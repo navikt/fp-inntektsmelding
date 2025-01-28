@@ -53,7 +53,6 @@ public class HåndterRekkefølgeAvForespørselTasks implements ProsessTaskLifecy
                 throw new IllegalArgumentException("Task av type " + OPPRETT.value() + " mangler saksnummer");
             }
 
-            //TODO bytt til en mer spesifikk query når vi er over på k9-prosesstask
             Optional<ProsessTaskData> blokkerendeTask = prosessTaskRepository.finnAlle(List.of(ProsessTaskStatus.KLAR))
                 .stream()
                 .filter(task -> BLOKKERENDE.contains(task.taskType()))

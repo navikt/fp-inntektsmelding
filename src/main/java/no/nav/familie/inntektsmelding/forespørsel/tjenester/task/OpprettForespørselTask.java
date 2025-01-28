@@ -59,7 +59,6 @@ public class OpprettForespørselTask implements ProsessTaskHandler {
         }
 
         String tilleggsinfo = String.format("For første fraværsdag %s", skjæringstidspunkt.format(DateTimeFormatter.ofPattern("dd.MM.yy")));
-        // K9 trenger ikke førsteUttaksdato, setter alltid null her
         forespørselBehandlingTjeneste.opprettForespørsel(ytelsetype, aktørId, fagsakSaksnummer, organisasjonsnummer, skjæringstidspunkt, null, tilleggsinfo);
         MetrikkerTjeneste.loggForespørselOpprettet(ytelsetype);
     }
