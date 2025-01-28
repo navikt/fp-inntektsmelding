@@ -13,22 +13,15 @@ on:
         options:
           - dev
           - prod
-      namespace:
-        required: true
-        type: choice
-        description: 'teamforeldrepenger eller k9'
-        options:
-          - k9saksbehandling
-          - teamforeldrepenger
 
 jobs:
   deploy:
     name: Deploy dev
     permissions:
       id-token: write
-    uses: navikt/ft-inntektsmelding/.github/workflows/deploy.yml@master
+    uses: navikt/fp-gha-workflows/.github/workflows/deploy.yml@main
     with:
+      gar: true
       image: ${{ inputs.image }}
-      cluster: ${{ inputs.environment }}-gcp
-      namespace: ${{ inputs.namespace }}
+      cluster: ${{ inputs.environment }}-fss
     secrets: inherit

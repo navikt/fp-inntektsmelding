@@ -29,7 +29,7 @@ class AltinnAutoriseringKlientTest {
 
     @BeforeEach
     void setUp() {
-        KontekstHolder.setKontekst(BasisKontekst.ikkeAutentisertRequest("ft-inntektsmelding"));
+        KontekstHolder.setKontekst(BasisKontekst.ikkeAutentisertRequest("fp-inntektsmelding"));
     }
 
     @Test

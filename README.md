@@ -1,11 +1,11 @@
-# ft-inntektsmelding
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=navikt_ft-inntektsmelding&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=navikt_ft-inntektsmelding)
-[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=navikt_ft-inntektsmelding&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=navikt_ft-inntektsmelding)
-[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=navikt_ft-inntektsmelding&metric=bugs)](https://sonarcloud.io/summary/new_code?id=navikt_ft-inntektsmelding)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=navikt_ft-inntektsmelding&metric=coverage)](https://sonarcloud.io/summary/new_code?id=navikt_ft-inntektsmelding)
-[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=navikt_ft-inntektsmelding&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=navikt_ft-inntektsmelding)
+# fp-inntektsmelding
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=navikt_fp-inntektsmelding&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=navikt_fp-inntektsmelding)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=navikt_fp-inntektsmelding&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=navikt_fp-inntektsmelding)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=navikt_fp-inntektsmelding&metric=bugs)](https://sonarcloud.io/summary/new_code?id=navikt_fp-inntektsmelding)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=navikt_fp-inntektsmelding&metric=coverage)](https://sonarcloud.io/summary/new_code?id=navikt_fp-inntektsmelding)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=navikt_fp-inntektsmelding&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=navikt_fp-inntektsmelding)
 
-Backend for inntektsmelding for Team Foreldrepenger og Team Sykdom i Familien
+Backend for inntektsmelding for Team Foreldrepenger
 
 ## Oppdatere graphql skjema til Arbeidsgiver Notifikasjon API
 

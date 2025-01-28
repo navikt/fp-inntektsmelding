@@ -10,7 +10,7 @@
     </parent>
 
     <groupId>no.nav.familie.inntektsmelding</groupId>
-    <artifactId>ft-inntektsmelding</artifactId>
+    <artifactId>fp-inntektsmelding</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <properties>
@@ -327,9 +327,9 @@
 
     <distributionManagement>
         <repository>
-            <id>ft-inntektsmelding</id>
+            <id>fp-inntektsmelding</id>
             <name>Github navikt Maven Packages</name>
-            <url>https://maven.pkg.github.com/navikt/ft-inntektsmelding</url>
+            <url>https://maven.pkg.github.com/navikt/fp-inntektsmelding</url>
         </repository>
     </distributionManagement>
 </project>
