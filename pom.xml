@@ -15,8 +15,8 @@
 
     <properties>
         <sonar.moduleKey>${project.artifactId}</sonar.moduleKey>
-        <sonar.projectName>ft-inntektsmelding</sonar.projectName>
-        <sonar.projectKey>navikt_ft-inntektsmelding</sonar.projectKey>
+        <sonar.projectName>fp-inntektsmelding</sonar.projectName>
+        <sonar.projectKey>navikt_fp-inntektsmelding</sonar.projectKey>
 
         <felles.version>7.4.5</felles.version>
         <prosesstask.version>5.1.1</prosesstask.version>
