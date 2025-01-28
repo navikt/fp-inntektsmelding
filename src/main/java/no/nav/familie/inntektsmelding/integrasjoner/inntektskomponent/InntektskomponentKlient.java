@@ -55,7 +55,7 @@ public class InntektskomponentKlient {
 
         request.setIdentListe(Collections.singletonList(Aktoer.newAktoerId(finnInntektRequest.aktørId())));
         request.setAinntektsfilter("8-28");
-        request.setFormaal("Foreldrepenger"); // Trenger eget formål for K9
+        request.setFormaal("Foreldrepenger");
 
         request.setMaanedFom(finnInntektRequest.fom().isAfter(INNTK_TIDLIGSTE_DATO) ? finnInntektRequest.fom() : INNTK_TIDLIGSTE_DATO);
         request.setMaanedTom(finnInntektRequest.tom().isAfter(INNTK_TIDLIGSTE_DATO) ? finnInntektRequest.tom() : INNTK_TIDLIGSTE_DATO);

@@ -14,7 +14,7 @@ class PdlKlient extends AbstractPersonKlient {
 
     PdlKlient() {
         super(RestClient.client(), Tema.FOR);
-    } //TODO: K9 må bruke egen tema senere.
+    }
 
     PdlKlient(Tema tema) {
         super(RestClient.client(), tema);

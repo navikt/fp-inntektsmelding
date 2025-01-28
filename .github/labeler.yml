@@ -1,5 +1,0 @@
-pom:
-- any:
-  - changed-files:
-    - any-glob-to-any-file: "**/*/pom.xml"
-    - any-glob-to-any-file: "pom.xml"
