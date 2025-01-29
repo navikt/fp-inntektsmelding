@@ -48,7 +48,7 @@ class PersonTjenesteTest {
 
     @Test
     void hentInnloggetPerson_skal_returnere_innlogget_person() {
-        var ytelseType = Ytelsetype.OMSORGSPENGER;
+        var ytelseType = Ytelsetype.FORELDREPENGER;
         var pdlPerson = new Person();
         var pdlNavn = new Navn();
         pdlNavn.setFornavn("fornavn");
@@ -79,7 +79,7 @@ class PersonTjenesteTest {
 
     @Test
     void hentInnloggetPerson_skal_kaste_exception_om_man_ikke_har_kontekst() {
-        var ytelseType = Ytelsetype.OMSORGSPENGER;
+        var ytelseType = Ytelsetype.FORELDREPENGER;
 
         when(KontekstHolder.harKontekst()).thenReturn(false);
 
@@ -88,7 +88,7 @@ class PersonTjenesteTest {
 
     @Test
     void hentInnloggetPerson_skal_kaste_exception_om_identtypen_ikke_er_ekstern() {
-        var ytelseType = Ytelsetype.OMSORGSPENGER;
+        var ytelseType = Ytelsetype.FORELDREPENGER;
 
         when(KontekstHolder.harKontekst()).thenReturn(true);
         var kontekst = RequestKontekst.forRequest("11839798115", null, IdentType.InternBruker, null, null, new HashSet<>());

@@ -55,22 +55,14 @@ class ForespørselTekster {
     public static Merkelapp finnMerkelapp(Ytelsetype ytelsetype) {
         return switch (ytelsetype) {
             case FORELDREPENGER -> Merkelapp.INNTEKTSMELDING_FP;
-            case PLEIEPENGER_SYKT_BARN -> Merkelapp.INNTEKTSMELDING_PSB;
-            case OMSORGSPENGER -> Merkelapp.INNTEKTSMELDING_OMP;
             case SVANGERSKAPSPENGER -> Merkelapp.INNTEKTSMELDING_SVP;
-            case PLEIEPENGER_NÆRSTÅENDE -> Merkelapp.INNTEKTSMELDING_PILS;
-            case OPPLÆRINGSPENGER -> Merkelapp.INNTEKTSMELDING_OPP;
         };
     }
 
     public static String mapYtelsestypeNavn(Ytelsetype ytelsetype) {
         return switch (ytelsetype) {
             case FORELDREPENGER -> "foreldrepenger";
-            case PLEIEPENGER_SYKT_BARN -> "pleiepenger sykt barn";
-            case OMSORGSPENGER -> "omsorgspenger";
             case SVANGERSKAPSPENGER -> "svangerskapspenger";
-            case PLEIEPENGER_NÆRSTÅENDE -> "pleiepenger i livets sluttfase";
-            case OPPLÆRINGSPENGER -> "opplæringspenger";
         };
     }
 

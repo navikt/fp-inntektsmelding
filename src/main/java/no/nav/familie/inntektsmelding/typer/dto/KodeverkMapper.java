@@ -39,10 +39,6 @@ public class KodeverkMapper {
         return switch (dto) {
             case FORELDREPENGER -> Ytelsetype.FORELDREPENGER;
             case SVANGERSKAPSPENGER -> Ytelsetype.SVANGERSKAPSPENGER;
-            case OMSORGSPENGER -> Ytelsetype.OMSORGSPENGER;
-            case OPPLÆRINGSPENGER -> Ytelsetype.OPPLÆRINGSPENGER;
-            case PLEIEPENGER_SYKT_BARN -> Ytelsetype.PLEIEPENGER_SYKT_BARN;
-            case PLEIEPENGER_I_LIVETS_SLUTTFASE -> Ytelsetype.PLEIEPENGER_NÆRSTÅENDE;
         };
     }
 
@@ -50,10 +46,6 @@ public class KodeverkMapper {
         return switch (ytelsetype) {
             case FORELDREPENGER -> YtelseTypeDto.FORELDREPENGER;
             case SVANGERSKAPSPENGER -> YtelseTypeDto.SVANGERSKAPSPENGER;
-            case OMSORGSPENGER -> YtelseTypeDto.OMSORGSPENGER;
-            case OPPLÆRINGSPENGER -> YtelseTypeDto.OPPLÆRINGSPENGER;
-            case PLEIEPENGER_SYKT_BARN -> YtelseTypeDto.PLEIEPENGER_SYKT_BARN;
-            case PLEIEPENGER_NÆRSTÅENDE -> YtelseTypeDto.PLEIEPENGER_I_LIVETS_SLUTTFASE;
         };
     }
 

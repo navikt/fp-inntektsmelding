@@ -20,7 +20,7 @@ class ForespørselTeksterTest {
 
     @Test
     void lagOppgaveTekst() {
-        String oppgaveTekst = ForespørselTekster.lagOppgaveTekst(Ytelsetype.OPPLÆRINGSPENGER);
+        String oppgaveTekst = ForespørselTekster.lagOppgaveTekst(Ytelsetype.FORELDREPENGER);
         assertEquals("Innsending av inntektsmelding for opplæringspenger", oppgaveTekst);
     }
 

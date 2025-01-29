@@ -150,10 +150,6 @@ public class FpDokgenRestTjeneste {
         return switch (ytelsetype.toLowerCase()) {
             case "foreldrepenger" -> Ytelsetype.FORELDREPENGER;
             case "svangerskapspenger" -> Ytelsetype.SVANGERSKAPSPENGER;
-            case "pleiepenger sykt barn" -> Ytelsetype.PLEIEPENGER_SYKT_BARN;
-            case "pleiepenger i livets sluttfase" -> Ytelsetype.PLEIEPENGER_NÆRSTÅENDE;
-            case "opplæringspenger" -> Ytelsetype.OPPLÆRINGSPENGER;
-            case "omsorgspenger" -> Ytelsetype.OMSORGSPENGER;
             default -> throw new IllegalArgumentException("Ugyldig ytelsetype: " + ytelsetype);
         };
     }
