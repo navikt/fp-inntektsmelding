@@ -1,4 +1,4 @@
-package no.nav.familie.inntektsmelding.refusjonomsorgsdagerarbeidsgiver.tjenester;
+package no.nav.familie.inntektsmelding.integrasjoner.aareg;
 
 import java.time.LocalDate;
 import java.util.Collections;
@@ -13,9 +13,7 @@ import no.nav.familie.inntektsmelding.integrasjoner.aareg.dto.Opplysningspliktig
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import no.nav.familie.inntektsmelding.integrasjoner.aareg.AaregRestKlient;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
-import no.nav.familie.inntektsmelding.refusjonomsorgsdagerarbeidsgiver.rest.ArbeidsforholdDto;
 
 @ApplicationScoped
 public class ArbeidsforholdTjeneste {
@@ -31,7 +29,7 @@ public class ArbeidsforholdTjeneste {
         this.aaregRestKlient = aaregRestKlient;
     }
 
-    public List<ArbeidsforholdDto> hentArbeidsforhold(PersonIdent ident, LocalDate førsteFraværsdag) {
+    public List<Arbeidsforhold> hentArbeidsforhold(PersonIdent ident, LocalDate førsteFraværsdag) {
         var aaregInfo = aaregRestKlient.finnArbeidsforholdForArbeidstaker(ident.getIdent(), førsteFraværsdag);
         if (aaregInfo == null) {
             LOG.info("Fant ingen arbeidsforhold for ident {}. Returnerer tom liste", ident.getIdent());
@@ -40,7 +38,7 @@ public class ArbeidsforholdTjeneste {
         LOG.info("Fant {} arbeidsforhold for ident {}.", aaregInfo.size(), ident.getIdent());
         return aaregInfo.stream()
             .filter(arb -> OpplysningspliktigArbeidsgiverDto.Type.ORGANISASJON.equals(arb.arbeidsgiver().type())) // Vi skal aldri behandle private arbeidsforhold i ftinntektsmelding
-            .map(arbeidsforhold -> new ArbeidsforholdDto(
+            .map(arbeidsforhold -> new Arbeidsforhold(
                 arbeidsforhold.arbeidsgiver().organisasjonsnummer(),
                 arbeidsforhold.arbeidsforholdId()
             )).toList();
