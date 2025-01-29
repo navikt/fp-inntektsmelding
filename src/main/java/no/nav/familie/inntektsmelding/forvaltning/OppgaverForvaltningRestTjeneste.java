@@ -14,6 +14,7 @@ import jakarta.ws.rs.core.Response;
 
 import no.nav.familie.inntektsmelding.forespørsel.rest.NyBeskjedRequest;
 
+import no.nav.familie.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 import no.nav.foreldrepenger.konfig.Environment;
 
 import org.slf4j.Logger;
@@ -25,7 +26,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import no.nav.familie.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 import no.nav.familie.inntektsmelding.server.auth.api.AutentisertMedAzure;
 import no.nav.familie.inntektsmelding.server.auth.api.Tilgangskontrollert;
 import no.nav.familie.inntektsmelding.server.tilgangsstyring.Tilgang;
