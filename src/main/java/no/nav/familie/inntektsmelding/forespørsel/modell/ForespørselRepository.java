@@ -10,8 +10,6 @@ import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 
-import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

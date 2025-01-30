@@ -52,11 +52,11 @@ public class JoarkTjeneste {
     }
 
 
-    public String journalførInntektsmelding(String XMLAvInntektsmelding,
+    public String journalførInntektsmelding(String xmlAvInntektsmelding,
                                             InntektsmeldingEntitet inntektsmelding,
                                             byte[] pdf,
                                             String fagsystemSaksnummer) {
-        var request = opprettRequest(XMLAvInntektsmelding, inntektsmelding, pdf, fagsystemSaksnummer);
+        var request = opprettRequest(xmlAvInntektsmelding, inntektsmelding, pdf, fagsystemSaksnummer);
         try {
             var response = joarkKlient.opprettJournalpost(request, false);
             // Kan nok fjerne loggingen etter en periode i dev, mest for feilsøking i starten.
