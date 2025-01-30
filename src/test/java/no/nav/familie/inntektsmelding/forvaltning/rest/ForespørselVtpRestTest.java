@@ -6,21 +6,32 @@ import static org.mockito.Mockito.when;
 import static org.assertj.core.api.Assertions.assertThat;
 
 
+import no.nav.familie.inntektsmelding.forespørsel.modell.ForespørselRepository;
+import no.nav.familie.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
+
+import no.nav.familie.inntektsmelding.forespørsel.tjenester.ForespørselTjeneste;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Answers;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import no.nav.familie.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 import no.nav.foreldrepenger.konfig.Environment;
 
 @ExtendWith(MockitoExtension.class)
 class ForespørselVtpRestTest {
+    @Mock
+    private ForespørselBehandlingTjeneste forespørselBehandlingTjeneste;
 
-    private static final ForespørselVtpRest forespørselVtpRest = new ForespørselVtpRest(mock(ForespørselBehandlingTjeneste.class,
-        Answers.CALLS_REAL_METHODS));
+    private ForespørselVtpRest forespørselVtpRest;
 
+    @BeforeEach
+    void setUp() {
+        forespørselVtpRest = new ForespørselVtpRest(forespørselBehandlingTjeneste);
+    }
 
     @Test
     void skal_kaste_exception_om_i_prod() {

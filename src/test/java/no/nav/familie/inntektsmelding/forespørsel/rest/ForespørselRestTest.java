@@ -24,7 +24,6 @@ import no.nav.familie.inntektsmelding.koder.ForespørselStatus;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.server.tilgangsstyring.Tilgang;
 import no.nav.familie.inntektsmelding.typer.dto.AktørIdDto;
-import no.nav.familie.inntektsmelding.typer.dto.ForespørselAksjon;
 import no.nav.familie.inntektsmelding.typer.dto.ForespørselResultat;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.familie.inntektsmelding.typer.dto.SaksnummerDto;
@@ -58,13 +57,13 @@ class ForespørselRestTest {
 
         var fagsakSaksnummer = new SaksnummerDto("SAK");
         var response = forespørselRest.opprettForespørsel(
-            new OpprettForespørselRequest(aktørId, null, LocalDate.now(), YtelseTypeDto.PLEIEPENGER_SYKT_BARN, fagsakSaksnummer, LocalDate.now().plusDays(5), List.of(orgnummer)));
+            new OpprettForespørselRequest(aktørId, null, LocalDate.now(), YtelseTypeDto.FORELDREPENGER, fagsakSaksnummer, LocalDate.now().plusDays(5), List.of(orgnummer)));
 
         var forventetResultat = new OpprettForespørselResponsNy(List.of(new OpprettForespørselResponsNy.OrganisasjonsnummerMedStatus(orgnummer, ForespørselResultat.FORESPØRSEL_OPPRETTET)));
 
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK_200);
         assertThat(response.getEntity()).isEqualTo(forventetResultat);
-        verify(forespørselBehandlingTjeneste).håndterInnkommendeForespørsel(LocalDate.now(), Ytelsetype.PLEIEPENGER_SYKT_BARN,
+        verify(forespørselBehandlingTjeneste).håndterInnkommendeForespørsel(LocalDate.now(), Ytelsetype.FORELDREPENGER,
             new AktørIdEntitet(aktørId.id()), orgnummer, fagsakSaksnummer, LocalDate.now().plusDays(5));
     }
 
@@ -78,7 +77,7 @@ class ForespørselRestTest {
 
         var fagsakSaksnummer = new SaksnummerDto("SAK");
         var response = forespørselRest.opprettForespørsel(
-            new OpprettForespørselRequest(aktørId, null, LocalDate.now(), YtelseTypeDto.PLEIEPENGER_SYKT_BARN, fagsakSaksnummer, LocalDate.now().plusDays(5), List.of(orgnummer, orgnummer2)));
+            new OpprettForespørselRequest(aktørId, null, LocalDate.now(), YtelseTypeDto.FORELDREPENGER, fagsakSaksnummer, LocalDate.now().plusDays(5), List.of(orgnummer, orgnummer2)));
 
         var forventetResultat = new OpprettForespørselResponsNy(List.of(
             new OpprettForespørselResponsNy.OrganisasjonsnummerMedStatus(orgnummer, ForespørselResultat.FORESPØRSEL_OPPRETTET),
@@ -88,43 +87,6 @@ class ForespørselRestTest {
         assertThat(response.getEntity()).isEqualTo(forventetResultat);
 
         verify(forespørselBehandlingTjeneste, times(2)).håndterInnkommendeForespørsel(any(), any(), any(), any(), any(), any());
-    }
-
-    @Test
-    void skal_oppdatere_forespørsler() {
-        var orgnummer1 = new OrganisasjonsnummerDto(BRREG_ORGNUMMER);
-        var orgnummer2 = new OrganisasjonsnummerDto(ORGNUMMER_TEST);
-        var stp1 = LocalDate.now();
-        var stp2 = LocalDate.now().minusMonths(2);
-        var aktørId = new AktørIdDto("1234567890134");
-
-        var forespørsler = List.of(new OppdaterForespørselDto(stp1, orgnummer1, ForespørselAksjon.OPPRETT),
-            new OppdaterForespørselDto(stp1, orgnummer2, ForespørselAksjon.OPPRETT),
-            new OppdaterForespørselDto(stp2, orgnummer1, ForespørselAksjon.OPPRETT),
-            new OppdaterForespørselDto(stp2, orgnummer2, ForespørselAksjon.OPPRETT));
-
-        var fagsakSaksnummer = new SaksnummerDto("SAK");
-        var response = forespørselRest.oppdaterForespørsler(
-            new OppdaterForespørslerRequest(aktørId, forespørsler, YtelseTypeDto.PLEIEPENGER_SYKT_BARN, fagsakSaksnummer));
-
-        assertThat(response.getStatus()).isEqualTo(HttpStatus.OK_200);
-    }
-
-    @Test
-    void skal_gi_400_for_oppdater_med_duplikate_forespørsler() {
-        var orgnummer = new OrganisasjonsnummerDto(BRREG_ORGNUMMER);
-        var stp1 = LocalDate.now();
-        var stp2 = LocalDate.now().minusMonths(2);
-        var aktørId = new AktørIdDto("1234567890134");
-
-        var forespørsler = List.of(new OppdaterForespørselDto(stp1, orgnummer, ForespørselAksjon.OPPRETT),
-            new OppdaterForespørselDto(stp1, orgnummer, ForespørselAksjon.OPPRETT));
-
-        var fagsakSaksnummer = new SaksnummerDto("SAK");
-        var response = forespørselRest.oppdaterForespørsler(
-            new OppdaterForespørslerRequest(aktørId, forespørsler, YtelseTypeDto.PLEIEPENGER_SYKT_BARN, fagsakSaksnummer));
-
-        assertThat(response.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST_400);
     }
 
     @Test

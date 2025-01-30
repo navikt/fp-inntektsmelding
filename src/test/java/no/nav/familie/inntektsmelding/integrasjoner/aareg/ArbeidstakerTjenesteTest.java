@@ -1,4 +1,4 @@
-package no.nav.familie.inntektsmelding.refusjonomsorgsdagerarbeidsgiver.tjenester;
+package no.nav.familie.inntektsmelding.integrasjoner.aareg;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -15,7 +15,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.familie.inntektsmelding.pip.AltinnTilgangTjeneste;
-import no.nav.familie.inntektsmelding.refusjonomsorgsdagerarbeidsgiver.rest.ArbeidsforholdDto;
 
 @ExtendWith(MockitoExtension.class)
 class ArbeidstakerTjenesteTest {
@@ -39,7 +38,7 @@ class ArbeidstakerTjenesteTest {
     void returnerer_arbeidstakerinfo_om_dette_finnes() {
         var førsteFraværsdag = LocalDate.now();
         when(arbeidsforholdTjenesteMock.hentArbeidsforhold(any(), any())).thenReturn(
-            List.of(new ArbeidsforholdDto("000000000", "111111111"))
+            List.of(new Arbeidsforhold("000000000", "111111111"))
         );
         when(altinnTilgangTjenesteMock.harTilgangTilBedriften(any())).thenReturn(true);
 
@@ -56,7 +55,7 @@ class ArbeidstakerTjenesteTest {
     void verifiserer_arbeidsforhold_detaljer() {
         var førsteFraværsdag = LocalDate.now();
         when(arbeidsforholdTjenesteMock.hentArbeidsforhold(any(), any())).thenReturn(
-            List.of(new ArbeidsforholdDto("00000000", "123456789")));
+            List.of(new Arbeidsforhold("00000000", "123456789")));
         when(altinnTilgangTjenesteMock.harTilgangTilBedriften(any())).thenReturn(true);
 
         var resultat = arbeidstakerTjeneste.finnArbeidsforholdInnsenderHarTilgangTil(TILFELDIG_PERSON_IDENT, førsteFraværsdag);
@@ -73,8 +72,8 @@ class ArbeidstakerTjenesteTest {
         var førsteFraværsdag = LocalDate.now();
         when(arbeidsforholdTjenesteMock.hentArbeidsforhold(any(), any())).thenReturn(
             List.of(
-                new ArbeidsforholdDto("00000000", "123456789"),
-                new ArbeidsforholdDto("00000001", "123456789")
+                new Arbeidsforhold("00000000", "123456789"),
+                new Arbeidsforhold("00000001", "123456789")
             )
         );
         when(altinnTilgangTjenesteMock.harTilgangTilBedriften("00000000")).thenReturn(false);

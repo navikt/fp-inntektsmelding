@@ -1,10 +1,8 @@
-package no.nav.familie.inntektsmelding.refusjonomsorgsdagerarbeidsgiver.tjenester;
+package no.nav.familie.inntektsmelding.integrasjoner.aareg;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
 import jakarta.inject.Inject;
-
-import no.nav.familie.inntektsmelding.refusjonomsorgsdagerarbeidsgiver.rest.ArbeidsforholdDto;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +30,7 @@ public class ArbeidstakerTjeneste {
         this.altinnTilgangTjeneste = altinnTilgangTjeneste;
     }
 
-    public List<ArbeidsforholdDto> finnArbeidsforholdInnsenderHarTilgangTil(PersonIdent ident, LocalDate førsteFraværsdag) {
+    public List<Arbeidsforhold> finnArbeidsforholdInnsenderHarTilgangTil(PersonIdent ident, LocalDate førsteFraværsdag) {
         var alleArbeidsforhold = arbeidsforholdTjeneste.hentArbeidsforhold(ident, førsteFraværsdag);
         LOG.info("Fant {} arbeidsforhold i Aa-registeret for {}", alleArbeidsforhold.size(), ident);
 

@@ -79,7 +79,7 @@ public class JoarkTjeneste {
             .medBruker(lagBruker(inntektsmeldingEntitet.getAktørId()))
             .medBehandlingstema(mapBehandlingTema(inntektsmeldingEntitet.getYtelsetype()))
             .medDatoMottatt(inntektsmeldingEntitet.getOpprettetTidspunkt().toLocalDate())
-            .medTema(mapTema(inntektsmeldingEntitet.getYtelsetype()))
+            .medTema("FOR")
             .medEksternReferanseId(UUID.randomUUID().toString())
             .medJournalfoerendeEnhet(JOURNALFØRENDE_ENHET)
             .medKanal(KANAL)
@@ -87,7 +87,7 @@ public class JoarkTjeneste {
 
         if (fagsystemSaksnummer != null) {
             opprettJournalpostRequestBuilder
-                .medSak(sak(fagsystemSaksnummer, inntektsmeldingEntitet.getYtelsetype()));
+                .medSak(new Sak(fagsystemSaksnummer, Fagsystem.FPSAK.getOffisiellKode(), Sak.Sakstype.FAGSAK));
         }
         return opprettJournalpostRequestBuilder.build();
     }
@@ -107,33 +107,10 @@ public class JoarkTjeneste {
         return Collections.singletonList(builder.build());
     }
 
-    private Sak sak(String saksnummer, Ytelsetype ytelsetype) {
-        return new Sak(saksnummer, utledFagsystemKode(ytelsetype).getOffisiellKode(), Sak.Sakstype.FAGSAK);
-    }
-
-    private Fagsystem utledFagsystemKode(Ytelsetype ytelsetype) {
-        return switch (ytelsetype) {
-            case FORELDREPENGER, SVANGERSKAPSPENGER -> Fagsystem.FPSAK;
-            case PLEIEPENGER_SYKT_BARN, PLEIEPENGER_NÆRSTÅENDE, OMSORGSPENGER, OPPLÆRINGSPENGER -> Fagsystem.K9SAK;
-        };
-    }
-
-    private String mapTema(Ytelsetype ytelsetype) {
-        return switch (ytelsetype) {
-            case FORELDREPENGER, SVANGERSKAPSPENGER -> "FOR";
-            case PLEIEPENGER_SYKT_BARN, PLEIEPENGER_NÆRSTÅENDE, OMSORGSPENGER, OPPLÆRINGSPENGER -> "OMS";
-        };
-    }
-
     private String mapBehandlingTema(Ytelsetype ytelsetype) {
         return switch (ytelsetype) {
             case FORELDREPENGER -> Behandlingtema.FORELDREPENGER.getOffisiellKode();
             case SVANGERSKAPSPENGER -> Behandlingtema.SVANGERSKAPSPENGER.getOffisiellKode();
-            case PLEIEPENGER_SYKT_BARN -> Behandlingtema.PLEIEPENGER_SYKT_BARN.getOffisiellKode();
-            case PLEIEPENGER_NÆRSTÅENDE -> Behandlingtema.PLEIEPENGER_LIVETS_SLUTTFASE.getOffisiellKode();
-            case OMSORGSPENGER -> Behandlingtema.OMSORGSPENGER.getOffisiellKode();
-            case OPPLÆRINGSPENGER ->
-                throw new IllegalArgumentException("Finner ikke behandlingtema for ytelsetype " + ytelsetype); // TODO Hva skal inn her?
         };
     }
 

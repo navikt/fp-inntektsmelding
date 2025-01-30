@@ -3,7 +3,6 @@ package no.nav.familie.inntektsmelding.integrasjoner.joark;
 public enum Fagsystem {
 
     FPSAK("FS36"),
-    K9SAK("K9"),
     ;
 
     private String offisiellKode;

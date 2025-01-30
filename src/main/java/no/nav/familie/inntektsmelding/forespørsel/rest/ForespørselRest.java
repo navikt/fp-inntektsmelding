@@ -21,12 +21,12 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import org.apache.commons.lang3.tuple.Pair;
+import no.nav.familie.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.nav.familie.inntektsmelding.forespørsel.modell.ForespørselEntitet;
-import no.nav.familie.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 import no.nav.familie.inntektsmelding.koder.ForespørselStatus;
 import no.nav.familie.inntektsmelding.metrikker.MetrikkerTjeneste;
 import no.nav.familie.inntektsmelding.server.auth.api.AutentisertMedAzure;
@@ -93,49 +93,6 @@ public class ForespørselRest {
         } else {
             return Response.status(Response.Status.BAD_REQUEST).build();
         }
-    }
-
-    @POST
-    @Path("/oppdater")
-    @Tilgangskontrollert
-    public Response oppdaterForespørsler(@Valid @NotNull OppdaterForespørslerRequest request) {
-        LOG.info("Mottok forespørsel om oppdatering av inntektsmeldingoppgaver på fagsakSaksnummer {}", request.fagsakSaksnummer());
-        sjekkErSystemkall();
-
-        boolean validertOk = validerOppdaterForespørslerRequest(request);
-        if (!validertOk) {
-            return Response.status(Response.Status.BAD_REQUEST).build();
-        }
-
-        forespørselBehandlingTjeneste.oppdaterForespørsler(
-            KodeverkMapper.mapYtelsetype(request.ytelsetype()),
-            new AktørIdEntitet(request.aktørId().id()),
-            request.forespørsler(),
-            request.fagsakSaksnummer()
-        );
-
-        return Response.ok().build();
-    }
-
-    private static boolean validerOppdaterForespørslerRequest(OppdaterForespørslerRequest request) {
-        var unikeForespørsler = new ArrayList<>();
-        var dupliserteForespørsler = new ArrayList<>();
-
-        request.forespørsler().forEach(forespørsel -> {
-            var forespørselPair = Pair.of(forespørsel.skjæringstidspunkt(), forespørsel.orgnr());
-            if (!unikeForespørsler.contains(forespørselPair)) {
-                unikeForespørsler.add(forespørselPair);
-            } else {
-                dupliserteForespørsler.add(forespørselPair);
-            }
-        });
-
-        if (!dupliserteForespørsler.isEmpty()) {
-            LOG.warn("Kan ikke oppdatere med duplikate forespørsler: {}", dupliserteForespørsler);
-            return false;
-        }
-
-        return true;
     }
 
     @POST
