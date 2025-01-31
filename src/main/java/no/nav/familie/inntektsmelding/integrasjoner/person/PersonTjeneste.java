@@ -9,6 +9,10 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.ProcessingException;
 
+import no.nav.pdl.KjoennResponseProjection;
+
+import no.nav.pdl.KjoennType;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,9 +62,9 @@ public class PersonTjeneste {
 
         LOG.info("Henter personobjekt");
         var person = pdlKlient.hentPerson(utledYtelse(ytelseType), request, projection);
-
         var navn = person.getNavn().getFirst();
-        return new PersonInfo(navn.getFornavn(), navn.getMellomnavn(), navn.getEtternavn(), personIdent, aktørId, mapFødselsdato(person), null);
+
+        return new PersonInfo(navn.getFornavn(), navn.getMellomnavn(), navn.getEtternavn(), personIdent, aktørId, mapFødselsdato(person), null, null);
     }
 
     public PersonInfo hentPersonFraIdent(PersonIdent personIdent, Ytelsetype ytelseType) {
@@ -68,15 +72,25 @@ public class PersonTjeneste {
         request.setIdent(personIdent.getIdent());
 
         var projection = new PersonResponseProjection().navn(new NavnResponseProjection().fornavn().mellomnavn().etternavn())
+            .kjoenn(new KjoennResponseProjection().kjoenn())
             .telefonnummer(new TelefonnummerResponseProjection().landskode().nummer())
             .foedselsdato(new FoedselsdatoResponseProjection().foedselsdato());
 
         var aktørId = finnAktørIdForIdent(personIdent);
         var person = pdlKlient.hentPerson(utledYtelse(ytelseType), request, projection);
         var navn = person.getNavn().getFirst();
+        var kjønn = person.getKjoenn().isEmpty() ? PersonInfo.Kjønn.UKJENT : mapKjønn(person.getKjoenn().getFirst().getKjoenn());
 
         return new PersonInfo(navn.getFornavn(), navn.getMellomnavn(), navn.getEtternavn(), personIdent, aktørId.orElse(null), mapFødselsdato(person),
-            mapTelefonnummer(person));
+            mapTelefonnummer(person), kjønn);
+    }
+
+    private PersonInfo.Kjønn mapKjønn(KjoennType kjønn) {
+        return switch (kjønn) {
+            case MANN -> PersonInfo.Kjønn.MANN;
+            case KVINNE -> PersonInfo.Kjønn.KVINNE;
+            case UKJENT -> PersonInfo.Kjønn.UKJENT;
+        };
     }
 
     private Optional<AktørIdEntitet> finnAktørIdForIdent(PersonIdent personIdent) {

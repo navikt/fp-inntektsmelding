@@ -5,7 +5,7 @@ import java.time.LocalDate;
 import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
 
 public record PersonInfo(String fornavn, String mellomnavn, String etternavn, PersonIdent fødselsnummer, AktørIdEntitet aktørId,
-                         LocalDate fødselsdato, String telefonnummer) {
+                         LocalDate fødselsdato, String telefonnummer, Kjønn kjønn) {
 
     public String mapNavn() {
         if (etternavn == null || fornavn == null) {
@@ -26,5 +26,11 @@ public record PersonInfo(String fornavn, String mellomnavn, String etternavn, Pe
             return "";
         }
         return fornavn;
+    }
+
+    public enum Kjønn {
+        MANN,
+        KVINNE,
+        UKJENT
     }
 }
