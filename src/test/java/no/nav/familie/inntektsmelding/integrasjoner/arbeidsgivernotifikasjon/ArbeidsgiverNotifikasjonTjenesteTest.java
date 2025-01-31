@@ -59,14 +59,14 @@ class ArbeidsgiverNotifikasjonTjenesteTest {
             "nesteSteg",
             "tidspunkt",
             "tilleggsinformasjon",
-            "hardDelete");
-        assertThat(input).containsEntry("grupperingsid", expectedGrupperingsid);
-        assertThat(input).containsEntry("initiellStatus", SaksStatus.UNDER_BEHANDLING);
-        assertThat(input).containsEntry("lenke", expectedLenke);
-        assertThat(input).containsEntry("merkelapp", expectedMerkelapp.getBeskrivelse());
-        assertThat(input).containsEntry("tittel", expectedTittel);
-        assertThat(input).containsEntry("virksomhetsnummer", expectedVirksomhetsnummer);
-        assertThat(input).containsEntry("overstyrStatustekstMed", "");
+            "hardDelete")
+            .containsEntry("grupperingsid", expectedGrupperingsid)
+            .containsEntry("initiellStatus", SaksStatus.UNDER_BEHANDLING)
+            .containsEntry("lenke", expectedLenke)
+            .containsEntry("merkelapp", expectedMerkelapp.getBeskrivelse())
+            .containsEntry("tittel", expectedTittel)
+            .containsEntry("virksomhetsnummer", expectedVirksomhetsnummer)
+            .containsEntry("overstyrStatustekstMed", "");
         assertThat(input.get("mottakere")).isNotNull();
     }
 
@@ -144,10 +144,9 @@ class ArbeidsgiverNotifikasjonTjenesteTest {
 
         var input = requestCaptor.getValue().getInput();
 
-        assertThat(input).containsOnlyKeys("id", "utfoertTidspunkt", "hardDelete", "nyLenke");
-
-        assertThat(input).containsEntry("id", expectedId);
-        assertThat(input).containsEntry("utfoertTidspunkt", expectedTidspunkt.format(DateTimeFormatter.ISO_DATE_TIME));
+        assertThat(input).containsOnlyKeys("id", "utfoertTidspunkt", "hardDelete", "nyLenke")
+            .containsEntry("id", expectedId)
+            .containsEntry("utfoertTidspunkt", expectedTidspunkt.format(DateTimeFormatter.ISO_DATE_TIME));
         assertThat(input.get("hardDelete")).isNull();
         assertThat(input.get("nyLenke")).isNull();
     }
@@ -167,11 +166,10 @@ class ArbeidsgiverNotifikasjonTjenesteTest {
 
         var input = request.getInput();
 
-        assertThat(input).containsOnlyKeys("id", "overstyrStatustekstMed", "nyStatus", "idempotencyKey", "hardDelete", "tidspunkt", "nyLenkeTilSak");
-
-        assertThat(input.get("id")).isEqualTo(expectedId);
-        assertThat(input.get("nyStatus")).isEqualTo(SaksStatus.FERDIG);
-        assertThat(input.get("overstyrStatustekstMed")).isEqualTo("");
+        assertThat(input).containsOnlyKeys("id", "overstyrStatustekstMed", "nyStatus", "idempotencyKey", "hardDelete", "tidspunkt", "nyLenkeTilSak")
+            .containsEntry("id", expectedId)
+            .containsEntry("nyStatus", SaksStatus.FERDIG)
+            .containsEntry("overstyrStatustekstMed", "");
 
         assertThat(input.get("idempotencyKey")).isNull();
         assertThat(input.get("hardDelete")).isNull();
@@ -193,11 +191,10 @@ class ArbeidsgiverNotifikasjonTjenesteTest {
 
         var input = request.getInput();
 
-        assertThat(input).containsOnlyKeys("id", "overstyrStatustekstMed", "nyStatus", "idempotencyKey", "hardDelete", "tidspunkt", "nyLenkeTilSak");
-
-        assertThat(input.get("id")).isEqualTo(expectedId);
-        assertThat(input.get("nyStatus")).isEqualTo(SaksStatus.FERDIG);
-        assertThat(input.get("overstyrStatustekstMed")).isEqualTo(ArbeidsgiverNotifikasjonTjeneste.SAK_STATUS_TEKST_ARBEIDSGIVERINITIERT);
+        assertThat(input).containsOnlyKeys("id", "overstyrStatustekstMed", "nyStatus", "idempotencyKey", "hardDelete", "tidspunkt", "nyLenkeTilSak")
+            .containsEntry("id", expectedId)
+            .containsEntry("nyStatus", SaksStatus.FERDIG)
+            .containsEntry("overstyrStatustekstMed", ArbeidsgiverNotifikasjonTjeneste.SAK_STATUS_TEKST_ARBEIDSGIVERINITIERT);
 
         assertThat(input.get("idempotencyKey")).isNull();
         assertThat(input.get("hardDelete")).isNull();

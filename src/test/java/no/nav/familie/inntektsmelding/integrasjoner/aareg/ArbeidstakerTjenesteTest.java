@@ -1,6 +1,6 @@
 package no.nav.familie.inntektsmelding.integrasjoner.aareg;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -43,8 +43,9 @@ class ArbeidstakerTjenesteTest {
         when(altinnTilgangTjenesteMock.harTilgangTilBedriften(any())).thenReturn(true);
 
         var resultat = arbeidstakerTjeneste.finnArbeidsforholdInnsenderHarTilgangTil(TILFELDIG_PERSON_IDENT, førsteFraværsdag);
-        assertThat(resultat).isNotNull();
-        assertThat(resultat.size()).isEqualTo(1);
+        assertThat(resultat)
+            .isNotNull()
+            .hasSize(1);
 
         var arbeidsforhold = resultat.getFirst();
         assertThat(arbeidsforhold.organisasjonsnummer()).isEqualTo("000000000");
@@ -60,8 +61,8 @@ class ArbeidstakerTjenesteTest {
 
         var resultat = arbeidstakerTjeneste.finnArbeidsforholdInnsenderHarTilgangTil(TILFELDIG_PERSON_IDENT, førsteFraværsdag);
 
-        assertThat(resultat.size()).isEqualTo(1);
-        var arbeidsforhold = resultat.get(0);
+        assertThat(resultat).hasSize(1);
+        var arbeidsforhold = resultat.getFirst();
 
         assertThat(arbeidsforhold.organisasjonsnummer()).isEqualTo("00000000");
         assertThat(arbeidsforhold.arbeidsforholdId()).isEqualTo("123456789");
@@ -81,7 +82,7 @@ class ArbeidstakerTjenesteTest {
 
         var resultat = arbeidstakerTjeneste.finnArbeidsforholdInnsenderHarTilgangTil(TILFELDIG_PERSON_IDENT, førsteFraværsdag);
 
-        assertThat(resultat.size()).isEqualTo(1);
+        assertThat(resultat).hasSize(1);
         var arbeidsforhold = resultat.getFirst();
 
         assertThat(arbeidsforhold.organisasjonsnummer()).isEqualTo("00000001");

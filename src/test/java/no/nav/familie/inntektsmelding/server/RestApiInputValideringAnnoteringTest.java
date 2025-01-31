@@ -22,7 +22,7 @@ class RestApiInputValideringAnnoteringTest extends RestApiTester {
      * Kontakt Team Humle hvis du trenger hjelp til å endre koden din slik at den går igjennom her
      */
     @Test
-    void alle_felter_i_objekter_som_brukes_som_inputDTO_skal_enten_ha_valideringsannotering_eller_være_av_godkjent_type() throws Exception {
+    void alle_felter_i_objekter_som_brukes_som_inputDTO_skal_enten_ha_valideringsannotering_eller_være_av_godkjent_type() {
         for (Method method : finnAlleRestMetoder()) {
             for (int i = 0; i < method.getParameterCount(); i++) {
                 Parameter parameter = method.getParameters()[i];

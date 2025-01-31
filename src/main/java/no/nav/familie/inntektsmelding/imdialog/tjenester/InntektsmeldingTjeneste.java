@@ -240,9 +240,9 @@ public class InntektsmeldingTjeneste {
         var inntektsopplysninger = inntektTjeneste.hentInntekt(aktørId, skjæringstidspunkt, LocalDate.now(),
             organisasjonsnummer);
         if (uuid == null) {
-            LOG.info("Inntektsopplysninger for aktørId {} var {}", aktørId, inntektsopplysninger.toString());
+            LOG.info("Inntektsopplysninger for aktørId {} var {}", aktørId, inntektsopplysninger);
         } else {
-            LOG.info("Inntektsopplysninger for forespørsel {} var {}", uuid, inntektsopplysninger.toString());
+            LOG.info("Inntektsopplysninger for forespørsel {} var {}", uuid, inntektsopplysninger);
         }
         var inntekter = inntektsopplysninger.måneder()
             .stream()
