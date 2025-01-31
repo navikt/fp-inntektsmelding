@@ -2,6 +2,7 @@ package no.nav.familie.inntektsmelding.forespørsel.modell;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -20,6 +21,7 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 
 import no.nav.familie.inntektsmelding.koder.ForespørselStatus;
+import no.nav.familie.inntektsmelding.koder.ForespørselType;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
 
@@ -48,7 +50,7 @@ public class ForespørselEntitet {
     @Column(name = "orgnr", nullable = false, updatable = false)
     private String organisasjonsnummer;
 
-    @Column(name = "skjaeringstidspunkt", nullable = false, updatable = false)
+    @Column(name = "skjaeringstidspunkt", updatable = false)
     private LocalDate skjæringstidspunkt;
 
     @Column(name = "forste_uttaksdato", updatable = false)
@@ -62,8 +64,11 @@ public class ForespørselEntitet {
     @Column(name = "ytelse_type", nullable = false, updatable = false)
     private Ytelsetype ytelseType;
 
-    @Column(name = "fagsystem_saksnummer", nullable = false, updatable = false)
+    @Column(name = "fagsystem_saksnummer", updatable = false)
     private String fagsystemSaksnummer;
+
+    @Column(name = "forespoersel_type", nullable = false, updatable = false)
+    private ForespørselType forespørselType;
 
     @Column(name = "opprettet_tid", nullable = false, updatable = false)
     private final LocalDateTime opprettetTidspunkt = LocalDateTime.now();
@@ -76,17 +81,22 @@ public class ForespørselEntitet {
                               AktørIdEntitet aktørId,
                               Ytelsetype ytelseType,
                               String fagsystemSaksnummer,
-                              LocalDate førsteUttaksdato) {
+                              LocalDate førsteUttaksdato,
+                              ForespørselType forespørselType) {
         this.uuid = UUID.randomUUID();
         this.organisasjonsnummer = organisasjonsnummer;
-        this.skjæringstidspunkt = skjæringstidspunkt;
         this.aktørId = aktørId;
         this.ytelseType = ytelseType;
-        this.fagsystemSaksnummer = fagsystemSaksnummer;
         this.førsteUttaksdato = førsteUttaksdato;
+        this.forespørselType = forespørselType;
+        if (forespørselType.equals(ForespørselType.BESTILT_AV_FAGSYSTEM)) {
+            this.fagsystemSaksnummer = Objects.requireNonNull(fagsystemSaksnummer, "fagsystemSaksnummer");
+            this.skjæringstidspunkt = Objects.requireNonNull(skjæringstidspunkt, "skjæringstidspunkt");
+        }
     }
 
     public ForespørselEntitet() {
+        // Hibernate
     }
 
     @PreUpdate
@@ -154,12 +164,16 @@ public class ForespørselEntitet {
         return Optional.ofNullable(førsteUttaksdato);
     }
 
+    public ForespørselType getForespørselType() {
+        return forespørselType;
+    }
+
     @Override
     public String toString() {
         return "ForespørselEntitet{" + "id=" + id + ", uuid=" + uuid + ", sakId=" + sakId + ", organisasjonsnummer=" + maskerId(organisasjonsnummer)
-            + ", skjæringstidspunkt=" + skjæringstidspunkt + ", aktørId=" + maskerId(aktørId.getAktørId()) + ", ytelseType=" + ytelseType
-            + ", fagsystemSaksnummer="
-            + fagsystemSaksnummer + '}';
+            + ", skjæringstidspunkt=" + skjæringstidspunkt + ", forespørselType=" + forespørselType +
+            ", aktørId=" + maskerId(aktørId.getAktørId()) + ", ytelseType=" + ytelseType
+            + ", fagsystemSaksnummer=" + fagsystemSaksnummer + '}';
     }
 
     private String maskerId(String id) {

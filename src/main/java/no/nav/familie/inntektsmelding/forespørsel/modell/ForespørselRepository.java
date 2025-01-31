@@ -10,6 +10,8 @@ import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 
+import no.nav.familie.inntektsmelding.koder.ForespørselType;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,13 +37,14 @@ public class ForespørselRepository {
 
 
     public UUID lagreForespørsel(LocalDate skjæringstidspunkt, Ytelsetype ytelsetype, String aktørId, String orgnummer, String fagsakSaksnummer,
-                                 LocalDate førsteUttaksdato) {
+                                 LocalDate førsteUttaksdato, ForespørselType forespørselType) {
         var forespørselEntitet = new ForespørselEntitet(orgnummer,
             skjæringstidspunkt,
             new AktørIdEntitet(aktørId),
             ytelsetype,
             fagsakSaksnummer,
-            førsteUttaksdato);
+            førsteUttaksdato,
+            forespørselType);
         LOG.info("ForespørselRepository: lagrer forespørsel entitet: {}", forespørselEntitet);
         entityManager.persist(forespørselEntitet);
         entityManager.flush();

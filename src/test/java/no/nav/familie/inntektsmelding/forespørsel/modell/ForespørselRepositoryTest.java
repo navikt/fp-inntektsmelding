@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDate;
 
+import no.nav.familie.inntektsmelding.koder.ForespørselType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,7 +30,7 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
             "9999999999999",
             "999999999",
             "123",
-            null);
+            null, ForespørselType.BESTILT_AV_FAGSYSTEM);
 
         var hentet = forespørselRepository.hentForespørsel(uuid).orElse(null);
 
@@ -49,7 +50,7 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
             "9999999999999",
             "999999999",
             "123",
-            LocalDate.now());
+            LocalDate.now(), ForespørselType.BESTILT_AV_FAGSYSTEM);
 
         var hentet = forespørselRepository.hentForespørsel(uuid).orElse(null);
 

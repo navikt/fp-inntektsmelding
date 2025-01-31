@@ -10,6 +10,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+import no.nav.familie.inntektsmelding.koder.ForespørselType;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -95,7 +96,7 @@ class ForespørselRestTest {
         var expectedBruker = "1233425324241";
         var expectedSkjæringstidspunkt = LocalDate.now();
         var input = new ForespørselEntitet(expectedOrg, expectedSkjæringstidspunkt, new AktørIdEntitet(expectedBruker), Ytelsetype.FORELDREPENGER,
-            "9876544321", expectedSkjæringstidspunkt.plusDays(10));
+            "9876544321", expectedSkjæringstidspunkt.plusDays(10), ForespørselType.BESTILT_AV_FAGSYSTEM);
 
         var resultat = ForespørselRest.mapTilDto(input);
 

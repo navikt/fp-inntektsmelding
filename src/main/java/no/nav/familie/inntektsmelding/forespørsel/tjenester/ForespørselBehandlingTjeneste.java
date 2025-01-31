@@ -11,6 +11,7 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import no.nav.familie.inntektsmelding.koder.ForespørselType;
 import no.nav.familie.inntektsmelding.typer.dto.NyBeskjedResultat;
 
 import org.slf4j.Logger;
@@ -210,23 +211,17 @@ public class ForespørselBehandlingTjeneste {
 
     public UUID opprettForespørselForArbeidsgiverInitiertIm(Ytelsetype ytelsetype,
                                                             AktørIdEntitet aktørId,
-                                                            SaksnummerDto fagsakSaksnummer,
                                                             OrganisasjonsnummerDto organisasjonsnummer,
-                                                            LocalDate skjæringstidspunkt,
-                                                            LocalDate førsteUttaksdato) {
-        var msg = String.format("Oppretter forespørsel for arbeidsgiverinitiert, orgnr: %s, stp: %s, saksnr: %s, ytelse: %s",
+                                                            LocalDate førsteFraværsdato) {
+        var msg = String.format("Oppretter forespørsel for arbeidsgiverinitiert, orgnr: %s, ytelse: %s",
             organisasjonsnummer,
-            skjæringstidspunkt,
-            fagsakSaksnummer.saksnr(),
             ytelsetype);
         LOG.info(msg);
 
-        var uuid = forespørselTjeneste.opprettForespørsel(skjæringstidspunkt,
-            ytelsetype,
+        var uuid = forespørselTjeneste.opprettForespørselArbeidsgiverinitiert(ytelsetype,
             aktørId,
             organisasjonsnummer,
-            fagsakSaksnummer,
-            førsteUttaksdato);
+            førsteFraværsdato);
 
         var person = personTjeneste.hentPersonInfoFraAktørId(aktørId, ytelsetype);
         var merkelapp = ForespørselTekster.finnMerkelapp(ytelsetype);
@@ -341,16 +336,6 @@ public class ForespørselBehandlingTjeneste {
                     forespoersel.getYtelseType().toString(),
                     forespoersel.getFørsteUttaksdato().orElse(null)))
             .toList();
-    }
-
-    public List<ForespørselEntitet> finnForespørslerForAktørId(AktørIdEntitet aktørIdEntitet, Ytelsetype ytelsetype) {
-        return forespørselTjeneste.finnForespørslerForAktørid(aktørIdEntitet, ytelsetype);
-    }
-
-    public Optional<ForespørselEntitet> finnOpprinneligForespørsel(AktørIdEntitet aktørId, Ytelsetype ytelseType, LocalDate startdato) {
-        return finnForespørslerForAktørId(aktørId, ytelseType).stream()
-            .filter(f -> f.getFørsteUttaksdato().orElse(f.getSkjæringstidspunkt()).isBefore(startdato))
-            .max(Comparator.comparing(f -> f.getFørsteUttaksdato().orElse(f.getSkjæringstidspunkt())));
     }
 
     private void validerStartdato(ForespørselEntitet forespørsel, LocalDate startdato) {
