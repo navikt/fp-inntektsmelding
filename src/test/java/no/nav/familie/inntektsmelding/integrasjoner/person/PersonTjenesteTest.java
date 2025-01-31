@@ -63,6 +63,7 @@ class PersonTjenesteTest {
         pdlPerson.setNavn(List.of(pdlNavn));
         pdlPerson.setTelefonnummer(List.of(pdlTelefonnummer));
         pdlPerson.setFoedselsdato(List.of(pdlFødselsdato));
+        pdlPerson.setKjoenn(List.of());
 
         var kontekst = RequestKontekst.forRequest("11839798115", null, IdentType.EksternBruker, null, null, new HashSet<>());
         when(KontekstHolder.harKontekst()).thenReturn(true);
@@ -75,6 +76,7 @@ class PersonTjenesteTest {
         assertEquals("mellomnavn", person.mellomnavn());
         assertEquals("etternavn", person.etternavn());
         assertEquals("4781549300", person.telefonnummer());
+        assertEquals(PersonInfo.Kjønn.UKJENT, person.kjønn());
     }
 
     @Test

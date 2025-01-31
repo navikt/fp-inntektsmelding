@@ -283,6 +283,7 @@ public class InntektsmeldingTjeneste {
         return Optional.of(new SlåOppArbeidstakerResponseDto(personInfo.fornavn(),
             personInfo.mellomnavn(),
             personInfo.etternavn(),
-            arbeidsforholdDto));
+            arbeidsforholdDto,
+            personInfo.kjønn()));
     }
 }

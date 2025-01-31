@@ -227,6 +227,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             new PersonIdent("12345678910"),
             aktørIdent,
             LocalDate.now(),
+            null,
             null));
         when(arbeidsgiverNotifikasjon.opprettSak(any(), any(), any(), any(), any())).thenReturn(SAK_ID);
 
@@ -408,6 +409,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             new PersonIdent("01019100000"),
             new AktørIdEntitet(AKTØR_ID),
             LocalDate.of(1991, 1, 1).minusYears(30),
+            null,
             null);
 
         when(organisasjonTjeneste.finnOrganisasjon(BRREG_ORGNUMMER)).thenReturn(new Organisasjon("Test A/S", BRREG_ORGNUMMER));
@@ -567,6 +569,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             new PersonIdent("01019100000"),
             new AktørIdEntitet(aktørId),
             LocalDate.of(1991, 1, 1).minusYears(30),
+            null,
             null);
         var sakTittel = ForespørselTekster.lagSaksTittel(personInfo.mapFulltNavn(), personInfo.fødselsdato());
 
