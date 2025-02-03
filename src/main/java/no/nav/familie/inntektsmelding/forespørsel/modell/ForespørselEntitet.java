@@ -67,6 +67,7 @@ public class ForespørselEntitet {
     @Column(name = "fagsystem_saksnummer", updatable = false)
     private String fagsystemSaksnummer;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "forespoersel_type", nullable = false, updatable = false)
     private ForespørselType forespørselType;
 
@@ -88,7 +89,7 @@ public class ForespørselEntitet {
         this.aktørId = aktørId;
         this.ytelseType = ytelseType;
         this.førsteUttaksdato = førsteUttaksdato;
-        this.forespørselType = forespørselType;
+        this.forespørselType = Objects.requireNonNull(forespørselType, "forespørselType");
         if (forespørselType.equals(ForespørselType.BESTILT_AV_FAGSYSTEM)) {
             this.fagsystemSaksnummer = Objects.requireNonNull(fagsystemSaksnummer, "fagsystemSaksnummer");
             this.skjæringstidspunkt = Objects.requireNonNull(skjæringstidspunkt, "skjæringstidspunkt");
