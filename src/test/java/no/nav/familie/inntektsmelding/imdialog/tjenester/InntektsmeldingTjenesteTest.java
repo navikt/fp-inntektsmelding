@@ -14,6 +14,7 @@ import java.util.UUID;
 
 import no.nav.familie.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 
+import no.nav.familie.inntektsmelding.koder.ForespørselType;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -102,7 +103,7 @@ class InntektsmeldingTjenesteTest {
             new AktørIdEntitet("9999999999999"),
             Ytelsetype.FORELDREPENGER,
             "123",
-            null);
+            null, ForespørselType.BESTILT_AV_FAGSYSTEM);
         when(forespørselBehandlingTjeneste.hentForespørsel(uuid)).thenReturn(Optional.of(forespørsel));
         when(organisasjonTjeneste.finnOrganisasjon(forespørsel.getOrganisasjonsnummer())).thenReturn(
             new Organisasjon("Bedriften", forespørsel.getOrganisasjonsnummer()));
@@ -170,7 +171,7 @@ class InntektsmeldingTjenesteTest {
             new AktørIdEntitet("9999999999999"),
             Ytelsetype.FORELDREPENGER,
             "123",
-            LocalDate.now().plusDays(10));
+            LocalDate.now().plusDays(10), ForespørselType.BESTILT_AV_FAGSYSTEM);
         when(forespørselBehandlingTjeneste.hentForespørsel(uuid)).thenReturn(Optional.of(forespørsel));
         when(organisasjonTjeneste.finnOrganisasjon(forespørsel.getOrganisasjonsnummer())).thenReturn(
             new Organisasjon("Bedriften", forespørsel.getOrganisasjonsnummer()));
@@ -217,7 +218,7 @@ class InntektsmeldingTjenesteTest {
             new AktørIdEntitet("9999999999999"),
             Ytelsetype.FORELDREPENGER,
             "123",
-            null);
+            null, ForespørselType.BESTILT_AV_FAGSYSTEM);
         forespørsel.setStatus(ForespørselStatus.UTGÅTT);
         when(forespørselBehandlingTjeneste.hentForespørsel(uuid)).thenReturn(Optional.of(forespørsel));
         var innsendingDto = new SendInntektsmeldingRequestDto(uuid,
@@ -236,30 +237,6 @@ class InntektsmeldingTjenesteTest {
 
         // Assert
         assertThat(ex.getMessage()).contains("Kan ikke motta nye inntektsmeldinger på utgåtte forespørsler");
-    }
-
-    @Test
-    void skal_feile_om_opprinnelig_forespørsel_ikke_finnes() {
-        // Arrange
-        var aktørId = new AktørIdEntitet("9999999999999");
-
-        when(forespørselBehandlingTjeneste.finnOpprinneligForespørsel(aktørId, Ytelsetype.FORELDREPENGER, LocalDate.now())).thenReturn(Optional.empty());
-        var innsendingDto = new SendInntektsmeldingRequestDto(null,
-            new AktørIdDto("9999999999999"),
-            YtelseTypeDto.FORELDREPENGER,
-            new ArbeidsgiverDto("999999999"),
-            new SendInntektsmeldingRequestDto.KontaktpersonRequestDto("Navn", "123"),
-            LocalDate.now(),
-            BigDecimal.valueOf(10000),
-            List.of(),
-            List.of(),
-            List.of());
-
-        // Act
-        var ex = assertThrows(IllegalStateException.class, () -> inntektsmeldingTjeneste.mottaArbeidsgiverInitiertInntektsmelding(innsendingDto));
-
-        // Assert
-        assertThat(ex.getMessage()).contains("Ingen forespørsler funnet for aktørId ved arbeidsgiverintiert innntektsmelding");
     }
 
     @Test
@@ -300,7 +277,7 @@ class InntektsmeldingTjenesteTest {
             aktørId,
             ytelsetype,
             "123",
-            førsteFraværsdag.plusWeeks(1));
+            førsteFraværsdag.plusWeeks(1), ForespørselType.BESTILT_AV_FAGSYSTEM);
         var personInfo = new PersonInfo("Navn", null, "Navnesen", fødselsnummer, aktørId, LocalDate.now(), null, PersonInfo.Kjønn.MANN);
         when(personTjeneste.hentPersonFraIdent(fødselsnummer, ytelsetype)).thenReturn(personInfo);
         when(personTjeneste.hentPersonFraIdent(PersonIdent.fra(INNMELDER_UID), ytelsetype)).thenReturn(
@@ -337,7 +314,7 @@ class InntektsmeldingTjenesteTest {
         var førsteFraværsdag = LocalDate.now();
         var organisasjonsnummer = new OrganisasjonsnummerDto("999999999");
         var aktørId = new AktørIdEntitet("9999999999999");
-        var forespørsel = new ForespørselEntitet("999999999", førsteFraværsdag, aktørId, ytelsetype, "123", førsteFraværsdag);
+        var forespørsel = new ForespørselEntitet("999999999", førsteFraværsdag, aktørId, ytelsetype, "123", førsteFraværsdag, ForespørselType.BESTILT_AV_FAGSYSTEM);
         var personInfo = new PersonInfo("Navn", null, "Navnesen", fødselsnummer, aktørId, LocalDate.now(), null, null);
         when(personTjeneste.hentPersonFraIdent(fødselsnummer, ytelsetype)).thenReturn(personInfo);
         when(personTjeneste.hentPersonInfoFraAktørId(aktørId, ytelsetype)).thenReturn(personInfo);

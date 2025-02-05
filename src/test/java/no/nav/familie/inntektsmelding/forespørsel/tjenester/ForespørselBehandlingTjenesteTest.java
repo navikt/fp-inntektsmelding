@@ -12,6 +12,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+import no.nav.familie.inntektsmelding.koder.ForespørselType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -95,7 +96,8 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
     @Test
     void eksisterende_forespørsel_på_samme_stp_skal_gi_nei() {
-        forespørselRepository.lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, BRREG_ORGNUMMER, SAKSNUMMMER, SKJÆRINGSTIDSPUNKT);
+        forespørselRepository.lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, BRREG_ORGNUMMER, SAKSNUMMMER, SKJÆRINGSTIDSPUNKT,
+            ForespørselType.BESTILT_AV_FAGSYSTEM);
 
         getEntityManager().clear();
 
@@ -235,9 +237,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
         var uuid = forespørselBehandlingTjeneste.opprettForespørselForArbeidsgiverInitiertIm(YTELSETYPE,
             new AktørIdEntitet(AKTØR_ID),
-            saksnummerDto,
             new OrganisasjonsnummerDto(BRREG_ORGNUMMER),
-            SKJÆRINGSTIDSPUNKT,
             FØRSTE_UTTAKSDATO);
 
         var lagret = forespørselRepository.hentForespørsel(uuid).orElseThrow();
@@ -251,7 +251,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
     @Test
     void skal_ferdigstille_forespørsel() {
         var forespørselUuid = forespørselRepository.lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, BRREG_ORGNUMMER, SAKSNUMMMER,
-            SKJÆRINGSTIDSPUNKT);
+            SKJÆRINGSTIDSPUNKT, ForespørselType.BESTILT_AV_FAGSYSTEM);
         forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, SAK_ID);
 
         forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørselUuid,
@@ -269,7 +269,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
     @Test
     void skal_ferdigstille_forespørsel_ulik_stp_og_startdato() {
         var forespørselUuid = forespørselRepository.lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, BRREG_ORGNUMMER, SAKSNUMMMER,
-            FØRSTE_UTTAKSDATO);
+            FØRSTE_UTTAKSDATO, ForespørselType.BESTILT_AV_FAGSYSTEM);
         forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, SAK_ID);
 
         forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørselUuid,
@@ -287,14 +287,14 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
     @Test
     void skal_sette_alle_forespørspørsler_for_sak_til_ferdig() {
         var forespørselUuid = forespørselRepository.lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, BRREG_ORGNUMMER, SAKSNUMMMER,
-            FØRSTE_UTTAKSDATO);
+            FØRSTE_UTTAKSDATO, ForespørselType.BESTILT_AV_FAGSYSTEM);
         forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, SAK_ID);
         var forespørselUuid2 = forespørselRepository.lagreForespørsel(SKJÆRINGSTIDSPUNKT.plusDays(2),
             YTELSETYPE,
             AKTØR_ID,
             BRREG_ORGNUMMER,
             SAKSNUMMMER,
-            FØRSTE_UTTAKSDATO.plusDays(1));
+            FØRSTE_UTTAKSDATO.plusDays(1), ForespørselType.BESTILT_AV_FAGSYSTEM);
         forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid2, "2");
 
         forespørselBehandlingTjeneste.lukkForespørsel(new SaksnummerDto(SAKSNUMMMER), new OrganisasjonsnummerDto(BRREG_ORGNUMMER), null);
@@ -310,14 +310,14 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
     @Test
     void skal_sette_alle_forespørspørsler_for_sak_til_utgått() {
         var forespørselUuid = forespørselRepository.lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, BRREG_ORGNUMMER, SAKSNUMMMER,
-            FØRSTE_UTTAKSDATO);
+            FØRSTE_UTTAKSDATO, ForespørselType.BESTILT_AV_FAGSYSTEM);
         forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, SAK_ID);
         var forespørselUuid2 = forespørselRepository.lagreForespørsel(SKJÆRINGSTIDSPUNKT.plusDays(2),
             YTELSETYPE,
             AKTØR_ID,
             BRREG_ORGNUMMER,
             SAKSNUMMMER,
-            FØRSTE_UTTAKSDATO);
+            FØRSTE_UTTAKSDATO, ForespørselType.BESTILT_AV_FAGSYSTEM);
         forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid2, "2");
 
         forespørselBehandlingTjeneste.settForespørselTilUtgått(new SaksnummerDto(SAKSNUMMMER), null, null);
@@ -333,7 +333,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
     @Test
     void skal_lukke_forespørsel_for_sak_med_gitt_stp() {
         var forespørselUuid = forespørselRepository.lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, BRREG_ORGNUMMER, SAKSNUMMMER,
-            SKJÆRINGSTIDSPUNKT);
+            SKJÆRINGSTIDSPUNKT, ForespørselType.BESTILT_AV_FAGSYSTEM);
         forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, SAK_ID);
 
         var forespørselUuid2 = forespørselRepository.lagreForespørsel(SKJÆRINGSTIDSPUNKT.plusDays(2),
@@ -341,7 +341,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             AKTØR_ID,
             BRREG_ORGNUMMER,
             SAKSNUMMMER,
-            SKJÆRINGSTIDSPUNKT);
+            SKJÆRINGSTIDSPUNKT, ForespørselType.BESTILT_AV_FAGSYSTEM);
         forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, "2");
 
         forespørselBehandlingTjeneste.lukkForespørsel(new SaksnummerDto(SAKSNUMMMER),
@@ -359,7 +359,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
     @Test
     void skal_slette_oppgave_gitt_saksnummer_og_orgnr() {
         var forespørselUuid = forespørselRepository.lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, BRREG_ORGNUMMER, SAKSNUMMMER,
-            SKJÆRINGSTIDSPUNKT);
+            SKJÆRINGSTIDSPUNKT, ForespørselType.BESTILT_AV_FAGSYSTEM);
         forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, SAK_ID);
 
         when(arbeidsgiverNotifikasjon.slettSak(SAK_ID)).thenReturn(SAK_ID);
@@ -376,7 +376,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
     @Test
     void skal_slette_oppgave_gitt_saksnummer() {
         var forespørselUuid = forespørselRepository.lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, BRREG_ORGNUMMER, SAKSNUMMMER,
-            SKJÆRINGSTIDSPUNKT);
+            SKJÆRINGSTIDSPUNKT, ForespørselType.BESTILT_AV_FAGSYSTEM);
         forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, SAK_ID);
 
         when(arbeidsgiverNotifikasjon.slettSak(SAK_ID)).thenReturn(SAK_ID);
@@ -399,7 +399,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             AKTØR_ID,
             BRREG_ORGNUMMER,
             SAKSNUMMMER,
-            SKJÆRINGSTIDSPUNKT);
+            SKJÆRINGSTIDSPUNKT, ForespørselType.BESTILT_AV_FAGSYSTEM);
         forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, SAK_ID);
         var uri = URI.create(String.format("https://arbeidsgiver.intern.dev.nav.no/fp-im-dialog/%s", forespørselUuid.toString()));
 
@@ -444,7 +444,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             AKTØR_ID,
             BRREG_ORGNUMMER,
             SAKSNUMMMER,
-            SKJÆRINGSTIDSPUNKT);
+            SKJÆRINGSTIDSPUNKT, ForespørselType.BESTILT_AV_FAGSYSTEM);
         forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, SAK_ID);
         forespørselRepository.ferdigstillForespørsel(SAK_ID);
 
@@ -455,46 +455,6 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
     }
 
     @Test
-    void skal_finne_siste_opprinnelig_forespørsel_og_før_ny_start_dato_for_aktør() {
-        var forespørselUuid = forespørselRepository.lagreForespørsel(SKJÆRINGSTIDSPUNKT,
-            Ytelsetype.FORELDREPENGER,
-            AKTØR_ID,
-            BRREG_ORGNUMMER,
-            SAKSNUMMMER,
-            FØRSTE_UTTAKSDATO);
-        forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, SAK_ID);
-        forespørselRepository.ferdigstillForespørsel(SAK_ID);
-
-        var forespørselUuid2 = forespørselRepository.lagreForespørsel(SKJÆRINGSTIDSPUNKT.plusMonths(4),
-            Ytelsetype.FORELDREPENGER,
-            AKTØR_ID,
-            BRREG_ORGNUMMER,
-            "SAKSNUMMMER2",
-            FØRSTE_UTTAKSDATO.plusMonths(4));
-        forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid2, SAK_ID_2);
-        forespørselRepository.ferdigstillForespørsel(SAK_ID_2);
-
-        var datoEtterStartDato = LocalDate.now().plusMonths(1);
-        var forespørselUuidEtterStartDato = forespørselRepository.lagreForespørsel(datoEtterStartDato,
-            Ytelsetype.FORELDREPENGER,
-            AKTØR_ID,
-            BRREG_ORGNUMMER,
-            "SAKSNUMMMER3",
-            datoEtterStartDato);
-        forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuidEtterStartDato, "3");
-        forespørselRepository.ferdigstillForespørsel("3");
-
-        var resultat = forespørselBehandlingTjeneste.finnOpprinneligForespørsel(new AktørIdEntitet(AKTØR_ID),
-            Ytelsetype.FORELDREPENGER,
-            LocalDate.now());
-
-        clearHibernateCache();
-
-        assertThat(resultat.map(ForespørselEntitet::getUuid)).isEqualTo(Optional.of(forespørselUuid2));
-    }
-
-
-    @Test
     void skal_returnere_liste_av_inntektsmeldingdto_for_forespørsler() {
 
         var forespørsel1sak1 = new ForespørselEntitet(BRREG_ORGNUMMER,
@@ -502,25 +462,25 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             new AktørIdEntitet(AKTØR_ID),
             Ytelsetype.FORELDREPENGER,
             SAK_ID,
-            LocalDate.of(2025, 1, 1));
+            LocalDate.of(2025, 1, 1), ForespørselType.BESTILT_AV_FAGSYSTEM);
         var forespørsel1sak2 = new ForespørselEntitet(BRREG_ORGNUMMER,
             LocalDate.of(2025, 2, 1),
             new AktørIdEntitet(AKTØR_ID),
             Ytelsetype.FORELDREPENGER,
             SAK_ID_2,
-            LocalDate.of(2025, 2, 1));
+            LocalDate.of(2025, 2, 1), ForespørselType.BESTILT_AV_FAGSYSTEM);
         var forespørsel2sak1 = new ForespørselEntitet(BRREG_ORGNUMMER,
             LocalDate.of(2025, 3, 1),
             new AktørIdEntitet(AKTØR_ID),
             Ytelsetype.FORELDREPENGER,
             SAK_ID,
-            LocalDate.of(2025, 3, 1));
+            LocalDate.of(2025, 3, 1), ForespørselType.BESTILT_AV_FAGSYSTEM);
         var forespørsel2sak2 = new ForespørselEntitet(BRREG_ORGNUMMER,
             LocalDate.of(2025, 4, 1),
             new AktørIdEntitet(AKTØR_ID),
             Ytelsetype.FORELDREPENGER,
             SAK_ID_2,
-            LocalDate.of(2025, 4, 1));
+            LocalDate.of(2025, 4, 1), ForespørselType.BESTILT_AV_FAGSYSTEM);
 
         getEntityManager().persist(forespørsel1sak1);
         getEntityManager().persist(forespørsel1sak2);

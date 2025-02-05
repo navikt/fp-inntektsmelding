@@ -10,6 +10,7 @@ import jakarta.inject.Inject;
 
 import no.nav.familie.inntektsmelding.forespørsel.modell.ForespørselEntitet;
 import no.nav.familie.inntektsmelding.forespørsel.modell.ForespørselRepository;
+import no.nav.familie.inntektsmelding.koder.ForespørselType;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.familie.inntektsmelding.typer.dto.SaksnummerDto;
@@ -35,7 +36,15 @@ public class ForespørselTjeneste {
                                    SaksnummerDto fagsakSaksnummer,
                                    LocalDate førsteUttaksdato) {
         return forespørselRepository.lagreForespørsel(skjæringstidspunkt, ytelseType, brukerAktørId.getAktørId(), orgnr.orgnr(),
-            fagsakSaksnummer.saksnr(), førsteUttaksdato);
+            fagsakSaksnummer.saksnr(), førsteUttaksdato, ForespørselType.BESTILT_AV_FAGSYSTEM);
+    }
+
+    public UUID opprettForespørselArbeidsgiverinitiert(Ytelsetype ytelseType,
+                                   AktørIdEntitet brukerAktørId,
+                                   OrganisasjonsnummerDto orgnr,
+                                   LocalDate førsteUttaksdato) {
+        return forespørselRepository.lagreForespørsel(null, ytelseType, brukerAktørId.getAktørId(), orgnr.orgnr(),
+            null, førsteUttaksdato, ForespørselType.ARBEIDSGIVERINITIERT);
     }
 
     public void setOppgaveId(UUID forespørselUUID, String oppgaveId) {

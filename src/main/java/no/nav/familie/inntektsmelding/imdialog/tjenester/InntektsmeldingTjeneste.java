@@ -34,7 +34,6 @@ import no.nav.familie.inntektsmelding.metrikker.MetrikkerTjeneste;
 import no.nav.familie.inntektsmelding.integrasjoner.aareg.ArbeidstakerTjeneste;
 import no.nav.familie.inntektsmelding.typer.dto.KodeverkMapper;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
-import no.nav.familie.inntektsmelding.typer.dto.SaksnummerDto;
 import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskTjeneste;
@@ -105,15 +104,9 @@ public class InntektsmeldingTjeneste {
         var ytelseType = KodeverkMapper.mapYtelsetype(sendInntektsmeldingRequestDto.ytelse());
         var organisasjonsnummer = new OrganisasjonsnummerDto(sendInntektsmeldingRequestDto.arbeidsgiverIdent().ident());
 
-
-        var opprinneligForespørsel = forespørselBehandlingTjeneste.finnOpprinneligForespørsel(aktørId, ytelseType, sendInntektsmeldingRequestDto.startdato())
-            .orElseThrow(() -> new IllegalStateException("Ingen forespørsler funnet for aktørId ved arbeidsgiverintiert innntektsmelding: " + aktørId));
-
         var forespørselUuid = forespørselBehandlingTjeneste.opprettForespørselForArbeidsgiverInitiertIm(ytelseType,
             aktørId,
-            new SaksnummerDto(opprinneligForespørsel.getFagsystemSaksnummer()),
             organisasjonsnummer,
-            opprinneligForespørsel.getSkjæringstidspunkt(),
             sendInntektsmeldingRequestDto.startdato());
 
         var forespørselEnitet = forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid)
