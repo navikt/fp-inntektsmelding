@@ -3,16 +3,12 @@ package no.nav.familie.inntektsmelding.forespørsel.tjenester;
 import java.net.URI;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-
-import no.nav.familie.inntektsmelding.koder.ForespørselType;
-import no.nav.familie.inntektsmelding.typer.dto.NyBeskjedResultat;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +22,7 @@ import no.nav.familie.inntektsmelding.koder.ForespørselStatus;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.metrikker.MetrikkerTjeneste;
 import no.nav.familie.inntektsmelding.typer.dto.ForespørselResultat;
+import no.nav.familie.inntektsmelding.typer.dto.NyBeskjedResultat;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.familie.inntektsmelding.typer.dto.SaksnummerDto;
 import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
@@ -133,6 +130,10 @@ public class ForespørselBehandlingTjeneste {
 
     public List<ForespørselEntitet> finnForespørsler(AktørIdEntitet aktørId, Ytelsetype ytelsetype, String orgnr) {
         return forespørselTjeneste.finnForespørsler(aktørId, ytelsetype, orgnr);
+    }
+
+    public List<ForespørselEntitet> finnForespørslerForAktørId(AktørIdEntitet aktørId, Ytelsetype ytelsetype) {
+        return forespørselTjeneste.finnForespørslerForAktørid(aktørId, ytelsetype);
     }
 
     public void settForespørselTilUtgått(ForespørselEntitet eksisterendeForespørsel, boolean skalOppdatereArbeidsgiverNotifikasjon) {

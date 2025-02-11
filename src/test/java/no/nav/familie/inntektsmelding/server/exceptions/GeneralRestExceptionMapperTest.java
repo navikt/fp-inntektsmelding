@@ -65,6 +65,22 @@ class GeneralRestExceptionMapperTest {
     }
 
     @Test
+    void skalMappeFunksjonellFeilSakIkkeFUnnet() {
+        var callId = MDCOperations.generateCallId();
+        MDCOperations.putCallId(callId);
+        try (var response = exceptionMapper.toResponse(funksjonellFeilSakIkkeFunnet())) {
+            assertThat(response.getStatus()).isEqualTo(403);
+            assertThat(response.getEntity()).isInstanceOf(FeilDto.class);
+            var feilDto = (FeilDto) response.getEntity();
+
+            assertThat(feilDto.type()).isEqualTo(FeilType.INGEN_SAK_FUNNET);
+            assertThat(feilDto.callId()).isEqualTo(callId);
+            assertThat(feilDto.feilmelding()).isEqualTo("Ingen sak funnet");
+            assertThat(logSniffer.search("Ingen sak funnet feil", Level.WARN)).hasSize(1);
+        }
+    }
+
+    @Test
     void skalMappeVLException() {
         var callId = MDCOperations.generateCallId();
         MDCOperations.putCallId(callId);
@@ -140,6 +156,10 @@ class GeneralRestExceptionMapperTest {
 
     private static ManglerTilgangException manglerTilgangFeil() {
         return new ManglerTilgangException("MANGLER_TILGANG_FEIL", "ManglerTilgangFeilmeldingKode");
+    }
+
+    private static FunksjonellException funksjonellFeilSakIkkeFunnet() {
+        return new FunksjonellException("INGEN_SAK_FUNNET", "en egen funksjonell melding", null);
     }
 
 }

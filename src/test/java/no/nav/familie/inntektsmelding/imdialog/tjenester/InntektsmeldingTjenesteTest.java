@@ -15,6 +15,8 @@ import java.util.UUID;
 import no.nav.familie.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 
 import no.nav.familie.inntektsmelding.koder.ForespørselType;
+import no.nav.vedtak.exception.FunksjonellException;
+
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -263,26 +265,80 @@ class InntektsmeldingTjenesteTest {
         assertThat(response.arbeidsforhold().stream().toList().getFirst().organisasjonsnummer()).isEqualTo(orgnr);
         assertThat(response.kjønn()).isNull();
     }
+    @Test
+    void skal_ikke_få_lov_å_sende_inn_hvis_ingen_eksisterende_forespørsler_for_personen_finnes() {
+        // Arrange
+        var fødselsnummer = new PersonIdent("11111111111");
+        var ytelsetype = Ytelsetype.FORELDREPENGER;
+        var eksForespørselDato = LocalDate.now().minusYears(4);
+        var førsteFraværsdag = LocalDate.now();
+        var organisasjonsnummer = new OrganisasjonsnummerDto("999999999");
+        var aktørId = new AktørIdEntitet("9999999999999");
+        var forespørsel = new ForespørselEntitet("999999998",
+            eksForespørselDato,
+            aktørId,
+            ytelsetype,
+            "123",
+            eksForespørselDato, ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var personInfo = new PersonInfo("Navn", null, "Navnesen", fødselsnummer, aktørId, LocalDate.now(), null, PersonInfo.Kjønn.MANN);
+        when(personTjeneste.hentPersonFraIdent(fødselsnummer, ytelsetype)).thenReturn(personInfo);
+        when(forespørselBehandlingTjeneste.finnForespørslerForAktørId(aktørId, ytelsetype)).thenReturn(List.of(forespørsel));
+
+        var ex = assertThrows(FunksjonellException.class, () -> inntektsmeldingTjeneste.lagArbeidsgiverinitiertDialogDto(fødselsnummer,
+            ytelsetype,
+            førsteFraværsdag,
+            organisasjonsnummer));
+
+        assertThat(ex.getMessage()).contains("INGEN_SAK_FUNNET");
+    }
+
+    @Test
+    void skal_ikke_få_lov_å_sende_inn_hvis_ingen_eksisterende_forespørsler_før_fraværsdato_finnes() {
+        // Arrange
+        var fødselsnummer = new PersonIdent("11111111111");
+        var ytelsetype = Ytelsetype.FORELDREPENGER;
+        var eksForespørselDato = LocalDate.now().plusDays(10);
+        var førsteFraværsdag = LocalDate.now();
+        var organisasjonsnummer = new OrganisasjonsnummerDto("999999999");
+        var aktørId = new AktørIdEntitet("9999999999999");
+        var forespørsel = new ForespørselEntitet("999999998",
+            eksForespørselDato,
+            aktørId,
+            ytelsetype,
+            "123",
+            eksForespørselDato, ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var personInfo = new PersonInfo("Navn", null, "Navnesen", fødselsnummer, aktørId, LocalDate.now(), null, PersonInfo.Kjønn.MANN);
+        when(personTjeneste.hentPersonFraIdent(fødselsnummer, ytelsetype)).thenReturn(personInfo);
+        when(forespørselBehandlingTjeneste.finnForespørslerForAktørId(aktørId, ytelsetype)).thenReturn(List.of(forespørsel));
+
+        var ex = assertThrows(FunksjonellException.class, () -> inntektsmeldingTjeneste.lagArbeidsgiverinitiertDialogDto(fødselsnummer,
+            ytelsetype,
+            førsteFraværsdag,
+            organisasjonsnummer));
+
+        assertThat(ex.getMessage()).contains("INGEN_SAK_FUNNET");
+    }
 
     @Test
     void skal_gi_arbeidsgiverinitiertdto_hvis_ingen_matchende_forespørsler_finnes() {
         // Arrange
         var fødselsnummer = new PersonIdent("11111111111");
         var ytelsetype = Ytelsetype.FORELDREPENGER;
+        var eksForespørselDato = LocalDate.now().minusYears(1);
         var førsteFraværsdag = LocalDate.now();
         var organisasjonsnummer = new OrganisasjonsnummerDto("999999999");
         var aktørId = new AktørIdEntitet("9999999999999");
-        var forespørsel = new ForespørselEntitet("999999999",
-            førsteFraværsdag.plusWeeks(1),
+        var forespørsel = new ForespørselEntitet("999999998",
+            eksForespørselDato,
             aktørId,
             ytelsetype,
             "123",
-            førsteFraværsdag.plusWeeks(1), ForespørselType.BESTILT_AV_FAGSYSTEM);
+            eksForespørselDato, ForespørselType.BESTILT_AV_FAGSYSTEM);
         var personInfo = new PersonInfo("Navn", null, "Navnesen", fødselsnummer, aktørId, LocalDate.now(), null, PersonInfo.Kjønn.MANN);
         when(personTjeneste.hentPersonFraIdent(fødselsnummer, ytelsetype)).thenReturn(personInfo);
         when(personTjeneste.hentPersonFraIdent(PersonIdent.fra(INNMELDER_UID), ytelsetype)).thenReturn(
             new PersonInfo("Ine", null, "Sender", new PersonIdent(INNMELDER_UID), null, LocalDate.now(), "+4711111111", null));
-        when(forespørselBehandlingTjeneste.finnForespørsler(aktørId, ytelsetype, organisasjonsnummer.orgnr())).thenReturn(List.of(forespørsel));
+        when(forespørselBehandlingTjeneste.finnForespørslerForAktørId(aktørId, ytelsetype)).thenReturn(List.of(forespørsel));
         when(organisasjonTjeneste.finnOrganisasjon(organisasjonsnummer.orgnr())).thenReturn(new Organisasjon("Bedriften",
             organisasjonsnummer.orgnr()));
         when(inntektTjeneste.hentInntekt(aktørId,
@@ -312,20 +368,21 @@ class InntektsmeldingTjenesteTest {
         var fødselsnummer = new PersonIdent("11111111111");
         var ytelsetype = Ytelsetype.FORELDREPENGER;
         var førsteFraværsdag = LocalDate.now();
+        var eksFpFørsteUttaksdato = LocalDate.now().minusDays(2);
         var organisasjonsnummer = new OrganisasjonsnummerDto("999999999");
         var aktørId = new AktørIdEntitet("9999999999999");
-        var forespørsel = new ForespørselEntitet("999999999", førsteFraværsdag, aktørId, ytelsetype, "123", førsteFraværsdag, ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var forespørsel = new ForespørselEntitet("999999999", eksFpFørsteUttaksdato, aktørId, ytelsetype, "123", eksFpFørsteUttaksdato, ForespørselType.BESTILT_AV_FAGSYSTEM);
         var personInfo = new PersonInfo("Navn", null, "Navnesen", fødselsnummer, aktørId, LocalDate.now(), null, null);
         when(personTjeneste.hentPersonFraIdent(fødselsnummer, ytelsetype)).thenReturn(personInfo);
         when(personTjeneste.hentPersonInfoFraAktørId(aktørId, ytelsetype)).thenReturn(personInfo);
         when(personTjeneste.hentPersonFraIdent(PersonIdent.fra(INNMELDER_UID), ytelsetype)).thenReturn(
             new PersonInfo("Ine", null, "Sender", new PersonIdent(INNMELDER_UID), null, LocalDate.now(), "+4711111111", PersonInfo.Kjønn.MANN));
-        when(forespørselBehandlingTjeneste.finnForespørsler(aktørId, ytelsetype, organisasjonsnummer.orgnr())).thenReturn(List.of(forespørsel));
+        when(forespørselBehandlingTjeneste.finnForespørslerForAktørId(aktørId, ytelsetype)).thenReturn(List.of(forespørsel));
         when(forespørselBehandlingTjeneste.hentForespørsel(forespørsel.getUuid())).thenReturn(Optional.of(forespørsel));
         when(organisasjonTjeneste.finnOrganisasjon(organisasjonsnummer.orgnr())).thenReturn(new Organisasjon("Bedriften",
             organisasjonsnummer.orgnr()));
         when(inntektTjeneste.hentInntekt(aktørId,
-            førsteFraværsdag,
+            eksFpFørsteUttaksdato,
             LocalDate.now(),
             organisasjonsnummer.orgnr())).thenReturn(new Inntektsopplysninger(BigDecimal.valueOf(52000), organisasjonsnummer.orgnr(), List.of()));
         // Act
@@ -337,7 +394,7 @@ class InntektsmeldingTjenesteTest {
         assertThat(imDialogDto.person().etternavn()).isEqualTo("Navnesen");
         assertThat(imDialogDto.arbeidsgiver().organisasjonNavn()).isEqualTo("Bedriften");
         assertThat(imDialogDto.arbeidsgiver().organisasjonNummer()).isEqualTo(organisasjonsnummer.orgnr());
-        assertThat(imDialogDto.førsteUttaksdato()).isEqualTo(førsteFraværsdag);
+        assertThat(imDialogDto.førsteUttaksdato()).isEqualTo(eksFpFørsteUttaksdato);
         assertThat(imDialogDto.inntektsopplysninger().gjennomsnittLønn()).isEqualByComparingTo(BigDecimal.valueOf(52000));
         assertThat(imDialogDto.forespørselUuid()).isEqualTo(forespørsel.getUuid());
     }
