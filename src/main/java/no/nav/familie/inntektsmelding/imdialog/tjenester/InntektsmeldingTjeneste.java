@@ -1,6 +1,7 @@
 package no.nav.familie.inntektsmelding.imdialog.tjenester;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -10,6 +11,8 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import no.nav.familie.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
+
+import no.nav.vedtak.exception.FunksjonellException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -168,13 +171,25 @@ public class InntektsmeldingTjeneste {
                                                                      OrganisasjonsnummerDto organisasjonsnummer) {
         var personInfo = personTjeneste.hentPersonFraIdent(fødselsnummer, ytelsetype);
 
-        var eksisterendeForepørsler = forespørselBehandlingTjeneste.finnForespørsler(personInfo.aktørId(), ytelsetype, organisasjonsnummer.orgnr());
-        var forespørslerSomMatcherFraværsdag = eksisterendeForepørsler.stream()
-            .filter(f -> førsteFraværsdag.equals(f.getFørsteUttaksdato().orElse(f.getSkjæringstidspunkt()))) // TODO: sjekk for et større intervall etterhvert
+        var eksisterendeForepørslersisteTreÅr = forespørselBehandlingTjeneste.finnForespørslerForAktørId(personInfo.aktørId(), ytelsetype).stream()
+            .filter(eksF-> innnenforIntervallÅr(eksF.getFørsteUttaksdato().orElse(eksF.getSkjæringstidspunkt()), førsteFraværsdag))
             .toList();
 
-        if (!forespørslerSomMatcherFraværsdag.isEmpty()) {
-            var forespørsel = forespørslerSomMatcherFraværsdag.getFirst();
+        if (eksisterendeForepørslersisteTreÅr.isEmpty()) {
+            var tekst = String.format("Du kan ikke sende inn inntektsmelding på %s for denne personen med aktør id %s",  ytelsetype, personInfo.aktørId());
+            throw new FunksjonellException("INGEN_SAK_FUNNET",tekst, null, null);
+        }
+
+        var harForespørselPåOrgnrSisteTreMnd = eksisterendeForepørslersisteTreÅr.stream()
+            .filter(f -> f.getOrganisasjonsnummer().equals(organisasjonsnummer.orgnr()))
+            .filter(f -> innenforIntervall(førsteFraværsdag, f.getFørsteUttaksdato().orElse(f.getSkjæringstidspunkt()))) // TODO: sjekk for et større intervall etterhvert
+            .toList();
+
+        if (!harForespørselPåOrgnrSisteTreMnd.isEmpty()) {
+            var forespørsel = harForespørselPåOrgnrSisteTreMnd.stream()
+                .max(Comparator.comparing(fp -> fp.getFørsteUttaksdato().orElse(fp.getSkjæringstidspunkt())))
+                .orElseThrow( () -> new IllegalStateException("Finner ikke siste forespørsel"));
+
             return lagDialogDto(forespørsel.getUuid());
         }
 
@@ -193,6 +208,20 @@ public class InntektsmeldingTjeneste {
             KodeverkMapper.mapForespørselStatus(ForespørselStatus.UNDER_BEHANDLING),
             førsteFraværsdag
         );
+    }
+
+    private boolean innnenforIntervallÅr(LocalDate førsteUttaksdato, LocalDate førsteFraværsdag) {
+        if (førsteUttaksdato == null) {
+            return false;
+        }
+        return (førsteUttaksdato.isEqual(førsteFraværsdag) || førsteUttaksdato.isBefore(førsteFraværsdag)) && førsteUttaksdato.isAfter(LocalDate.now().minusYears(3));
+    }
+
+    private boolean innenforIntervall(LocalDate førsteFraværsdag, LocalDate førsteUttaksdato) {
+        if (førsteUttaksdato == null) {
+            return false;
+        }
+        return førsteFraværsdag.isAfter(førsteUttaksdato.minusMonths(3)) && førsteFraværsdag.isBefore(førsteUttaksdato.plusMonths(3));
     }
 
     public InntektsmeldingEntitet hentInntektsmelding(long inntektsmeldingId) {
