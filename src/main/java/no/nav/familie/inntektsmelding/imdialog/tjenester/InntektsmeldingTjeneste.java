@@ -10,14 +10,11 @@ import java.util.stream.Collectors;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import no.nav.familie.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
-
-import no.nav.vedtak.exception.FunksjonellException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.nav.familie.inntektsmelding.forespørsel.modell.ForespørselEntitet;
+import no.nav.familie.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 import no.nav.familie.inntektsmelding.forespørsel.tjenester.LukkeÅrsak;
 import no.nav.familie.inntektsmelding.imdialog.modell.InntektsmeldingEntitet;
 import no.nav.familie.inntektsmelding.imdialog.modell.InntektsmeldingRepository;
@@ -26,15 +23,16 @@ import no.nav.familie.inntektsmelding.imdialog.rest.InntektsmeldingResponseDto;
 import no.nav.familie.inntektsmelding.imdialog.rest.SendInntektsmeldingRequestDto;
 import no.nav.familie.inntektsmelding.imdialog.rest.SlåOppArbeidstakerResponseDto;
 import no.nav.familie.inntektsmelding.imdialog.task.SendTilJoarkTask;
+import no.nav.familie.inntektsmelding.integrasjoner.aareg.ArbeidstakerTjeneste;
 import no.nav.familie.inntektsmelding.integrasjoner.dokgen.FpDokgenTjeneste;
 import no.nav.familie.inntektsmelding.integrasjoner.inntektskomponent.InntektTjeneste;
 import no.nav.familie.inntektsmelding.integrasjoner.organisasjon.OrganisasjonTjeneste;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
+import no.nav.familie.inntektsmelding.integrasjoner.person.PersonInfo;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonTjeneste;
 import no.nav.familie.inntektsmelding.koder.ForespørselStatus;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.metrikker.MetrikkerTjeneste;
-import no.nav.familie.inntektsmelding.integrasjoner.aareg.ArbeidstakerTjeneste;
 import no.nav.familie.inntektsmelding.typer.dto.KodeverkMapper;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
@@ -171,18 +169,9 @@ public class InntektsmeldingTjeneste {
                                                                      OrganisasjonsnummerDto organisasjonsnummer) {
         var personInfo = personTjeneste.hentPersonFraIdent(fødselsnummer, ytelsetype);
 
-        var eksisterendeForepørslersisteTreÅr = forespørselBehandlingTjeneste.finnForespørslerForAktørId(personInfo.aktørId(), ytelsetype).stream()
-            .filter(eksF-> innnenforIntervallÅr(eksF.getFørsteUttaksdato().orElse(eksF.getSkjæringstidspunkt()), førsteFraværsdag))
-            .toList();
-
-        if (eksisterendeForepørslersisteTreÅr.isEmpty()) {
-            var tekst = String.format("Du kan ikke sende inn inntektsmelding på %s for denne personen med aktør id %s",  ytelsetype, personInfo.aktørId());
-            throw new FunksjonellException("INGEN_SAK_FUNNET",tekst, null, null);
-        }
-
-        var harForespørselPåOrgnrSisteTreMnd = eksisterendeForepørslersisteTreÅr.stream()
+        var harForespørselPåOrgnrSisteTreMnd = finnForespørslerSisteTreÅr(ytelsetype, førsteFraværsdag, personInfo.aktørId()).stream()
             .filter(f -> f.getOrganisasjonsnummer().equals(organisasjonsnummer.orgnr()))
-            .filter(f -> innenforIntervall(førsteFraværsdag, f.getFørsteUttaksdato().orElse(f.getSkjæringstidspunkt()))) // TODO: sjekk for et større intervall etterhvert
+            .filter(f -> innenforIntervall(førsteFraværsdag, f.getFørsteUttaksdato().orElse(f.getSkjæringstidspunkt())))
             .toList();
 
         if (!harForespørselPåOrgnrSisteTreMnd.isEmpty()) {
@@ -208,6 +197,12 @@ public class InntektsmeldingTjeneste {
             KodeverkMapper.mapForespørselStatus(ForespørselStatus.UNDER_BEHANDLING),
             førsteFraværsdag
         );
+    }
+
+    public List<ForespørselEntitet> finnForespørslerSisteTreÅr(Ytelsetype ytelsetype, LocalDate førsteFraværsdag, AktørIdEntitet aktørId) {
+        return forespørselBehandlingTjeneste.finnForespørslerForAktørId(aktørId, ytelsetype).stream()
+            .filter(eksF -> innnenforIntervallÅr(eksF.getFørsteUttaksdato().orElse(eksF.getSkjæringstidspunkt()), førsteFraværsdag))
+            .toList();
     }
 
     private boolean innnenforIntervallÅr(LocalDate førsteUttaksdato, LocalDate førsteFraværsdag) {
@@ -287,14 +282,8 @@ public class InntektsmeldingTjeneste {
             personInfo.fødselsnummer().getIdent(), personInfo.aktørId().getAktørId());
     }
 
-    public Optional<SlåOppArbeidstakerResponseDto> finnArbeidsforholdForFnr(PersonIdent fødselsnummer, Ytelsetype ytelsetype,
-                                                                            LocalDate førsteFraværsdag) {
-        // TODO Skal vi sjekke noe mtp kode 6/7
-        var personInfo = personTjeneste.hentPersonFraIdent(fødselsnummer, ytelsetype);
-        if (personInfo == null) {
-            return Optional.empty();
-        }
-        var arbeidsforholdBrukerHarTilgangTil = arbeidstakerTjeneste.finnArbeidsforholdInnsenderHarTilgangTil(fødselsnummer, førsteFraværsdag);
+    public Optional<SlåOppArbeidstakerResponseDto> finnArbeidsforholdForFnr(PersonInfo personInfo, LocalDate førsteFraværsdag) {
+        var arbeidsforholdBrukerHarTilgangTil = arbeidstakerTjeneste.finnArbeidsforholdInnsenderHarTilgangTil(personInfo.fødselsnummer(), førsteFraværsdag);
         if (arbeidsforholdBrukerHarTilgangTil.isEmpty()) {
             return Optional.empty();
         }
