@@ -286,7 +286,16 @@ public class InntektsmeldingEntitet {
 
         public InntektsmeldingEntitet build() {
             validerRefusjonsperioder();
+            validerNaturalytelser();
             return kladd;
+        }
+
+        private void validerNaturalytelser() {
+            if (kladd.getBorfalteNaturalYtelser().stream().anyMatch(bn -> bn.getPeriode().getFom().isBefore(kladd.getStartDato()))) {
+                throw new TekniskException("FPINNTEKTSMELDING_NATURALYTELSE_1",
+                    String.format("Det er oppgitt naturalytelser som bortfaller før startdato for inntektsmeldingen, ugyldig tilstand. Oppgitte naturalytelser var %s",
+                        kladd.getBorfalteNaturalYtelser()));
+            }
         }
 
         private void validerRefusjonsperioder() {
