@@ -49,10 +49,10 @@ public class InntektsmeldingEntitet {
     @OneToOne(cascade = CascadeType.ALL, mappedBy = "inntektsmelding")
     private KontaktpersonEntitet kontaktperson;
 
-    @Column(name = "start_dato_permisjon")
+    @Column(name = "start_dato_permisjon", nullable = false)
     private LocalDate startDato;
 
-    @Column(name = "maaned_inntekt")
+    @Column(name = "maaned_inntekt", nullable = false)
     private BigDecimal månedInntekt;
 
     @Column(name = "maaned_refusjon")
@@ -285,6 +285,8 @@ public class InntektsmeldingEntitet {
         }
 
         public InntektsmeldingEntitet build() {
+            Objects.requireNonNull(kladd.startDato, "startdato");
+            Objects.requireNonNull(kladd.månedInntekt, "månedsinntekt");
             validerRefusjonsperioder();
             validerNaturalytelser();
             return kladd;
