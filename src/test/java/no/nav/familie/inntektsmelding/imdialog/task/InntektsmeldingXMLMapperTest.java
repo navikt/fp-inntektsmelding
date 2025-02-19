@@ -97,6 +97,8 @@ class InntektsmeldingXMLMapperTest {
             .medBortfaltNaturalytelser(bortfaltNaturalytelseEntitet)
             .medArbeidsgiverIdent(DUMMY_ARBEIDSGIVER_IDENT)
             .medAktørId(aktørId)
+            .medStartDato(NOW)
+            .medMånedInntekt(BigDecimal.ZERO)
             .medKildesystem(kildesystem)
             .medYtelsetype(Ytelsetype.FORELDREPENGER)
             .build();

@@ -41,7 +41,7 @@ class InntektsmeldingPdfDataMapperTest {
     private static final AktørIdEntitet AKTØRID_SØKER = new AktørIdEntitet("1234567891234");
     private static final BigDecimal INNTEKT = BigDecimal.valueOf(40000);
     private static final LocalDateTime OPPRETTETT_TIDSPUNKT = LocalDateTime.now();
-    private static final LocalDate START_DATO = LocalDate.now();
+    private static final LocalDate START_DATO = LocalDate.of(2024, 5, 1);
     private PersonInfo personInfo;
     private PersonIdent personIdent;
 
