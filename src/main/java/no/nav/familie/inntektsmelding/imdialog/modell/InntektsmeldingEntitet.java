@@ -295,8 +295,8 @@ public class InntektsmeldingEntitet {
         private void validerNaturalytelser() {
             if (kladd.getBorfalteNaturalYtelser().stream().anyMatch(bn -> bn.getPeriode().getFom().isBefore(kladd.getStartDato()))) {
                 throw new TekniskException("FPINNTEKTSMELDING_NATURALYTELSE_1",
-                    String.format("Det er oppgitt naturalytelser som bortfaller før startdato for inntektsmeldingen, ugyldig tilstand. Oppgitte naturalytelser var %s",
-                        kladd.getBorfalteNaturalYtelser()));
+                    String.format("Det er oppgitt naturalytelser som bortfaller før startdato for inntektsmeldingen, ugyldig tilstand. Oppgitte naturalytelser var %s og oppgitt startdato var %s",
+                        kladd.getBorfalteNaturalYtelser(), kladd.getStartDato()));
             }
         }
 
