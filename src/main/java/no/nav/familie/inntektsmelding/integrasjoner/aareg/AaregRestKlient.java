@@ -22,6 +22,9 @@ import no.nav.vedtak.felles.integrasjon.rest.TokenFlow;
 
 import no.nav.vedtak.mapper.json.DefaultJsonMapper;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /*
  * Dokumentasjon https://confluence.adeo.no/display/FEL/AAREG+-+Tjeneste+REST+aareg.api
  * Swagger https://aareg-services-q2.dev.intern.nav.no/swagger-ui/index.html?urls.primaryName=aareg.api.v1#/arbeidstaker/finnArbeidsforholdPrArbeidstaker
@@ -31,8 +34,9 @@ import no.nav.vedtak.mapper.json.DefaultJsonMapper;
 @Dependent
 @RestClientConfig(tokenConfig = TokenFlow.AZUREAD_CC, endpointProperty = "aareg.rs.url",
     endpointDefault = "https://aareg-services.dev-fss-pub.nais.io",
-    scopesProperty = "aareg.scopes", scopesDefault = "api://dev-fss.arbeidsforhold.aareg-services-nais/.default")
+    scopesProperty = "aareg.scopes", scopesDefault = "api://dev-fss.arbeidsforhold.aareg-services-nais/.defavult")
 public class AaregRestKlient {
+    private static final Logger LOG = LoggerFactory.getLogger(AaregRestKlient.class);
 
     private final RestClient restClient; // Setter på consumer-token fra STS
     private final RestConfig restConfig;
@@ -78,9 +82,9 @@ public class AaregRestKlient {
      */
     URI lagUriForForFinnArbeidsforholdForArbeidstaker(LocalDate qfom, LocalDate qtom) {
         return UriBuilder.fromUri(restConfig.endpoint())
-            .path("arbeidstaker/arbeidsforhold")
-            .queryParam("ansettelsesperiodeFom", String.valueOf(qfom))
-            .queryParam("ansettelsesperiodeTom", String.valueOf(qtom))
+            .path("arbeidsforhold")
+            .queryParam("ansettelsesperiodeFom", String.valueOf(LocalDate.of(2025,1,1)))
+            .queryParam("ansettelsesperiodeTom", String.valueOf(LocalDate.of(2025,6,1)))
             .queryParam("regelverk", "A_ORDNINGEN")
             .queryParam("historikk", "true")
             .queryParam("sporingsinformasjon", "false")
