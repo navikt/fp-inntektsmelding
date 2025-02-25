@@ -141,7 +141,7 @@ class AaregRestKlientTest {
         var uri = aaregRestKlient.lagUriForForFinnArbeidsforholdForArbeidstaker(fom, tom);
 
         // Assert
-        assertThat(uri.getPath()).endsWith("arbeidstaker/arbeidsforhold");
+        assertThat(uri.getPath()).endsWith("/arbeidsforhold");
         assertThat(uri.getQuery())
             .contains("ansettelsesperiodeFom=2024-01-01")
             .contains("ansettelsesperiodeTom=2024-03-31")
