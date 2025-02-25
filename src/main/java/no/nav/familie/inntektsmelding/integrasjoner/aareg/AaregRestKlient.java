@@ -30,7 +30,7 @@ import no.nav.vedtak.mapper.json.DefaultJsonMapper;
 @Dependent
 @RestClientConfig(tokenConfig = TokenFlow.AZUREAD_CC, endpointProperty = "aareg.rs.url",
     endpointDefault = "https://aareg-services.dev-fss-pub.nais.io",
-    scopesProperty = "aareg.scopes", scopesDefault = "api://dev-fss.arbeidsforhold.aareg-services-nais/.defavult")
+    scopesProperty = "aareg.scopes", scopesDefault = "api://dev-fss.arbeidsforhold.aareg-services-nais/.default")
 public class AaregRestKlient {
 
     private final RestClient restClient; // Setter på consumer-token fra STS
