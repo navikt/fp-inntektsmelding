@@ -19,11 +19,7 @@ import no.nav.vedtak.felles.integrasjon.rest.RestClientConfig;
 import no.nav.vedtak.felles.integrasjon.rest.RestConfig;
 import no.nav.vedtak.felles.integrasjon.rest.RestRequest;
 import no.nav.vedtak.felles.integrasjon.rest.TokenFlow;
-
 import no.nav.vedtak.mapper.json.DefaultJsonMapper;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /*
  * Dokumentasjon https://confluence.adeo.no/display/FEL/AAREG+-+Tjeneste+REST+aareg.api
@@ -36,7 +32,6 @@ import org.slf4j.LoggerFactory;
     endpointDefault = "https://aareg-services.dev-fss-pub.nais.io",
     scopesProperty = "aareg.scopes", scopesDefault = "api://dev-fss.arbeidsforhold.aareg-services-nais/.defavult")
 public class AaregRestKlient {
-    private static final Logger LOG = LoggerFactory.getLogger(AaregRestKlient.class);
 
     private final RestClient restClient; // Setter på consumer-token fra STS
     private final RestConfig restConfig;
