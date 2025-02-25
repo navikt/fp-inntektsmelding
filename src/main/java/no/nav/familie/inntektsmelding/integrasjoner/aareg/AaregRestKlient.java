@@ -78,8 +78,8 @@ public class AaregRestKlient {
     URI lagUriForForFinnArbeidsforholdForArbeidstaker(LocalDate qfom, LocalDate qtom) {
         return UriBuilder.fromUri(restConfig.endpoint())
             .path("arbeidsforhold")
-            .queryParam("ansettelsesperiodeFom", String.valueOf(LocalDate.of(2025,1,1)))
-            .queryParam("ansettelsesperiodeTom", String.valueOf(LocalDate.of(2025,6,1)))
+            .queryParam("ansettelsesperiodeFom", String.valueOf(qfom))
+            .queryParam("ansettelsesperiodeTom", String.valueOf(qtom))
             .queryParam("regelverk", "A_ORDNINGEN")
             .queryParam("historikk", "true")
             .queryParam("sporingsinformasjon", "false")
