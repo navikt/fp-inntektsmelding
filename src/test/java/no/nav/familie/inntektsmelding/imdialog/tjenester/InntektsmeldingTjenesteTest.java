@@ -12,11 +12,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-import no.nav.familie.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
-
-import no.nav.familie.inntektsmelding.koder.ForespørselType;
-import no.nav.vedtak.exception.FunksjonellException;
-
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,9 +21,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import no.nav.familie.inntektsmelding.forespørsel.modell.ForespørselEntitet;
+import no.nav.familie.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 import no.nav.familie.inntektsmelding.imdialog.modell.InntektsmeldingRepository;
 import no.nav.familie.inntektsmelding.imdialog.rest.InntektsmeldingDialogDto;
 import no.nav.familie.inntektsmelding.imdialog.rest.SendInntektsmeldingRequestDto;
+import no.nav.familie.inntektsmelding.integrasjoner.aareg.Arbeidsforhold;
+import no.nav.familie.inntektsmelding.integrasjoner.aareg.ArbeidstakerTjeneste;
 import no.nav.familie.inntektsmelding.integrasjoner.dokgen.FpDokgenTjeneste;
 import no.nav.familie.inntektsmelding.integrasjoner.inntektskomponent.InntektTjeneste;
 import no.nav.familie.inntektsmelding.integrasjoner.inntektskomponent.Inntektsopplysninger;
@@ -38,9 +36,8 @@ import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonInfo;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonTjeneste;
 import no.nav.familie.inntektsmelding.koder.ForespørselStatus;
+import no.nav.familie.inntektsmelding.koder.ForespørselType;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
-import no.nav.familie.inntektsmelding.integrasjoner.aareg.Arbeidsforhold;
-import no.nav.familie.inntektsmelding.integrasjoner.aareg.ArbeidstakerTjeneste;
 import no.nav.familie.inntektsmelding.typer.dto.AktørIdDto;
 import no.nav.familie.inntektsmelding.typer.dto.ArbeidsgiverDto;
 import no.nav.familie.inntektsmelding.typer.dto.MånedslønnStatus;
@@ -244,17 +241,17 @@ class InntektsmeldingTjenesteTest {
     @Test
     void skal_hente_arbeidsforhold_gitt_fnr() {
         // Arrange
-        var fnr = new PersonIdent("11111111111");
+        var personIdent = new PersonIdent("11111111111");
         var førsteFraværsdag = LocalDate.now();
         var aktørId = new AktørIdEntitet("9999999999999");
-        when(personTjeneste.hentPersonFraIdent(fnr, Ytelsetype.FORELDREPENGER)).thenReturn(
-            new PersonInfo("Navn", null, "Navnesen", new PersonIdent("12121212122"), aktørId, LocalDate.now(), null, null));
+        var personinfo = new PersonInfo("Navn", null, "Navnesen", personIdent, aktørId, LocalDate.now(), null, null);
         var orgnr = "999999999";
-        when(arbeidstakerTjeneste.finnArbeidsforholdInnsenderHarTilgangTil(fnr, førsteFraværsdag)).thenReturn(List.of(new Arbeidsforhold(orgnr,
+
+        when(arbeidstakerTjeneste.finnArbeidsforholdInnsenderHarTilgangTil(personIdent, førsteFraværsdag)).thenReturn(List.of(new Arbeidsforhold(orgnr,
             "ARB-001")));
         when(organisasjonTjeneste.finnOrganisasjon(orgnr)).thenReturn(new Organisasjon("Bedriften", orgnr));
         // Act
-        var response = inntektsmeldingTjeneste.finnArbeidsforholdForFnr(fnr, Ytelsetype.FORELDREPENGER, LocalDate.now()).orElse(null);
+        var response = inntektsmeldingTjeneste.finnArbeidsforholdForFnr(personinfo, LocalDate.now()).orElse(null);
 
         // Assert
         assertThat(response).isNotNull();
@@ -268,38 +265,32 @@ class InntektsmeldingTjenesteTest {
     @Test
     void skal_ikke_få_lov_å_sende_inn_hvis_ingen_eksisterende_forespørsler_for_personen_finnes() {
         // Arrange
-        var fødselsnummer = new PersonIdent("11111111111");
         var ytelsetype = Ytelsetype.FORELDREPENGER;
         var eksForespørselDato = LocalDate.now().minusYears(4);
         var førsteFraværsdag = LocalDate.now();
-        var organisasjonsnummer = new OrganisasjonsnummerDto("999999999");
         var aktørId = new AktørIdEntitet("9999999999999");
+
         var forespørsel = new ForespørselEntitet("999999998",
             eksForespørselDato,
             aktørId,
             ytelsetype,
             "123",
             eksForespørselDato, ForespørselType.BESTILT_AV_FAGSYSTEM);
-        var personInfo = new PersonInfo("Navn", null, "Navnesen", fødselsnummer, aktørId, LocalDate.now(), null, PersonInfo.Kjønn.MANN);
-        when(personTjeneste.hentPersonFraIdent(fødselsnummer, ytelsetype)).thenReturn(personInfo);
+
         when(forespørselBehandlingTjeneste.finnForespørslerForAktørId(aktørId, ytelsetype)).thenReturn(List.of(forespørsel));
 
-        var ex = assertThrows(FunksjonellException.class, () -> inntektsmeldingTjeneste.lagArbeidsgiverinitiertDialogDto(fødselsnummer,
-            ytelsetype,
-            førsteFraværsdag,
-            organisasjonsnummer));
+        // Act
+        var finnesForespørsler = inntektsmeldingTjeneste.finnForespørslerSisteTreÅr(ytelsetype, førsteFraværsdag, aktørId);
 
-        assertThat(ex.getMessage()).contains("INGEN_SAK_FUNNET");
+        assertThat(finnesForespørsler).isEmpty();
     }
 
     @Test
     void skal_ikke_få_lov_å_sende_inn_hvis_ingen_eksisterende_forespørsler_før_fraværsdato_finnes() {
         // Arrange
-        var fødselsnummer = new PersonIdent("11111111111");
         var ytelsetype = Ytelsetype.FORELDREPENGER;
         var eksForespørselDato = LocalDate.now().plusDays(10);
         var førsteFraværsdag = LocalDate.now();
-        var organisasjonsnummer = new OrganisasjonsnummerDto("999999999");
         var aktørId = new AktørIdEntitet("9999999999999");
         var forespørsel = new ForespørselEntitet("999999998",
             eksForespørselDato,
@@ -307,16 +298,12 @@ class InntektsmeldingTjenesteTest {
             ytelsetype,
             "123",
             eksForespørselDato, ForespørselType.BESTILT_AV_FAGSYSTEM);
-        var personInfo = new PersonInfo("Navn", null, "Navnesen", fødselsnummer, aktørId, LocalDate.now(), null, PersonInfo.Kjønn.MANN);
-        when(personTjeneste.hentPersonFraIdent(fødselsnummer, ytelsetype)).thenReturn(personInfo);
+
         when(forespørselBehandlingTjeneste.finnForespørslerForAktørId(aktørId, ytelsetype)).thenReturn(List.of(forespørsel));
 
-        var ex = assertThrows(FunksjonellException.class, () -> inntektsmeldingTjeneste.lagArbeidsgiverinitiertDialogDto(fødselsnummer,
-            ytelsetype,
-            førsteFraværsdag,
-            organisasjonsnummer));
+        var finnesForespørsler = inntektsmeldingTjeneste.finnForespørslerSisteTreÅr(ytelsetype, førsteFraværsdag, aktørId);
 
-        assertThat(ex.getMessage()).contains("INGEN_SAK_FUNNET");
+        assertThat(finnesForespørsler).isEmpty();
     }
 
     @Test
