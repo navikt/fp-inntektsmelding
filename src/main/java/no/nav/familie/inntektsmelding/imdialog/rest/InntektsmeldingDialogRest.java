@@ -16,6 +16,9 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import no.nav.familie.inntektsmelding.imdialog.tjenester.GrunnlagDtoTjeneste;
+import no.nav.familie.inntektsmelding.imdialog.tjenester.InntektsmeldingMapper;
+import no.nav.familie.inntektsmelding.imdialog.tjenester.InntektsmeldingMottakTjeneste;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 
 import org.slf4j.Logger;
@@ -41,6 +44,8 @@ public class InntektsmeldingDialogRest {
     private static final String LAST_NED_PDF = "/last-ned-pdf";
 
     private InntektsmeldingTjeneste inntektsmeldingTjeneste;
+    private GrunnlagDtoTjeneste grunnlagDtoTjeneste;
+    private InntektsmeldingMottakTjeneste inntektsmeldingMottakTjeneste;
     private Tilgang tilgang;
 
     InntektsmeldingDialogRest() {
@@ -48,8 +53,13 @@ public class InntektsmeldingDialogRest {
     }
 
     @Inject
-    public InntektsmeldingDialogRest(InntektsmeldingTjeneste inntektsmeldingTjeneste, Tilgang tilgang) {
+    public InntektsmeldingDialogRest(InntektsmeldingTjeneste inntektsmeldingTjeneste,
+                                     GrunnlagDtoTjeneste grunnlagDtoTjeneste,
+                                     InntektsmeldingMottakTjeneste inntektsmeldingMottakTjeneste,
+                                     Tilgang tilgang) {
         this.inntektsmeldingTjeneste = inntektsmeldingTjeneste;
+        this.grunnlagDtoTjeneste = grunnlagDtoTjeneste;
+        this.inntektsmeldingMottakTjeneste = inntektsmeldingMottakTjeneste;
         this.tilgang = tilgang;
     }
 
@@ -61,7 +71,7 @@ public class InntektsmeldingDialogRest {
         tilgang.sjekkAtArbeidsgiverHarTilgangTilBedrift(forespørselUuid);
 
         LOG.info("Henter forespørsel med uuid {}", forespørselUuid);
-        var dto = inntektsmeldingTjeneste.lagDialogDto(forespørselUuid);
+        var dto = grunnlagDtoTjeneste.lagDialogDto(forespørselUuid);
         return Response.ok(dto).build();
 
     }
@@ -74,7 +84,9 @@ public class InntektsmeldingDialogRest {
         tilgang.sjekkAtArbeidsgiverHarTilgangTilBedrift(forespørselUuid);
 
         LOG.info("Henter inntektsmeldinger for forespørsel {}", forespørselUuid);
-        var dto = inntektsmeldingTjeneste.hentInntektsmeldinger(forespørselUuid);
+        var dto = inntektsmeldingTjeneste.hentInntektsmeldinger(forespørselUuid).stream()
+            .map(im -> InntektsmeldingMapper.mapFraEntitet(im, forespørselUuid))
+            .toList();
         return Response.ok(dto).build();
     }
 
@@ -87,11 +99,11 @@ public class InntektsmeldingDialogRest {
         if (sendInntektsmeldingRequestDto.foresporselUuid() == null) {
             tilgang.sjekkAtArbeidsgiverHarTilgangTilBedrift(new OrganisasjonsnummerDto(sendInntektsmeldingRequestDto.arbeidsgiverIdent().ident()));
             LOG.info("Mottok arbeisgiverinitert inntektsmelding for aktørId {}", sendInntektsmeldingRequestDto.aktorId());
-           return Response.ok(inntektsmeldingTjeneste.mottaArbeidsgiverInitiertInntektsmelding(sendInntektsmeldingRequestDto)).build();
+           return Response.ok(inntektsmeldingMottakTjeneste.mottaArbeidsgiverInitiertInntektsmelding(sendInntektsmeldingRequestDto)).build();
         } else {
             tilgang.sjekkAtArbeidsgiverHarTilgangTilBedrift(sendInntektsmeldingRequestDto.foresporselUuid());
             LOG.info("Mottok inntektsmelding for forespørsel {}", sendInntektsmeldingRequestDto.foresporselUuid());
-            return Response.ok(inntektsmeldingTjeneste.mottaInntektsmelding(sendInntektsmeldingRequestDto)).build();
+            return Response.ok(inntektsmeldingMottakTjeneste.mottaInntektsmelding(sendInntektsmeldingRequestDto)).build();
         }
     }
 
