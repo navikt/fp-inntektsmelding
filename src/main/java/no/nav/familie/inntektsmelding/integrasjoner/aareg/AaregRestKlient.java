@@ -19,7 +19,6 @@ import no.nav.vedtak.felles.integrasjon.rest.RestClientConfig;
 import no.nav.vedtak.felles.integrasjon.rest.RestConfig;
 import no.nav.vedtak.felles.integrasjon.rest.RestRequest;
 import no.nav.vedtak.felles.integrasjon.rest.TokenFlow;
-
 import no.nav.vedtak.mapper.json.DefaultJsonMapper;
 
 /*
@@ -78,7 +77,7 @@ public class AaregRestKlient {
      */
     URI lagUriForForFinnArbeidsforholdForArbeidstaker(LocalDate qfom, LocalDate qtom) {
         return UriBuilder.fromUri(restConfig.endpoint())
-            .path("arbeidstaker/arbeidsforhold")
+            .path("arbeidsforhold")
             .queryParam("ansettelsesperiodeFom", String.valueOf(qfom))
             .queryParam("ansettelsesperiodeTom", String.valueOf(qtom))
             .queryParam("regelverk", "A_ORDNINGEN")
