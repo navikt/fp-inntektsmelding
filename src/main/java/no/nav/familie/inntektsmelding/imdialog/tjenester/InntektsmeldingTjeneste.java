@@ -137,7 +137,9 @@ public class InntektsmeldingTjeneste {
 
     private void opprettTaskForSendTilJoark(Long imId, String fagsystemSaksnummer) {
         var task = ProsessTaskData.forProsessTask(SendTilJoarkTask.class);
-        task.setSaksnummer(fagsystemSaksnummer);
+        if (fagsystemSaksnummer != null) {
+            task.setSaksnummer(fagsystemSaksnummer);
+        }
         task.setProperty(SendTilJoarkTask.KEY_INNTEKTSMELDING_ID, imId.toString());
         prosessTaskTjeneste.lagre(task);
         LOG.info("Opprettet task for oversending til joark");
