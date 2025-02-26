@@ -55,7 +55,7 @@ public class SlettFeilaktigeForespørslerAlleTask implements ProsessTaskHandler 
                 forespørsel.getSkjæringstidspunkt());
             if (!dryRun) {
                 var task = ProsessTaskData.forTaskType(TaskType.forProsessTask(SlettForespørselTask.class));
-                task.setProperty(FORESPØRSEL_UUID, forespørsel.toString());
+                task.setProperty(FORESPØRSEL_UUID, forespørsel.getUuid().toString());
                 prosessTaskTjeneste.lagre(task);
             }
         });
