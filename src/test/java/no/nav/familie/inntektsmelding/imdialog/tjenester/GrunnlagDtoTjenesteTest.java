@@ -89,7 +89,8 @@ class GrunnlagDtoTjenesteTest {
             new AktørIdEntitet("9999999999999"),
             Ytelsetype.FORELDREPENGER,
             "123",
-            null, ForespørselType.BESTILT_AV_FAGSYSTEM);
+            LocalDate.now(),
+            ForespørselType.BESTILT_AV_FAGSYSTEM);
         when(forespørselBehandlingTjeneste.hentForespørsel(uuid)).thenReturn(Optional.of(forespørsel));
         when(organisasjonTjeneste.finnOrganisasjon(forespørsel.getOrganisasjonsnummer())).thenReturn(
             new Organisasjon("Bedriften", forespørsel.getOrganisasjonsnummer()));
