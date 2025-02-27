@@ -36,11 +36,11 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
         var hentet = forespørselRepository.hentForespørsel(uuid).orElse(null);
 
         assertThat(hentet).isNotNull();
-        assertThat(hentet.getSkjæringstidspunkt()).isEqualTo(LocalDate.now());
+        assertThat(hentet.getSkjæringstidspunkt().orElse(null)).isEqualTo(LocalDate.now());
         assertThat(hentet.getOrganisasjonsnummer()).isEqualTo("999999999");
         assertThat(hentet.getAktørId().getAktørId()).isEqualTo("9999999999999");
         assertThat(hentet.getYtelseType()).isEqualTo(Ytelsetype.FORELDREPENGER);
-        assertThat(hentet.getFagsystemSaksnummer()).isEqualTo("123");
+        assertThat(hentet.getFagsystemSaksnummer().orElseThrow()).isEqualTo("123");
         assertThat(hentet.getFørsteUttaksdato()).isEqualTo(LocalDate.now());
 
     }
@@ -57,11 +57,11 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
         var hentet = forespørselRepository.hentForespørsel(uuid).orElse(null);
 
         assertThat(hentet).isNotNull();
-        assertThat(hentet.getSkjæringstidspunkt()).isEqualTo(LocalDate.now());
+        assertThat(hentet.getSkjæringstidspunkt().orElse(null)).isEqualTo(LocalDate.now());
         assertThat(hentet.getOrganisasjonsnummer()).isEqualTo("999999999");
         assertThat(hentet.getAktørId().getAktørId()).isEqualTo("9999999999999");
         assertThat(hentet.getYtelseType()).isEqualTo(Ytelsetype.FORELDREPENGER);
-        assertThat(hentet.getFagsystemSaksnummer()).isEqualTo("123");
+        assertThat(hentet.getFagsystemSaksnummer().orElseThrow()).isEqualTo("123");
         assertThat(hentet.getFørsteUttaksdato()).isEqualTo(LocalDate.now());
     }
 }
