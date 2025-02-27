@@ -53,7 +53,7 @@ public class ForespørselEntitet {
     @Column(name = "skjaeringstidspunkt", updatable = false)
     private LocalDate skjæringstidspunkt;
 
-    @Column(name = "førsteUttaksdato", updatable = false, nullable = false)
+    @Column(name = "forste_uttaksdato", updatable = false, nullable = false)
     private LocalDate førsteUttaksdato;
 
     @Embedded
