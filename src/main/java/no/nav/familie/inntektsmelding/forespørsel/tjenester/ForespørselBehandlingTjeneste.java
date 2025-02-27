@@ -281,7 +281,7 @@ public class ForespørselBehandlingTjeneste {
             var lukketForespørsel = ferdigstillForespørsel(f.getUuid(),
                 f.getAktørId(),
                 new OrganisasjonsnummerDto(f.getOrganisasjonsnummer()),
-                f.getFørsteUttaksdato().orElseGet(f::getSkjæringstidspunkt),
+                f.getFørsteUttaksdato(),
                 LukkeÅrsak.EKSTERN_INNSENDING);
             MetrikkerTjeneste.loggForespørselLukkEkstern(lukketForespørsel);
         });
@@ -335,13 +335,12 @@ public class ForespørselBehandlingTjeneste {
                     forespoersel.getOrganisasjonsnummer(),
                     forespoersel.getAktørId().getAktørId(),
                     forespoersel.getYtelseType().toString(),
-                    forespoersel.getFørsteUttaksdato().orElse(null)))
+                    forespoersel.getFørsteUttaksdato()))
             .toList();
     }
 
     private void validerStartdato(ForespørselEntitet forespørsel, LocalDate startdato) {
-        var datoÅMatcheMot = forespørsel.getFørsteUttaksdato().orElseGet(forespørsel::getSkjæringstidspunkt);
-        if (!datoÅMatcheMot.equals(startdato)) {
+        if (!forespørsel.getFørsteUttaksdato().equals(startdato)) {
             throw new IllegalStateException("Startdato var ikke like");
         }
     }

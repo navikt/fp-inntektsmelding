@@ -77,7 +77,8 @@ class InntektsmeldingMottakTjenesteTest {
             new AktørIdEntitet("9999999999999"),
             Ytelsetype.FORELDREPENGER,
             "123",
-            null, ForespørselType.BESTILT_AV_FAGSYSTEM);
+            LocalDate.now(),
+            ForespørselType.BESTILT_AV_FAGSYSTEM);
         forespørsel.setStatus(ForespørselStatus.UTGÅTT);
         when(forespørselBehandlingTjeneste.hentForespørsel(uuid)).thenReturn(Optional.of(forespørsel));
         var innsendingDto = new SendInntektsmeldingRequestDto(uuid,
