@@ -15,7 +15,7 @@ import jakarta.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import no.nav.familie.inntektsmelding.imdialog.tjenester.InntektsmeldingTjeneste;
+import no.nav.familie.inntektsmelding.imdialog.tjenester.GrunnlagDtoTjeneste;
 import no.nav.familie.inntektsmelding.server.auth.api.AutentisertMedTokenX;
 import no.nav.familie.inntektsmelding.server.auth.api.Tilgangskontrollert;
 import no.nav.foreldrepenger.konfig.Environment;
@@ -32,7 +32,7 @@ public class ArbeidsgiverinitiertDialogRest {
     private static final String HENT_ARBEIDSFORHOLD = "/arbeidsforhold";
     private static final String HENT_OPPLYSNINGER = "/opplysninger";
 
-    private InntektsmeldingTjeneste inntektsmeldingTjeneste;
+    private GrunnlagDtoTjeneste grunnlagDtoTjeneste;
     private boolean erProd = true;
 
     ArbeidsgiverinitiertDialogRest() {
@@ -40,8 +40,8 @@ public class ArbeidsgiverinitiertDialogRest {
     }
 
     @Inject
-    public ArbeidsgiverinitiertDialogRest(InntektsmeldingTjeneste inntektsmeldingTjeneste) {
-        this.inntektsmeldingTjeneste = inntektsmeldingTjeneste;
+    public ArbeidsgiverinitiertDialogRest(GrunnlagDtoTjeneste grunnlagDtoTjeneste) {
+        this.grunnlagDtoTjeneste = grunnlagDtoTjeneste;
         this.erProd = Environment.current().isProd();
     }
 
@@ -54,7 +54,7 @@ public class ArbeidsgiverinitiertDialogRest {
             throw new IllegalStateException("Ugyldig kall på restpunkt som ikke er lansert");
         }
         LOG.info("Henter arbeidsforhold for søker {}", request.fødselsnummer());
-        var dto = inntektsmeldingTjeneste.finnArbeidsforholdForFnr(request.fødselsnummer(), request.ytelseType(), request.førsteFraværsdag());
+        var dto = grunnlagDtoTjeneste.finnArbeidsforholdForFnr(request.fødselsnummer(), request.ytelseType(), request.førsteFraværsdag());
         return dto.map(d ->Response.ok(d).build()).orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
     }
 
@@ -67,7 +67,7 @@ public class ArbeidsgiverinitiertDialogRest {
             throw new IllegalStateException("Ugyldig kall på restpunkt som ikke er lansert");
         }
         LOG.info("Henter opplysninger for søker {}", request.fødselsnummer());
-        var dto = inntektsmeldingTjeneste.lagArbeidsgiverinitiertDialogDto(request.fødselsnummer(), request.ytelseType(), request.førsteFraværsdag(), request.organisasjonsnummer());
+        var dto = grunnlagDtoTjeneste.lagArbeidsgiverinitiertDialogDto(request.fødselsnummer(), request.ytelseType(), request.førsteFraværsdag(), request.organisasjonsnummer());
         return Response.ok(dto).build();
     }
 }
