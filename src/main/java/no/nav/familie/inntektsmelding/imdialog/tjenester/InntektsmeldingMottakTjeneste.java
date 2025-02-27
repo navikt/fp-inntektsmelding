@@ -95,16 +95,13 @@ public class InntektsmeldingMottakTjeneste {
     private Long lagreOgLagJournalførTask(InntektsmeldingEntitet entitet, ForespørselEntitet forespørsel) {
         LOG.info("Lagrer inntektsmelding for forespørsel {}", forespørsel.getUuid());
         var imId = inntektsmeldingRepository.lagreInntektsmelding(entitet);
-        opprettTaskForSendTilJoark(imId, forespørsel.getFagsystemSaksnummer());
+        opprettTaskForSendTilJoark(imId, forespørsel);
         return imId;
     }
 
-    private void opprettTaskForSendTilJoark(Long imId, String fagsystemSaksnummer) {
+    private void opprettTaskForSendTilJoark(Long imId, ForespørselEntitet forespørsel) {
         var task = ProsessTaskData.forProsessTask(SendTilJoarkTask.class);
-        if (fagsystemSaksnummer != null) {
-            task.setSaksnummer(fagsystemSaksnummer);
-        }
-        task.setSaksnummer(fagsystemSaksnummer);
+        forespørsel.getFagsystemSaksnummer().ifPresent(task::setSaksnummer);
         task.setProperty(SendTilJoarkTask.KEY_INNTEKTSMELDING_ID, imId.toString());
         prosessTaskTjeneste.lagre(task);
         LOG.info("Opprettet task for oversending til joark");

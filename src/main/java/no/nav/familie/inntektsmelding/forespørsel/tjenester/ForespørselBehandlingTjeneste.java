@@ -149,7 +149,7 @@ public class ForespørselBehandlingTjeneste {
         var msg = String.format("Setter forespørsel til utgått, orgnr: %s, stp: %s, saksnr: %s, ytelse: %s",
             eksisterendeForespørsel.getOrganisasjonsnummer(),
             eksisterendeForespørsel.getSkjæringstidspunkt(),
-            eksisterendeForespørsel.getFagsystemSaksnummer(),
+            eksisterendeForespørsel.getFagsystemSaksnummer().orElse(null),
             eksisterendeForespørsel.getYtelseType());
         LOG.info(msg);
     }

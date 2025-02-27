@@ -38,13 +38,13 @@ public class SlettForespørselTask implements ProsessTaskHandler {
         var forespørselUuid = Optional.ofNullable(prosessTaskData.getPropertyValue(FORESPØRSEL_UUID)).map(String::valueOf).orElseThrow();
         var forespørsel = forespørselBehandlingTjeneste.hentForespørsel(UUID.fromString(forespørselUuid)).orElseThrow();
 
-        forespørselBehandlingTjeneste.slettForespørsel(new SaksnummerDto(forespørsel.getFagsystemSaksnummer()),
+        forespørselBehandlingTjeneste.slettForespørsel(new SaksnummerDto(forespørsel.getFagsystemSaksnummer().orElseThrow()),
             new OrganisasjonsnummerDto(forespørsel.getOrganisasjonsnummer()),
             forespørsel.getSkjæringstidspunkt());
         LOG.info("FEILAKTIGE_FORESPØRSLER: Forespørsel {} med oppgaveid {} for saksnummer {} med orgnummer {} og skjæringstidspunkt {} er slettet",
             forespørsel.getUuid(),
             Optional.ofNullable(forespørsel.getOppgaveId()),
-            forespørsel.getFagsystemSaksnummer(),
+            forespørsel.getFagsystemSaksnummer().orElse(null),
             forespørsel.getOrganisasjonsnummer(),
             forespørsel.getFørsteUttaksdato());
     }

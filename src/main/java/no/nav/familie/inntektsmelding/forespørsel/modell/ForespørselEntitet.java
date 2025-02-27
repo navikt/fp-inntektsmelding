@@ -153,8 +153,8 @@ public class ForespørselEntitet {
         return ytelseType;
     }
 
-    public String getFagsystemSaksnummer() {
-        return fagsystemSaksnummer;
+    public Optional<String> getFagsystemSaksnummer() {
+        return Optional.ofNullable(fagsystemSaksnummer);
     }
 
     public LocalDateTime getOpprettetTidspunkt() {
