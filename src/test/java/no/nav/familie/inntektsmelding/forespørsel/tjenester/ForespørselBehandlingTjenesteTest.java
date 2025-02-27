@@ -133,7 +133,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         var fpEntitet = forespørselBehandlingTjeneste.ferdigstillForespørsel(lagret.getUuid(),
             lagret.getAktørId(),
             new OrganisasjonsnummerDto(lagret.getOrganisasjonsnummer()),
-            lagret.getFørsteUttaksdato().orElse(lagret.getSkjæringstidspunkt()),
+            lagret.getFørsteUttaksdato(),
             LukkeÅrsak.EKSTERN_INNSENDING);
 
         assertThat(fpEntitet.getStatus()).isEqualTo(ForespørselStatus.FERDIG);
@@ -167,7 +167,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         var fpEntitet = forespørselBehandlingTjeneste.ferdigstillForespørsel(lagret.getUuid(),
             lagret.getAktørId(),
             new OrganisasjonsnummerDto(lagret.getOrganisasjonsnummer()),
-            lagret.getFørsteUttaksdato().orElse(lagret.getSkjæringstidspunkt()),
+            lagret.getFørsteUttaksdato(),
             LukkeÅrsak.EKSTERN_INNSENDING);
 
         assertThat(fpEntitet.getStatus()).isEqualTo(ForespørselStatus.FERDIG);
@@ -200,7 +200,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         var fpEntitet = forespørselBehandlingTjeneste.ferdigstillForespørsel(lagret.getUuid(),
             lagret.getAktørId(),
             new OrganisasjonsnummerDto(lagret.getOrganisasjonsnummer()),
-            lagret.getFørsteUttaksdato().orElse(lagret.getSkjæringstidspunkt()),
+            lagret.getFørsteUttaksdato(),
             LukkeÅrsak.ORDINÆR_INNSENDING);
 
         assertThat(fpEntitet.getStatus()).isEqualTo(ForespørselStatus.FERDIG);
@@ -233,8 +233,6 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             null));
         when(arbeidsgiverNotifikasjon.opprettSak(any(), any(), any(), any(), any())).thenReturn(SAK_ID);
 
-        var saksnummerDto = new SaksnummerDto(SAKSNUMMMER);
-
         var uuid = forespørselBehandlingTjeneste.opprettForespørselForArbeidsgiverInitiertIm(YTELSETYPE,
             new AktørIdEntitet(AKTØR_ID),
             new OrganisasjonsnummerDto(BRREG_ORGNUMMER),
@@ -245,7 +243,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         clearHibernateCache();
         assertThat(lagret.getStatus()).isEqualTo(ForespørselStatus.UNDER_BEHANDLING);
         assertThat(lagret.getOppgaveId()).isEmpty();
-        assertThat(lagret.getFørsteUttaksdato().orElse(null)).isEqualTo(FØRSTE_UTTAKSDATO);
+        assertThat(lagret.getFørsteUttaksdato()).isEqualTo(FØRSTE_UTTAKSDATO);
     }
 
     @Test

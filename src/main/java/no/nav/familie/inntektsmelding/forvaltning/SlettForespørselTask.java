@@ -46,7 +46,7 @@ public class SlettForespørselTask implements ProsessTaskHandler {
             Optional.ofNullable(forespørsel.getOppgaveId()),
             forespørsel.getFagsystemSaksnummer(),
             forespørsel.getOrganisasjonsnummer(),
-            forespørsel.getFørsteUttaksdato().orElse(forespørsel.getSkjæringstidspunkt()));
+            forespørsel.getFørsteUttaksdato());
     }
 }
 

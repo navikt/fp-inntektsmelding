@@ -53,7 +53,7 @@ public class ForespørselEntitet {
     @Column(name = "skjaeringstidspunkt", updatable = false)
     private LocalDate skjæringstidspunkt;
 
-    @Column(name = "forste_uttaksdato", updatable = false)
+    @Column(name = "førsteUttaksdato", updatable = false, nullable = false)
     private LocalDate førsteUttaksdato;
 
     @Embedded
@@ -85,10 +85,10 @@ public class ForespørselEntitet {
                               LocalDate førsteUttaksdato,
                               ForespørselType forespørselType) {
         this.uuid = UUID.randomUUID();
-        this.organisasjonsnummer = organisasjonsnummer;
-        this.aktørId = aktørId;
-        this.ytelseType = ytelseType;
-        this.førsteUttaksdato = førsteUttaksdato;
+        this.organisasjonsnummer = Objects.requireNonNull(organisasjonsnummer, "organisasjonsnummer");
+        this.aktørId = Objects.requireNonNull(aktørId, "aktørId");
+        this.ytelseType = Objects.requireNonNull(ytelseType, "ytelseType");
+        this.førsteUttaksdato = Objects.requireNonNull(førsteUttaksdato, "førsteUttaksdato");;
         this.forespørselType = Objects.requireNonNull(forespørselType, "forespørselType");
         if (forespørselType.equals(ForespørselType.BESTILT_AV_FAGSYSTEM)) {
             this.fagsystemSaksnummer = Objects.requireNonNull(fagsystemSaksnummer, "fagsystemSaksnummer");
@@ -161,8 +161,8 @@ public class ForespørselEntitet {
         return opprettetTidspunkt;
     }
 
-    public Optional<LocalDate> getFørsteUttaksdato() {
-        return Optional.ofNullable(førsteUttaksdato);
+    public LocalDate getFørsteUttaksdato() {
+        return førsteUttaksdato;
     }
 
     public ForespørselType getForespørselType() {

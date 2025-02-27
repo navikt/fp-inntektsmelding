@@ -6,9 +6,6 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import no.nav.familie.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 import no.nav.familie.inntektsmelding.imdialog.modell.InntektsmeldingEntitet;
 import no.nav.familie.inntektsmelding.imdialog.modell.InntektsmeldingRepository;
@@ -16,7 +13,6 @@ import no.nav.familie.inntektsmelding.integrasjoner.dokgen.FpDokgenTjeneste;
 
 @ApplicationScoped
 public class InntektsmeldingTjeneste {
-    private static final Logger LOG = LoggerFactory.getLogger(InntektsmeldingTjeneste.class);
     private ForespørselBehandlingTjeneste forespørselBehandlingTjeneste;
     private InntektsmeldingRepository inntektsmeldingRepository;
     private FpDokgenTjeneste fpDokgenTjeneste;
@@ -44,7 +40,7 @@ public class InntektsmeldingTjeneste {
 
         return inntektsmeldingRepository.hentInntektsmeldinger(forespørsel.getAktørId(),
             forespørsel.getOrganisasjonsnummer(),
-            forespørsel.getFørsteUttaksdato().orElseGet(forespørsel::getSkjæringstidspunkt),
+            forespørsel.getFørsteUttaksdato(),
             forespørsel.getYtelseType());
     }
 

@@ -9,6 +9,8 @@ import java.util.stream.Collectors;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import no.nav.familie.inntektsmelding.forespørsel.modell.ForespørselEntitet;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,6 +41,7 @@ public class GrunnlagDtoTjeneste {
     private ArbeidstakerTjeneste arbeidstakerTjeneste;
 
     GrunnlagDtoTjeneste() {
+        // CDI
     }
 
     @Inject
@@ -73,7 +76,7 @@ public class GrunnlagDtoTjeneste {
             KodeverkMapper.mapYtelsetype(forespørsel.getYtelseType()),
             forespørsel.getUuid(),
             KodeverkMapper.mapForespørselStatus(forespørsel.getStatus()),
-            forespørsel.getFørsteUttaksdato().orElseGet(forespørsel::getSkjæringstidspunkt));
+            forespørsel.getFørsteUttaksdato());
     }
 
     public InntektsmeldingDialogDto lagArbeidsgiverinitiertDialogDto(PersonIdent fødselsnummer,
@@ -83,7 +86,7 @@ public class GrunnlagDtoTjeneste {
         var personInfo = personTjeneste.hentPersonFraIdent(fødselsnummer, ytelsetype);
 
         var eksisterendeForepørslersisteTreÅr = forespørselBehandlingTjeneste.finnForespørslerForAktørId(personInfo.aktørId(), ytelsetype).stream()
-            .filter(eksF-> innnenforIntervallÅr(eksF.getFørsteUttaksdato().orElse(eksF.getSkjæringstidspunkt()), førsteFraværsdag))
+            .filter(eksF-> innnenforIntervallÅr(eksF.getFørsteUttaksdato(), førsteFraværsdag))
             .toList();
 
         if (eksisterendeForepørslersisteTreÅr.isEmpty()) {
@@ -93,12 +96,12 @@ public class GrunnlagDtoTjeneste {
 
         var harForespørselPåOrgnrSisteTreMnd = eksisterendeForepørslersisteTreÅr.stream()
             .filter(f -> f.getOrganisasjonsnummer().equals(organisasjonsnummer.orgnr()))
-            .filter(f -> innenforIntervall(førsteFraværsdag, f.getFørsteUttaksdato().orElse(f.getSkjæringstidspunkt()))) // TODO: sjekk for et større intervall etterhvert
+            .filter(f -> innenforIntervall(førsteFraværsdag, f.getFørsteUttaksdato())) // TODO: sjekk for et større intervall etterhvert
             .toList();
 
         if (!harForespørselPåOrgnrSisteTreMnd.isEmpty()) {
             var forespørsel = harForespørselPåOrgnrSisteTreMnd.stream()
-                .max(Comparator.comparing(fp -> fp.getFørsteUttaksdato().orElse(fp.getSkjæringstidspunkt())))
+                .max(Comparator.comparing(ForespørselEntitet::getFørsteUttaksdato))
                 .orElseThrow( () -> new IllegalStateException("Finner ikke siste forespørsel"));
 
             return lagDialogDto(forespørsel.getUuid());
