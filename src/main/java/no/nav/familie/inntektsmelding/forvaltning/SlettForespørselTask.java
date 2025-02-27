@@ -45,9 +45,9 @@ public class SlettForespørselTask implements ProsessTaskHandler {
         LOG.info("FEILAKTIGE_FORESPØRSLER: Forespørsel {} med oppgaveid {} for saksnummer {} med orgnummer {} og skjæringstidspunkt {} er slettet",
             forespørsel.getUuid(),
             Optional.ofNullable(forespørsel.getOppgaveId()),
-            stp,
+            forespørsel.getFagsystemSaksnummer().orElse(null),
             forespørsel.getOrganisasjonsnummer(),
-            forespørsel.getFørsteUttaksdato());
+            stp);
     }
 }
 
