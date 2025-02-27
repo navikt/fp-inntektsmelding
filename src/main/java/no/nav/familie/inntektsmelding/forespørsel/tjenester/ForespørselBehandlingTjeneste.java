@@ -95,7 +95,7 @@ public class ForespørselBehandlingTjeneste {
         //Vi sjekker kun mot FERDIGE forespørsler da fpsak allerede har lukket forespørsler som er UNDER_BEHANDLING
         forespørselTjeneste.finnForespørslerForFagsak(fagsakSaksnummer).stream()
             .filter(forespørselEntitet -> organisasjonsnummerFraRequest.orgnr().equals(forespørselEntitet.getOrganisasjonsnummer()))
-            .filter(forespørselEntitet -> !skjæringstidspunktFraRequest.equals(forespørselEntitet.getSkjæringstidspunkt()))
+            .filter(forespørselEntitet -> !skjæringstidspunktFraRequest.equals(forespørselEntitet.getSkjæringstidspunkt().orElse(null)))
             .filter(forespørselEntitet -> ForespørselStatus.FERDIG.equals(forespørselEntitet.getStatus()))
             .forEach(forespørselEntitet -> settForespørselTilUtgått(forespørselEntitet, false));
     }
