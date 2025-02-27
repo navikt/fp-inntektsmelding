@@ -491,22 +491,22 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
         assertThat(inntektsmeldingForespørselDtos).hasSize(2);
         var dto1 = inntektsmeldingForespørselDtos.stream()
-            .filter(forespørsel -> forespørsel.skjæringstidspunkt().equals(forespørsel1sak1.getSkjæringstidspunkt()))
+            .filter(forespørsel -> forespørsel.skjæringstidspunkt().equals(forespørsel1sak1.getSkjæringstidspunkt().orElse(null)))
             .findAny()
-            .get();
+            .orElseThrow();
         var dto2 = inntektsmeldingForespørselDtos.stream()
-            .filter(forespørsel -> forespørsel.skjæringstidspunkt().equals(forespørsel2sak1.getSkjæringstidspunkt()))
+            .filter(forespørsel -> forespørsel.skjæringstidspunkt().equals(forespørsel2sak1.getSkjæringstidspunkt().orElse(null)))
             .findAny()
-            .get();
+            .orElseThrow();
 
         assertThat(dto1.aktørid()).isEqualTo(forespørsel1sak1.getAktørId().getAktørId());
-        assertThat(dto1.skjæringstidspunkt()).isEqualTo(forespørsel1sak1.getSkjæringstidspunkt());
+        assertThat(dto1.skjæringstidspunkt()).isEqualTo(forespørsel1sak1.getSkjæringstidspunkt().orElse(null));
         assertThat(dto1.ytelsetype()).isEqualTo(forespørsel1sak1.getYtelseType().toString());
         assertThat(dto1.uuid()).isEqualTo(forespørsel1sak1.getUuid());
         assertThat(dto1.arbeidsgiverident()).isEqualTo(forespørsel1sak1.getOrganisasjonsnummer());
 
         assertThat(dto2.aktørid()).isEqualTo(forespørsel2sak1.getAktørId().getAktørId());
-        assertThat(dto2.skjæringstidspunkt()).isEqualTo(forespørsel2sak1.getSkjæringstidspunkt());
+        assertThat(dto2.skjæringstidspunkt()).isEqualTo(forespørsel2sak1.getSkjæringstidspunkt().orElse(null));
         assertThat(dto2.ytelsetype()).isEqualTo(forespørsel2sak1.getYtelseType().toString());
         assertThat(dto2.uuid()).isEqualTo(forespørsel2sak1.getUuid());
         assertThat(dto2.arbeidsgiverident()).isEqualTo(forespørsel2sak1.getOrganisasjonsnummer());

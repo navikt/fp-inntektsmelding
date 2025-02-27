@@ -40,7 +40,7 @@ public class SlettForespørselTask implements ProsessTaskHandler {
 
         forespørselBehandlingTjeneste.slettForespørsel(new SaksnummerDto(forespørsel.getFagsystemSaksnummer().orElseThrow()),
             new OrganisasjonsnummerDto(forespørsel.getOrganisasjonsnummer()),
-            forespørsel.getSkjæringstidspunkt());
+            forespørsel.getSkjæringstidspunkt().orElseThrow());
         LOG.info("FEILAKTIGE_FORESPØRSLER: Forespørsel {} med oppgaveid {} for saksnummer {} med orgnummer {} og skjæringstidspunkt {} er slettet",
             forespørsel.getUuid(),
             Optional.ofNullable(forespørsel.getOppgaveId()),

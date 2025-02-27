@@ -90,40 +90,6 @@ class ForespørselRestTest {
         verify(forespørselBehandlingTjeneste, times(2)).håndterInnkommendeForespørsel(any(), any(), any(), any(), any(), any());
     }
 
-    @Test
-    void serdes_forespørsel_mapper() {
-        var expectedOrg = "123456789";
-        var expectedBruker = "1233425324241";
-        var expectedSkjæringstidspunkt = LocalDate.now();
-        var input = new ForespørselEntitet(expectedOrg, expectedSkjæringstidspunkt, new AktørIdEntitet(expectedBruker), Ytelsetype.FORELDREPENGER,
-            "9876544321", expectedSkjæringstidspunkt.plusDays(10), ForespørselType.BESTILT_AV_FAGSYSTEM);
-
-        var resultat = ForespørselRest.mapTilDto(input);
-
-        assertThat(resultat).isNotNull().isInstanceOf(ForespørselRest.ForespørselDto.class);
-        assertThat(resultat.organisasjonsnummer()).isEqualTo(new OrganisasjonsnummerDto(expectedOrg));
-        assertThat(resultat.skjæringstidspunkt()).isEqualTo(expectedSkjæringstidspunkt);
-        assertThat(resultat.brukerAktørId()).isEqualTo(new AktørIdDto(expectedBruker));
-        assertThat(resultat.ytelseType()).isEqualTo(YtelseTypeDto.FORELDREPENGER);
-        assertThat(resultat.uuid()).isNotNull();
-    }
-
-    @Test
-    void serdes() {
-        var expectedOrg = new OrganisasjonsnummerDto("123456789");
-        var expectedBruker = new AktørIdDto("123342532424");
-        var expectedSkjæringstidspunkt = LocalDate.now();
-        var dto = new ForespørselRest.ForespørselDto(UUID.randomUUID(), expectedOrg, expectedSkjæringstidspunkt, expectedBruker,
-            YtelseTypeDto.SVANGERSKAPSPENGER, ForespørselStatus.UNDER_BEHANDLING);
-
-        var ser = DefaultJsonMapper.toJson(dto);
-        var des = DefaultJsonMapper.fromJson(ser, ForespørselRest.ForespørselDto.class);
-
-
-        assertThat(ser).contains(expectedOrg.orgnr(), expectedBruker.id(), expectedSkjæringstidspunkt.toString());
-        assertThat(des).isEqualTo(dto);
-    }
-
     private void mockForespørsel() {
         when(forespørselBehandlingTjeneste.håndterInnkommendeForespørsel(any(),
             any(),

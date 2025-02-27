@@ -141,8 +141,8 @@ public class ForespørselEntitet {
         return organisasjonsnummer;
     }
 
-    public LocalDate getSkjæringstidspunkt() {
-        return skjæringstidspunkt;
+    public Optional<LocalDate> getSkjæringstidspunkt() {
+        return Optional.ofNullable(skjæringstidspunkt);
     }
 
     public AktørIdEntitet getAktørId() {
@@ -167,6 +167,10 @@ public class ForespørselEntitet {
 
     public ForespørselType getForespørselType() {
         return forespørselType;
+    }
+
+    public boolean erArbeidsgiverInitiert() {
+        return ForespørselType.ARBEIDSGIVERINITIERT.equals(forespørselType);
     }
 
     @Override

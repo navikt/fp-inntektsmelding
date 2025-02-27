@@ -52,7 +52,7 @@ public class SlettFeilaktigeForespørslerAlleTask implements ProsessTaskHandler 
                 Optional.ofNullable(forespørsel.getOppgaveId()),
                 forespørsel.getFagsystemSaksnummer().orElse(null),
                 forespørsel.getOrganisasjonsnummer(),
-                forespørsel.getSkjæringstidspunkt());
+                forespørsel.getSkjæringstidspunkt().orElse(null));
             if (dryRun.equals(Boolean.FALSE)) {
                 var task = ProsessTaskData.forTaskType(TaskType.forProsessTask(SlettForespørselTask.class));
                 task.setProperty(FORESPØRSEL_UUID, forespørsel.getUuid().toString());
