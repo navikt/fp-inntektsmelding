@@ -64,15 +64,16 @@ public class GrunnlagDtoTjeneste {
         var personDto = lagPersonDto(forespørsel.getAktørId(), forespørsel.getYtelseType());
         var organisasjonDto = lagOrganisasjonDto(forespørsel.getOrganisasjonsnummer());
         var innmelderDto = lagInnmelderDto(forespørsel.getYtelseType());
+        var datoForInntekter = forespørsel.erArbeidsgiverInitiert() ? forespørsel.getFørsteUttaksdato() : forespørsel.getSkjæringstidspunkt().orElseThrow();
         var inntektDtoer = lagInntekterDto(forespørsel.getUuid(),
             forespørsel.getAktørId(),
-            forespørsel.getSkjæringstidspunkt(),
+            datoForInntekter,
             forespørsel.getOrganisasjonsnummer());
         return new InntektsmeldingDialogDto(personDto,
             organisasjonDto,
             innmelderDto,
             inntektDtoer,
-            forespørsel.getSkjæringstidspunkt(),
+            datoForInntekter,
             KodeverkMapper.mapYtelsetype(forespørsel.getYtelseType()),
             forespørsel.getUuid(),
             KodeverkMapper.mapForespørselStatus(forespørsel.getStatus()),
@@ -103,7 +104,6 @@ public class GrunnlagDtoTjeneste {
             var forespørsel = harForespørselPåOrgnrSisteTreMnd.stream()
                 .max(Comparator.comparing(ForespørselEntitet::getFørsteUttaksdato))
                 .orElseThrow( () -> new IllegalStateException("Finner ikke siste forespørsel"));
-
             return lagDialogDto(forespørsel.getUuid());
         }
 
@@ -191,6 +191,7 @@ public class GrunnlagDtoTjeneste {
         if (arbeidsforholdBrukerHarTilgangTil.isEmpty()) {
             return Optional.empty();
         }
+
         var arbeidsforholdDto = arbeidsforholdBrukerHarTilgangTil.stream()
             .map(a -> new SlåOppArbeidstakerResponseDto.ArbeidsforholdDto(organisasjonTjeneste.finnOrganisasjon(a.organisasjonsnummer()).navn(),
                 a.organisasjonsnummer()))

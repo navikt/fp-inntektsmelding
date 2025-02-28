@@ -95,7 +95,7 @@ public class ForespørselBehandlingTjeneste {
         //Vi sjekker kun mot FERDIGE forespørsler da fpsak allerede har lukket forespørsler som er UNDER_BEHANDLING
         forespørselTjeneste.finnForespørslerForFagsak(fagsakSaksnummer).stream()
             .filter(forespørselEntitet -> organisasjonsnummerFraRequest.orgnr().equals(forespørselEntitet.getOrganisasjonsnummer()))
-            .filter(forespørselEntitet -> !skjæringstidspunktFraRequest.equals(forespørselEntitet.getSkjæringstidspunkt()))
+            .filter(forespørselEntitet -> !skjæringstidspunktFraRequest.equals(forespørselEntitet.getSkjæringstidspunkt().orElse(null)))
             .filter(forespørselEntitet -> ForespørselStatus.FERDIG.equals(forespørselEntitet.getStatus()))
             .forEach(forespørselEntitet -> settForespørselTilUtgått(forespørselEntitet, false));
     }
@@ -148,8 +148,8 @@ public class ForespørselBehandlingTjeneste {
 
         var msg = String.format("Setter forespørsel til utgått, orgnr: %s, stp: %s, saksnr: %s, ytelse: %s",
             eksisterendeForespørsel.getOrganisasjonsnummer(),
-            eksisterendeForespørsel.getSkjæringstidspunkt(),
-            eksisterendeForespørsel.getFagsystemSaksnummer(),
+            eksisterendeForespørsel.getSkjæringstidspunkt().orElse(null),
+            eksisterendeForespørsel.getFagsystemSaksnummer().orElse(null),
             eksisterendeForespørsel.getYtelseType());
         LOG.info(msg);
     }
@@ -249,7 +249,7 @@ public class ForespørselBehandlingTjeneste {
 
         var msg = String.format("Oppretter ny beskjed med ekstern varsling, orgnr: %s, stp: %s, saksnr: %s, ytelse: %s",
             organisasjonsnummer,
-            forespørsel.getSkjæringstidspunkt(),
+            forespørsel.getSkjæringstidspunkt().orElse(null),
             fagsakSaksnummer.saksnr(),
             forespørsel.getYtelseType());
         LOG.info(msg);
@@ -298,22 +298,13 @@ public class ForespørselBehandlingTjeneste {
                                                                    LocalDate skjæringstidspunkt) {
         return forespørselTjeneste.finnÅpneForespørslerForFagsak(fagsakSaksnummer).stream()
             .filter(f -> orgnummerDto == null || orgnummerDto.orgnr().equals(f.getOrganisasjonsnummer()))
-            .filter(f -> skjæringstidspunkt == null || skjæringstidspunkt.equals(f.getSkjæringstidspunkt()))
-            .toList();
-    }
-
-    public List<ForespørselEntitet> hentForespørslerForFagsak(SaksnummerDto fagsakSaksnummer,
-                                                              OrganisasjonsnummerDto orgnummerDto,
-                                                              LocalDate skjæringstidspunkt) {
-        return forespørselTjeneste.finnForespørslerForFagsak(fagsakSaksnummer).stream()
-            .filter(f -> orgnummerDto == null || orgnummerDto.orgnr().equals(f.getOrganisasjonsnummer()))
-            .filter(f -> skjæringstidspunkt == null || skjæringstidspunkt.equals(f.getSkjæringstidspunkt()))
+            .filter(f -> skjæringstidspunkt == null || skjæringstidspunkt.equals(f.getSkjæringstidspunkt().orElse(null)))
             .toList();
     }
 
     public void slettForespørsel(SaksnummerDto fagsakSaksnummer, OrganisasjonsnummerDto orgnummerDto, LocalDate skjæringstidspunkt) {
         var sakerSomSkalSlettes = forespørselTjeneste.finnForespørslerForFagsak(fagsakSaksnummer).stream()
-            .filter(f -> skjæringstidspunkt == null || f.getSkjæringstidspunkt().equals(skjæringstidspunkt))
+            .filter(f -> skjæringstidspunkt == null || skjæringstidspunkt.equals(f.getSkjæringstidspunkt().orElse(null)))
             .filter(f -> orgnummerDto == null || f.getOrganisasjonsnummer().equals(orgnummerDto.orgnr()))
             .filter(f -> f.getStatus().equals(ForespørselStatus.UNDER_BEHANDLING))
             .toList();
@@ -331,7 +322,7 @@ public class ForespørselBehandlingTjeneste {
         return forespørselTjeneste.finnForespørslerForFagsak(fagsakSaksnummer).stream().map(forespoersel ->
                 new InntektsmeldingForespørselDto(
                     forespoersel.getUuid(),
-                    forespoersel.getSkjæringstidspunkt(),
+                    forespoersel.getSkjæringstidspunkt().orElse(null),
                     forespoersel.getOrganisasjonsnummer(),
                     forespoersel.getAktørId().getAktørId(),
                     forespoersel.getYtelseType().toString(),
