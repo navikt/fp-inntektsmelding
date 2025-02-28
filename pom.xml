@@ -19,7 +19,7 @@
         <sonar.projectKey>navikt_fp-inntektsmelding</sonar.projectKey>
 
         <felles.version>7.4.11</felles.version>
-        <prosesstask.version>5.1.2</prosesstask.version>
+        <prosesstask.version>5.1.3</prosesstask.version>
         <fp-kontrakter.version>9.2.2</fp-kontrakter.version>
     </properties>
 
