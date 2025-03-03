@@ -106,6 +106,7 @@ spec:
       external:
         - host: pdl-api.{{environment}}-fss-pub.nais.io
         - host: team-inntekt-proxy.{{environment}}-fss-pub.nais.io
+        - host: fpsak-api.{{environment}}-fss-pub.nais.io
         - host: ereg-services.{{environment}}-fss-pub.nais.io
         - host: aareg-services.{{environment}}-fss-pub.nais.io
       {{#if devOnly}}
