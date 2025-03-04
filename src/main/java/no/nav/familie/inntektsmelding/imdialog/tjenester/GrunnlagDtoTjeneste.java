@@ -89,18 +89,9 @@ public class GrunnlagDtoTjeneste {
                                                                      OrganisasjonsnummerDto organisasjonsnummer) {
         var personInfo = finnPersoninfo(fødselsnummer, ytelsetype);
 
-        var eksisterendeForepørslersisteTreÅr = forespørselBehandlingTjeneste.finnForespørslerForAktørId(personInfo.aktørId(), ytelsetype).stream()
-            .filter(eksF-> innnenforIntervallÅr(eksF.getFørsteUttaksdato(), førsteFraværsdag))
-            .toList();
-
-        if (eksisterendeForepørslersisteTreÅr.isEmpty()) {
-            var tekst = String.format("Du kan ikke sende inn inntektsmelding på %s for denne personen med aktør id %s",  ytelsetype, personInfo.aktørId());
-            throw new FunksjonellException("INGEN_SAK_FUNNET",tekst, null, null);
-        }
-
-        var harForespørselPåOrgnrSisteTreMnd = eksisterendeForepørslersisteTreÅr.stream()
+        var harForespørselPåOrgnrSisteTreMnd = finnForespørslerSisteTreÅr(ytelsetype, førsteFraværsdag, personInfo.aktørId()).stream()
             .filter(f -> f.getOrganisasjonsnummer().equals(organisasjonsnummer.orgnr()))
-            .filter(f -> innenforIntervall(førsteFraværsdag, f.getFørsteUttaksdato())) // TODO: sjekk for et større intervall etterhvert
+            .filter(f -> innenforIntervall(førsteFraværsdag, f.getFørsteUttaksdato()))
             .toList();
 
         if (!harForespørselPåOrgnrSisteTreMnd.isEmpty()) {
