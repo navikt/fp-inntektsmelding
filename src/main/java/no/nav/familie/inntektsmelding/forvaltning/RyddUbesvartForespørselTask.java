@@ -46,7 +46,7 @@ public class RyddUbesvartForespørselTask implements ProsessTaskHandler {
         var stp = forespørsel.getSkjæringstidspunkt().orElseThrow();
 
         String loggKode = forespørselSkalBeholdes ? "UBESVART_FORESPØRSEL_MÅ_BEHOLDES" : "UBESVART_FORESPØRSEL_KAN_SLETTES";
-        LOG.info("{}: Forespørsel {} med oppgaveid {} for saksnummer {} med orgnummer {} og skjæringstidspunkt {} kunne vært slettet",
+        LOG.info("{}: Forespørsel {} med oppgaveid {} for saksnummer {} med orgnummer {} og skjæringstidspunkt {}",
             loggKode,
             forespørsel.getUuid(),
             Optional.ofNullable(forespørsel.getOppgaveId()),
@@ -54,6 +54,13 @@ public class RyddUbesvartForespørselTask implements ProsessTaskHandler {
             forespørsel.getOrganisasjonsnummer(),
             stp);
         if (!dryRun && !forespørselSkalBeholdes) {
+            LOG.info("{}: Forespørsel {} med oppgaveid {} for saksnummer {} med orgnummer {} og skjæringstidspunkt {} blir slettet",
+                loggKode,
+                forespørsel.getUuid(),
+                Optional.ofNullable(forespørsel.getOppgaveId()),
+                forespørsel.getFagsystemSaksnummer().orElseThrow(),
+                forespørsel.getOrganisasjonsnummer(),
+                stp);
             forespørselBehandlingTjeneste.slettForespørsel(new SaksnummerDto(forespørsel.getFagsystemSaksnummer().orElseThrow()),
                 new OrganisasjonsnummerDto(forespørsel.getOrganisasjonsnummer()),
                 stp);
