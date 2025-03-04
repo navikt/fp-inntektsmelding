@@ -12,6 +12,10 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import no.nav.familie.inntektsmelding.integrasjoner.person.PersonTjeneste;
+
+import no.nav.vedtak.exception.FunksjonellException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +58,17 @@ public class ArbeidsgiverinitiertDialogRest {
             throw new IllegalStateException("Ugyldig kall på restpunkt som ikke er lansert");
         }
         LOG.info("Henter arbeidsforhold for søker {}", request.fødselsnummer());
-        var dto = grunnlagDtoTjeneste.finnArbeidsforholdForFnr(request.fødselsnummer(), request.ytelseType(), request.førsteFraværsdag());
+        var personInfo = grunnlagDtoTjeneste.finnPersoninfo(request.fødselsnummer(), request.ytelseType());
+        if (personInfo == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+        var aktørId = personInfo.aktørId();
+        var eksisterendeForepørslersisteTreÅr  = grunnlagDtoTjeneste.finnForespørslerSisteTreÅr(request.ytelseType(), request.førsteFraværsdag(), aktørId);
+        if (eksisterendeForepørslersisteTreÅr.isEmpty()) {
+            var tekst = String.format("Du kan ikke sende inn inntektsmelding på %s for denne personen med aktør id %s",  request.ytelseType(), personInfo.aktørId());
+            throw new FunksjonellException("INGEN_SAK_FUNNET",tekst, null, null);
+        }
+        var dto = grunnlagDtoTjeneste.finnArbeidsforholdForFnr(personInfo, request.førsteFraværsdag());
         return dto.map(d ->Response.ok(d).build()).orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
     }
 
