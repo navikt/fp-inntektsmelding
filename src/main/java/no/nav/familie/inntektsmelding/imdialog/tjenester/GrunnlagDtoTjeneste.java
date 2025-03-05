@@ -2,6 +2,7 @@ package no.nav.familie.inntektsmelding.imdialog.tjenester;
 
 import java.time.LocalDate;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -10,6 +11,8 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import no.nav.familie.inntektsmelding.forespørsel.modell.ForespørselEntitet;
+
+import no.nav.familie.inntektsmelding.integrasjoner.person.PersonInfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,20 +87,11 @@ public class GrunnlagDtoTjeneste {
                                                                      Ytelsetype ytelsetype,
                                                                      LocalDate førsteFraværsdag,
                                                                      OrganisasjonsnummerDto organisasjonsnummer) {
-        var personInfo = personTjeneste.hentPersonFraIdent(fødselsnummer, ytelsetype);
+        var personInfo = finnPersoninfo(fødselsnummer, ytelsetype);
 
-        var eksisterendeForepørslersisteTreÅr = forespørselBehandlingTjeneste.finnForespørslerForAktørId(personInfo.aktørId(), ytelsetype).stream()
-            .filter(eksF-> innnenforIntervallÅr(eksF.getFørsteUttaksdato(), førsteFraværsdag))
-            .toList();
-
-        if (eksisterendeForepørslersisteTreÅr.isEmpty()) {
-            var tekst = String.format("Du kan ikke sende inn inntektsmelding på %s for denne personen med aktør id %s",  ytelsetype, personInfo.aktørId());
-            throw new FunksjonellException("INGEN_SAK_FUNNET",tekst, null, null);
-        }
-
-        var harForespørselPåOrgnrSisteTreMnd = eksisterendeForepørslersisteTreÅr.stream()
+        var harForespørselPåOrgnrSisteTreMnd = finnForespørslerSisteTreÅr(ytelsetype, førsteFraværsdag, personInfo.aktørId()).stream()
             .filter(f -> f.getOrganisasjonsnummer().equals(organisasjonsnummer.orgnr()))
-            .filter(f -> innenforIntervall(førsteFraværsdag, f.getFørsteUttaksdato())) // TODO: sjekk for et større intervall etterhvert
+            .filter(f -> innenforIntervall(førsteFraværsdag, f.getFørsteUttaksdato()))
             .toList();
 
         if (!harForespørselPåOrgnrSisteTreMnd.isEmpty()) {
@@ -143,7 +137,7 @@ public class GrunnlagDtoTjeneste {
             throw new IllegalStateException("Mangler innlogget bruker kontekst.");
         }
         var pid = KontekstHolder.getKontekst().getUid();
-        var personInfo = personTjeneste.hentPersonFraIdent(PersonIdent.fra(pid), ytelsetype);
+        var personInfo = finnPersoninfo(PersonIdent.fra(pid), ytelsetype);
         return new InntektsmeldingDialogDto.InnsenderDto(personInfo.fornavn(), personInfo.mellomnavn(), personInfo.etternavn(),
             personInfo.telefonnummer());
     }
@@ -180,14 +174,10 @@ public class GrunnlagDtoTjeneste {
             personInfo.fødselsnummer().getIdent(), personInfo.aktørId().getAktørId());
     }
 
-    public Optional<SlåOppArbeidstakerResponseDto> finnArbeidsforholdForFnr(PersonIdent fødselsnummer, Ytelsetype ytelsetype,
+    public Optional<SlåOppArbeidstakerResponseDto> finnArbeidsforholdForFnr(PersonInfo personInfo,
                                                                             LocalDate førsteFraværsdag) {
         // TODO Skal vi sjekke noe mtp kode 6/7
-        var personInfo = personTjeneste.hentPersonFraIdent(fødselsnummer, ytelsetype);
-        if (personInfo == null) {
-            return Optional.empty();
-        }
-        var arbeidsforholdBrukerHarTilgangTil = arbeidstakerTjeneste.finnArbeidsforholdInnsenderHarTilgangTil(fødselsnummer, førsteFraværsdag);
+        var arbeidsforholdBrukerHarTilgangTil = arbeidstakerTjeneste.finnArbeidsforholdInnsenderHarTilgangTil(personInfo.fødselsnummer(), førsteFraværsdag);
         if (arbeidsforholdBrukerHarTilgangTil.isEmpty()) {
             return Optional.empty();
         }
@@ -202,4 +192,15 @@ public class GrunnlagDtoTjeneste {
             arbeidsforholdDto,
             personInfo.kjønn()));
     }
+
+    public PersonInfo finnPersoninfo(PersonIdent fødselsnummer, Ytelsetype ytelsetype) {
+        return personTjeneste.hentPersonFraIdent(fødselsnummer, ytelsetype);
+    }
+
+    public List<ForespørselEntitet> finnForespørslerSisteTreÅr(Ytelsetype ytelsetype, LocalDate førsteFraværsdag, AktørIdEntitet aktørId) {
+        return forespørselBehandlingTjeneste.finnForespørslerForAktørId(aktørId, ytelsetype).stream()
+            .filter(eksF -> innnenforIntervallÅr(eksF.getFørsteUttaksdato(), førsteFraværsdag))
+            .toList();
+    }
+
 }
