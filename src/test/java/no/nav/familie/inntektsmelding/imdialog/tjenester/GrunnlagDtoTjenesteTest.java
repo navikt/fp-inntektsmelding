@@ -223,11 +223,9 @@ class GrunnlagDtoTjenesteTest {
     @Test
     void skal_ikke_få_lov_å_sende_inn_hvis_ingen_eksisterende_forespørsler_for_personen_finnes() {
         // Arrange
-        var fødselsnummer = new PersonIdent("11111111111");
         var ytelsetype = Ytelsetype.FORELDREPENGER;
         var eksForespørselDato = LocalDate.now().minusYears(4);
         var førsteFraværsdag = LocalDate.now();
-        var organisasjonsnummer = new OrganisasjonsnummerDto("999999999");
         var aktørId = new AktørIdEntitet("9999999999999");
         var forespørsel = new ForespørselEntitet("999999998",
             eksForespørselDato,
@@ -235,26 +233,19 @@ class GrunnlagDtoTjenesteTest {
             ytelsetype,
             "123",
             eksForespørselDato, ForespørselType.BESTILT_AV_FAGSYSTEM);
-        var personInfo = new PersonInfo("Navn", null, "Navnesen", fødselsnummer, aktørId, LocalDate.now(), null, PersonInfo.Kjønn.MANN);
-        when(personTjeneste.hentPersonFraIdent(fødselsnummer, ytelsetype)).thenReturn(personInfo);
         when(forespørselBehandlingTjeneste.finnForespørslerForAktørId(aktørId, ytelsetype)).thenReturn(List.of(forespørsel));
 
-        var ex = assertThrows(FunksjonellException.class, () -> grunnlagDtoTjeneste.lagArbeidsgiverinitiertDialogDto(fødselsnummer,
-            ytelsetype,
-            førsteFraværsdag,
-            organisasjonsnummer));
+        var forespørsler = grunnlagDtoTjeneste.finnForespørslerSisteTreÅr(ytelsetype, førsteFraværsdag, aktørId);
 
-        assertThat(ex.getMessage()).contains("INGEN_SAK_FUNNET");
+        assertThat(forespørsler).isEmpty();
     }
 
     @Test
     void skal_ikke_få_lov_å_sende_inn_hvis_ingen_eksisterende_forespørsler_før_fraværsdato_finnes() {
         // Arrange
-        var fødselsnummer = new PersonIdent("11111111111");
         var ytelsetype = Ytelsetype.FORELDREPENGER;
         var eksForespørselDato = LocalDate.now().plusDays(10);
         var førsteFraværsdag = LocalDate.now();
-        var organisasjonsnummer = new OrganisasjonsnummerDto("999999999");
         var aktørId = new AktørIdEntitet("9999999999999");
         var forespørsel = new ForespørselEntitet("999999998",
             eksForespørselDato,
@@ -262,16 +253,11 @@ class GrunnlagDtoTjenesteTest {
             ytelsetype,
             "123",
             eksForespørselDato, ForespørselType.BESTILT_AV_FAGSYSTEM);
-        var personInfo = new PersonInfo("Navn", null, "Navnesen", fødselsnummer, aktørId, LocalDate.now(), null, PersonInfo.Kjønn.MANN);
-        when(personTjeneste.hentPersonFraIdent(fødselsnummer, ytelsetype)).thenReturn(personInfo);
         when(forespørselBehandlingTjeneste.finnForespørslerForAktørId(aktørId, ytelsetype)).thenReturn(List.of(forespørsel));
 
-        var ex = assertThrows(FunksjonellException.class, () -> grunnlagDtoTjeneste.lagArbeidsgiverinitiertDialogDto(fødselsnummer,
-            ytelsetype,
-            førsteFraværsdag,
-            organisasjonsnummer));
+        var forespørsler = grunnlagDtoTjeneste.finnForespørslerSisteTreÅr(ytelsetype, førsteFraværsdag, aktørId);
 
-        assertThat(ex.getMessage()).contains("INGEN_SAK_FUNNET");
+        assertThat(forespørsler).isEmpty();
     }
 
     @Test
