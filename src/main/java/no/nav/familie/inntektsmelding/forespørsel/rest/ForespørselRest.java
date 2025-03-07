@@ -70,7 +70,8 @@ public class ForespørselRest {
                     new AktørIdEntitet(request.aktørId().id()),
                     new OrganisasjonsnummerDto(organisasjonsnummer.orgnr()),
                     request.fagsakSaksnummer(),
-                    request.førsteUttaksdato());
+                    request.førsteUttaksdato(),
+                    request.migrering());
 
                 if (ForespørselResultat.FORESPØRSEL_OPPRETTET.equals(bleForespørselOpprettet)) {
                     MetrikkerTjeneste.loggForespørselOpprettet(KodeverkMapper.mapYtelsetype(request.ytelsetype()));
