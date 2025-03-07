@@ -1,6 +1,7 @@
 package no.nav.familie.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon;
 
 import java.net.URI;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 
 public interface ArbeidsgiverNotifikasjon {
@@ -33,4 +34,12 @@ public interface ArbeidsgiverNotifikasjon {
                                               String beskjedTekst,
                                               String varselTekst,
                                               URI lenke);
+
+    String opprettMigrertOppgave(String string,
+                                 Merkelapp merkelapp,
+                                 String eksternId,
+                                 String organisasjonsnummer,
+                                 String oppgavetekst,
+                                 URI skjemaUri,
+                                 LocalDate skjæringstidsunkt);
 }
