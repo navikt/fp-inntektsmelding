@@ -2,6 +2,7 @@ package no.nav.familie.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon;
 
 import java.net.URI;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
@@ -31,12 +32,12 @@ class ArbeidsgiverNotifikasjonTjeneste implements ArbeidsgiverNotifikasjon {
     }
 
     @Override
-    public String opprettSak(String grupperingsid, Merkelapp merkelapp, String virksomhetsnummer, String saksTittel, URI lenke) {
+    public String opprettSak(String grupperingsid, Merkelapp merkelapp, String organisasjonsnumme, String saksTittel, URI lenke) {
 
         var request = NySakMutationRequest.builder()
             .setGrupperingsid(grupperingsid)
             .setTittel(saksTittel)
-            .setVirksomhetsnummer(virksomhetsnummer)
+            .setVirksomhetsnummer(organisasjonsnumme)
             .setMerkelapp(merkelapp.getBeskrivelse())
             .setLenke(lenke.toString())
             .setInitiellStatus(SaksStatus.UNDER_BEHANDLING)
@@ -60,7 +61,7 @@ class ArbeidsgiverNotifikasjonTjeneste implements ArbeidsgiverNotifikasjon {
     public String opprettOppgave(String grupperingsid,
                                  Merkelapp oppgaveMerkelapp,
                                  String eksternId,
-                                 String virksomhetsnummer,
+                                 String organisasjonsnumme,
                                  String oppgaveTekst,
                                  String varselTekst,
                                  String påminnelseTekst,
@@ -75,7 +76,7 @@ class ArbeidsgiverNotifikasjonTjeneste implements ArbeidsgiverNotifikasjon {
                     .setLenke(oppgaveLenke.toString())
                     .build())
                 .setMetadata(MetadataInput.builder()
-                    .setVirksomhetsnummer(virksomhetsnummer)
+                    .setVirksomhetsnummer(organisasjonsnumme)
                     .setEksternId(eksternId)
                     .setGrupperingsid(grupperingsid)
                     .build())
@@ -104,7 +105,7 @@ class ArbeidsgiverNotifikasjonTjeneste implements ArbeidsgiverNotifikasjon {
     public String opprettNyBeskjedMedEksternVarsling(String grupperingsid,
                                                      Merkelapp beskjedMerkelapp,
                                                      String eksternId,
-                                                     String virksomhetsnummer,
+                                                     String organisasjonsnumme,
                                                      String beskjedTekst,
                                                      String varselTekst,
                                                      URI oppgaveLenke) {
@@ -116,7 +117,7 @@ class ArbeidsgiverNotifikasjonTjeneste implements ArbeidsgiverNotifikasjon {
                 .build())
             .setMottaker(lagAltinnMottakerInput())
             .setMetadata(MetadataInput.builder()
-                .setVirksomhetsnummer(virksomhetsnummer)
+                .setVirksomhetsnummer(organisasjonsnumme)
                 .setEksternId(UUID.randomUUID().toString())
                 .setGrupperingsid(grupperingsid)
                 .build())
@@ -133,6 +134,39 @@ class ArbeidsgiverNotifikasjonTjeneste implements ArbeidsgiverNotifikasjon {
             .onUgyldigMottaker(new UgyldigMottakerResponseProjection().feilmelding())
             .onUkjentRolle(new UkjentRolleResponseProjection().feilmelding());
         return klient.opprettBeskjedOgVarsling(beskjedRequest, projection);
+    }
+
+    @Override
+    public String opprettMigrertOppgave(String grupperingsid, Merkelapp merkelapp, String eksternId, String orgnr, String oppgaveTekst, URI oppgaveLenke, LocalDate skjæringstidsunkt) {
+        var request = NyOppgaveMutationRequest.builder()
+            .setNyOppgave(NyOppgaveInput.builder()
+                .setMottaker(lagAltinnMottakerInput())
+                .setNotifikasjon(NotifikasjonInput.builder()
+                    .setMerkelapp(merkelapp.getBeskrivelse())
+                    .setTekst(oppgaveTekst)
+                    .setLenke(oppgaveLenke.toString())
+                    .build())
+                .setMetadata(MetadataInput.builder()
+                    .setVirksomhetsnummer(orgnr)
+                    .setOpprettetTidspunkt(skjæringstidsunkt.minusWeeks(4).atStartOfDay().toString())
+                    .setEksternId(eksternId)
+                    .setGrupperingsid(grupperingsid)
+                    .build())
+                .build())
+            .build();
+
+
+        var projection = new NyOppgaveResultatResponseProjection().typename()
+            .onNyOppgaveVellykket(new NyOppgaveVellykketResponseProjection().id())
+            .onUgyldigMerkelapp(new UgyldigMerkelappResponseProjection().feilmelding())
+            .onUgyldigMottaker(new UgyldigMottakerResponseProjection().feilmelding())
+            .onDuplikatEksternIdOgMerkelapp(new DuplikatEksternIdOgMerkelappResponseProjection().feilmelding())
+            .onUkjentProdusent(new UkjentProdusentResponseProjection().feilmelding())
+            .onUkjentRolle(new UkjentRolleResponseProjection().feilmelding())
+            .onUgyldigPaaminnelseTidspunkt(new UgyldigPaaminnelseTidspunktResponseProjection().feilmelding());
+
+        return klient.opprettOppgave(request, projection);
+
     }
 
     private static MottakerInput lagAltinnMottakerInput() {
