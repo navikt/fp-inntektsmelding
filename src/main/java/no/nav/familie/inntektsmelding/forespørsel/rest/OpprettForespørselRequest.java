@@ -17,5 +17,6 @@ public record OpprettForespørselRequest(@NotNull @Valid AktørIdDto aktørId,
                                         @NotNull @Valid YtelseTypeDto ytelsetype,
                                         @NotNull @Valid SaksnummerDto fagsakSaksnummer,
                                         @Valid LocalDate førsteUttaksdato,
-                                        @Valid List<OrganisasjonsnummerDto> organisasjonsnumre) {
+                                        @Valid List<OrganisasjonsnummerDto> organisasjonsnumre,
+                                        @Valid boolean migrering) {
 }
