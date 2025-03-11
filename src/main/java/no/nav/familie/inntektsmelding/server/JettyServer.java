@@ -113,9 +113,9 @@ public class JettyServer {
         config.setJdbcUrl(ENV.getRequiredProperty("DB_JDBC_URL"));
         config.setUsername(ENV.getRequiredProperty("DB_USERNAME"));
         config.setPassword(ENV.getRequiredProperty("DB_PASSWORD"));
-        config.setConnectionTimeout(TimeUnit.SECONDS.toMillis(1));
+        config.setConnectionTimeout(TimeUnit.SECONDS.toMillis(2));
         config.setMinimumIdle(1);
-        config.setMaximumPoolSize(6);
+        config.setMaximumPoolSize(12);
         config.setInitializationFailTimeout(30000);
         config.setConnectionTestQuery("select 1");
         config.setDriverClassName("org.postgresql.Driver");
