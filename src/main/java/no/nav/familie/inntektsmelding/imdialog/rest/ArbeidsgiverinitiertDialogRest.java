@@ -12,8 +12,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import no.nav.familie.inntektsmelding.integrasjoner.person.PersonTjeneste;
-
+import no.nav.familie.inntektsmelding.integrasjoner.fpsak.FpsakTjeneste;
 import no.nav.vedtak.exception.FunksjonellException;
 
 import org.slf4j.Logger;
@@ -37,6 +36,7 @@ public class ArbeidsgiverinitiertDialogRest {
     private static final String HENT_OPPLYSNINGER = "/opplysninger";
 
     private GrunnlagDtoTjeneste grunnlagDtoTjeneste;
+    private FpsakTjeneste fpsakTjeneste;
     private boolean erProd = true;
 
     ArbeidsgiverinitiertDialogRest() {
@@ -44,8 +44,10 @@ public class ArbeidsgiverinitiertDialogRest {
     }
 
     @Inject
-    public ArbeidsgiverinitiertDialogRest(GrunnlagDtoTjeneste grunnlagDtoTjeneste) {
+    public ArbeidsgiverinitiertDialogRest(GrunnlagDtoTjeneste grunnlagDtoTjeneste,
+                                          FpsakTjeneste fpsakTjeneste) {
         this.grunnlagDtoTjeneste = grunnlagDtoTjeneste;
+        this.fpsakTjeneste = fpsakTjeneste;
         this.erProd = Environment.current().isProd();
     }
 
@@ -65,8 +67,12 @@ public class ArbeidsgiverinitiertDialogRest {
         var aktørId = personInfo.aktørId();
         var eksisterendeForepørslersisteTreÅr  = grunnlagDtoTjeneste.finnForespørslerSisteTreÅr(request.ytelseType(), request.førsteFraværsdag(), aktørId);
         if (eksisterendeForepørslersisteTreÅr.isEmpty()) {
-            var tekst = String.format("Du kan ikke sende inn inntektsmelding på %s for denne personen med aktør id %s",  request.ytelseType(), personInfo.aktørId());
-            throw new FunksjonellException("INGEN_SAK_FUNNET",tekst, null, null);
+            LOG.info("Fant ikke forespørsel siste tre år for aktør {}, spør fpsak.", aktørId);
+            var finnesYtelseIFpsak = fpsakTjeneste.harAktørSakIFagsystem(aktørId, request.ytelseType());
+            if (!finnesYtelseIFpsak) {
+                var tekst = String.format("Du kan ikke sende inn inntektsmelding på %s for denne personen med aktør id %s",  request.ytelseType(), personInfo.aktørId());
+                throw new FunksjonellException("INGEN_SAK_FUNNET",tekst, null, null);
+            }
         }
         var dto = grunnlagDtoTjeneste.finnArbeidsforholdForFnr(personInfo, request.førsteFraværsdag());
         return dto.map(d ->Response.ok(d).build()).orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
