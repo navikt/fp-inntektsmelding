@@ -16,7 +16,7 @@ class FpDokgenKlientTest {
 
     @Test
     void skal_generere_pdf()  {
-        FpDokgenKlient fpDokgenKlient = new FpDokgenKlient();
+        FpDokgenKlient fpDokgenKlient = new FpDokgenKlient(restClient);
         when(restClient.sendReturnByteArray(any())).thenReturn("pdf".getBytes());
         var bytes = fpDokgenKlient.genererPdf(new InntektsmeldingPdfData(), ForespørselType.BESTILT_AV_FAGSYSTEM);
         assertThat(bytes).isNotEmpty();
