@@ -10,6 +10,10 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import no.nav.familie.inntektsmelding.koder.ArbeidsgiverinitiertÅrsak;
+
+import no.nav.familie.inntektsmelding.koder.ForespørselType;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -213,16 +217,18 @@ public class ForespørselBehandlingTjeneste {
     public UUID opprettForespørselForArbeidsgiverInitiertIm(Ytelsetype ytelsetype,
                                                             AktørIdEntitet aktørId,
                                                             OrganisasjonsnummerDto organisasjonsnummer,
-                                                            LocalDate førsteFraværsdato) {
+                                                            LocalDate førsteFraværsdato,
+                                                            ArbeidsgiverinitiertÅrsak arbeidsgiverinitiertÅrsak) {
         var msg = String.format("Oppretter forespørsel for arbeidsgiverinitiert, orgnr: %s, ytelse: %s",
             organisasjonsnummer,
             ytelsetype);
         LOG.info(msg);
-
+        var forespørselType = utledForespørselType(arbeidsgiverinitiertÅrsak);
         var uuid = forespørselTjeneste.opprettForespørselArbeidsgiverinitiert(ytelsetype,
             aktørId,
             organisasjonsnummer,
-            førsteFraværsdato);
+            førsteFraværsdato,
+            forespørselType);
 
         var person = personTjeneste.hentPersonInfoFraAktørId(aktørId, ytelsetype);
         var merkelapp = ForespørselTekster.finnMerkelapp(ytelsetype);
@@ -236,6 +242,14 @@ public class ForespørselBehandlingTjeneste {
         forespørselTjeneste.setArbeidsgiverNotifikasjonSakId(uuid, fagerSakId);
 
         return uuid;
+    }
+
+    private ForespørselType utledForespørselType(ArbeidsgiverinitiertÅrsak arbeidsgiverinitiertÅrsak) {
+        if (arbeidsgiverinitiertÅrsak == ArbeidsgiverinitiertÅrsak.NYANSATT) {
+            return ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT;
+        } else {
+            throw new IllegalArgumentException("Ukjent arbeidsgiverinitiert årsak: " + arbeidsgiverinitiertÅrsak);
+        }
     }
 
     public NyBeskjedResultat opprettNyBeskjedMedEksternVarsling(SaksnummerDto fagsakSaksnummer,

@@ -15,6 +15,7 @@ import jakarta.validation.constraints.Size;
 
 import no.nav.familie.inntektsmelding.typer.dto.AktørIdDto;
 import no.nav.familie.inntektsmelding.typer.dto.ArbeidsgiverDto;
+import no.nav.familie.inntektsmelding.typer.dto.ArbeidsgiverinitiertÅrsakDto;
 import no.nav.familie.inntektsmelding.typer.dto.EndringsårsakDto;
 import no.nav.familie.inntektsmelding.typer.dto.NaturalytelsetypeDto;
 import no.nav.familie.inntektsmelding.typer.dto.YtelseTypeDto;
@@ -28,7 +29,8 @@ public record SendInntektsmeldingRequestDto(@Valid UUID foresporselUuid,
                                             @NotNull @Min(0) @Max(Integer.MAX_VALUE) @Digits(integer = 20, fraction = 2) BigDecimal inntekt,
                                             @NotNull List<@Valid Refusjon> refusjon,
                                             @NotNull List<@Valid BortfaltNaturalytelseRequestDto> bortfaltNaturalytelsePerioder,
-                                            @NotNull List<@Valid EndringsårsakerRequestDto> endringAvInntektÅrsaker) {
+                                            @NotNull List<@Valid EndringsårsakerRequestDto> endringAvInntektÅrsaker,
+                                            @Valid ArbeidsgiverinitiertÅrsakDto arbeidsgiverinitiertÅrsakDto) {
 
     public record Refusjon(@NotNull LocalDate fom,
                            @NotNull @Min(0) @Max(Integer.MAX_VALUE) @Digits(integer = 20, fraction = 2) BigDecimal beløp) {

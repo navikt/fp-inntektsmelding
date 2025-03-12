@@ -37,7 +37,7 @@ class InntektsmeldingMapperTest {
         // Arrange
         var request = new SendInntektsmeldingRequestDto(UUID.randomUUID(), new AktørIdDto("9999999999999"), YtelseTypeDto.FORELDREPENGER,
             new ArbeidsgiverDto("999999999"), new SendInntektsmeldingRequestDto.KontaktpersonRequestDto("Testy test", "999999999"), LocalDate.now(),
-            BigDecimal.valueOf(5000), Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
+            BigDecimal.valueOf(5000), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), null);
 
         // Act
         var entitet = InntektsmeldingMapper.mapTilEntitet(request);
@@ -68,7 +68,8 @@ class InntektsmeldingMapperTest {
             Arrays.asList(new SendInntektsmeldingRequestDto.Refusjon(LocalDate.now(), BigDecimal.valueOf(5000)),
                 new SendInntektsmeldingRequestDto.Refusjon(LocalDate.now().plusDays(10), BigDecimal.ZERO)),
             Collections.emptyList(),
-            Collections.emptyList());
+            Collections.emptyList(),
+            null);
 
         // Act
         var entitet = InntektsmeldingMapper.mapTilEntitet(request);
@@ -100,7 +101,8 @@ class InntektsmeldingMapperTest {
                 new SendInntektsmeldingRequestDto.Refusjon(LocalDate.now().plusDays(5), BigDecimal.valueOf(4000)),
                 new SendInntektsmeldingRequestDto.Refusjon(LocalDate.now().plusDays(10), BigDecimal.ZERO)),
             Collections.emptyList(),
-            Collections.emptyList());
+            Collections.emptyList(),
+            null);
 
         // Act
         var entitet = InntektsmeldingMapper.mapTilEntitet(request);
@@ -137,7 +139,10 @@ class InntektsmeldingMapperTest {
                     Tid.TIDENES_ENDE,
                     NaturalytelsetypeDto.ANNET,
                     BigDecimal.valueOf(4000))),
-            Collections.singletonList(new SendInntektsmeldingRequestDto.EndringsårsakerRequestDto(EndringsårsakDto.TARIFFENDRING, null, null, LocalDate.now())));
+            Collections.singletonList(new SendInntektsmeldingRequestDto.EndringsårsakerRequestDto(EndringsårsakDto.TARIFFENDRING,
+                null,
+                null,
+                LocalDate.now())), null);
 
         // Act
         var entitet = InntektsmeldingMapper.mapTilEntitet(request);
@@ -307,6 +312,7 @@ class InntektsmeldingMapperTest {
         assertThat(imDto.endringAvInntektÅrsaker().get(1).årsak()).isEqualTo(EndringsårsakDto.TARIFFENDRING);
 
     }
+
     @Test
     void skal_teste_mapping_tilbake_til_dto_refusjon_ikke_opphør_eller_endring() {
         // Arrange
