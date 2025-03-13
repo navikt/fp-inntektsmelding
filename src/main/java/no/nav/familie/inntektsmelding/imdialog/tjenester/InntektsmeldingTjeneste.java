@@ -6,11 +6,11 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import no.nav.familie.inntektsmelding.forespørsel.modell.ForespørselEntitet;
 import no.nav.familie.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 import no.nav.familie.inntektsmelding.imdialog.modell.InntektsmeldingEntitet;
 import no.nav.familie.inntektsmelding.imdialog.modell.InntektsmeldingRepository;
 import no.nav.familie.inntektsmelding.integrasjoner.dokgen.FpDokgenTjeneste;
-import no.nav.familie.inntektsmelding.koder.ForespørselType;
 
 @ApplicationScoped
 public class InntektsmeldingTjeneste {
@@ -47,6 +47,15 @@ public class InntektsmeldingTjeneste {
 
     public byte[] hentPDF(long inntektsmeldingId) {
         var inntektsmeldingEntitet = inntektsmeldingRepository.hentInntektsmelding(inntektsmeldingId);
-        return fpDokgenTjeneste.mapDataOgGenererPdf(inntektsmeldingEntitet, ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var forespørsler = forespørselBehandlingTjeneste.finnForespørsler(inntektsmeldingEntitet.getAktørId(),
+            inntektsmeldingEntitet.getYtelsetype(),
+            inntektsmeldingEntitet.getArbeidsgiverIdent());
+        var forespørselType = forespørsler
+            .stream()
+            .filter(forespørselEntitet -> forespørselEntitet.getFørsteUttaksdato().equals(inntektsmeldingEntitet.getStartDato()))
+            .map(ForespørselEntitet::getForespørselType)
+            .findAny()
+            .orElseThrow(() -> new IllegalStateException("Forespørseltype ikke funnet for inntektsmeldingId: " + inntektsmeldingId));
+        return fpDokgenTjeneste.mapDataOgGenererPdf(inntektsmeldingEntitet, forespørselType);
     }
 }

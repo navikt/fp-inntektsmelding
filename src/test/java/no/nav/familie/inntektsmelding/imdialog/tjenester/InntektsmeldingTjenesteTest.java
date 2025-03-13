@@ -1,6 +1,8 @@
 package no.nav.familie.inntektsmelding.imdialog.tjenester;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
@@ -9,6 +11,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+
+import no.nav.familie.inntektsmelding.koder.Kildesystem;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -81,4 +85,31 @@ class InntektsmeldingTjenesteTest {
         // Assert
         assertThat(inntektsmeldinger).hasSize(1).containsAll(List.of(inntektsmelding));
     }
+
+    @Test
+    void skal_teste_at_pdf_genereres() {
+        // Arrange
+        var imId = 1;
+        var startdato = LocalDate.now().minusDays(10);
+        var søkerAktørId = new AktørIdEntitet("1111111111111");
+        var agIdent = "999999999";
+        var im = InntektsmeldingEntitet.builder()
+            .medMånedInntekt(BigDecimal.ZERO)
+            .medStartDato(startdato)
+            .medArbeidsgiverIdent(agIdent)
+            .medAktørId(søkerAktørId)
+            .medKildesystem(Kildesystem.ARBEIDSGIVERPORTAL)
+            .medYtelsetype(Ytelsetype.FORELDREPENGER)
+            .build();
+        when(inntektsmeldingRepository.hentInntektsmelding(imId)).thenReturn(im);
+        var forespørsel = new ForespørselEntitet(agIdent, LocalDate.now(),
+            søkerAktørId, Ytelsetype.FORELDREPENGER, "123", startdato, ForespørselType.BESTILT_AV_FAGSYSTEM);
+        when(forespørselBehandlingTjeneste.finnForespørsler(søkerAktørId, Ytelsetype.FORELDREPENGER, agIdent)).thenReturn(List.of(forespørsel));
+        // Act
+        inntektsmeldingTjeneste.hentPDF(imId);
+
+        // Assert
+        verify(fpDokgenTjeneste, times(1)).mapDataOgGenererPdf(im, ForespørselType.BESTILT_AV_FAGSYSTEM);
+    }
+
 }
