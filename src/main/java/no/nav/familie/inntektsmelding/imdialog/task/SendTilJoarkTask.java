@@ -20,10 +20,9 @@ import java.util.Optional;
 @ApplicationScoped
 @ProsessTask(value = "mottaInntektsmelding.oversendJoark")
 public class SendTilJoarkTask implements ProsessTaskHandler {
-    private static final Logger LOG = LoggerFactory.getLogger(SendTilJoarkTask.class);
     public static final String KEY_INNTEKTSMELDING_ID = "inntektsmeldingId";
-    public static final String KEY_FORESØRSEL_TYPE = "forespørselType";
-
+    public static final String KEY_FORESPOERSEL_TYPE = "forespoerselType";
+    private static final Logger LOG = LoggerFactory.getLogger(SendTilJoarkTask.class);
     private InntektsmeldingTjeneste inntektsmeldingTjeneste;
     private InntektsmeldingXMLTjeneste inntektsmeldingXMLTjeneste;
     private FpDokgenTjeneste fpDokgenTjeneste;
@@ -47,7 +46,9 @@ public class SendTilJoarkTask implements ProsessTaskHandler {
     @Override
     public void doTask(ProsessTaskData prosessTaskData) {
         var inntektsmeldingId = Integer.parseInt(prosessTaskData.getPropertyValue(KEY_INNTEKTSMELDING_ID));
-        var forespørselType = Optional.ofNullable(prosessTaskData.getPropertyValue(KEY_FORESØRSEL_TYPE)).map(ForespørselType::valueOf).orElseThrow();
+        var forespørselType = Optional.ofNullable(prosessTaskData.getPropertyValue(KEY_FORESPOERSEL_TYPE))
+            .map(ForespørselType::valueOf)
+            .orElse(ForespørselType.BESTILT_AV_FAGSYSTEM);
         var fagsysteSaksnummer = prosessTaskData.getSaksnummer();
         LOG.info("Starter task for oversending til joark for saksnummer {}", fagsysteSaksnummer);
 

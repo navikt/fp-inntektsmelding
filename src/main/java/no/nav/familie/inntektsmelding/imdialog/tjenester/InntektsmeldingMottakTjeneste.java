@@ -105,7 +105,7 @@ public class InntektsmeldingMottakTjeneste {
         var task = ProsessTaskData.forProsessTask(SendTilJoarkTask.class);
         forespørsel.getFagsystemSaksnummer().ifPresent(task::setSaksnummer);
         task.setProperty(SendTilJoarkTask.KEY_INNTEKTSMELDING_ID, imId.toString());
-        task.setProperty(SendTilJoarkTask.KEY_FORESØRSEL_TYPE, forespørsel.getForespørselType().toString());
+        task.setProperty(SendTilJoarkTask.KEY_FORESPOERSEL_TYPE, forespørsel.getForespørselType().toString());
         prosessTaskTjeneste.lagre(task);
         LOG.info("Opprettet task for oversending til joark");
     }
