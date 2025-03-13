@@ -3,6 +3,10 @@ package no.nav.familie.inntektsmelding.integrasjoner.dokgen;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import no.nav.familie.inntektsmelding.koder.ForespørselType;
+
+import no.nav.foreldrepenger.konfig.Environment;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,6 +18,8 @@ import no.nav.familie.inntektsmelding.integrasjoner.person.PersonTjeneste;
 import no.nav.familie.inntektsmelding.typer.OrganisasjonsnummerValidator;
 import no.nav.vedtak.exception.TekniskException;
 import no.nav.vedtak.mapper.json.DefaultJsonMapper;
+
+import java.time.LocalDate;
 
 @ApplicationScoped
 public class FpDokgenTjeneste {
@@ -34,7 +40,7 @@ public class FpDokgenTjeneste {
         this.organisasjonTjeneste = organisasjonTjeneste;
     }
 
-    public byte[] mapDataOgGenererPdf(InntektsmeldingEntitet inntektsmelding) {
+    public byte[] mapDataOgGenererPdf(InntektsmeldingEntitet inntektsmelding, ForespørselType forespørselType) {
         PersonInfo personInfo;
         String arbeidsgiverNavn;
         var arbeidsgvierIdent = inntektsmelding.getArbeidsgiverIdent();
@@ -43,15 +49,15 @@ public class FpDokgenTjeneste {
         personInfo = personTjeneste.hentPersonInfoFraAktørId(inntektsmelding.getAktørId(), inntektsmelding.getYtelsetype());
         arbeidsgiverNavn = finnArbeidsgiverNavn(inntektsmelding, arbeidsgvierIdent);
 
-        var imDokumentdata = InntektsmeldingPdfDataMapper.mapInntektsmeldingData(inntektsmelding, arbeidsgiverNavn, personInfo, arbeidsgvierIdent);
-
-        return genererPdf(imDokumentdata, inntektsmeldingsid);
+        return genererPdf(InntektsmeldingPdfDataMapper.mapInntektsmeldingPdfData(inntektsmelding, arbeidsgiverNavn, personInfo, arbeidsgvierIdent, forespørselType ), inntektsmeldingsid, forespørselType);
     }
 
-    private byte[] genererPdf(InntektsmeldingPdfData imDokumentData, int inntektsmeldingId) {
+
+
+    private byte[] genererPdf(InntektsmeldingPdfData imDokumentData, int inntektsmeldingId, ForespørselType forespørselType) {
         try {
             byte[] pdf;
-            pdf = fpDokgenKlient.genererPdf(imDokumentData);
+            pdf = fpDokgenKlient.genererPdf(imDokumentData, forespørselType);
             LOG.info("Pdf av inntektsmelding med id {} ble generert.", inntektsmeldingId);
             return pdf;
         } catch (Exception e) {

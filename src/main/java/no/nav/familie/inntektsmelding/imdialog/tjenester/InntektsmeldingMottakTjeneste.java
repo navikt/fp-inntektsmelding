@@ -69,12 +69,14 @@ public class InntektsmeldingMottakTjeneste {
         var imEnitet = InntektsmeldingMapper.mapTilEntitet(sendInntektsmeldingRequestDto);
         var aktørId = new AktørIdEntitet(sendInntektsmeldingRequestDto.aktorId().id());
         var ytelseType = KodeverkMapper.mapYtelsetype(sendInntektsmeldingRequestDto.ytelse());
+        var arbeidsgiverinitiertÅrsak = KodeverkMapper.mapArbeidsgiverinitiertÅrsak(sendInntektsmeldingRequestDto.arbeidsgiverinitiertÅrsak());
         var organisasjonsnummer = new OrganisasjonsnummerDto(sendInntektsmeldingRequestDto.arbeidsgiverIdent().ident());
 
         var forespørselUuid = forespørselBehandlingTjeneste.opprettForespørselForArbeidsgiverInitiertIm(ytelseType,
             aktørId,
             organisasjonsnummer,
-            sendInntektsmeldingRequestDto.startdato());
+            sendInntektsmeldingRequestDto.startdato(),
+            arbeidsgiverinitiertÅrsak);
 
         var forespørselEnitet = forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid)
             .orElseThrow(() -> new IllegalStateException("Mangler forespørsel entitet"));
@@ -103,6 +105,7 @@ public class InntektsmeldingMottakTjeneste {
         var task = ProsessTaskData.forProsessTask(SendTilJoarkTask.class);
         forespørsel.getFagsystemSaksnummer().ifPresent(task::setSaksnummer);
         task.setProperty(SendTilJoarkTask.KEY_INNTEKTSMELDING_ID, imId.toString());
+        task.setProperty(SendTilJoarkTask.KEY_FORESPOERSEL_TYPE, forespørsel.getForespørselType().toString());
         prosessTaskTjeneste.lagre(task);
         LOG.info("Opprettet task for oversending til joark");
     }

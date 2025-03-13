@@ -1,6 +1,6 @@
 package no.nav.familie.inntektsmelding.koder;
 
 public enum ForespørselType {
-    ARBEIDSGIVERINITIERT,
+    ARBEIDSGIVERINITIERT_NYANSATT,
     BESTILT_AV_FAGSYSTEM,
 }

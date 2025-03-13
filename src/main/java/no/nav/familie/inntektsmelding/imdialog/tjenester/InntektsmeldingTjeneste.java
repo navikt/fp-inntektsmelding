@@ -6,6 +6,7 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import no.nav.familie.inntektsmelding.forespørsel.modell.ForespørselEntitet;
 import no.nav.familie.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 import no.nav.familie.inntektsmelding.imdialog.modell.InntektsmeldingEntitet;
 import no.nav.familie.inntektsmelding.imdialog.modell.InntektsmeldingRepository;
@@ -46,6 +47,13 @@ public class InntektsmeldingTjeneste {
 
     public byte[] hentPDF(long inntektsmeldingId) {
         var inntektsmeldingEntitet = inntektsmeldingRepository.hentInntektsmelding(inntektsmeldingId);
-        return fpDokgenTjeneste.mapDataOgGenererPdf(inntektsmeldingEntitet);
+        var forespørselType = forespørselBehandlingTjeneste.finnForespørsler(inntektsmeldingEntitet.getAktørId(),
+                inntektsmeldingEntitet.getYtelsetype(),
+                inntektsmeldingEntitet.getArbeidsgiverIdent()).stream()
+            .filter(forespørselEntitet -> forespørselEntitet.getFørsteUttaksdato().equals(inntektsmeldingEntitet.getStartDato()))
+            .map(ForespørselEntitet::getForespørselType)
+            .findAny()
+            .orElseThrow(() -> new IllegalStateException("Forespørseltype ikke funnet for inntektsmeldingId: " + inntektsmeldingId));
+        return fpDokgenTjeneste.mapDataOgGenererPdf(inntektsmeldingEntitet, forespørselType);
     }
 }

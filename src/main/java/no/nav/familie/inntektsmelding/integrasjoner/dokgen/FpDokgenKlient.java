@@ -1,12 +1,9 @@
 package no.nav.familie.inntektsmelding.integrasjoner.dokgen;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-
 import jakarta.enterprise.context.Dependent;
-import jakarta.inject.Inject;
+import jakarta.ws.rs.core.UriBuilder;
 
-import no.nav.foreldrepenger.konfig.KonfigVerdi;
+import no.nav.familie.inntektsmelding.koder.ForespørselType;
 import no.nav.vedtak.exception.TekniskException;
 import no.nav.vedtak.felles.integrasjon.rest.FpApplication;
 import no.nav.vedtak.felles.integrasjon.rest.RestClient;
@@ -23,29 +20,19 @@ import no.nav.vedtak.felles.integrasjon.rest.TokenFlow;
 public class FpDokgenKlient {
     private final RestClient restClient;
     private final RestConfig restConfig;
-    private final String templatePath;
-    private final String templateType;
 
-    @Inject
-    public FpDokgenKlient(
-        @KonfigVerdi(value = "pdf.template.path", defaultVerdi = "/template/fpinntektsmelding-inntektsmelding/PDFINNTEKTSMELDING") String tempatePath,
-        @KonfigVerdi(value = "pdf.template.type", defaultVerdi = "/create-pdf-format-variation") String templateType
-    ) {
-        this(RestClient.client(), tempatePath, templateType);
+    public FpDokgenKlient() {
+        this(RestClient.client());
     }
 
-    public FpDokgenKlient(RestClient restClient,
-                          String templatePath,
-                          String templateType) {
+    public FpDokgenKlient(RestClient restClient) {
         this.restClient = restClient;
         this.restConfig = RestConfig.forClient(FpDokgenKlient.class);
-        this.templatePath = templatePath;
-        this.templateType = templateType;
     }
 
-
-    public byte[] genererPdf(InntektsmeldingPdfData dokumentdata) throws URISyntaxException {
-        var endpoint = new URI(restConfig.endpoint() + templatePath + templateType);
+    public byte[] genererPdf(InntektsmeldingPdfData dokumentdata, ForespørselType forespørselType) {
+        var templatePath = utledTemplatePath(forespørselType);
+        var endpoint = UriBuilder.fromUri(restConfig.endpoint()).path(templatePath).path("/create-pdf-format-variation").build();
         var request = RestRequest.newPOSTJson(dokumentdata, endpoint, restConfig);
         var pdf = restClient.sendReturnByteArray(request);
 
@@ -53,5 +40,12 @@ public class FpDokgenKlient {
             throw new TekniskException("FPIM", "Fikk tomt svar ved kall til dokgen for generering av pdf for inntektsmelding");
         }
         return pdf;
+    }
+
+    private String utledTemplatePath(ForespørselType forespørselType) {
+        if (forespørselType == ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT) {
+            return "/template/fpinntektsmelding-refusjonskrav/PDFINNTEKTSMELDING";
+        }
+        return "/template/fpinntektsmelding-inntektsmelding/PDFINNTEKTSMELDING";
     }
 }

@@ -1,5 +1,6 @@
 package no.nav.familie.inntektsmelding.typer.dto;
 
+import no.nav.familie.inntektsmelding.koder.ArbeidsgiverinitiertÅrsak;
 import no.nav.familie.inntektsmelding.koder.Endringsårsak;
 import no.nav.familie.inntektsmelding.koder.ForespørselStatus;
 import no.nav.familie.inntektsmelding.koder.NaturalytelseType;
@@ -91,6 +92,17 @@ public class KodeverkMapper {
             case FERDIG -> ForespørselStatusDto.FERDIG;
             case UTGÅTT -> ForespørselStatusDto.UTGÅTT;
         };
+    }
+
+    public static ArbeidsgiverinitiertÅrsak mapArbeidsgiverinitiertÅrsak(ArbeidsgiverinitiertÅrsakDto arbeidsgiverinitiertÅrsakDto) {
+        switch (arbeidsgiverinitiertÅrsakDto) {
+            case NYANSATT -> {
+                return ArbeidsgiverinitiertÅrsak.NYANSATT;
+            }
+            case null, default -> {
+                throw new NullPointerException("Mangler årsak for arbeidsgiverinitiert inntektsmelding");
+            }
+        }
     }
 
 }

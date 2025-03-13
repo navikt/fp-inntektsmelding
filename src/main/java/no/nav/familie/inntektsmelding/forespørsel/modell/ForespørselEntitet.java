@@ -170,7 +170,7 @@ public class ForespørselEntitet {
     }
 
     public boolean erArbeidsgiverInitiert() {
-        return ForespørselType.ARBEIDSGIVERINITIERT.equals(forespørselType);
+        return ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT.equals(forespørselType);
     }
 
     @Override

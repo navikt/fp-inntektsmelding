@@ -13,6 +13,7 @@ import no.nav.familie.inntektsmelding.imdialog.modell.EndringsårsakEntitet;
 import no.nav.familie.inntektsmelding.imdialog.modell.InntektsmeldingEntitet;
 import no.nav.familie.inntektsmelding.imdialog.modell.RefusjonsendringEntitet;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonInfo;
+import no.nav.familie.inntektsmelding.koder.ForespørselType;
 import no.nav.familie.inntektsmelding.koder.Kildesystem;
 import no.nav.familie.inntektsmelding.koder.NaturalytelseType;
 import no.nav.familie.inntektsmelding.utils.mapper.NaturalYtelseMapper;
@@ -23,11 +24,13 @@ public class InntektsmeldingPdfDataMapper {
     private InntektsmeldingPdfDataMapper() {
         throw new IllegalStateException("InntektsmeldingPdfDataMapper: Utility class");
     }
-    public static InntektsmeldingPdfData mapInntektsmeldingData(InntektsmeldingEntitet inntektsmelding,
-                                                                String arbeidsgiverNavn,
-                                                                PersonInfo personInfo,
-                                                                String arbeidsgvierIdent) {
+    public static InntektsmeldingPdfData mapInntektsmeldingPdfData(InntektsmeldingEntitet inntektsmelding,
+                                                                   String arbeidsgiverNavn,
+                                                                   PersonInfo personInfo,
+                                                                   String arbeidsgvierIdent,
+                                                                   ForespørselType forespørselType) {
         var startdato = inntektsmelding.getStartDato();
+        //Felles
         var imDokumentdataBuilder = new InntektsmeldingPdfData.Builder()
             .medNavn(personInfo.mapNavn())
             .medPersonnummer(personInfo.fødselsnummer().getIdent())
@@ -35,14 +38,9 @@ public class InntektsmeldingPdfDataMapper {
             .medArbeidsgiverNavn(arbeidsgiverNavn)
             .medAvsenderSystem("NAV_NO")
             .medYtelseNavn(inntektsmelding.getYtelsetype())
-            .medOpprettetTidspunkt(inntektsmelding.getOpprettetTidspunkt())
-            .medStartDato(startdato)
-            .medMånedInntekt(inntektsmelding.getMånedInntekt())
             .medKontaktperson(mapKontaktperson(inntektsmelding))
-            .medNaturalytelser(mapNaturalYtelser(inntektsmelding.getBorfalteNaturalYtelser()))
-            .medIngenBortfaltNaturalytelse(erIngenBortalteNaturalYtelser(inntektsmelding.getBorfalteNaturalYtelser()))
-            .medIngenGjenopptattNaturalytelse(erIngenGjenopptatteNaturalYtelser(inntektsmelding.getBorfalteNaturalYtelser()))
-            .medEndringsårsaker(mapEndringsårsaker(inntektsmelding.getEndringsårsaker()));
+            .medOpprettetTidspunkt(inntektsmelding.getOpprettetTidspunkt())
+            .medStartDato(startdato);
 
         if (inntektsmelding.getMånedRefusjon() != null) {
             var opphørsdato = inntektsmelding.getOpphørsdatoRefusjon() != null ? inntektsmelding.getOpphørsdatoRefusjon() : null;
@@ -51,6 +49,15 @@ public class InntektsmeldingPdfDataMapper {
             imDokumentdataBuilder.medAntallRefusjonsperioder(refusjonsendringerTilPdf.size());
         } else {
             imDokumentdataBuilder.medAntallRefusjonsperioder(0);
+        }
+
+        //Gjelder ikke arbeidsgiverinitiert nyansatt
+        if (forespørselType == ForespørselType.BESTILT_AV_FAGSYSTEM) {
+            imDokumentdataBuilder.medMånedInntekt(inntektsmelding.getMånedInntekt())
+                .medNaturalytelser(mapNaturalYtelser(inntektsmelding.getBorfalteNaturalYtelser()))
+                .medIngenBortfaltNaturalytelse(erIngenBortalteNaturalYtelser(inntektsmelding.getBorfalteNaturalYtelser()))
+                .medIngenGjenopptattNaturalytelse(erIngenGjenopptatteNaturalYtelser(inntektsmelding.getBorfalteNaturalYtelser()))
+                .medEndringsårsaker(mapEndringsårsaker(inntektsmelding.getEndringsårsaker()));
         }
 
         return imDokumentdataBuilder.build();

@@ -12,6 +12,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+import no.nav.familie.inntektsmelding.koder.ArbeidsgiverinitiertÅrsak;
 import no.nav.familie.inntektsmelding.koder.ForespørselType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -236,7 +237,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         var uuid = forespørselBehandlingTjeneste.opprettForespørselForArbeidsgiverInitiertIm(YTELSETYPE,
             new AktørIdEntitet(AKTØR_ID),
             new OrganisasjonsnummerDto(BRREG_ORGNUMMER),
-            FØRSTE_UTTAKSDATO);
+            FØRSTE_UTTAKSDATO, ArbeidsgiverinitiertÅrsak.NYANSATT);
 
         var lagret = forespørselRepository.hentForespørsel(uuid).orElseThrow();
 
