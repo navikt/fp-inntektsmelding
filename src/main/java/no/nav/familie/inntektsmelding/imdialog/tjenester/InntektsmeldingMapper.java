@@ -36,7 +36,7 @@ public class InntektsmeldingMapper {
             .orElseThrow(() -> new IllegalStateException("Finner ikke refusjon på arbeidsgiverinitiert inntektsmeldsing, ugyldig tilstand"));
         var opphørsdato = refusjonPrMnd == null ? null : finnOpphørsdato(dto.refusjon(), dto.startdato()).orElse(Tid.TIDENES_ENDE);
         var builder = opprettBuilderOgSettFellesFelter(dto);
-        // Vi ønsker ikke be arbeidsgiver om refusjon i disse tilfellene da de sjelden har hatt utbetaling som nyansatt, og dette uansett ikke vil brukes i saksbehandlingen.
+        // Vi ønsker ikke be arbeidsgiver om inntekt i disse tilfellene da de sjelden har hatt utbetaling som nyansatt, og dette uansett ikke vil brukes i saksbehandlingen.
         // Setter derfor samme beløp som refusjon
         return builder
             .medMånedInntekt(refusjonPrMnd)
