@@ -30,7 +30,7 @@ public record SendInntektsmeldingRequestDto(@Valid UUID foresporselUuid,
                                             @NotNull List<@Valid Refusjon> refusjon,
                                             @NotNull List<@Valid BortfaltNaturalytelseRequestDto> bortfaltNaturalytelsePerioder,
                                             @NotNull List<@Valid EndringsårsakerRequestDto> endringAvInntektÅrsaker,
-                                            @Valid ArbeidsgiverinitiertÅrsakDto arbeidsgiverinitiertÅrsakDto) {
+                                            @Valid ArbeidsgiverinitiertÅrsakDto arbeidsgiverinitiertÅrsak) {
 
     public record Refusjon(@NotNull LocalDate fom,
                            @NotNull @Min(0) @Max(Integer.MAX_VALUE) @Digits(integer = 20, fraction = 2) BigDecimal beløp) {
