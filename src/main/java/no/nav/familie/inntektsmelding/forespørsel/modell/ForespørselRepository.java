@@ -194,10 +194,9 @@ public class ForespørselRepository {
 
     public List<ForespørselEntitet> finnForespørsler(AktørIdEntitet aktørId, Ytelsetype ytelsetype, String orgnr) {
         var query = entityManager.createQuery("FROM ForespørselEntitet where aktørId=:aktørId "
-                    + "and status=:underBehandling and ytelseType=:ytelseType and organisasjonsnummer=:orgnr",
+                    + "and ytelseType=:ytelseType and organisasjonsnummer=:orgnr",
                 ForespørselEntitet.class)
             .setParameter("aktørId", aktørId)
-            .setParameter("underBehandling", ForespørselStatus.UNDER_BEHANDLING)
             .setParameter("ytelseType", ytelsetype)
             .setParameter("orgnr", orgnr);
         return query.getResultList();
