@@ -10,6 +10,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import no.nav.familie.inntektsmelding.forespørsel.modell.ForespørselEntitet;
+
+import no.nav.familie.inntektsmelding.koder.ForespørselType;
+
+import no.nav.familie.inntektsmelding.typer.dto.ArbeidsgiverinitiertÅrsakDto;
+
 import org.junit.jupiter.api.Test;
 
 import no.nav.familie.inntektsmelding.imdialog.modell.BortaltNaturalytelseEntitet;
@@ -214,10 +220,16 @@ class InntektsmeldingMapperTest {
             ))
             .build();
 
-        var forespørselUuid = UUID.randomUUID();
+        var forespørselEntitet = new ForespørselEntitet("999999999",
+            LocalDate.now(),
+            new AktørIdEntitet("9999999999999"),
+            Ytelsetype.FORELDREPENGER,
+            "123",
+            LocalDate.now(),
+            ForespørselType.BESTILT_AV_FAGSYSTEM);
 
         // Act
-        var imDto = InntektsmeldingMapper.mapFraEntitet(imEntitet, forespørselUuid);
+        var imDto = InntektsmeldingMapper.mapFraEntitet(imEntitet, forespørselEntitet);
 
         // Assert
         assertThat(imDto.aktorId().id()).isEqualTo(imEntitet.getAktørId().getAktørId());
@@ -240,6 +252,8 @@ class InntektsmeldingMapperTest {
         assertThat(imDto.endringAvInntektÅrsaker()).hasSize(2);
         assertThat(imDto.endringAvInntektÅrsaker().get(0).årsak()).isEqualTo(EndringsårsakDto.FERIE);
         assertThat(imDto.endringAvInntektÅrsaker().get(1).årsak()).isEqualTo(EndringsårsakDto.TARIFFENDRING);
+        assertThat(imDto.arbeidsgiverinitiertÅrsak()).isNull();
+
     }
 
     @Test
@@ -282,10 +296,16 @@ class InntektsmeldingMapperTest {
             ))
             .build();
 
-        var forespørselUuid = UUID.randomUUID();
+        var forespørselEntitet = new ForespørselEntitet("999999999",
+            LocalDate.now(),
+            new AktørIdEntitet("9999999999999"),
+            Ytelsetype.FORELDREPENGER,
+            "123",
+            LocalDate.now(),
+            ForespørselType.BESTILT_AV_FAGSYSTEM);
 
         // Act
-        var imDto = InntektsmeldingMapper.mapFraEntitet(imEntitet, forespørselUuid);
+        var imDto = InntektsmeldingMapper.mapFraEntitet(imEntitet, forespørselEntitet);
 
         // Assert
         assertThat(imDto.aktorId().id()).isEqualTo(imEntitet.getAktørId().getAktørId());
@@ -310,6 +330,7 @@ class InntektsmeldingMapperTest {
         assertThat(imDto.endringAvInntektÅrsaker()).hasSize(2);
         assertThat(imDto.endringAvInntektÅrsaker().get(0).årsak()).isEqualTo(EndringsårsakDto.FERIE);
         assertThat(imDto.endringAvInntektÅrsaker().get(1).årsak()).isEqualTo(EndringsårsakDto.TARIFFENDRING);
+        assertThat(imDto.arbeidsgiverinitiertÅrsak()).isNull();
 
     }
 
@@ -352,10 +373,16 @@ class InntektsmeldingMapperTest {
             ))
             .build();
 
-        var forespørselUuid = UUID.randomUUID();
+        var forespørselEntitet = new ForespørselEntitet("999999999",
+            LocalDate.now(),
+            new AktørIdEntitet("9999999999999"),
+            Ytelsetype.FORELDREPENGER,
+            "123",
+            LocalDate.now(),
+            ForespørselType.BESTILT_AV_FAGSYSTEM);
 
         // Act
-        var imDto = InntektsmeldingMapper.mapFraEntitet(imEntitet, forespørselUuid);
+        var imDto = InntektsmeldingMapper.mapFraEntitet(imEntitet, forespørselEntitet);
 
         // Assert
         assertThat(imDto.aktorId().id()).isEqualTo(imEntitet.getAktørId().getAktørId());
@@ -376,6 +403,48 @@ class InntektsmeldingMapperTest {
         assertThat(imDto.endringAvInntektÅrsaker()).hasSize(2);
         assertThat(imDto.endringAvInntektÅrsaker().get(0).årsak()).isEqualTo(EndringsårsakDto.FERIE);
         assertThat(imDto.endringAvInntektÅrsaker().get(1).årsak()).isEqualTo(EndringsårsakDto.TARIFFENDRING);
+        assertThat(imDto.arbeidsgiverinitiertÅrsak()).isNull();
+    }
 
+    @Test
+    void skal_teste_mapping_av_arbeidsgiverinitiert_inntektsmelding() {
+        // Arrange
+        var imEntitet = InntektsmeldingEntitet.builder()
+            .medAktørId(new AktørIdEntitet("9999999999999"))
+            .medKontaktperson(new KontaktpersonEntitet("Første", "999999999"))
+            .medYtelsetype(Ytelsetype.FORELDREPENGER)
+            .medMånedInntekt(BigDecimal.valueOf(5000))
+            .medMånedRefusjon(BigDecimal.valueOf(5000))
+            .medRefusjonOpphørsdato(Tid.TIDENES_ENDE)
+            .medStartDato(LocalDate.now())
+            .medArbeidsgiverIdent("999999999")
+            .medOpprettetTidspunkt(LocalDateTime.now().plusDays(1))
+            .build();
+
+        var forespørselEntitet = new ForespørselEntitet("999999999",
+            LocalDate.now(),
+            new AktørIdEntitet("9999999999999"),
+            Ytelsetype.FORELDREPENGER,
+            "123",
+            LocalDate.now(),
+            ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT);
+
+        // Act
+        var imDto = InntektsmeldingMapper.mapFraEntitet(imEntitet, forespørselEntitet);
+
+        // Assert
+        assertThat(imDto.aktorId().id()).isEqualTo(imEntitet.getAktørId().getAktørId());
+        assertThat(imDto.arbeidsgiverIdent().ident()).isEqualTo(imEntitet.getArbeidsgiverIdent());
+        assertThat(imDto.inntekt()).isEqualByComparingTo(imEntitet.getMånedInntekt());
+        assertThat(imDto.startdato()).isEqualTo(imEntitet.getStartDato());
+        assertThat(KodeverkMapper.mapYtelsetype(imDto.ytelse())).isEqualTo(imEntitet.getYtelsetype());
+        assertThat(BigDecimal.valueOf(5000)).isEqualByComparingTo(imEntitet.getMånedRefusjon());
+        assertThat(imDto.kontaktperson().navn()).isEqualTo(imEntitet.getKontaktperson().getNavn());
+        assertThat(imDto.kontaktperson().telefonnummer()).isEqualTo(imEntitet.getKontaktperson().getTelefonnummer());
+        assertThat(imDto.refusjon()).hasSize(1);
+        assertThat(imDto.refusjon().get(0).fom()).isEqualTo(imEntitet.getStartDato());
+        assertThat(imDto.refusjon().get(0).beløp()).isEqualByComparingTo(imEntitet.getMånedRefusjon());
+        assertThat(imDto.opprettetTidspunkt()).isEqualTo(imEntitet.getOpprettetTidspunkt());
+        assertThat(imDto.arbeidsgiverinitiertÅrsak()).isEqualTo(ArbeidsgiverinitiertÅrsakDto.NYANSATT);
     }
 }

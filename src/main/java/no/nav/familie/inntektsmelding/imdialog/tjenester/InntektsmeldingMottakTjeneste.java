@@ -62,7 +62,7 @@ public class InntektsmeldingMottakTjeneste {
         MetrikkerTjeneste.loggForespørselLukkIntern(lukketForespørsel);
         MetrikkerTjeneste.loggInnsendtInntektsmelding(imEntitet);
 
-        return InntektsmeldingMapper.mapFraEntitet(imEntitet, mottattInntektsmeldingDto.foresporselUuid());
+        return InntektsmeldingMapper.mapFraEntitet(imEntitet, forespørselEntitet);
     }
 
     public InntektsmeldingResponseDto mottaArbeidsgiverInitiertInntektsmelding(SendInntektsmeldingRequestDto sendInntektsmeldingRequestDto) {
@@ -91,7 +91,7 @@ public class InntektsmeldingMottakTjeneste {
         // Metrikker i prometheus
         MetrikkerTjeneste.logginnsendtArbeidsgiverinitiertIm(imEntitet);
 
-        return InntektsmeldingMapper.mapFraEntitet(imEntitet, forespørselUuid);
+        return InntektsmeldingMapper.mapFraEntitet(imEntitet, forespørselEnitet);
     }
 
     private Long lagreOgLagJournalførTask(InntektsmeldingEntitet entitet, ForespørselEntitet forespørsel) {
