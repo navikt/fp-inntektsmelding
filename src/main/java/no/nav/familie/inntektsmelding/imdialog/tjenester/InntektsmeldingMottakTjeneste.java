@@ -71,27 +71,44 @@ public class InntektsmeldingMottakTjeneste {
         var ytelseType = KodeverkMapper.mapYtelsetype(sendInntektsmeldingRequestDto.ytelse());
         var arbeidsgiverinitiertÅrsak = KodeverkMapper.mapArbeidsgiverinitiertÅrsak(sendInntektsmeldingRequestDto.arbeidsgiverinitiertÅrsak());
         var organisasjonsnummer = new OrganisasjonsnummerDto(sendInntektsmeldingRequestDto.arbeidsgiverIdent().ident());
+        var finnesForespørselFraFør = sendInntektsmeldingRequestDto.foresporselUuid() != null;
+        if (finnesForespørselFraFør) {
+            // Inntektsmelding er endring av allerede innsendt inntektsmelding
 
-        var forespørselUuid = forespørselBehandlingTjeneste.opprettForespørselForArbeidsgiverInitiertIm(ytelseType,
-            aktørId,
-            organisasjonsnummer,
-            sendInntektsmeldingRequestDto.startdato(),
-            arbeidsgiverinitiertÅrsak);
+            var forespørselEnitet = forespørselBehandlingTjeneste.hentForespørsel(sendInntektsmeldingRequestDto.foresporselUuid())
+                .orElseThrow(() -> new IllegalStateException("Mangler forespørsel entitet"));
 
-        var forespørselEnitet = forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid)
-            .orElseThrow(() -> new IllegalStateException("Mangler forespørsel entitet"));
+            var imId = lagreOgLagJournalførTask(imEnitet, forespørselEnitet);
+            var imEntitet = inntektsmeldingRepository.hentInntektsmelding(imId);
 
-        var imId = lagreOgLagJournalførTask(imEnitet, forespørselEnitet);
+            // Metrikker i prometheus
+            MetrikkerTjeneste.loggEndretArbeidsgiverinitiertIm(imEntitet);
 
-        forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørselUuid, aktørId, organisasjonsnummer,
-            sendInntektsmeldingRequestDto.startdato(), LukkeÅrsak.ORDINÆR_INNSENDING);
+            return InntektsmeldingMapper.mapFraEntitet(imEntitet, forespørselEnitet);
+        } else {
+            // Inntektsmelding er ny, ikke endring. Må da opprette og ferdigstille forespørsel slik at denne skal finnes i oversikten på Min side - Arbeidsgiver
 
-        var imEntitet = inntektsmeldingRepository.hentInntektsmelding(imId);
+            var forespørselUuid = forespørselBehandlingTjeneste.opprettForespørselForArbeidsgiverInitiertIm(ytelseType,
+                aktørId,
+                organisasjonsnummer,
+                sendInntektsmeldingRequestDto.startdato(),
+                arbeidsgiverinitiertÅrsak);
 
-        // Metrikker i prometheus
-        MetrikkerTjeneste.logginnsendtArbeidsgiverinitiertIm(imEntitet);
+            var forespørselEnitet = forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid)
+                .orElseThrow(() -> new IllegalStateException("Mangler forespørsel entitet"));
 
-        return InntektsmeldingMapper.mapFraEntitet(imEntitet, forespørselEnitet);
+            var imId = lagreOgLagJournalførTask(imEnitet, forespørselEnitet);
+
+            forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørselUuid, aktørId, organisasjonsnummer,
+                sendInntektsmeldingRequestDto.startdato(), LukkeÅrsak.ORDINÆR_INNSENDING);
+
+            var imEntitet = inntektsmeldingRepository.hentInntektsmelding(imId);
+
+            // Metrikker i prometheus
+            MetrikkerTjeneste.logginnsendtArbeidsgiverinitiertIm(imEntitet);
+
+            return InntektsmeldingMapper.mapFraEntitet(imEntitet, forespørselEnitet);
+        }
     }
 
     private Long lagreOgLagJournalførTask(InntektsmeldingEntitet entitet, ForespørselEntitet forespørsel) {
