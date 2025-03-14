@@ -30,24 +30,44 @@ public class InntektsmeldingMapper {
         // Skjuler default konstruktør
     }
 
+    public static InntektsmeldingEntitet mapTilEntitetArbeidsgiverinitiert(SendInntektsmeldingRequestDto dto) {
+        // Frontend sender kun inn liste med refusjon. Vi utleder startsum og opphørsdato utifra denne lista.
+        var refusjonPrMnd = finnFørsteRefusjon(dto.refusjon(), dto.startdato())
+            .orElseThrow(() -> new IllegalStateException("Finner ikke refusjon på arbeidsgiverinitiert inntektsmeldsing, ugyldig tilstand"));
+        var opphørsdato = refusjonPrMnd == null ? null : finnOpphørsdato(dto.refusjon(), dto.startdato()).orElse(Tid.TIDENES_ENDE);
+        var builder = opprettBuilderOgSettFellesFelter(dto);
+        // Vi ønsker ikke be arbeidsgiver om inntekt i disse tilfellene da de sjelden har hatt utbetaling som nyansatt, og dette uansett ikke vil brukes i saksbehandlingen.
+        // Setter derfor samme beløp som refusjon
+        return builder
+            .medMånedInntekt(refusjonPrMnd)
+            .medMånedRefusjon(refusjonPrMnd)
+            .medRefusjonOpphørsdato(opphørsdato)
+            .medRefusjonsendringer(mapRefusjonsendringer(dto.startdato(), opphørsdato, dto.refusjon()))
+            .build();
+    }
+
     public static InntektsmeldingEntitet mapTilEntitet(SendInntektsmeldingRequestDto dto) {
         // Frontend sender kun inn liste med refusjon. Vi utleder startsum og opphørsdato utifra denne lista.
         var refusjonPrMnd = finnFørsteRefusjon(dto.refusjon(), dto.startdato()).orElse(null);
         var opphørsdato = refusjonPrMnd == null ? null : finnOpphørsdato(dto.refusjon(), dto.startdato()).orElse(Tid.TIDENES_ENDE);
-        return InntektsmeldingEntitet.builder()
-            .medAktørId(new AktørIdEntitet(dto.aktorId().id()))
-            .medArbeidsgiverIdent(dto.arbeidsgiverIdent().ident())
-            .medMånedInntekt(dto.inntekt())
-            .medKildesystem(Kildesystem.ARBEIDSGIVERPORTAL)
+        var builder = opprettBuilderOgSettFellesFelter(dto);
+        return builder.medMånedInntekt(dto.inntekt())
             .medMånedRefusjon(refusjonPrMnd)
             .medRefusjonOpphørsdato(opphørsdato)
-            .medStartDato(dto.startdato())
-            .medYtelsetype(KodeverkMapper.mapYtelsetype(dto.ytelse()))
-            .medKontaktperson(mapKontaktPerson(dto))
             .medEndringsårsaker(mapEndringsårsaker(dto.endringAvInntektÅrsaker()))
             .medBortfaltNaturalytelser(mapBortfalteNaturalytelser(dto.bortfaltNaturalytelsePerioder()))
             .medRefusjonsendringer(mapRefusjonsendringer(dto.startdato(), opphørsdato, dto.refusjon()))
             .build();
+    }
+
+    private static InntektsmeldingEntitet.Builder opprettBuilderOgSettFellesFelter(SendInntektsmeldingRequestDto dto) {
+        return InntektsmeldingEntitet.builder()
+            .medAktørId(new AktørIdEntitet(dto.aktorId().id()))
+            .medArbeidsgiverIdent(dto.arbeidsgiverIdent().ident())
+            .medKildesystem(Kildesystem.ARBEIDSGIVERPORTAL)
+            .medStartDato(dto.startdato())
+            .medYtelsetype(KodeverkMapper.mapYtelsetype(dto.ytelse()))
+            .medKontaktperson(mapKontaktPerson(dto));
     }
 
     private static Optional<BigDecimal> finnFørsteRefusjon(List<SendInntektsmeldingRequestDto.Refusjon> refusjon, LocalDate startdato) {
