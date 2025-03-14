@@ -16,11 +16,11 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import no.nav.familie.inntektsmelding.forespørsel.modell.ForespørselEntitet;
 import no.nav.familie.inntektsmelding.forespørsel.tjenester.ForespørselTjeneste;
 import no.nav.familie.inntektsmelding.imdialog.tjenester.GrunnlagDtoTjeneste;
 import no.nav.familie.inntektsmelding.imdialog.tjenester.InntektsmeldingMapper;
 import no.nav.familie.inntektsmelding.imdialog.tjenester.InntektsmeldingMottakTjeneste;
+import no.nav.familie.inntektsmelding.typer.dto.ArbeidsgiverinitiertÅrsakDto;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 
 import org.slf4j.Logger;
@@ -100,8 +100,8 @@ public class InntektsmeldingDialogRest {
     @Produces(MediaType.APPLICATION_JSON + ";charset=utf-8")
     @Tilgangskontrollert
     public Response sendInntektsmelding(@NotNull @Valid SendInntektsmeldingRequestDto sendInntektsmeldingRequestDto) {
-
-        if (sendInntektsmeldingRequestDto.foresporselUuid() == null) {
+        if (ArbeidsgiverinitiertÅrsakDto.NYANSATT.equals(sendInntektsmeldingRequestDto.arbeidsgiverinitiertÅrsak())) {
+            // Arbeidsgiverinitiert har aldri forespørsel ved første innsending, så sjekker heller direkte på arbeidsgiverIdent i disse sakene
             tilgang.sjekkAtArbeidsgiverHarTilgangTilBedrift(new OrganisasjonsnummerDto(sendInntektsmeldingRequestDto.arbeidsgiverIdent().ident()));
             LOG.info("Mottok arbeisgiverinitert inntektsmelding for aktørId {}", sendInntektsmeldingRequestDto.aktorId());
            return Response.ok(inntektsmeldingMottakTjeneste.mottaArbeidsgiverInitiertInntektsmelding(sendInntektsmeldingRequestDto)).build();

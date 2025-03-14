@@ -40,6 +40,9 @@ public class MetrikkerTjeneste {
     // Måler innsending av arbeidsgiverinitiert inntektsmelding
     private static final String ARBEIDSGIVERINITIERT_INNSENDING = APP_NAME + "arbeidsgiverinitiert.innsending";
 
+    // Måler innsending av arbeidsgiverinitiert inntektsmelding
+    private static final String ARBEIDSGIVERINITIERT_ENDRING = APP_NAME + "arbeidsgiverinitiert.endring";
+
     // Måler opprettelse av oppgaver per ytelse
     private static final String COUNTER_FORESPØRRSEL = APP_NAME + ".oppgaver.opprettet";
 
@@ -134,7 +137,6 @@ public class MetrikkerTjeneste {
     }
 
     public static void logginnsendtArbeidsgiverinitiertIm(InntektsmeldingEntitet imEntitet) {
-
         try {
             var tags = new ArrayList<Tag>();
             tags.add(new ImmutableTag(TAG_YTELSE, imEntitet.getYtelsetype().name()));
@@ -143,4 +145,15 @@ public class MetrikkerTjeneste {
             loggFeil(e, "logginnsendtArbeidsgiverinitiertIm");
         }
     }
+
+    public static void loggEndretArbeidsgiverinitiertIm(InntektsmeldingEntitet imEntitet) {
+        try {
+            var tags = new ArrayList<Tag>();
+            tags.add(new ImmutableTag(TAG_YTELSE, imEntitet.getYtelsetype().name()));
+            Metrics.counter(ARBEIDSGIVERINITIERT_ENDRING, tags).increment();
+        } catch (Exception e) {
+            loggFeil(e, "loggEndretArbeidsgiverinitiertIm");
+        }
+    }
+
 }
