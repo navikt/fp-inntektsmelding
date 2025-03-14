@@ -16,6 +16,8 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import no.nav.familie.inntektsmelding.forespørsel.modell.ForespørselEntitet;
+import no.nav.familie.inntektsmelding.forespørsel.tjenester.ForespørselTjeneste;
 import no.nav.familie.inntektsmelding.imdialog.tjenester.GrunnlagDtoTjeneste;
 import no.nav.familie.inntektsmelding.imdialog.tjenester.InntektsmeldingMapper;
 import no.nav.familie.inntektsmelding.imdialog.tjenester.InntektsmeldingMottakTjeneste;
@@ -46,6 +48,7 @@ public class InntektsmeldingDialogRest {
     private InntektsmeldingTjeneste inntektsmeldingTjeneste;
     private GrunnlagDtoTjeneste grunnlagDtoTjeneste;
     private InntektsmeldingMottakTjeneste inntektsmeldingMottakTjeneste;
+    private ForespørselTjeneste forespørselTjeneste;
     private Tilgang tilgang;
 
     InntektsmeldingDialogRest() {
@@ -56,10 +59,12 @@ public class InntektsmeldingDialogRest {
     public InntektsmeldingDialogRest(InntektsmeldingTjeneste inntektsmeldingTjeneste,
                                      GrunnlagDtoTjeneste grunnlagDtoTjeneste,
                                      InntektsmeldingMottakTjeneste inntektsmeldingMottakTjeneste,
+                                     ForespørselTjeneste forespørselTjeneste,
                                      Tilgang tilgang) {
         this.inntektsmeldingTjeneste = inntektsmeldingTjeneste;
         this.grunnlagDtoTjeneste = grunnlagDtoTjeneste;
         this.inntektsmeldingMottakTjeneste = inntektsmeldingMottakTjeneste;
+        this.forespørselTjeneste = forespørselTjeneste;
         this.tilgang = tilgang;
     }
 
@@ -82,10 +87,10 @@ public class InntektsmeldingDialogRest {
     @Tilgangskontrollert
     public Response hentInntektsmeldingerForOppgave(@NotNull @Valid @QueryParam("foresporselUuid") UUID forespørselUuid) {
         tilgang.sjekkAtArbeidsgiverHarTilgangTilBedrift(forespørselUuid);
-
+        var forespørselEntitet = forespørselTjeneste.hentForespørsel(forespørselUuid).orElseThrow(() -> new IllegalStateException("Finner ingen forespørsel for id: " + forespørselUuid));
         LOG.info("Henter inntektsmeldinger for forespørsel {}", forespørselUuid);
         var dto = inntektsmeldingTjeneste.hentInntektsmeldinger(forespørselUuid).stream()
-            .map(im -> InntektsmeldingMapper.mapFraEntitet(im, forespørselUuid))
+            .map(im -> InntektsmeldingMapper.mapFraEntitet(im, forespørselEntitet))
             .toList();
         return Response.ok(dto).build();
     }

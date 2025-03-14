@@ -10,6 +10,7 @@ import jakarta.validation.constraints.NotNull;
 
 import no.nav.familie.inntektsmelding.typer.dto.AktørIdDto;
 import no.nav.familie.inntektsmelding.typer.dto.ArbeidsgiverDto;
+import no.nav.familie.inntektsmelding.typer.dto.ArbeidsgiverinitiertÅrsakDto;
 import no.nav.familie.inntektsmelding.typer.dto.YtelseTypeDto;
 
 import java.math.BigDecimal;
@@ -28,6 +29,7 @@ public record InntektsmeldingResponseDto(
     @NotNull LocalDateTime opprettetTidspunkt,
     @NotNull List<SendInntektsmeldingRequestDto.@Valid Refusjon> refusjon,
     @NotNull List<SendInntektsmeldingRequestDto.@Valid BortfaltNaturalytelseRequestDto> bortfaltNaturalytelsePerioder,
-    @NotNull List<SendInntektsmeldingRequestDto.@Valid EndringsårsakerRequestDto> endringAvInntektÅrsaker
+    @NotNull List<SendInntektsmeldingRequestDto.@Valid EndringsårsakerRequestDto> endringAvInntektÅrsaker,
+    @Valid ArbeidsgiverinitiertÅrsakDto arbeidsgiverinitiertÅrsak
 ) {
 }

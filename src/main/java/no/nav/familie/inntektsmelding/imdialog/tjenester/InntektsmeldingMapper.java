@@ -7,8 +7,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
 
+import no.nav.familie.inntektsmelding.forespørsel.modell.ForespørselEntitet;
 import no.nav.familie.inntektsmelding.imdialog.modell.BortaltNaturalytelseEntitet;
 import no.nav.familie.inntektsmelding.imdialog.modell.EndringsårsakEntitet;
 import no.nav.familie.inntektsmelding.imdialog.modell.InntektsmeldingEntitet;
@@ -16,9 +16,11 @@ import no.nav.familie.inntektsmelding.imdialog.modell.KontaktpersonEntitet;
 import no.nav.familie.inntektsmelding.imdialog.modell.RefusjonsendringEntitet;
 import no.nav.familie.inntektsmelding.imdialog.rest.InntektsmeldingResponseDto;
 import no.nav.familie.inntektsmelding.imdialog.rest.SendInntektsmeldingRequestDto;
+import no.nav.familie.inntektsmelding.koder.ForespørselType;
 import no.nav.familie.inntektsmelding.koder.Kildesystem;
 import no.nav.familie.inntektsmelding.typer.dto.AktørIdDto;
 import no.nav.familie.inntektsmelding.typer.dto.ArbeidsgiverDto;
+import no.nav.familie.inntektsmelding.typer.dto.ArbeidsgiverinitiertÅrsakDto;
 import no.nav.familie.inntektsmelding.typer.dto.KodeverkMapper;
 import no.nav.familie.inntektsmelding.typer.dto.NaturalytelsetypeDto;
 import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
@@ -94,7 +96,7 @@ public class InntektsmeldingMapper {
             .build();
     }
 
-    public static InntektsmeldingResponseDto mapFraEntitet(InntektsmeldingEntitet entitet, UUID forespørselUuid) {
+    public static InntektsmeldingResponseDto mapFraEntitet(InntektsmeldingEntitet entitet, ForespørselEntitet forespørselEntitet) {
         var refusjoner = mapRefusjonerTilDto(entitet);
 
         var bortfalteNaturalytelser = entitet.getBorfalteNaturalYtelser().stream().map(i ->
@@ -112,9 +114,11 @@ public class InntektsmeldingMapper {
                 e.getBleKjentFom().orElse(null)))
             .toList();
 
+        var forespørselType = forespørselEntitet.getForespørselType().equals(ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT) ? ArbeidsgiverinitiertÅrsakDto.NYANSATT : null;
+
         return new InntektsmeldingResponseDto(
             entitet.getId(),
-            forespørselUuid,
+            forespørselEntitet.getUuid(),
             new AktørIdDto(entitet.getAktørId().getAktørId()),
             KodeverkMapper.mapYtelsetype(entitet.getYtelsetype()),
             new ArbeidsgiverDto(entitet.getArbeidsgiverIdent()),
@@ -124,7 +128,8 @@ public class InntektsmeldingMapper {
             entitet.getOpprettetTidspunkt(),
             refusjoner,
             bortfalteNaturalytelser,
-            endringsårsaker
+            endringsårsaker,
+            forespørselType
             );
     }
 
