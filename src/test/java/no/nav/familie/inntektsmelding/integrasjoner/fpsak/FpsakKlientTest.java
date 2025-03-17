@@ -26,7 +26,7 @@ class FpsakKlientTest {
     private FpsakKlient fpsakKlient;
 
     @BeforeEach
-    public void setUP() {
+    void setUP() {
         fpsakKlient = new FpsakKlient(restClient);
     }
 
