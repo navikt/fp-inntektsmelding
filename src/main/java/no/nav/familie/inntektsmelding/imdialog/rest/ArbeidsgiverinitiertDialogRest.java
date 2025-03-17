@@ -12,16 +12,14 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import no.nav.familie.inntektsmelding.integrasjoner.fpsak.FpsakTjeneste;
-import no.nav.vedtak.exception.FunksjonellException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.nav.familie.inntektsmelding.imdialog.tjenester.GrunnlagDtoTjeneste;
+import no.nav.familie.inntektsmelding.integrasjoner.fpsak.FpsakTjeneste;
 import no.nav.familie.inntektsmelding.server.auth.api.AutentisertMedTokenX;
 import no.nav.familie.inntektsmelding.server.auth.api.Tilgangskontrollert;
-import no.nav.foreldrepenger.konfig.Environment;
+import no.nav.vedtak.exception.FunksjonellException;
 
 @AutentisertMedTokenX
 @RequestScoped
@@ -37,7 +35,6 @@ public class ArbeidsgiverinitiertDialogRest {
 
     private GrunnlagDtoTjeneste grunnlagDtoTjeneste;
     private FpsakTjeneste fpsakTjeneste;
-    private boolean erProd = true;
 
     ArbeidsgiverinitiertDialogRest() {
         // CDI
@@ -48,7 +45,6 @@ public class ArbeidsgiverinitiertDialogRest {
                                           FpsakTjeneste fpsakTjeneste) {
         this.grunnlagDtoTjeneste = grunnlagDtoTjeneste;
         this.fpsakTjeneste = fpsakTjeneste;
-        this.erProd = Environment.current().isProd();
     }
 
     @POST
@@ -56,9 +52,6 @@ public class ArbeidsgiverinitiertDialogRest {
     @Produces(MediaType.APPLICATION_JSON + ";charset=utf-8")
     @Tilgangskontrollert
     public Response hentArbeidsforhold(@Valid @NotNull HentArbeidsgiverRequest request) {
-        if (erProd) {
-            throw new IllegalStateException("Ugyldig kall på restpunkt som ikke er lansert");
-        }
         LOG.info("Henter arbeidsforhold for søker {}", request.fødselsnummer());
         var personInfo = grunnlagDtoTjeneste.finnPersoninfo(request.fødselsnummer(), request.ytelseType());
         if (personInfo == null) {
@@ -83,9 +76,6 @@ public class ArbeidsgiverinitiertDialogRest {
     @Produces(MediaType.APPLICATION_JSON + ";charset=utf-8")
     @Tilgangskontrollert
     public Response hentOpplysninger(@Valid @NotNull OpplysningerRequestDto request) {
-        if (erProd) {
-            throw new IllegalStateException("Ugyldig kall på restpunkt som ikke er lansert");
-        }
         LOG.info("Henter opplysninger for søker {}", request.fødselsnummer());
         var dto = grunnlagDtoTjeneste.lagArbeidsgiverinitiertDialogDto(request.fødselsnummer(), request.ytelseType(), request.førsteFraværsdag(), request.organisasjonsnummer());
         return Response.ok(dto).build();
