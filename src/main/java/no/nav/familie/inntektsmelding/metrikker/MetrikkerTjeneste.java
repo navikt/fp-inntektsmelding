@@ -38,10 +38,10 @@ public class MetrikkerTjeneste {
     private static final DistributionSummary OPPGAVE_VARIGHET_INTERN_TELLER = Metrics.summary(APP_NAME + ".oppgaver.varighet.intern");
 
     // Måler innsending av arbeidsgiverinitiert inntektsmelding
-    private static final String ARBEIDSGIVERINITIERT_INNSENDING = APP_NAME + "arbeidsgiverinitiert.innsending";
+    private static final String ARBEIDSGIVERINITIERT_INNSENDING = APP_NAME + ".arbeidsgiverinitiert.innsending";
 
-    // Måler innsending av arbeidsgiverinitiert inntektsmelding
-    private static final String ARBEIDSGIVERINITIERT_ENDRING = APP_NAME + "arbeidsgiverinitiert.endring";
+    // Måler endring av arbeidsgiverinitiert inntektsmelding
+    private static final String ARBEIDSGIVERINITIERT_ENDRING = APP_NAME + ".arbeidsgiverinitiert.endring";
 
     // Måler opprettelse av oppgaver per ytelse
     private static final String COUNTER_FORESPØRRSEL = APP_NAME + ".oppgaver.opprettet";
