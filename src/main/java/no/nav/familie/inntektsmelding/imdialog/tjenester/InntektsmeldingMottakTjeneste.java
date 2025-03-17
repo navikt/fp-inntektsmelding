@@ -19,6 +19,7 @@ import no.nav.familie.inntektsmelding.metrikker.MetrikkerTjeneste;
 import no.nav.familie.inntektsmelding.typer.dto.KodeverkMapper;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
+import no.nav.vedtak.exception.TekniskException;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskTjeneste;
 
@@ -43,7 +44,7 @@ public class InntektsmeldingMottakTjeneste {
 
     public InntektsmeldingResponseDto mottaInntektsmelding(SendInntektsmeldingRequestDto mottattInntektsmeldingDto) {
         var forespørselEntitet = forespørselBehandlingTjeneste.hentForespørsel(mottattInntektsmeldingDto.foresporselUuid())
-            .orElseThrow(() -> new IllegalStateException("Mangler forespørsel entitet"));
+            .orElseThrow(this::manglerForespørselFeil);
 
         if (ForespørselStatus.UTGÅTT.equals(forespørselEntitet.getStatus())) {
             throw new IllegalStateException("Kan ikke motta nye inntektsmeldinger på utgåtte forespørsler");
@@ -76,7 +77,7 @@ public class InntektsmeldingMottakTjeneste {
             // Inntektsmelding er endring av allerede innsendt inntektsmelding
 
             var forespørselEnitet = forespørselBehandlingTjeneste.hentForespørsel(sendInntektsmeldingRequestDto.foresporselUuid())
-                .orElseThrow(() -> new IllegalStateException("Mangler forespørsel entitet"));
+                .orElseThrow(this::manglerForespørselFeil);
 
             var imId = lagreOgLagJournalførTask(imEnitet, forespørselEnitet);
             var imEntitet = inntektsmeldingRepository.hentInntektsmelding(imId);
@@ -95,7 +96,7 @@ public class InntektsmeldingMottakTjeneste {
                 arbeidsgiverinitiertÅrsak);
 
             var forespørselEnitet = forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid)
-                .orElseThrow(() -> new IllegalStateException("Mangler forespørsel entitet"));
+                .orElseThrow(this::manglerForespørselFeil);
 
             var imId = lagreOgLagJournalførTask(imEnitet, forespørselEnitet);
 
@@ -125,5 +126,9 @@ public class InntektsmeldingMottakTjeneste {
         task.setProperty(SendTilJoarkTask.KEY_FORESPOERSEL_TYPE, forespørsel.getForespørselType().toString());
         prosessTaskTjeneste.lagre(task);
         LOG.info("Opprettet task for oversending til joark");
+    }
+
+    private TekniskException manglerForespørselFeil() {
+        return new TekniskException("FPINNTEKTSMELDING_FORESPØRSEL_1", "Mangler forespørsel entitet");
     }
 }

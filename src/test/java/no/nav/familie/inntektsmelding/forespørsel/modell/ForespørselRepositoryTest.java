@@ -24,29 +24,29 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
     }
 
     @Test
-    void skal_teste_at_forespørsel_lagres_uten_stp() {
-        var uuid = forespørselRepository.lagreForespørsel(LocalDate.now(),
+    void skal_lagre_arbeidsgiverinitiert_forespørsel() {
+        var uuid = forespørselRepository.lagreForespørsel(null,
             Ytelsetype.FORELDREPENGER,
             "9999999999999",
             "999999999",
-            "123",
+            null,
             LocalDate.now(),
-            ForespørselType.BESTILT_AV_FAGSYSTEM);
+            ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT);
 
         var hentet = forespørselRepository.hentForespørsel(uuid).orElse(null);
 
         assertThat(hentet).isNotNull();
-        assertThat(hentet.getSkjæringstidspunkt().orElse(null)).isEqualTo(LocalDate.now());
+        assertThat(hentet.getSkjæringstidspunkt()).isEmpty();
         assertThat(hentet.getOrganisasjonsnummer()).isEqualTo("999999999");
         assertThat(hentet.getAktørId().getAktørId()).isEqualTo("9999999999999");
         assertThat(hentet.getYtelseType()).isEqualTo(Ytelsetype.FORELDREPENGER);
-        assertThat(hentet.getFagsystemSaksnummer().orElseThrow()).isEqualTo("123");
+        assertThat(hentet.getFagsystemSaksnummer()).isEmpty();
         assertThat(hentet.getFørsteUttaksdato()).isEqualTo(LocalDate.now());
 
     }
 
     @Test
-    void skal_teste_at_forespørsel_lagres_med_første_uttaksdato() {
+    void skal_lagre_forespørsel_bnestilt_fra_fagsystem() {
         var uuid = forespørselRepository.lagreForespørsel(LocalDate.now(),
             Ytelsetype.FORELDREPENGER,
             "9999999999999",

@@ -88,7 +88,7 @@ public class ForespørselEntitet {
         this.organisasjonsnummer = Objects.requireNonNull(organisasjonsnummer, "organisasjonsnummer");
         this.aktørId = Objects.requireNonNull(aktørId, "aktørId");
         this.ytelseType = Objects.requireNonNull(ytelseType, "ytelseType");
-        this.førsteUttaksdato = Objects.requireNonNull(førsteUttaksdato, "førsteUttaksdato");;
+        this.førsteUttaksdato = Objects.requireNonNull(førsteUttaksdato, "førsteUttaksdato");
         this.forespørselType = Objects.requireNonNull(forespørselType, "forespørselType");
         if (forespørselType.equals(ForespørselType.BESTILT_AV_FAGSYSTEM)) {
             this.fagsystemSaksnummer = Objects.requireNonNull(fagsystemSaksnummer, "fagsystemSaksnummer");

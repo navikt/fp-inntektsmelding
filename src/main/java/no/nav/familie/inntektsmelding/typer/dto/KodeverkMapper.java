@@ -99,9 +99,7 @@ public class KodeverkMapper {
             case NYANSATT -> {
                 return ArbeidsgiverinitiertÅrsak.NYANSATT;
             }
-            case null, default -> {
-                throw new NullPointerException("Mangler årsak for arbeidsgiverinitiert inntektsmelding");
-            }
+            case null -> throw new NullPointerException("Mangler årsak for arbeidsgiverinitiert inntektsmelding");
         }
     }
 
