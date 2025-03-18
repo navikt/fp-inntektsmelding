@@ -224,6 +224,10 @@ public class ForespørselBehandlingTjeneste {
         }
 
         forespørselTjeneste.setOppgaveId(uuid, oppgaveId);
+        //Midlertiding løsning for å lukke migrerte forespørsler
+        if (migrering)  {
+            ferdigstillForespørsel(uuid, aktørId, organisasjonsnummer, førsteUttaksdato, LukkeÅrsak.EKSTERN_INNSENDING);
+        }
     }
 
     public UUID opprettForespørselForArbeidsgiverInitiertIm(Ytelsetype ytelsetype,
