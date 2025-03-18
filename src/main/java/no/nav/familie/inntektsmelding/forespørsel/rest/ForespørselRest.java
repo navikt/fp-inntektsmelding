@@ -64,6 +64,7 @@ public class ForespørselRest {
 
             LOG.info("Mottok forespørsel om inntektsmeldingoppgave på fagsakSaksnummer {} for orgnumrene: {} ", request.fagsakSaksnummer(), request.organisasjonsnumre());
             List<OpprettForespørselResponsNy.OrganisasjonsnummerMedStatus> organisasjonsnumreMedStatus = new ArrayList<>();
+            var migrering = request.migrering();
             request.organisasjonsnumre().forEach(organisasjonsnummer -> {
                 var bleForespørselOpprettet = forespørselBehandlingTjeneste.håndterInnkommendeForespørsel(request.skjæringstidspunkt(),
                     KodeverkMapper.mapYtelsetype(request.ytelsetype()),
@@ -71,10 +72,12 @@ public class ForespørselRest {
                     new OrganisasjonsnummerDto(organisasjonsnummer.orgnr()),
                     request.fagsakSaksnummer(),
                     request.førsteUttaksdato(),
-                    request.migrering());
+                    migrering);
 
                 if (ForespørselResultat.FORESPØRSEL_OPPRETTET.equals(bleForespørselOpprettet)) {
-                    MetrikkerTjeneste.loggForespørselOpprettet(KodeverkMapper.mapYtelsetype(request.ytelsetype()));
+                    if(!migrering) {
+                        MetrikkerTjeneste.loggForespørselOpprettet(KodeverkMapper.mapYtelsetype(request.ytelsetype()));
+                    }
                 }
                 organisasjonsnumreMedStatus.add(new OpprettForespørselResponsNy.OrganisasjonsnummerMedStatus(organisasjonsnummer, bleForespørselOpprettet));
             });
