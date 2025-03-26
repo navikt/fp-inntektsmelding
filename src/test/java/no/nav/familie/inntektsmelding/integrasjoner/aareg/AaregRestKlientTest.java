@@ -128,7 +128,10 @@ class AaregRestKlientTest {
         when(restClient.sendReturnUnhandled(any(RestRequest.class)))
             .thenThrow(new IntegrasjonException("FP-w00t", "Ukjent feil"));
 
-        assertThrows(IntegrasjonException.class, () -> aaregRestKlient.finnArbeidsforholdForArbeidstaker(ident, LocalDate.now()));
+        var exception = assertThrows(IntegrasjonException.class,
+            () -> aaregRestKlient.finnArbeidsforholdForArbeidstaker(ident, LocalDate.now()));
+        assertThat(exception.getMessage())
+            .isEqualTo("FP-w00t:Ukjent feil");
     }
 
     @Test

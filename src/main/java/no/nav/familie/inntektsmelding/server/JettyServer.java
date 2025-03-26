@@ -130,8 +130,7 @@ public class JettyServer {
         return new HikariDataSource(config);
     }
 
-    private void start() {
-        try {
+    private void start() throws Exception {
             var server = new Server(getServerPort());
             LOG.info("Starter server");
             var context = new ServletContextHandler(CONTEXT_PATH, ServletContextHandler.NO_SESSIONS);
@@ -160,9 +159,6 @@ public class JettyServer {
 
             LOG.info("Server startet på port: {}", getServerPort());
             server.join();
-        } catch (Exception e) {
-            LOG.error("Feilet under oppstart.", e);
-        }
     }
 
     private static void registerDefaultServlet(ServletContextHandler context) {

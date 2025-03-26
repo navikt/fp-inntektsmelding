@@ -15,6 +15,8 @@ import jakarta.ws.rs.core.Response;
 
 import no.nav.familie.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 
+import no.nav.vedtak.exception.TekniskException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,7 +60,7 @@ public class ForespørselVtpRest {
         @Parameter(description = "Saksnummer det skal listes ut forespørsler for")
         @Valid @NotNull @PathParam("saksnummer") SaksnummerDto saksnummer) {
         if (!Environment.current().isLocal()) {
-            throw new RuntimeException("Endepunkt for listing av forespørsler per sak skal kun brukes for verdikjedetesting, lokalt eller på github");
+            throw new TekniskException("FP_INNTEKTSMELDING_VTP", "Endepunkt for listing av forespørsler per sak skal kun brukes for verdikjedetesting, lokalt eller på github");
         }
         LOG.info("Mottok forespørsel om uuid for forespørsel for sak {}", saksnummer);
         var forespørsler = forespørselBehandlingTjeneste.finnForespørslerForFagsak(saksnummer);
