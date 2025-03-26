@@ -30,7 +30,7 @@ public class AltinnAutoriseringKlient {
      */
     private static final int ALTINN_TOTAL_SIZE_LIMIT = 100_000;
 
-    private static AltinnAutoriseringKlient INSTANCE = new AltinnAutoriseringKlient();
+    private static AltinnAutoriseringKlient instance = new AltinnAutoriseringKlient();
 
     private final RestClient restClient;
     private final RestConfig restConfig;
@@ -46,10 +46,10 @@ public class AltinnAutoriseringKlient {
     }
 
     public static synchronized AltinnAutoriseringKlient instance() {
-        var inst = INSTANCE;
+        var inst = instance;
         if (inst == null) {
             inst = new AltinnAutoriseringKlient();
-            INSTANCE = inst;
+            instance = inst;
         }
         return inst;
     }
