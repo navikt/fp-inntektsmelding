@@ -14,6 +14,10 @@ import no.nav.familie.inntektsmelding.forespørsel.modell.ForespørselEntitet;
 
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonInfo;
 
+import no.nav.familie.inntektsmelding.koder.ForespørselType;
+
+import no.nav.familie.inntektsmelding.metrikker.MetrikkerTjeneste;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -97,6 +101,9 @@ public class GrunnlagDtoTjeneste {
             var forespørsel = harForespørselPåOrgnrSisteTreMnd.stream()
                 .max(Comparator.comparing(ForespørselEntitet::getFørsteUttaksdato))
                 .orElseThrow( () -> new IllegalStateException("Finner ikke siste forespørsel"));
+            if (forespørsel.getForespørselType().equals(ForespørselType.BESTILT_AV_FAGSYSTEM)) {
+                MetrikkerTjeneste.loggRedirectFraAGITilVanligForespørsel(forespørsel);
+            }
             return lagDialogDto(forespørsel.getUuid());
         }
 
