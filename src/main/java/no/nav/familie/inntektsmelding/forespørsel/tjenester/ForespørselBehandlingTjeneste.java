@@ -197,17 +197,9 @@ public class ForespørselBehandlingTjeneste {
 
         forespørselTjeneste.setArbeidsgiverNotifikasjonSakId(uuid, arbeidsgiverNotifikasjonSakId);
 
-        String oppgaveId;
+        String oppgaveId = null;
         try {
-            if (migrering) {
-                oppgaveId = arbeidsgiverNotifikasjon.opprettMigrertOppgave(uuid.toString(),
-                    merkelapp,
-                    uuid.toString(),
-                    organisasjonsnummer.orgnr(),
-                    ForespørselTekster.lagOppgaveTekst(ytelsetype),
-                    skjemaUri,
-                    skjæringstidspunkt);
-            } else {
+            if (!migrering) {
                 oppgaveId = arbeidsgiverNotifikasjon.opprettOppgave(uuid.toString(),
                     merkelapp,
                     uuid.toString(),
@@ -223,7 +215,9 @@ public class ForespørselBehandlingTjeneste {
             throw e;
         }
 
-        forespørselTjeneste.setOppgaveId(uuid, oppgaveId);
+        if (oppgaveId != null) {
+            forespørselTjeneste.setOppgaveId(uuid, oppgaveId);
+        }
         //Midlertiding løsning for å lukke migrerte forespørsler
         if (migrering)  {
             ferdigstillForespørsel(uuid, aktørId, organisasjonsnummer, førsteUttaksdato, LukkeÅrsak.EKSTERN_INNSENDING);

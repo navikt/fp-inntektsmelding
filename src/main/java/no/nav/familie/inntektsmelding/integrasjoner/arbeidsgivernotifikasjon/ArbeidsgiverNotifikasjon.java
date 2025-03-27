@@ -35,11 +35,4 @@ public interface ArbeidsgiverNotifikasjon {
                                               String varselTekst,
                                               URI lenke);
 
-    String opprettMigrertOppgave(String string,
-                                 Merkelapp merkelapp,
-                                 String eksternId,
-                                 String organisasjonsnummer,
-                                 String oppgavetekst,
-                                 URI skjemaUri,
-                                 LocalDate skjæringstidsunkt);
 }

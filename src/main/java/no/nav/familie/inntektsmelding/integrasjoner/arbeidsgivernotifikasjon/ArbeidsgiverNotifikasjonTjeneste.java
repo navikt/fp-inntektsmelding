@@ -136,39 +136,6 @@ class ArbeidsgiverNotifikasjonTjeneste implements ArbeidsgiverNotifikasjon {
         return klient.opprettBeskjedOgVarsling(beskjedRequest, projection);
     }
 
-    @Override
-    public String opprettMigrertOppgave(String grupperingsid, Merkelapp merkelapp, String eksternId, String orgnr, String oppgaveTekst, URI oppgaveLenke, LocalDate skjæringstidsunkt) {
-        var request = NyOppgaveMutationRequest.builder()
-            .setNyOppgave(NyOppgaveInput.builder()
-                .setMottaker(lagAltinnMottakerInput())
-                .setNotifikasjon(NotifikasjonInput.builder()
-                    .setMerkelapp(merkelapp.getBeskrivelse())
-                    .setTekst(oppgaveTekst)
-                    .setLenke(oppgaveLenke.toString())
-                    .build())
-                .setMetadata(MetadataInput.builder()
-                    .setVirksomhetsnummer(orgnr)
-                    .setOpprettetTidspunkt(skjæringstidsunkt.minusWeeks(4).atStartOfDay().toString())
-                    .setEksternId(eksternId)
-                    .setGrupperingsid(grupperingsid)
-                    .build())
-                .build())
-            .build();
-
-
-        var projection = new NyOppgaveResultatResponseProjection().typename()
-            .onNyOppgaveVellykket(new NyOppgaveVellykketResponseProjection().id())
-            .onUgyldigMerkelapp(new UgyldigMerkelappResponseProjection().feilmelding())
-            .onUgyldigMottaker(new UgyldigMottakerResponseProjection().feilmelding())
-            .onDuplikatEksternIdOgMerkelapp(new DuplikatEksternIdOgMerkelappResponseProjection().feilmelding())
-            .onUkjentProdusent(new UkjentProdusentResponseProjection().feilmelding())
-            .onUkjentRolle(new UkjentRolleResponseProjection().feilmelding())
-            .onUgyldigPaaminnelseTidspunkt(new UgyldigPaaminnelseTidspunktResponseProjection().feilmelding());
-
-        return klient.opprettOppgave(request, projection);
-
-    }
-
     private static MottakerInput lagAltinnMottakerInput() {
         return MottakerInput.builder()
             .setAltinn(AltinnMottakerInput.builder().setServiceCode(SERVICE_CODE).setServiceEdition(SERVICE_EDITION_CODE).build())

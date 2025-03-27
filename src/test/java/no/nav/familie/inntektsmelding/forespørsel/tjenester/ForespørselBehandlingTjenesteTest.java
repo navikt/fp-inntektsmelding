@@ -97,7 +97,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
     }
 
     @Test
-    void skal_opprette_migrert_oppgave_for_forespørsel() {
+    void skal_sette_migrert_forespørsel_til_ferdig_og_ikke_opprette_oppgave() {
         mockInfoForOpprettelse(AKTØR_ID, YTELSETYPE, BRREG_ORGNUMMER, SAK_ID, OPPGAVE_ID, true);
         when(organisasjonTjeneste.finnOrganisasjon(BRREG_ORGNUMMER)).thenReturn(new Organisasjon("test org", BRREG_ORGNUMMER));
 
@@ -116,7 +116,8 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         assertThat(resultat).isEqualTo(ForespørselResultat.FORESPØRSEL_OPPRETTET);
         assertThat(lagret).hasSize(1);
         assertThat(lagret.getFirst().getArbeidsgiverNotifikasjonSakId()).isEqualTo(SAK_ID);
-        assertThat(lagret.getFirst().getOppgaveId()).isEqualTo(Optional.of(OPPGAVE_ID));
+        assertThat(lagret.getFirst().getOppgaveId()).isEmpty();
+        assertThat(lagret.getFirst().getStatus()).isEqualTo(ForespørselStatus.FERDIG);
     }
 
     @Test
@@ -565,10 +566,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
         lenient().when(personTjeneste.hentPersonInfoFraAktørId(new AktørIdEntitet(aktørId), ytelsetype)).thenReturn(personInfo);
         lenient().when(arbeidsgiverNotifikasjon.opprettSak(any(), any(), eq(brregOrgnummer), eq(sakTittel), any())).thenReturn(sakId);
-        if (migrering) {
-        lenient().when(arbeidsgiverNotifikasjon.opprettMigrertOppgave(any(), any(), any(), eq(brregOrgnummer), any(), any(), any()))
-            .thenReturn(oppgaveId);
-        } else {
+        if (!migrering) {
             lenient().when(arbeidsgiverNotifikasjon.opprettOppgave(any(), any(), any(), eq(brregOrgnummer), any(), any(), any(), any()))
                 .thenReturn(oppgaveId);
         }
