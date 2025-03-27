@@ -75,7 +75,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
     @Test
     void skal_opprette_forespørsel_og_sette_sak_og_oppgave() {
-        mockInfoForOpprettelse(AKTØR_ID, YTELSETYPE, BRREG_ORGNUMMER, SAK_ID, OPPGAVE_ID, false);
+        mockInfoForOpprettelse(AKTØR_ID, YTELSETYPE, BRREG_ORGNUMMER, SAK_ID, OPPGAVE_ID);
         when(organisasjonTjeneste.finnOrganisasjon(BRREG_ORGNUMMER)).thenReturn(new Organisasjon("test org", BRREG_ORGNUMMER));
 
         var resultat = forespørselBehandlingTjeneste.håndterInnkommendeForespørsel(SKJÆRINGSTIDSPUNKT,
@@ -98,7 +98,18 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
     @Test
     void skal_sette_migrert_forespørsel_til_ferdig_og_ikke_opprette_oppgave() {
-        mockInfoForOpprettelse(AKTØR_ID, YTELSETYPE, BRREG_ORGNUMMER, SAK_ID, OPPGAVE_ID, true);
+        var personInfo = new PersonInfo("Navn",
+            null,
+            "Navnesen",
+            new PersonIdent("01019100000"),
+            new AktørIdEntitet(AKTØR_ID),
+            LocalDate.of(1991, 1, 1).minusYears(30),
+            null,
+            null);
+        var migrertSak = "3";
+
+        when(personTjeneste.hentPersonInfoFraAktørId(new AktørIdEntitet(AKTØR_ID), YTELSETYPE)).thenReturn(personInfo);
+        lenient().when(arbeidsgiverNotifikasjon.opprettSak(any(), any(), any(), any(), any(), any())).thenReturn(migrertSak);
         when(organisasjonTjeneste.finnOrganisasjon(BRREG_ORGNUMMER)).thenReturn(new Organisasjon("test org", BRREG_ORGNUMMER));
 
         var resultat = forespørselBehandlingTjeneste.håndterInnkommendeForespørsel(SKJÆRINGSTIDSPUNKT,
@@ -115,7 +126,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
         assertThat(resultat).isEqualTo(ForespørselResultat.FORESPØRSEL_OPPRETTET);
         assertThat(lagret).hasSize(1);
-        assertThat(lagret.getFirst().getArbeidsgiverNotifikasjonSakId()).isEqualTo(SAK_ID);
+        assertThat(lagret.getFirst().getArbeidsgiverNotifikasjonSakId()).isEqualTo(migrertSak);
         assertThat(lagret.getFirst().getOppgaveId()).isEmpty();
         assertThat(lagret.getFirst().getStatus()).isEqualTo(ForespørselStatus.FERDIG);
     }
@@ -144,7 +155,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
     @Test
     void skal_ikke_opprette_forespørsel_når_finnes_allerede_for_stp_og_første_uttaksdato() {
-        mockInfoForOpprettelse(AKTØR_ID, YTELSETYPE, BRREG_ORGNUMMER, SAK_ID, OPPGAVE_ID, false);
+        mockInfoForOpprettelse(AKTØR_ID, YTELSETYPE, BRREG_ORGNUMMER, SAK_ID, OPPGAVE_ID);
         when(organisasjonTjeneste.finnOrganisasjon(BRREG_ORGNUMMER)).thenReturn(new Organisasjon("test org", BRREG_ORGNUMMER));
 
         forespørselBehandlingTjeneste.håndterInnkommendeForespørsel(SKJÆRINGSTIDSPUNKT,
@@ -179,7 +190,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
     @Test
     void skal_opprette_forespørsel_når_finnes_allerede_for_samme_stp_og_ulik_uttaksdato() {
-        mockInfoForOpprettelse(AKTØR_ID, YTELSETYPE, BRREG_ORGNUMMER, SAK_ID, OPPGAVE_ID, false);
+        mockInfoForOpprettelse(AKTØR_ID, YTELSETYPE, BRREG_ORGNUMMER, SAK_ID, OPPGAVE_ID);
         when(organisasjonTjeneste.finnOrganisasjon(BRREG_ORGNUMMER)).thenReturn(new Organisasjon("test org", BRREG_ORGNUMMER));
 
         forespørselBehandlingTjeneste.håndterInnkommendeForespørsel(SKJÆRINGSTIDSPUNKT,
@@ -215,7 +226,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
     @Test
     void skal_opprette_ny_forespørsel_med_nytt_stp_og_sette_mottatte_forespørsel_med_tidligere_stp_til_utgått() {
-        mockInfoForOpprettelse(AKTØR_ID, YTELSETYPE, BRREG_ORGNUMMER, SAK_ID, OPPGAVE_ID, false);
+        mockInfoForOpprettelse(AKTØR_ID, YTELSETYPE, BRREG_ORGNUMMER, SAK_ID, OPPGAVE_ID);
         when(organisasjonTjeneste.finnOrganisasjon(BRREG_ORGNUMMER)).thenReturn(new Organisasjon("test org", BRREG_ORGNUMMER));
         var saksnummerDto = new SaksnummerDto(SAKSNUMMMER);
 
@@ -254,17 +265,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
     @Test
     void skal_opprette_opprette_arbeidsgiverinitiert_forespørsel_uten_oppgave() {
-        var aktørIdent = new AktørIdEntitet(AKTØR_ID);
-        mockInfoForOpprettelse(AKTØR_ID, YTELSETYPE, BRREG_ORGNUMMER, SAK_ID, OPPGAVE_ID, false);
-        when(personTjeneste.hentPersonInfoFraAktørId(any(), any())).thenReturn(new PersonInfo("12345678910",
-            "test",
-            "test",
-            new PersonIdent("12345678910"),
-            aktørIdent,
-            LocalDate.now(),
-            null,
-            null));
-        when(arbeidsgiverNotifikasjon.opprettSak(any(), any(), any(), any(), any())).thenReturn(SAK_ID);
+        mockInfoForOpprettelse(AKTØR_ID, YTELSETYPE, BRREG_ORGNUMMER, SAK_ID, OPPGAVE_ID);
 
         var uuid = forespørselBehandlingTjeneste.opprettForespørselForArbeidsgiverInitiertIm(YTELSETYPE,
             new AktørIdEntitet(AKTØR_ID),
@@ -553,7 +554,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         getEntityManager().clear();
     }
 
-    private void mockInfoForOpprettelse(String aktørId, Ytelsetype ytelsetype, String brregOrgnummer, String sakId, String oppgaveId, boolean migrering) {
+    private void mockInfoForOpprettelse(String aktørId, Ytelsetype ytelsetype, String brregOrgnummer, String sakId, String oppgaveId) {
         var personInfo = new PersonInfo("Navn",
             null,
             "Navnesen",
@@ -565,10 +566,8 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         var sakTittel = ForespørselTekster.lagSaksTittel(personInfo.mapFulltNavn(), personInfo.fødselsdato());
 
         lenient().when(personTjeneste.hentPersonInfoFraAktørId(new AktørIdEntitet(aktørId), ytelsetype)).thenReturn(personInfo);
-        lenient().when(arbeidsgiverNotifikasjon.opprettSak(any(), any(), eq(brregOrgnummer), eq(sakTittel), any())).thenReturn(sakId);
-        if (!migrering) {
-            lenient().when(arbeidsgiverNotifikasjon.opprettOppgave(any(), any(), any(), eq(brregOrgnummer), any(), any(), any(), any()))
-                .thenReturn(oppgaveId);
-        }
+        lenient().when(arbeidsgiverNotifikasjon.opprettOppgave(any(), any(), any(), eq(brregOrgnummer), any(), any(), any(), any()))
+            .thenReturn(oppgaveId);
+        lenient().when(arbeidsgiverNotifikasjon.opprettSak(any(), any(), eq(brregOrgnummer), eq(sakTittel), any(), eq(Optional.empty()))).thenReturn(sakId);
     }
 }

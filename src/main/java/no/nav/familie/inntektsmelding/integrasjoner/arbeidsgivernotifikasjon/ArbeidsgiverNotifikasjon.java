@@ -3,10 +3,11 @@ package no.nav.familie.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon;
 import java.net.URI;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.Optional;
 
 public interface ArbeidsgiverNotifikasjon {
 
-    String opprettSak(String grupperingsid, Merkelapp merkelapp, String virksomhetsnummer, String saksTittel, URI lenke);
+    String opprettSak(String grupperingsid, Merkelapp merkelapp, String virksomhetsnummer, String saksTittel, URI lenke, Optional<LocalDate> førsteUttaksdato);
 
     String oppdaterSakTilleggsinformasjon(String id, String overstyrtTilleggsinformasjon);
 

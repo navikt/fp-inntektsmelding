@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -32,7 +33,7 @@ class ArbeidsgiverNotifikasjonTjeneste implements ArbeidsgiverNotifikasjon {
     }
 
     @Override
-    public String opprettSak(String grupperingsid, Merkelapp merkelapp, String organisasjonsnumme, String saksTittel, URI lenke) {
+    public String opprettSak(String grupperingsid, Merkelapp merkelapp, String organisasjonsnumme, String saksTittel, URI lenke, Optional<LocalDate> førsteUttaksdato) {
 
         var request = NySakMutationRequest.builder()
             .setGrupperingsid(grupperingsid)
@@ -42,8 +43,11 @@ class ArbeidsgiverNotifikasjonTjeneste implements ArbeidsgiverNotifikasjon {
             .setLenke(lenke.toString())
             .setInitiellStatus(SaksStatus.UNDER_BEHANDLING)
             .setOverstyrStatustekstMed(SAK_STATUS_TEKST)
-            .setMottakere(List.of(lagAltinnMottakerInput()))
-            .build();
+            .setMottakere(List.of(lagAltinnMottakerInput()));
+
+        //Når vi migrerer forespørsler for eksisterende løpende saker som ikke har forespørsel setter vi tidspunkt på saken til
+        //4 uker før første uttaksdato slik at de havner nederst i sakslisten i arbeidsgiverportalen til arbeidsgiver
+        førsteUttaksdato.ifPresent(dato -> request.setTidspunkt(dato.minusWeeks(4).atStartOfDay().format(DateTimeFormatter.ISO_DATE_TIME)));
 
         var projection = new NySakResultatResponseProjection().typename()
             .onNySakVellykket(new NySakVellykketResponseProjection().id())
@@ -54,7 +58,7 @@ class ArbeidsgiverNotifikasjonTjeneste implements ArbeidsgiverNotifikasjon {
             .onUkjentProdusent(new UkjentProdusentResponseProjection().feilmelding())
             .onUkjentRolle(new UkjentRolleResponseProjection().feilmelding());
 
-        return klient.opprettSak(request, projection);
+        return klient.opprettSak(request.build(), projection);
     }
 
     @Override

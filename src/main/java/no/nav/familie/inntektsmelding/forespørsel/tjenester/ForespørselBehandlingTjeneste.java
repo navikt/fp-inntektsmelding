@@ -189,7 +189,8 @@ public class ForespørselBehandlingTjeneste {
             merkelapp,
             organisasjonsnummer.orgnr(),
             ForespørselTekster.lagSaksTittel(person.mapFulltNavn(), person.fødselsdato()),
-            skjemaUri);
+            skjemaUri,
+            migrering ? Optional.of(førsteUttaksdato) : Optional.empty());
 
         if (tilleggsinfo != null) {
             arbeidsgiverNotifikasjon.oppdaterSakTilleggsinformasjon(arbeidsgiverNotifikasjonSakId, tilleggsinfo);
@@ -247,7 +248,8 @@ public class ForespørselBehandlingTjeneste {
             merkelapp,
             organisasjonsnummer.orgnr(),
             ForespørselTekster.lagSaksTittel(person.mapFulltNavn(), person.fødselsdato()),
-            skjemaUri);
+            skjemaUri,
+            Optional.empty());
 
         forespørselTjeneste.setArbeidsgiverNotifikasjonSakId(uuid, fagerSakId);
 
