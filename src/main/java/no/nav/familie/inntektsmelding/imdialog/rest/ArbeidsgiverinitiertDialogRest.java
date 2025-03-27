@@ -77,7 +77,7 @@ public class ArbeidsgiverinitiertDialogRest {
     @Tilgangskontrollert
     public Response hentOpplysninger(@Valid @NotNull OpplysningerRequestDto request) {
         LOG.info("Henter opplysninger for søker {}", request.fødselsnummer());
-        var dto = grunnlagDtoTjeneste.lagArbeidsgiverinitiertDialogDto(request.fødselsnummer(), request.ytelseType(), request.førsteFraværsdag(), request.organisasjonsnummer());
+        var dto = grunnlagDtoTjeneste.lagArbeidsgiverinitiertDialogDto(request.fødselsnummer(), request.ytelseType(), request.førsteFraværsdag(), request.organisasjonsnummer().orgnr());
         return Response.ok(dto).build();
     }
 }

@@ -20,8 +20,8 @@ public record InntektsmeldingDialogDto(@Valid @NotNull PersonInfoResponseDto per
                                        @Valid @NotNull YtelseTypeDto ytelse,
                                        @Valid UUID forespørselUuid,
                                        @Valid @NotNull ForespørselStatusDto forespørselStatus,
-                                       @Valid @NotNull LocalDate førsteUttaksdato) {
-
+                                       @Valid @NotNull LocalDate førsteUttaksdato,
+                                       @Valid @NotNull List<AnsettelsePeriodeDto> ansettelsePerioder) {
     public record PersonInfoResponseDto(@NotNull String fornavn, @NotNull String mellomnavn, @NotNull String etternavn, @NotNull String fødselsnummer,
                                         @NotNull String aktørId) {
     }
@@ -32,8 +32,11 @@ public record InntektsmeldingDialogDto(@Valid @NotNull PersonInfoResponseDto per
     public record InnsenderDto(@NotNull String fornavn, String mellomnavn, @NotNull String etternavn, String telefon) {
     }
 
-    public record InntektsopplysningerDto(@Valid BigDecimal gjennomsnittLønn, @NotNull @Valid List<MånedsinntektDto> månedsinntekter) {
+    public record InntektsopplysningerDto(@Valid BigDecimal gjennomsnittLønn, @Valid @NotNull List<MånedsinntektDto> månedsinntekter) {
         public record MånedsinntektDto(@NotNull LocalDate fom, @NotNull LocalDate tom, BigDecimal beløp, @Valid @NotNull MånedslønnStatus status) {
         }
+    }
+
+    public record AnsettelsePeriodeDto(LocalDate fom, LocalDate tom) {
     }
 }
