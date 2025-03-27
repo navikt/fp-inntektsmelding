@@ -43,6 +43,9 @@ public class MetrikkerTjeneste {
     // Måler endring av arbeidsgiverinitiert inntektsmelding
     private static final String ARBEIDSGIVERINITIERT_ENDRING = APP_NAME + ".arbeidsgiverinitiert.endring";
 
+    // Måler hvor ofte vi gjør redirect fra agi til vanlig forespørsel
+    private static final String ARBEIDSGIVERINITIERT_REDIRECT = APP_NAME + ".arbeidsgiverinitiert.redirect";
+
     // Måler opprettelse av oppgaver per ytelse
     private static final String COUNTER_FORESPØRRSEL = APP_NAME + ".oppgaver.opprettet";
 
@@ -156,4 +159,14 @@ public class MetrikkerTjeneste {
         }
     }
 
+    public static void loggRedirectFraAGITilVanligForespørsel(ForespørselEntitet forespørsel) {
+        try {
+            var tags = new ArrayList<Tag>();
+            tags.add(new ImmutableTag(TAG_YTELSE, forespørsel.getYtelseType().name()));
+            Metrics.counter(ARBEIDSGIVERINITIERT_REDIRECT, tags).increment();
+        } catch (Exception e) {
+            loggFeil(e, "loggRedirectFraAGITilVanligForespørsel");
+        }
+
+    }
 }
