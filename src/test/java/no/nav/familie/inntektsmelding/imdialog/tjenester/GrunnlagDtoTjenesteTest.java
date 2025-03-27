@@ -348,7 +348,7 @@ class GrunnlagDtoTjenesteTest {
         assertThat(imDialogDto.førsteUttaksdato()).isEqualTo(eksFpFørsteUttaksdato);
         assertThat(imDialogDto.forespørselUuid()).isEqualTo(forespørsel.getUuid());
         assertThat(imDialogDto.inntektsopplysninger().gjennomsnittLønn()).isEqualByComparingTo(BigDecimal.valueOf(52000));
-        assertThat(imDialogDto.ansettelsePerioder()).isNull();
+        assertThat(imDialogDto.ansettelsePerioder()).isEmpty();
     }
 
     @Test
