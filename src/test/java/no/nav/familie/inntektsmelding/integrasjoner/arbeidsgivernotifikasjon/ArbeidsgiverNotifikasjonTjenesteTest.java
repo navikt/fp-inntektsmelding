@@ -6,8 +6,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 
 import java.net.URI;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,7 +43,7 @@ class ArbeidsgiverNotifikasjonTjenesteTest {
 
         var requestCaptor = ArgumentCaptor.forClass(NySakMutationRequest.class);
 
-        tjeneste.opprettSak(expectedGrupperingsid, expectedMerkelapp, expectedVirksomhetsnummer, expectedTittel, URI.create(expectedLenke));
+        tjeneste.opprettSak(expectedGrupperingsid, expectedMerkelapp, expectedVirksomhetsnummer, expectedTittel, URI.create(expectedLenke), Optional.empty());
 
         Mockito.verify(klient).opprettSak(requestCaptor.capture(), any(NySakResultatResponseProjection.class));
 
@@ -67,6 +69,44 @@ class ArbeidsgiverNotifikasjonTjenesteTest {
             .containsEntry("tittel", expectedTittel)
             .containsEntry("virksomhetsnummer", expectedVirksomhetsnummer)
             .containsEntry("overstyrStatustekstMed", "");
+        assertThat(input.get("mottakere")).isNotNull();
+    }
+
+    @Test
+    void opprett_sak_med_tidspunkt() {
+
+        var expectedGrupperingsid = "id-som-knytter-sak-til-notifikasjon";
+        var expectedVirksomhetsnummer = "2342342334";
+        var expectedTittel = "Inntektsmelding for person";
+        var expectedLenke = "https://inntektsmelding-innsendings-dialog.com";
+        var expectedMerkelapp = Merkelapp.INNTEKTSMELDING_FP;
+        var førsteUttaksdato = LocalDate.of(2025, 1, 1);
+        var forventetFørsteUttaksdato = "2024-12-04T00:00:00";
+
+        var requestCaptor = ArgumentCaptor.forClass(NySakMutationRequest.class);
+
+        tjeneste.opprettSak(expectedGrupperingsid, expectedMerkelapp, expectedVirksomhetsnummer, expectedTittel, URI.create(expectedLenke), Optional.of(
+            førsteUttaksdato));
+
+        Mockito.verify(klient).opprettSak(requestCaptor.capture(), any(NySakResultatResponseProjection.class));
+
+        var request = requestCaptor.getValue();
+
+        var input = request.getInput();
+        assertThat(input).containsOnlyKeys("grupperingsid",
+                "initiellStatus",
+                "lenke",
+                "merkelapp",
+                "tittel",
+                "virksomhetsnummer",
+                "mottakere",
+                "overstyrStatustekstMed",
+                "nesteSteg",
+                "tidspunkt",
+                "tilleggsinformasjon",
+                "hardDelete",
+                "tidspunkt")
+            .containsEntry("tidspunkt", forventetFørsteUttaksdato);
         assertThat(input.get("mottakere")).isNotNull();
     }
 

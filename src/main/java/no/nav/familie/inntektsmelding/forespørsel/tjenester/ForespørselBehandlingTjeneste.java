@@ -65,7 +65,8 @@ public class ForespørselBehandlingTjeneste {
                                                              AktørIdEntitet aktørId,
                                                              OrganisasjonsnummerDto organisasjonsnummer,
                                                              SaksnummerDto fagsakSaksnummer,
-                                                             LocalDate førsteUttaksdato) {
+                                                             LocalDate førsteUttaksdato,
+                                                             boolean migrering) {
         var finnesForespørsel = forespørselTjeneste.finnGjeldendeForespørsel(skjæringstidspunkt,
             ytelsetype,
             aktørId,
@@ -83,7 +84,7 @@ public class ForespørselBehandlingTjeneste {
         }
 
         settFerdigeForespørslerForTidligereStpTilUtgått(skjæringstidspunkt, fagsakSaksnummer, organisasjonsnummer);
-        opprettForespørsel(ytelsetype, aktørId, fagsakSaksnummer, organisasjonsnummer, skjæringstidspunkt, førsteUttaksdato, null);
+        opprettForespørsel(ytelsetype, aktørId, fagsakSaksnummer, organisasjonsnummer, skjæringstidspunkt, førsteUttaksdato, null, migrering);
 
         return ForespørselResultat.FORESPØRSEL_OPPRETTET;
     }
@@ -164,7 +165,8 @@ public class ForespørselBehandlingTjeneste {
                                    OrganisasjonsnummerDto organisasjonsnummer,
                                    LocalDate skjæringstidspunkt,
                                    LocalDate førsteUttaksdato,
-                                   String tilleggsinfo) {
+                                   String tilleggsinfo,
+                                   boolean migrering) {
         var msg = String.format("Oppretter forespørsel, orgnr: %s, stp: %s, saksnr: %s, ytelse: %s",
             organisasjonsnummer,
             skjæringstidspunkt,
@@ -187,7 +189,8 @@ public class ForespørselBehandlingTjeneste {
             merkelapp,
             organisasjonsnummer.orgnr(),
             ForespørselTekster.lagSaksTittel(person.mapFulltNavn(), person.fødselsdato()),
-            skjemaUri);
+            skjemaUri,
+            migrering ? Optional.of(førsteUttaksdato) : Optional.empty());
 
         if (tilleggsinfo != null) {
             arbeidsgiverNotifikasjon.oppdaterSakTilleggsinformasjon(arbeidsgiverNotifikasjonSakId, tilleggsinfo);
@@ -195,23 +198,31 @@ public class ForespørselBehandlingTjeneste {
 
         forespørselTjeneste.setArbeidsgiverNotifikasjonSakId(uuid, arbeidsgiverNotifikasjonSakId);
 
-        String oppgaveId;
+        String oppgaveId = null;
         try {
-            oppgaveId = arbeidsgiverNotifikasjon.opprettOppgave(uuid.toString(),
-                merkelapp,
-                uuid.toString(),
-                organisasjonsnummer.orgnr(),
-                ForespørselTekster.lagOppgaveTekst(ytelsetype),
-                ForespørselTekster.lagVarselTekst(ytelsetype, organisasjon),
-                ForespørselTekster.lagPåminnelseTekst(ytelsetype, organisasjon),
-                skjemaUri);
+            if (!migrering) {
+                oppgaveId = arbeidsgiverNotifikasjon.opprettOppgave(uuid.toString(),
+                    merkelapp,
+                    uuid.toString(),
+                    organisasjonsnummer.orgnr(),
+                    ForespørselTekster.lagOppgaveTekst(ytelsetype),
+                    ForespørselTekster.lagVarselTekst(ytelsetype, organisasjon),
+                    ForespørselTekster.lagPåminnelseTekst(ytelsetype, organisasjon),
+                    skjemaUri);
+            }
         } catch (Exception e) {
             //Manuell rollback er nødvendig fordi sak og oppgave går i to forskjellige kall
             arbeidsgiverNotifikasjon.slettSak(arbeidsgiverNotifikasjonSakId);
             throw e;
         }
 
-        forespørselTjeneste.setOppgaveId(uuid, oppgaveId);
+        if (oppgaveId != null) {
+            forespørselTjeneste.setOppgaveId(uuid, oppgaveId);
+        }
+        //Midlertiding løsning for å lukke migrerte forespørsler
+        if (migrering)  {
+            ferdigstillForespørsel(uuid, aktørId, organisasjonsnummer, førsteUttaksdato, LukkeÅrsak.EKSTERN_INNSENDING);
+        }
     }
 
     public UUID opprettForespørselForArbeidsgiverInitiertIm(Ytelsetype ytelsetype,
@@ -237,7 +248,8 @@ public class ForespørselBehandlingTjeneste {
             merkelapp,
             organisasjonsnummer.orgnr(),
             ForespørselTekster.lagSaksTittel(person.mapFulltNavn(), person.fødselsdato()),
-            skjemaUri);
+            skjemaUri,
+            Optional.empty());
 
         forespørselTjeneste.setArbeidsgiverNotifikasjonSakId(uuid, fagerSakId);
 

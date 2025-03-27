@@ -2,10 +2,12 @@ package no.nav.familie.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon;
 
 import java.net.URI;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -31,18 +33,21 @@ class ArbeidsgiverNotifikasjonTjeneste implements ArbeidsgiverNotifikasjon {
     }
 
     @Override
-    public String opprettSak(String grupperingsid, Merkelapp merkelapp, String virksomhetsnummer, String saksTittel, URI lenke) {
+    public String opprettSak(String grupperingsid, Merkelapp merkelapp, String organisasjonsnumme, String saksTittel, URI lenke, Optional<LocalDate> førsteUttaksdato) {
 
         var request = NySakMutationRequest.builder()
             .setGrupperingsid(grupperingsid)
             .setTittel(saksTittel)
-            .setVirksomhetsnummer(virksomhetsnummer)
+            .setVirksomhetsnummer(organisasjonsnumme)
             .setMerkelapp(merkelapp.getBeskrivelse())
             .setLenke(lenke.toString())
             .setInitiellStatus(SaksStatus.UNDER_BEHANDLING)
             .setOverstyrStatustekstMed(SAK_STATUS_TEKST)
-            .setMottakere(List.of(lagAltinnMottakerInput()))
-            .build();
+            .setMottakere(List.of(lagAltinnMottakerInput()));
+
+        //Når vi migrerer forespørsler for eksisterende løpende saker som ikke har forespørsel setter vi tidspunkt på saken til
+        //4 uker før første uttaksdato slik at de havner nederst i sakslisten i arbeidsgiverportalen til arbeidsgiver
+        førsteUttaksdato.ifPresent(dato -> request.setTidspunkt(dato.minusWeeks(4).atStartOfDay().format(DateTimeFormatter.ISO_DATE_TIME)));
 
         var projection = new NySakResultatResponseProjection().typename()
             .onNySakVellykket(new NySakVellykketResponseProjection().id())
@@ -53,14 +58,14 @@ class ArbeidsgiverNotifikasjonTjeneste implements ArbeidsgiverNotifikasjon {
             .onUkjentProdusent(new UkjentProdusentResponseProjection().feilmelding())
             .onUkjentRolle(new UkjentRolleResponseProjection().feilmelding());
 
-        return klient.opprettSak(request, projection);
+        return klient.opprettSak(request.build(), projection);
     }
 
     @Override
     public String opprettOppgave(String grupperingsid,
                                  Merkelapp oppgaveMerkelapp,
                                  String eksternId,
-                                 String virksomhetsnummer,
+                                 String organisasjonsnumme,
                                  String oppgaveTekst,
                                  String varselTekst,
                                  String påminnelseTekst,
@@ -75,7 +80,7 @@ class ArbeidsgiverNotifikasjonTjeneste implements ArbeidsgiverNotifikasjon {
                     .setLenke(oppgaveLenke.toString())
                     .build())
                 .setMetadata(MetadataInput.builder()
-                    .setVirksomhetsnummer(virksomhetsnummer)
+                    .setVirksomhetsnummer(organisasjonsnumme)
                     .setEksternId(eksternId)
                     .setGrupperingsid(grupperingsid)
                     .build())
@@ -104,7 +109,7 @@ class ArbeidsgiverNotifikasjonTjeneste implements ArbeidsgiverNotifikasjon {
     public String opprettNyBeskjedMedEksternVarsling(String grupperingsid,
                                                      Merkelapp beskjedMerkelapp,
                                                      String eksternId,
-                                                     String virksomhetsnummer,
+                                                     String organisasjonsnumme,
                                                      String beskjedTekst,
                                                      String varselTekst,
                                                      URI oppgaveLenke) {
@@ -116,7 +121,7 @@ class ArbeidsgiverNotifikasjonTjeneste implements ArbeidsgiverNotifikasjon {
                 .build())
             .setMottaker(lagAltinnMottakerInput())
             .setMetadata(MetadataInput.builder()
-                .setVirksomhetsnummer(virksomhetsnummer)
+                .setVirksomhetsnummer(organisasjonsnumme)
                 .setEksternId(UUID.randomUUID().toString())
                 .setGrupperingsid(grupperingsid)
                 .build())
