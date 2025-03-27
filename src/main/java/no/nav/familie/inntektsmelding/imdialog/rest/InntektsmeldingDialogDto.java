@@ -37,6 +37,6 @@ public record InntektsmeldingDialogDto(@Valid @NotNull PersonInfoResponseDto per
         }
     }
 
-    public record AnsettelsePeriodeDto(LocalDate fom, LocalDate tom) {
+    public record AnsettelsePeriodeDto(@NotNull LocalDate fom, @NotNull LocalDate tom) {
     }
 }

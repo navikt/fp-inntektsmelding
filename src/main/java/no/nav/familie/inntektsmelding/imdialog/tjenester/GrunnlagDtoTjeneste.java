@@ -89,7 +89,7 @@ public class GrunnlagDtoTjeneste {
             forespørsel.getUuid(),
             KodeverkMapper.mapForespørselStatus(forespørsel.getStatus()),
             forespørsel.getFørsteUttaksdato(),
-            forespørsel.erArbeidsgiverInitiert() ? finnAnsettelsesperioder(new PersonIdent(personDto.fødselsnummer()), organisasjonsnummer, forespørsel.getFørsteUttaksdato()) : null);
+            forespørsel.erArbeidsgiverInitiert() ? finnAnsettelsesperioder(new PersonIdent(personDto.fødselsnummer()), organisasjonsnummer, forespørsel.getFørsteUttaksdato()) : Collections.emptyList());
     }
 
     public InntektsmeldingDialogDto lagArbeidsgiverinitiertDialogDto(PersonIdent fødselsnummer,
@@ -121,6 +121,7 @@ public class GrunnlagDtoTjeneste {
         return new InntektsmeldingDialogDto(personDto,
             organisasjonDto,
             innmelderDto,
+            // Vi preutfyller ikke inntekter på arbeidsgiverinitiert inntektsmelding(nyansatt)
             new InntektsmeldingDialogDto.InntektsopplysningerDto(null, Collections.emptyList()),
             førsteFraværsdag,
             KodeverkMapper.mapYtelsetype(ytelsetype),
