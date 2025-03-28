@@ -1,6 +1,7 @@
 package no.nav.familie.inntektsmelding.imdialog.tjenester;
 
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -10,14 +11,6 @@ import java.util.stream.Collectors;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import no.nav.familie.inntektsmelding.forespørsel.modell.ForespørselEntitet;
-
-import no.nav.familie.inntektsmelding.integrasjoner.person.PersonInfo;
-
-import no.nav.familie.inntektsmelding.koder.ForespørselType;
-
-import no.nav.familie.inntektsmelding.metrikker.MetrikkerTjeneste;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,17 +18,21 @@ import no.nav.familie.inntektsmelding.forespørsel.modell.ForespørselEntitet;
 import no.nav.familie.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 import no.nav.familie.inntektsmelding.imdialog.rest.InntektsmeldingDialogDto;
 import no.nav.familie.inntektsmelding.imdialog.rest.SlåOppArbeidstakerResponseDto;
+import no.nav.familie.inntektsmelding.integrasjoner.aareg.ArbeidsforholdTjeneste;
 import no.nav.familie.inntektsmelding.integrasjoner.aareg.ArbeidstakerTjeneste;
+import no.nav.familie.inntektsmelding.integrasjoner.aareg.dto.AnsettelsesperiodeDto;
 import no.nav.familie.inntektsmelding.integrasjoner.inntektskomponent.InntektTjeneste;
 import no.nav.familie.inntektsmelding.integrasjoner.organisasjon.OrganisasjonTjeneste;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonInfo;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonTjeneste;
 import no.nav.familie.inntektsmelding.koder.ForespørselStatus;
+import no.nav.familie.inntektsmelding.koder.ForespørselType;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
+import no.nav.familie.inntektsmelding.metrikker.MetrikkerTjeneste;
 import no.nav.familie.inntektsmelding.typer.dto.KodeverkMapper;
-import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
+import no.nav.vedtak.konfig.Tid;
 import no.nav.vedtak.sikkerhet.kontekst.IdentType;
 import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
 
@@ -47,6 +44,7 @@ public class GrunnlagDtoTjeneste {
     private OrganisasjonTjeneste organisasjonTjeneste;
     private InntektTjeneste inntektTjeneste;
     private ArbeidstakerTjeneste arbeidstakerTjeneste;
+    private ArbeidsforholdTjeneste arbeidsforholdTjeneste;
 
     GrunnlagDtoTjeneste() {
         // CDI
@@ -57,26 +55,31 @@ public class GrunnlagDtoTjeneste {
                                PersonTjeneste personTjeneste,
                                OrganisasjonTjeneste organisasjonTjeneste,
                                InntektTjeneste inntektTjeneste,
-                               ArbeidstakerTjeneste arbeidstakerTjeneste) {
+                               ArbeidstakerTjeneste arbeidstakerTjeneste,
+                               ArbeidsforholdTjeneste arbeidsforholdTjeneste) {
         this.forespørselBehandlingTjeneste = forespørselBehandlingTjeneste;
         this.personTjeneste = personTjeneste;
         this.organisasjonTjeneste = organisasjonTjeneste;
         this.inntektTjeneste = inntektTjeneste;
         this.arbeidstakerTjeneste = arbeidstakerTjeneste;
+        this.arbeidsforholdTjeneste = arbeidsforholdTjeneste;
     }
 
     public InntektsmeldingDialogDto lagDialogDto(UUID forespørselUuid) {
         var forespørsel = forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid)
             .orElseThrow(() -> new IllegalStateException(
                 "Prøver å hente data for en forespørsel som ikke finnes, forespørselUUID: " + forespørselUuid));
+
+        var organisasjonsnummer = forespørsel.getOrganisasjonsnummer();
         var personDto = lagPersonDto(forespørsel.getAktørId(), forespørsel.getYtelseType());
-        var organisasjonDto = lagOrganisasjonDto(forespørsel.getOrganisasjonsnummer());
+        var organisasjonDto = lagOrganisasjonDto(organisasjonsnummer);
         var innmelderDto = lagInnmelderDto(forespørsel.getYtelseType());
         var datoForInntekter = forespørsel.erArbeidsgiverInitiert() ? forespørsel.getFørsteUttaksdato() : forespørsel.getSkjæringstidspunkt().orElseThrow();
         var inntektDtoer = lagInntekterDto(forespørsel.getUuid(),
             forespørsel.getAktørId(),
             datoForInntekter,
             forespørsel.getOrganisasjonsnummer());
+
         return new InntektsmeldingDialogDto(personDto,
             organisasjonDto,
             innmelderDto,
@@ -85,24 +88,25 @@ public class GrunnlagDtoTjeneste {
             KodeverkMapper.mapYtelsetype(forespørsel.getYtelseType()),
             forespørsel.getUuid(),
             KodeverkMapper.mapForespørselStatus(forespørsel.getStatus()),
-            forespørsel.getFørsteUttaksdato());
+            forespørsel.getFørsteUttaksdato(),
+            forespørsel.erArbeidsgiverInitiert() ? finnAnsettelsesperioder(new PersonIdent(personDto.fødselsnummer()), organisasjonsnummer, forespørsel.getFørsteUttaksdato()) : Collections.emptyList());
     }
 
     public InntektsmeldingDialogDto lagArbeidsgiverinitiertDialogDto(PersonIdent fødselsnummer,
-                                                                     Ytelsetype ytelsetype,
-                                                                     LocalDate førsteFraværsdag,
-                                                                     OrganisasjonsnummerDto organisasjonsnummer) {
+                                                                          Ytelsetype ytelsetype,
+                                                                          LocalDate førsteFraværsdag,
+                                                                          String organisasjonsnummer) {
         var personInfo = finnPersoninfo(fødselsnummer, ytelsetype);
 
         var harForespørselPåOrgnrSisteTreMnd = finnForespørslerSisteTreÅr(ytelsetype, førsteFraværsdag, personInfo.aktørId()).stream()
-            .filter(f -> f.getOrganisasjonsnummer().equals(organisasjonsnummer.orgnr()))
+            .filter(f -> f.getOrganisasjonsnummer().equals(organisasjonsnummer))
             .filter(f -> innenforIntervall(førsteFraværsdag, f.getFørsteUttaksdato()))
             .toList();
 
         if (!harForespørselPåOrgnrSisteTreMnd.isEmpty()) {
             var forespørsel = harForespørselPåOrgnrSisteTreMnd.stream()
                 .max(Comparator.comparing(ForespørselEntitet::getFørsteUttaksdato))
-                .orElseThrow( () -> new IllegalStateException("Finner ikke siste forespørsel"));
+                .orElseThrow(() -> new IllegalStateException("Finner ikke siste forespørsel"));
             if (forespørsel.getForespørselType().equals(ForespørselType.BESTILT_AV_FAGSYSTEM)) {
                 MetrikkerTjeneste.loggRedirectFraAGITilVanligForespørsel(forespørsel);
             }
@@ -111,19 +115,37 @@ public class GrunnlagDtoTjeneste {
 
         var personDto = new InntektsmeldingDialogDto.PersonInfoResponseDto(personInfo.fornavn(), personInfo.mellomnavn(), personInfo.etternavn(),
             personInfo.fødselsnummer().getIdent(), personInfo.aktørId().getAktørId());
-        var organisasjonDto = lagOrganisasjonDto(organisasjonsnummer.orgnr());
+        var organisasjonDto = lagOrganisasjonDto(organisasjonsnummer);
         var innmelderDto = lagInnmelderDto(ytelsetype);
-        var inntektDtoer = lagInntekterDto(null, personInfo.aktørId(), førsteFraværsdag, organisasjonsnummer.orgnr());
+
         return new InntektsmeldingDialogDto(personDto,
             organisasjonDto,
             innmelderDto,
-            inntektDtoer,
+            // Vi preutfyller ikke inntekter på arbeidsgiverinitiert inntektsmelding(nyansatt)
+            new InntektsmeldingDialogDto.InntektsopplysningerDto(null, Collections.emptyList()),
             førsteFraværsdag,
             KodeverkMapper.mapYtelsetype(ytelsetype),
             null,
             KodeverkMapper.mapForespørselStatus(ForespørselStatus.UNDER_BEHANDLING),
-            førsteFraværsdag
-        );
+            førsteFraværsdag,
+            finnAnsettelsesperioder(personInfo.fødselsnummer(), organisasjonsnummer, førsteFraværsdag));
+    }
+
+    private List<InntektsmeldingDialogDto.AnsettelsePeriodeDto> finnAnsettelsesperioder(PersonIdent fødselsnummer,
+                                                                                        String organisasjonsnummer,
+                                                                                        LocalDate førsteFraværsdag) {
+        return arbeidsforholdTjeneste.hentArbeidsforhold(fødselsnummer, førsteFraværsdag).stream()
+            .filter(arbeidsforhold -> arbeidsforhold.organisasjonsnummer().equals(organisasjonsnummer))
+            .map(arbeidsforhold -> mapAnsettelsePeriode(arbeidsforhold.ansettelsesperiode()))
+            .toList();
+    }
+
+    private InntektsmeldingDialogDto.AnsettelsePeriodeDto mapAnsettelsePeriode(AnsettelsesperiodeDto ansettelsesperiode) {
+        if (ansettelsesperiode != null) {
+            return new InntektsmeldingDialogDto.AnsettelsePeriodeDto(ansettelsesperiode.periode().fom(),
+                ansettelsesperiode.periode().tom() != null ? ansettelsesperiode.periode().tom() : Tid.TIDENES_ENDE);
+        }
+        return null;
     }
 
     private boolean innnenforIntervallÅr(LocalDate førsteUttaksdato, LocalDate førsteFraværsdag) {
@@ -210,5 +232,4 @@ public class GrunnlagDtoTjeneste {
             .filter(eksF -> innnenforIntervallÅr(eksF.getFørsteUttaksdato(), førsteFraværsdag))
             .toList();
     }
-
 }

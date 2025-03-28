@@ -7,6 +7,12 @@ import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 
+import no.nav.familie.inntektsmelding.integrasjoner.aareg.dto.AnsettelsesperiodeDto;
+
+import no.nav.familie.inntektsmelding.integrasjoner.aareg.dto.PeriodeDto;
+
+import no.nav.vedtak.konfig.Tid;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -82,13 +88,14 @@ class ArbeidsforholdTjenesteTest {
             .hasSize(1)
             .first()
             .satisfies(dto -> {
-                assertThat(dto.arbeidsforholdId()).isEqualTo("abc123");
+                assertThat(dto.ansettelsesperiode()).isNull();
                 assertThat(dto.organisasjonsnummer()).isEqualTo("999999999");
             });
     }
 
     @Test
     void skalMappeFlereArbeidsforholdKorrekt() {
+        var ansettelsesperiode = new AnsettelsesperiodeDto(new PeriodeDto(LocalDate.now().minusYears(1), LocalDate.now().plusMonths(6)));
         var arbeidsforhold1 = new ArbeidsforholdDto(
             "arbeidsforhold id 1",
             123L,
@@ -98,12 +105,12 @@ class ArbeidsforholdTjenesteTest {
                 "100000001",
                 "Eino Arbeidsgiver AS"
             ),
-            null,
+            ansettelsesperiode,
             null,
             null,
             "type"
         );
-
+        var ansettelsesperiode2 = new AnsettelsesperiodeDto(new PeriodeDto(LocalDate.now().minusYears(2), Tid.TIDENES_ENDE));
         var arbeidsforhold2 = new ArbeidsforholdDto(
             "arbeidsforhold id 2",
             123L,
@@ -113,7 +120,7 @@ class ArbeidsforholdTjenesteTest {
                 "100000002",
                 "André Arbeidsgiver AS"
             ),
-            null,
+            ansettelsesperiode2,
             null,
             null,
             "type"
@@ -128,9 +135,9 @@ class ArbeidsforholdTjenesteTest {
 
         assertThat(resultat).hasSize(2);
 
-        assertThat(resultat.getFirst().arbeidsforholdId()).isEqualTo("arbeidsforhold id 1");
+        assertThat(resultat.getFirst().ansettelsesperiode()).isEqualTo(ansettelsesperiode);
         assertThat(resultat.getFirst().organisasjonsnummer()).isEqualTo("000000001");
-        assertThat(resultat.get(1).arbeidsforholdId()).isEqualTo("arbeidsforhold id 2");
+        assertThat(resultat.get(1).ansettelsesperiode()).isEqualTo(ansettelsesperiode2);
         assertThat(resultat.get(1).organisasjonsnummer()).isEqualTo("000000002");
     }
 }
