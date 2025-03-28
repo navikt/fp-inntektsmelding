@@ -12,6 +12,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+
+import no.nav.familie.inntektsmelding.server.jackson.JacksonJsonConfig;
+
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -47,6 +51,8 @@ import no.nav.vedtak.sikkerhet.kontekst.RequestKontekst;
 import no.nav.vedtak.sikkerhet.oidc.config.OpenIDProvider;
 import no.nav.vedtak.sikkerhet.oidc.token.OpenIDToken;
 import no.nav.vedtak.sikkerhet.oidc.token.TokenString;
+
+import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
 @ExtendWith(MockitoExtension.class)
 class GrunnlagDtoTjenesteTest {
@@ -151,6 +157,7 @@ class GrunnlagDtoTjenesteTest {
                 LocalDate.of(2024, 5, 31),
                 BigDecimal.valueOf(52_000),
                 MånedslønnStatus.BRUKT_I_GJENNOMSNITT));
+        assertThat(imDialogDto.ansettelsePerioder()).isEmpty();
     }
 
     @Test
@@ -309,6 +316,8 @@ class GrunnlagDtoTjenesteTest {
         assertThat(imDialogDto.arbeidsgiver().organisasjonNummer()).isEqualTo(organisasjonsnummer);
         assertThat(imDialogDto.førsteUttaksdato()).isEqualTo(førsteDatoMedRefusjon);
         assertThat(imDialogDto.forespørselUuid()).isNull();
+        assertThat(imDialogDto.inntektsopplysninger().gjennomsnittLønn()).isNull();
+        assertThat(imDialogDto.inntektsopplysninger().månedsinntekter()).isEmpty();
         assertThat(imDialogDto.ansettelsePerioder()).isEqualTo(forventetAnsPerioder);
     }
 
