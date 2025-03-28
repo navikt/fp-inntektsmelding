@@ -65,7 +65,7 @@ class GeneralRestExceptionMapperTest {
     }
 
     @Test
-    void skalMappeFunksjonellFeilSakIkkeFUnnet() {
+    void skalMappeFunksjonellFeilSakIkkeFunnet() {
         var callId = MDCOperations.generateCallId();
         MDCOperations.putCallId(callId);
         try (var response = exceptionMapper.toResponse(funksjonellFeilSakIkkeFunnet())) {
@@ -76,7 +76,7 @@ class GeneralRestExceptionMapperTest {
             assertThat(feilDto.type()).isEqualTo(FeilType.INGEN_SAK_FUNNET);
             assertThat(feilDto.callId()).isEqualTo(callId);
             assertThat(feilDto.feilmelding()).isEqualTo("Ingen sak funnet");
-            assertThat(logSniffer.search("Ingen sak funnet feil", Level.WARN)).hasSize(1);
+            assertThat(logSniffer.search("Ingen sak funnet feil", Level.INFO)).hasSize(1);
         }
     }
 
