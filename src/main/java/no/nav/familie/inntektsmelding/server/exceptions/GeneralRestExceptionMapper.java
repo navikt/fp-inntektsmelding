@@ -34,7 +34,7 @@ public class GeneralRestExceptionMapper implements ExceptionMapper<Throwable> {
             if (feil instanceof FunksjonellException) {
                 var exceptionMelding = getExceptionMelding(feil);
                 if (exceptionMelding.contains("INGEN_SAK_FUNNET")) {
-                    LOG.warn("Ingen sak funnet feil: {}", exceptionMelding);
+                    LOG.info("Ingen sak funnet feil: {}", exceptionMelding);
                     return ingenSakFunnet();
                 }
             }
