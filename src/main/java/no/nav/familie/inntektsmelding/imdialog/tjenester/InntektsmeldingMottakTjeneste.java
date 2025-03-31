@@ -74,10 +74,13 @@ public class InntektsmeldingMottakTjeneste {
         var organisasjonsnummer = new OrganisasjonsnummerDto(sendInntektsmeldingRequestDto.arbeidsgiverIdent().ident());
         var finnesForespørselFraFør = sendInntektsmeldingRequestDto.foresporselUuid() != null;
         if (finnesForespørselFraFør) {
-            // Inntektsmelding er endring av allerede innsendt inntektsmelding
-
+            // endring av allerede innsendt inntektsmelding
             var forespørselEnitet = forespørselBehandlingTjeneste.hentForespørsel(sendInntektsmeldingRequestDto.foresporselUuid())
                 .orElseThrow(this::manglerForespørselFeil);
+            //hvis ny startdato må også forespørsel oppdateres
+            if (sendInntektsmeldingRequestDto.startdato() != forespørselEnitet.getFørsteUttaksdato()) {
+                forespørselEnitet = forespørselBehandlingTjeneste.setFørsteUttaksdato(forespørselEnitet, sendInntektsmeldingRequestDto.startdato());
+            }
 
             var imId = lagreOgLagJournalførTask(imEnitet, forespørselEnitet);
             var imEntitet = inntektsmeldingRepository.hentInntektsmelding(imId);

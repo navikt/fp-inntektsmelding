@@ -486,6 +486,41 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         assertThat(resultat).isEqualTo(NyBeskjedResultat.FORESPØRSEL_FINNES_IKKE);
     }
 
+
+    @Test
+    void skal_oppdatere_førsteUttaksdto_for_arbeidsgiverinitert() {
+        var forespørselUuid = forespørselRepository.lagreForespørsel(SKJÆRINGSTIDSPUNKT,
+            Ytelsetype.FORELDREPENGER,
+            AKTØR_ID,
+            BRREG_ORGNUMMER,
+            SAKSNUMMMER,
+            FØRSTE_UTTAKSDATO,
+            ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT);
+        forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, SAK_ID);
+        forespørselRepository.ferdigstillForespørsel(SAK_ID);
+
+        var forespørsel = forespørselRepository.hentForespørsel(forespørselUuid).orElseThrow();
+        var nyFørsteUttaksdato = FØRSTE_UTTAKSDATO.plusWeeks(1);
+
+        var resultat = forespørselBehandlingTjeneste.setFørsteUttaksdato(forespørsel, nyFørsteUttaksdato);
+
+        clearHibernateCache();
+
+        var oppdatertForespørsel = forespørselRepository.hentForespørsel(forespørselUuid).orElseThrow();
+
+        assertThat(resultat.getAktørId()).isEqualTo(oppdatertForespørsel.getAktørId());
+        assertThat(resultat.getFørsteUttaksdato()).isEqualTo(nyFørsteUttaksdato);
+        assertThat(resultat.getId()).isEqualTo(oppdatertForespørsel.getId());
+        assertThat(resultat.getUuid()).isEqualTo(oppdatertForespørsel.getUuid());
+        assertThat(resultat.getArbeidsgiverNotifikasjonSakId()).isEqualTo(oppdatertForespørsel.getArbeidsgiverNotifikasjonSakId());
+        assertThat(resultat.getStatus()).isEqualTo(oppdatertForespørsel.getStatus());
+        assertThat(resultat.getOppgaveId()).isEqualTo(oppdatertForespørsel.getOppgaveId());
+        assertThat(resultat.getOrganisasjonsnummer()).isEqualTo(oppdatertForespørsel.getOrganisasjonsnummer());
+        assertThat(resultat.getSkjæringstidspunkt()).isEqualTo(oppdatertForespørsel.getSkjæringstidspunkt());
+        assertThat(resultat.getYtelseType()).isEqualTo(oppdatertForespørsel.getYtelseType());
+        assertThat(resultat.getFagsystemSaksnummer()).isEqualTo(oppdatertForespørsel.getFagsystemSaksnummer());
+        assertThat(resultat.getForespørselType()).isEqualTo(oppdatertForespørsel.getForespørselType());
+    }
     @Test
     void skal_returnere_liste_av_inntektsmeldingdto_for_forespørsler() {
 

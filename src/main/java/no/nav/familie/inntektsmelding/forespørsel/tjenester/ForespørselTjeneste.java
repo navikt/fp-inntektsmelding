@@ -52,10 +52,12 @@ public class ForespørselTjeneste {
         forespørselRepository.oppdaterOppgaveId(forespørselUUID, oppgaveId);
     }
 
+    public ForespørselEntitet setFørsteUttaksdato(ForespørselEntitet forespørselEnitet, LocalDate førsteUttaksdato) {
+        return forespørselRepository.oppdaterFørsteUttaksdato(forespørselEnitet, førsteUttaksdato);
+    }
 
     public void setArbeidsgiverNotifikasjonSakId(UUID forespørselUUID, String arbeidsgiverNotifikasjonSakId) {
         forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUUID, arbeidsgiverNotifikasjonSakId);
-
     }
 
     public void ferdigstillForespørsel(String arbeidsgiverNotifikasjonSakId) {
