@@ -10,10 +10,6 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import no.nav.familie.inntektsmelding.koder.ArbeidsgiverinitiertÅrsak;
-
-import no.nav.familie.inntektsmelding.koder.ForespørselType;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +18,9 @@ import no.nav.familie.inntektsmelding.forvaltning.rest.InntektsmeldingForespørs
 import no.nav.familie.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon.ArbeidsgiverNotifikasjon;
 import no.nav.familie.inntektsmelding.integrasjoner.organisasjon.OrganisasjonTjeneste;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonTjeneste;
+import no.nav.familie.inntektsmelding.koder.ArbeidsgiverinitiertÅrsak;
 import no.nav.familie.inntektsmelding.koder.ForespørselStatus;
+import no.nav.familie.inntektsmelding.koder.ForespørselType;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.metrikker.MetrikkerTjeneste;
 import no.nav.familie.inntektsmelding.typer.dto.ForespørselResultat;
@@ -372,5 +370,9 @@ public class ForespørselBehandlingTjeneste {
         if (!forespørsel.getAktørId().equals(aktorId)) {
             throw new IllegalStateException("AktørId for bruker var ikke like");
         }
+    }
+
+    public ForespørselEntitet setFørsteUttaksdato(ForespørselEntitet forespørselEnitet, LocalDate startdato) {
+        return forespørselTjeneste.setFørsteUttaksdato(forespørselEnitet, startdato);
     }
 }

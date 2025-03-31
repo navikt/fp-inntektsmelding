@@ -10,12 +10,11 @@ import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 
-import no.nav.familie.inntektsmelding.koder.ForespørselType;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.nav.familie.inntektsmelding.koder.ForespørselStatus;
+import no.nav.familie.inntektsmelding.koder.ForespørselType;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.familie.inntektsmelding.typer.dto.SaksnummerDto;
@@ -200,5 +199,12 @@ public class ForespørselRepository {
             .setParameter("ytelseType", ytelsetype)
             .setParameter("orgnr", orgnr);
         return query.getResultList();
+    }
+
+    public ForespørselEntitet oppdaterFørsteUttaksdato(ForespørselEntitet forespørselEnitet, LocalDate førsteUttaksdato) {
+        forespørselEnitet.setFørsteUttaksdato(førsteUttaksdato);
+        entityManager.persist(forespørselEnitet);
+        entityManager.flush();
+        return forespørselEnitet;
     }
 }

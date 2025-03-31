@@ -177,34 +177,47 @@ class InntektsmeldingMottakTjenesteTest {
         var aktørId = new AktørIdEntitet("9999999999999");
         var orgnr = "999999999";
         var startdato = LocalDate.now();
-        var forespørsel = new ForespørselEntitet(orgnr,
+        var eksisterendeForespørsel = new ForespørselEntitet(orgnr,
             startdato,
             aktørId,
             ytelse,
             "123",
             LocalDate.now(),
-            ForespørselType.BESTILT_AV_FAGSYSTEM);
+            ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT);
+
+        var nyStartDato = LocalDate.now().plusWeeks(1);
 
         var im = InntektsmeldingEntitet.builder()
             .medAktørId(aktørId)
             .medKontaktperson(new KontaktpersonEntitet("Test", "Test"))
             .medYtelsetype(Ytelsetype.FORELDREPENGER)
             .medMånedInntekt(BigDecimal.valueOf(100))
-            .medStartDato(startdato)
+            .medStartDato(nyStartDato)
             .medMånedRefusjon(BigDecimal.valueOf(100))
             .medRefusjonOpphørsdato(Tid.TIDENES_ENDE)
             .medArbeidsgiverIdent(orgnr)
             .build();
 
-        when(forespørselBehandlingTjeneste.hentForespørsel(uuid)).thenReturn(Optional.of(forespørsel));
+
+        var forespørselMedNyDato = new ForespørselEntitet(orgnr,
+            nyStartDato,
+            aktørId,
+            ytelse,
+            "123",
+            LocalDate.now(),
+            ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT);
+
+        when(forespørselBehandlingTjeneste.hentForespørsel(uuid)).thenReturn(Optional.of(eksisterendeForespørsel));
+        when(forespørselBehandlingTjeneste.setFørsteUttaksdato(eksisterendeForespørsel, nyStartDato)).thenReturn(forespørselMedNyDato);
+
         var innsendingDto = new SendInntektsmeldingRequestDto(uuid,
             new AktørIdDto("9999999999999"),
             YtelseTypeDto.FORELDREPENGER,
             new ArbeidsgiverDto(orgnr),
             new SendInntektsmeldingRequestDto.KontaktpersonRequestDto("Navn", "123"),
-            LocalDate.now(),
+            nyStartDato,
             null,
-            List.of(new SendInntektsmeldingRequestDto.Refusjon(startdato, BigDecimal.valueOf(100))),
+            List.of(new SendInntektsmeldingRequestDto.Refusjon(nyStartDato, BigDecimal.valueOf(100))),
             List.of(),
             List.of(),
             ArbeidsgiverinitiertÅrsakDto.NYANSATT);
@@ -218,5 +231,6 @@ class InntektsmeldingMottakTjenesteTest {
         verify(forespørselBehandlingTjeneste, times(0)).ferdigstillForespørsel(uuid, aktørId, new OrganisasjonsnummerDto(orgnr), startdato, LukkeÅrsak.ORDINÆR_INNSENDING);
         assertThat(responseDto).isNotNull();
         assertThat(responseDto.refusjon()).hasSize(1);
+        assertThat(responseDto.startdato()).isEqualTo(nyStartDato);
     }
 }

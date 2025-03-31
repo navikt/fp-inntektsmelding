@@ -53,7 +53,7 @@ public class ForespørselEntitet {
     @Column(name = "skjaeringstidspunkt", updatable = false)
     private LocalDate skjæringstidspunkt;
 
-    @Column(name = "forste_uttaksdato", updatable = false, nullable = false)
+    @Column(name = "forste_uttaksdato", nullable = false)
     private LocalDate førsteUttaksdato;
 
     @Embedded
@@ -135,6 +135,10 @@ public class ForespørselEntitet {
 
     void setOppgaveId(String oppgaveId) {
         this.oppgaveId = oppgaveId;
+    }
+
+    public void setFørsteUttaksdato(LocalDate førsteUttaksdato) {
+        this.førsteUttaksdato = førsteUttaksdato;
     }
 
     public String getOrganisasjonsnummer() {
