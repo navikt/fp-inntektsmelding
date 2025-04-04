@@ -57,29 +57,37 @@ public class ForespørselRest {
     public Response opprettForespørsel(@Valid @NotNull OpprettForespørselRequest request) {
         sjekkErSystemkall();
 
-        if (request.organisasjonsnumre() != null){
+        if (request.organisasjonsnumre() != null) {
             if (request.organisasjonsnumre().isEmpty()) {
                 return Response.status(Response.Status.NO_CONTENT).build();
             }
-
-            LOG.info("Mottok forespørsel om inntektsmeldingoppgave på fagsakSaksnummer {} for orgnumrene: {} ", request.fagsakSaksnummer(), request.organisasjonsnumre());
+            var skjæringstidspunkt = request.skjæringstidspunkt();
+            var førsteUttaksdato = request.førsteUttaksdato();
+            var fagsakSaksnummer = request.fagsakSaksnummer();
+            LOG.info(
+                "Mottok beskjed fra fpsak om å opprette forespørsel på {} med skjæringstidspunkt {} og første uttaksdato {} på: {} ",
+                fagsakSaksnummer,
+                skjæringstidspunkt,
+                førsteUttaksdato,
+                request.organisasjonsnumre());
             List<OpprettForespørselResponsNy.OrganisasjonsnummerMedStatus> organisasjonsnumreMedStatus = new ArrayList<>();
             var migrering = request.migrering();
             request.organisasjonsnumre().forEach(organisasjonsnummer -> {
-                var bleForespørselOpprettet = forespørselBehandlingTjeneste.håndterInnkommendeForespørsel(request.skjæringstidspunkt(),
+                var bleForespørselOpprettet = forespørselBehandlingTjeneste.håndterInnkommendeForespørsel(skjæringstidspunkt,
                     KodeverkMapper.mapYtelsetype(request.ytelsetype()),
                     new AktørIdEntitet(request.aktørId().id()),
                     new OrganisasjonsnummerDto(organisasjonsnummer.orgnr()),
-                    request.fagsakSaksnummer(),
-                    request.førsteUttaksdato(),
+                    fagsakSaksnummer,
+                    førsteUttaksdato,
                     migrering);
 
                 if (ForespørselResultat.FORESPØRSEL_OPPRETTET.equals(bleForespørselOpprettet)) {
-                    if(!migrering) {
+                    if (!migrering) {
                         MetrikkerTjeneste.loggForespørselOpprettet(KodeverkMapper.mapYtelsetype(request.ytelsetype()));
                     }
                 }
-                organisasjonsnumreMedStatus.add(new OpprettForespørselResponsNy.OrganisasjonsnummerMedStatus(organisasjonsnummer, bleForespørselOpprettet));
+                organisasjonsnumreMedStatus.add(new OpprettForespørselResponsNy.OrganisasjonsnummerMedStatus(organisasjonsnummer,
+                    bleForespørselOpprettet));
             });
             return Response.ok(new OpprettForespørselResponsNy(organisasjonsnumreMedStatus)).build();
         } else {
