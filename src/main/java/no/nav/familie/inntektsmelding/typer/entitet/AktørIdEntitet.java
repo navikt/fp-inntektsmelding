@@ -9,7 +9,7 @@ import jakarta.persistence.Embeddable;
 
 @Embeddable
 public class AktørIdEntitet {
-    private static final Pattern VALID = Pattern.compile("^[0-9]{13}");
+    private static final Pattern VALID = Pattern.compile("^\\d{13}");
 
     @Column(name = "aktoer_id")
     private String aktørId;
