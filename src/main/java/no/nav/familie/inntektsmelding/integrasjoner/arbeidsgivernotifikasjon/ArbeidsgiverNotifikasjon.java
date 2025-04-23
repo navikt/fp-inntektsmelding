@@ -11,7 +11,7 @@ public interface ArbeidsgiverNotifikasjon {
 
     String oppdaterSakTilleggsinformasjon(String id, String overstyrtTilleggsinformasjon);
 
-    String ferdigstillSak(String id, boolean arbeidsgvierInitiert);
+    String ferdigstillSak(String id, boolean arbeidsgvierInitiert, Optional<LocalDate> førsteUttaksdato);
 
     String opprettOppgave(String grupperingsid,
                           Merkelapp merkelapp,

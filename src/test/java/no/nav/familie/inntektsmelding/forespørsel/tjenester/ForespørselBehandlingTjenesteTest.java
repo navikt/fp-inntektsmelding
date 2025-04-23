@@ -173,7 +173,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             lagret.getAktørId(),
             new OrganisasjonsnummerDto(lagret.getOrganisasjonsnummer()),
             lagret.getFørsteUttaksdato(),
-            LukkeÅrsak.EKSTERN_INNSENDING);
+            LukkeÅrsak.EKSTERN_INNSENDING, false);
 
         assertThat(fpEntitet.getStatus()).isEqualTo(ForespørselStatus.FERDIG);
 
@@ -209,7 +209,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             lagret.getAktørId(),
             new OrganisasjonsnummerDto(lagret.getOrganisasjonsnummer()),
             lagret.getFørsteUttaksdato(),
-            LukkeÅrsak.EKSTERN_INNSENDING);
+            LukkeÅrsak.EKSTERN_INNSENDING, false);
 
         assertThat(fpEntitet.getStatus()).isEqualTo(ForespørselStatus.FERDIG);
 
@@ -244,7 +244,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             lagret.getAktørId(),
             new OrganisasjonsnummerDto(lagret.getOrganisasjonsnummer()),
             lagret.getFørsteUttaksdato(),
-            LukkeÅrsak.ORDINÆR_INNSENDING);
+            LukkeÅrsak.ORDINÆR_INNSENDING, false);
 
         assertThat(fpEntitet.getStatus()).isEqualTo(ForespørselStatus.FERDIG);
 
@@ -290,7 +290,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             new AktørIdEntitet(AKTØR_ID),
             new OrganisasjonsnummerDto(BRREG_ORGNUMMER),
             SKJÆRINGSTIDSPUNKT,
-            LukkeÅrsak.EKSTERN_INNSENDING);
+            LukkeÅrsak.EKSTERN_INNSENDING, false);
 
         clearHibernateCache();
 
@@ -308,7 +308,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             new AktørIdEntitet(AKTØR_ID),
             new OrganisasjonsnummerDto(BRREG_ORGNUMMER),
             FØRSTE_UTTAKSDATO,
-            LukkeÅrsak.EKSTERN_INNSENDING);
+            LukkeÅrsak.EKSTERN_INNSENDING, false);
 
         clearHibernateCache();
 

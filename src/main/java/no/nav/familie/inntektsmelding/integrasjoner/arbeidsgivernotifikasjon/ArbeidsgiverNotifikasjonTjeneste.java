@@ -209,7 +209,7 @@ class ArbeidsgiverNotifikasjonTjeneste implements ArbeidsgiverNotifikasjon {
     }
 
     @Override
-    public String ferdigstillSak(String id, boolean arbeidsgiverInitiert) {
+    public String ferdigstillSak(String id, boolean arbeidsgiverInitiert, Optional<LocalDate> førsteUttaksdato) {
 
         var requestBuilder = NyStatusSakMutationRequest.builder()
             .setId(id)
@@ -220,6 +220,10 @@ class ArbeidsgiverNotifikasjonTjeneste implements ArbeidsgiverNotifikasjon {
         } else {
             requestBuilder.setOverstyrStatustekstMed(SAK_STATUS_TEKST);
         }
+        //Når vi migrerer forespørsler for eksisterende løpende saker som ikke har forespørsel setter vi tidspunkt på saken til
+        //4 uker før første uttaksdato slik at de havner nederst i sakslisten i arbeidsgiverportalen til arbeidsgiver
+        førsteUttaksdato.ifPresent(dato -> requestBuilder.setTidspunkt(dato.minusWeeks(4).atStartOfDay().format(DateTimeFormatter.ISO_DATE_TIME)));
+
         var projection = new NyStatusSakResultatResponseProjection().typename()
             .onNyStatusSakVellykket(new NyStatusSakVellykketResponseProjection().id())
             .onUgyldigMerkelapp(new UgyldigMerkelappResponseProjection().feilmelding())
