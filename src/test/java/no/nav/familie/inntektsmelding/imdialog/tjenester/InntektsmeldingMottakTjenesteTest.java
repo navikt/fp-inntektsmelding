@@ -164,7 +164,8 @@ class InntektsmeldingMottakTjenesteTest {
         var responseDto = inntektsmeldingMottakTjeneste.mottaArbeidsgiverInitiertInntektsmelding(innsendingDto);
 
         // Assert
-        verify(forespørselBehandlingTjeneste, times(1)).ferdigstillForespørsel(uuid, aktørId, new OrganisasjonsnummerDto(orgnr), startdato, LukkeÅrsak.ORDINÆR_INNSENDING);
+        verify(forespørselBehandlingTjeneste, times(1)).ferdigstillForespørsel(uuid, aktørId, new OrganisasjonsnummerDto(orgnr), startdato, LukkeÅrsak.ORDINÆR_INNSENDING,
+            false);
         assertThat(responseDto).isNotNull();
         assertThat(responseDto.refusjon()).hasSize(1);
     }
@@ -228,7 +229,8 @@ class InntektsmeldingMottakTjenesteTest {
         var responseDto = inntektsmeldingMottakTjeneste.mottaArbeidsgiverInitiertInntektsmelding(innsendingDto);
 
         // Assert
-        verify(forespørselBehandlingTjeneste, times(0)).ferdigstillForespørsel(uuid, aktørId, new OrganisasjonsnummerDto(orgnr), startdato, LukkeÅrsak.ORDINÆR_INNSENDING);
+        verify(forespørselBehandlingTjeneste, times(0)).ferdigstillForespørsel(uuid, aktørId, new OrganisasjonsnummerDto(orgnr), startdato, LukkeÅrsak.ORDINÆR_INNSENDING,
+            false);
         assertThat(responseDto).isNotNull();
         assertThat(responseDto.refusjon()).hasSize(1);
         assertThat(responseDto.startdato()).isEqualTo(nyStartDato);

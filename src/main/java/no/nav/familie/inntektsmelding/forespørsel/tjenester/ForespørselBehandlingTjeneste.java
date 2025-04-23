@@ -107,7 +107,8 @@ public class ForespørselBehandlingTjeneste {
                                                      AktørIdEntitet aktorId,
                                                      OrganisasjonsnummerDto organisasjonsnummerDto,
                                                      LocalDate startdato,
-                                                     LukkeÅrsak årsak) {
+                                                     LukkeÅrsak årsak,
+                                                     boolean migrering) {
         var foresporsel = forespørselTjeneste.hentForespørsel(foresporselUuid)
             .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel for inntektsmelding, ugyldig tilstand"));
 
@@ -119,8 +120,9 @@ public class ForespørselBehandlingTjeneste {
         // Arbeidsgiverinitierte forespørsler har ingen oppgave
         foresporsel.getOppgaveId().ifPresent(oppgaveId -> arbeidsgiverNotifikasjon.oppgaveUtført(oppgaveId, OffsetDateTime.now()));
 
-        var erArbeidsgiverInitiertInntektsmelding = foresporsel.getOppgaveId().isEmpty();
-        arbeidsgiverNotifikasjon.ferdigstillSak(foresporsel.getArbeidsgiverNotifikasjonSakId(), erArbeidsgiverInitiertInntektsmelding); // Oppdaterer status i arbeidsgiver-notifikasjon
+        var erArbeidsgiverInitiertInntektsmelding = foresporsel.getOppgaveId().isEmpty() && !migrering;
+        arbeidsgiverNotifikasjon.ferdigstillSak(foresporsel.getArbeidsgiverNotifikasjonSakId(), erArbeidsgiverInitiertInntektsmelding,
+            migrering ? Optional.of(startdato) : Optional.empty()); // Oppdaterer status i arbeidsgiver-notifikasjon
         arbeidsgiverNotifikasjon.oppdaterSakTilleggsinformasjon(foresporsel.getArbeidsgiverNotifikasjonSakId(),
             ForespørselTekster.lagTilleggsInformasjon(årsak));
         forespørselTjeneste.ferdigstillForespørsel(foresporsel.getArbeidsgiverNotifikasjonSakId()); // Oppdaterer status i forespørsel
@@ -142,7 +144,7 @@ public class ForespørselBehandlingTjeneste {
     public void settForespørselTilUtgått(ForespørselEntitet eksisterendeForespørsel, boolean skalOppdatereArbeidsgiverNotifikasjon) {
         if (skalOppdatereArbeidsgiverNotifikasjon) {
             eksisterendeForespørsel.getOppgaveId().ifPresent( oppgaveId -> arbeidsgiverNotifikasjon.oppgaveUtgått(oppgaveId, OffsetDateTime.now()));
-            arbeidsgiverNotifikasjon.ferdigstillSak(eksisterendeForespørsel.getArbeidsgiverNotifikasjonSakId(), false); // Oppdaterer status i arbeidsgiver-notifikasjon
+            arbeidsgiverNotifikasjon.ferdigstillSak(eksisterendeForespørsel.getArbeidsgiverNotifikasjonSakId(), false, Optional.empty()); // Oppdaterer status i arbeidsgiver-notifikasjon
         }
 
         arbeidsgiverNotifikasjon.oppdaterSakTilleggsinformasjon(eksisterendeForespørsel.getArbeidsgiverNotifikasjonSakId(),
@@ -219,7 +221,7 @@ public class ForespørselBehandlingTjeneste {
         }
         //Midlertiding løsning for å lukke migrerte forespørsler
         if (migrering)  {
-            ferdigstillForespørsel(uuid, aktørId, organisasjonsnummer, førsteUttaksdato, LukkeÅrsak.EKSTERN_INNSENDING);
+            ferdigstillForespørsel(uuid, aktørId, organisasjonsnummer, førsteUttaksdato, LukkeÅrsak.EKSTERN_INNSENDING, migrering);
         }
     }
 
@@ -306,7 +308,7 @@ public class ForespørselBehandlingTjeneste {
                 f.getAktørId(),
                 new OrganisasjonsnummerDto(f.getOrganisasjonsnummer()),
                 f.getFørsteUttaksdato(),
-                LukkeÅrsak.EKSTERN_INNSENDING);
+                LukkeÅrsak.EKSTERN_INNSENDING, false);
             MetrikkerTjeneste.loggForespørselLukkEkstern(lukketForespørsel);
         });
     }

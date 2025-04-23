@@ -198,7 +198,7 @@ class ArbeidsgiverNotifikasjonTjenesteTest {
 
         var requestCaptor = ArgumentCaptor.forClass(NyStatusSakMutationRequest.class);
 
-        tjeneste.ferdigstillSak(expectedId, false);
+        tjeneste.ferdigstillSak(expectedId, false, Optional.empty());
 
         Mockito.verify(klient).oppdaterSakStatus(requestCaptor.capture(), any(NyStatusSakResultatResponseProjection.class));
 
@@ -223,7 +223,7 @@ class ArbeidsgiverNotifikasjonTjenesteTest {
 
         var requestCaptor = ArgumentCaptor.forClass(NyStatusSakMutationRequest.class);
 
-        tjeneste.ferdigstillSak(expectedId, true);
+        tjeneste.ferdigstillSak(expectedId, true, Optional.empty());
 
         Mockito.verify(klient).oppdaterSakStatus(requestCaptor.capture(), any(NyStatusSakResultatResponseProjection.class));
 
@@ -239,6 +239,32 @@ class ArbeidsgiverNotifikasjonTjenesteTest {
         assertThat(input.get("idempotencyKey")).isNull();
         assertThat(input.get("hardDelete")).isNull();
         assertThat(input.get("tidspunkt")).isNull();
+        assertThat(input.get("nyLenkeTilSak")).isNull();
+    }
+
+    @Test
+    void ferdigstill_migrert_sak() {
+        var expectedId = "TestId";
+        var expectedTidspunkt = LocalDate.now().minusWeeks(4).atStartOfDay().format(DateTimeFormatter.ISO_DATE_TIME);
+
+        var requestCaptor = ArgumentCaptor.forClass(NyStatusSakMutationRequest.class);
+
+        tjeneste.ferdigstillSak(expectedId, false, Optional.of(LocalDate.now()));
+
+        Mockito.verify(klient).oppdaterSakStatus(requestCaptor.capture(), any(NyStatusSakResultatResponseProjection.class));
+
+        var request = requestCaptor.getValue();
+
+        var input = request.getInput();
+
+        assertThat(input).containsOnlyKeys("id", "overstyrStatustekstMed", "nyStatus", "idempotencyKey", "hardDelete", "tidspunkt", "nyLenkeTilSak")
+            .containsEntry("id", expectedId)
+            .containsEntry("nyStatus", SaksStatus.FERDIG)
+            .containsEntry("overstyrStatustekstMed", ArbeidsgiverNotifikasjonTjeneste.SAK_STATUS_TEKST)
+            .containsEntry("tidspunkt", expectedTidspunkt);
+
+        assertThat(input.get("idempotencyKey")).isNull();
+        assertThat(input.get("hardDelete")).isNull();
         assertThat(input.get("nyLenkeTilSak")).isNull();
     }
 
