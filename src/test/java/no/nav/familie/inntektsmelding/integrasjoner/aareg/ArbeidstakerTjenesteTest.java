@@ -105,7 +105,6 @@ class ArbeidstakerTjenesteTest {
         var forventetListe = organisasjoner.stream().map(OrganisasjonsnummerDto::new).toList();
 
         when(altinnTilgangTjenesteMock.hentBedrifterArbeidsgiverHarTilgangTil()).thenReturn(organisasjoner);
-        when(altinnTilgangTjenesteMock.hentBedrifterArbeidsgiverHarTilgangTil()).thenReturn(organisasjoner);
 
         var resultat = arbeidstakerTjeneste.finnOrganisasjonerArbeidsgiverHarTilgangTil(TILFELDIG_PERSON_IDENT);
 
