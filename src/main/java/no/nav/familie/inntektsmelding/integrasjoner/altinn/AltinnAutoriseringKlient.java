@@ -95,6 +95,12 @@ public class AltinnAutoriseringKlient {
         }
     }
 
+    public List<String> hentBedrifterArbeidsgiverHarTilgangTil() {
+        return gjørKallMedPagineringOgRetry().stream()
+            .map(AltinnReportee::organizationNumber)
+            .toList();
+    }
+
     @JsonNaming(PropertyNamingStrategies.UpperCamelCaseStrategy.class)
     record AltinnReportee(String name,
                           String organizationForm,

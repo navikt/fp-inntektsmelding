@@ -12,6 +12,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
+
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -209,7 +211,7 @@ class GrunnlagDtoTjenesteTest {
         var aktørId = new AktørIdEntitet("9999999999999");
         var personInfo = new PersonInfo("Navn", null, "Navnesen", fnr, aktørId, LocalDate.now(), null, null);
         var orgnr = "999999999";
-        when(arbeidstakerTjeneste.finnArbeidsforholdInnsenderHarTilgangTil(fnr, førsteFraværsdag)).thenReturn(List.of(new Arbeidsforhold(orgnr,
+        when(arbeidstakerTjeneste.finnSøkersArbeidsforholdSomArbeidsgiverHarTilgangTil(fnr, førsteFraværsdag)).thenReturn(List.of(new Arbeidsforhold(orgnr,
             new AnsettelsesperiodeDto(new PeriodeDto(LocalDate.now().minusMonths(2), Tid.TIDENES_ENDE)))));
         when(organisasjonTjeneste.finnOrganisasjon(orgnr)).thenReturn(new Organisasjon("Bedriften", orgnr));
         // Act
@@ -222,6 +224,34 @@ class GrunnlagDtoTjenesteTest {
         assertThat(response.arbeidsforhold()).hasSize(1);
         assertThat(response.arbeidsforhold().stream().toList().getFirst().organisasjonsnavn()).isEqualTo("Bedriften");
         assertThat(response.arbeidsforhold().stream().toList().getFirst().organisasjonsnummer()).isEqualTo(orgnr);
+        assertThat(response.kjønn()).isNull();
+    }
+
+    @Test
+    void skal_hente_personinfo_og_organisasjoner_innsender_har_tilgang_til_gitt_fnr() {
+        // Arrange
+        var fnr = new PersonIdent("11111111111");
+        var aktørId = new AktørIdEntitet("9999999999999");
+        var personInfo = new PersonInfo("Navn", null, "Navnesen", fnr, aktørId, LocalDate.now(), null, null);
+        var orgnr1 = new OrganisasjonsnummerDto("123456789");
+        var orgnr2 = new OrganisasjonsnummerDto("987654321");
+        var navn1 = "Organisasjon 1";
+        var navn2 = "Organisasjon 2";
+        when(arbeidstakerTjeneste.finnOrganisasjonerArbeidsgiverHarTilgangTil(fnr)).thenReturn(List.of(orgnr1, orgnr2));
+        when(organisasjonTjeneste.finnOrganisasjon(orgnr1.orgnr())).thenReturn(new Organisasjon(navn1, orgnr1.orgnr()));
+        when(organisasjonTjeneste.finnOrganisasjon(orgnr2.orgnr())).thenReturn(new Organisasjon(navn2, orgnr2.orgnr()));
+        // Act
+        var response = grunnlagDtoTjeneste.hentSøkerinfoOgOrganisasjonerArbeidsgiverHarTilgangTil(personInfo).orElse(null);
+
+        // Assert
+        assertThat(response).isNotNull();
+        assertThat(response.fornavn()).isEqualTo("Navn");
+        assertThat(response.etternavn()).isEqualTo("Navnesen");
+        assertThat(response.arbeidsforhold()).hasSize(2);
+        assertThat(response.arbeidsforhold().stream()).anyMatch(o -> o.organisasjonsnavn().equals(navn1));
+        assertThat(response.arbeidsforhold().stream()).anyMatch(o -> o.organisasjonsnavn().equals(navn2));
+        assertThat(response.arbeidsforhold().stream()).anyMatch(o -> o.organisasjonsnummer().equals(orgnr1.orgnr()));
+        assertThat(response.arbeidsforhold().stream()).anyMatch(o -> o.organisasjonsnummer().equals(orgnr2.orgnr()));
         assertThat(response.kjønn()).isNull();
     }
 

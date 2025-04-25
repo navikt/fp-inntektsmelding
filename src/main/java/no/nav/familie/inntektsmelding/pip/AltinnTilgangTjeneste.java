@@ -1,5 +1,7 @@
 package no.nav.familie.inntektsmelding.pip;
 
+import java.util.List;
+
 import jakarta.enterprise.context.Dependent;
 
 import no.nav.familie.inntektsmelding.integrasjoner.altinn.AltinnAutoriseringKlient;
@@ -23,5 +25,9 @@ public class AltinnTilgangTjeneste {
 
     public boolean manglerTilgangTilBedriften(String orgNr) {
         return !harTilgangTilBedriften(orgNr);
+    }
+
+    public List<String> hentBedrifterArbeidsgiverHarTilgangTil() {
+        return altinnKlient.hentBedrifterArbeidsgiverHarTilgangTil();
     }
 }
