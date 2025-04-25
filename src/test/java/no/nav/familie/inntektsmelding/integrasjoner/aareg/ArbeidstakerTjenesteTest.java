@@ -104,10 +104,10 @@ class ArbeidstakerTjenesteTest {
         var organisasjoner = List.of("000000000", "000000001", "000000002");
         var forventetListe = organisasjoner.stream().map(OrganisasjonsnummerDto::new).toList();
 
-        when(altinnTilgangTjenesteMock.hentBedrifterInnsenderHarTilgangTil()).thenReturn(organisasjoner);
-        when(altinnTilgangTjenesteMock.hentBedrifterInnsenderHarTilgangTil()).thenReturn(organisasjoner);
+        when(altinnTilgangTjenesteMock.hentBedrifterArbeidsgiverHarTilgangTil()).thenReturn(organisasjoner);
+        when(altinnTilgangTjenesteMock.hentBedrifterArbeidsgiverHarTilgangTil()).thenReturn(organisasjoner);
 
-        var resultat = arbeidstakerTjeneste.finnOrganisasjonerInnsenderHarTilgangTil(TILFELDIG_PERSON_IDENT);
+        var resultat = arbeidstakerTjeneste.finnOrganisasjonerArbeidsgiverHarTilgangTil(TILFELDIG_PERSON_IDENT);
 
         assertThat(resultat).hasSize(3);
         assertThat(resultat).isEqualTo(forventetListe);

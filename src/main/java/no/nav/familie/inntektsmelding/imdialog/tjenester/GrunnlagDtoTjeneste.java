@@ -225,7 +225,7 @@ public class GrunnlagDtoTjeneste {
 
 
     public Optional<SlåOppArbeidstakerResponseDto> hentSøkerinfoOgOrganisasjonerArbeidsgiverHarTilgangTil(PersonInfo personInfo) {
-        var organisasjonerArbeidsgiverHarTilgangTil = arbeidstakerTjeneste.finnOrganisasjonerInnsenderHarTilgangTil(personInfo.fødselsnummer());
+        var organisasjonerArbeidsgiverHarTilgangTil = arbeidstakerTjeneste.finnOrganisasjonerArbeidsgiverHarTilgangTil(personInfo.fødselsnummer());
 
         var organisasjoner = organisasjonerArbeidsgiverHarTilgangTil.stream()
             .map(orgnrDto -> new SlåOppArbeidstakerResponseDto.ArbeidsforholdDto(organisasjonTjeneste.finnOrganisasjon(orgnrDto.orgnr()).navn(),

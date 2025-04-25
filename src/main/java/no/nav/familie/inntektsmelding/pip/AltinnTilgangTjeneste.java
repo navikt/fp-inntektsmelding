@@ -27,7 +27,7 @@ public class AltinnTilgangTjeneste {
         return !harTilgangTilBedriften(orgNr);
     }
 
-    public List<String> hentBedrifterInnsenderHarTilgangTil() {
-        return altinnKlient.hentBedrifterInnsenderHarTilgangTil();
+    public List<String> hentBedrifterArbeidsgiverHarTilgangTil() {
+        return altinnKlient.hentBedrifterArbeidsgiverHarTilgangTil();
     }
 }

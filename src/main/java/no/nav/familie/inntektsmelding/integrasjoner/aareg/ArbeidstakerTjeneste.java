@@ -41,26 +41,26 @@ public class ArbeidstakerTjeneste {
             return Collections.emptyList();
         }
 
-        var arbeidsforholdArbeisdgiverHarTilgangTil = alleArbeidsforholdTilSøker
+        var arbeidsforholdArbeidsgiverHarTilgangTil = alleArbeidsforholdTilSøker
             .stream()
             .filter(dto -> altinnTilgangTjeneste.harTilgangTilBedriften(dto.organisasjonsnummer()))
             .toList();
 
-        if (alleArbeidsforholdTilSøker.size() > arbeidsforholdArbeisdgiverHarTilgangTil.size()) {
-            LOG.info("Innsender har tilgang til {} av {} arbeidsforhold for {}", arbeidsforholdArbeisdgiverHarTilgangTil.size(), alleArbeidsforholdTilSøker.size(), ident);
+        if (alleArbeidsforholdTilSøker.size() > arbeidsforholdArbeidsgiverHarTilgangTil.size()) {
+            LOG.info("Innsender har tilgang til {} av {} arbeidsforhold for {}", arbeidsforholdArbeidsgiverHarTilgangTil.size(), alleArbeidsforholdTilSøker.size(), ident);
         }
 
         LOG.info("Returnerer informasjon om arbeidsforhold for {}", ident);
-        return arbeidsforholdArbeisdgiverHarTilgangTil;
+        return arbeidsforholdArbeidsgiverHarTilgangTil;
     }
 
-    public List<OrganisasjonsnummerDto> finnOrganisasjonerInnsenderHarTilgangTil(PersonIdent ident) {
-        var tilgjengeligeOrganisasjoner = altinnTilgangTjeneste.hentBedrifterInnsenderHarTilgangTil().stream()
+    public List<OrganisasjonsnummerDto> finnOrganisasjonerArbeidsgiverHarTilgangTil(PersonIdent ident) {
+        var organisasjoner = altinnTilgangTjeneste.hentBedrifterArbeidsgiverHarTilgangTil().stream()
             .map(OrganisasjonsnummerDto::new)
             .toList();
 
-        LOG.info("Innsender har tilgang til {} organisasjoner for {}", tilgjengeligeOrganisasjoner, ident);
+        LOG.info("Arbeidsgiver har tilgang til følgende organisasjoner {} for {}", organisasjoner, ident);
 
-        return tilgjengeligeOrganisasjoner;
+        return organisasjoner;
     }
 }

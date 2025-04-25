@@ -95,7 +95,7 @@ public class AltinnAutoriseringKlient {
         }
     }
 
-    public List<String> hentBedrifterInnsenderHarTilgangTil() {
+    public List<String> hentBedrifterArbeidsgiverHarTilgangTil() {
         return gjørKallMedPagineringOgRetry().stream()
             .map(AltinnReportee::organizationNumber)
             .toList();

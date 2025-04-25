@@ -237,7 +237,7 @@ class GrunnlagDtoTjenesteTest {
         var orgnr2 = new OrganisasjonsnummerDto("987654321");
         var navn1 = "Organisasjon 1";
         var navn2 = "Organisasjon 2";
-        when(arbeidstakerTjeneste.finnOrganisasjonerInnsenderHarTilgangTil(fnr)).thenReturn(List.of(orgnr1, orgnr2));
+        when(arbeidstakerTjeneste.finnOrganisasjonerArbeidsgiverHarTilgangTil(fnr)).thenReturn(List.of(orgnr1, orgnr2));
         when(organisasjonTjeneste.finnOrganisasjon(orgnr1.orgnr())).thenReturn(new Organisasjon(navn1, orgnr1.orgnr()));
         when(organisasjonTjeneste.finnOrganisasjon(orgnr2.orgnr())).thenReturn(new Organisasjon(navn2, orgnr2.orgnr()));
         // Act
