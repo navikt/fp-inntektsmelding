@@ -11,6 +11,7 @@ import no.nav.familie.inntektsmelding.integrasjoner.aareg.dto.Ansettelsesperiode
 
 import no.nav.familie.inntektsmelding.integrasjoner.aareg.dto.PeriodeDto;
 
+import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.vedtak.konfig.Tid;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -49,7 +50,7 @@ class ArbeidstakerTjenesteTest {
         );
         when(altinnTilgangTjenesteMock.harTilgangTilBedriften(any())).thenReturn(true);
 
-        var resultat = arbeidstakerTjeneste.finnArbeidsforholdInnsenderHarTilgangTil(TILFELDIG_PERSON_IDENT, førsteFraværsdag);
+        var resultat = arbeidstakerTjeneste.finnSøkersArbeidsforholdSomArbeidsgiverHarTilgangTil(TILFELDIG_PERSON_IDENT, førsteFraværsdag);
         assertThat(resultat)
             .isNotNull()
             .hasSize(1);
@@ -67,7 +68,7 @@ class ArbeidstakerTjenesteTest {
             List.of(new Arbeidsforhold("00000000", ansettelsesPeriode)));
         when(altinnTilgangTjenesteMock.harTilgangTilBedriften(any())).thenReturn(true);
 
-        var resultat = arbeidstakerTjeneste.finnArbeidsforholdInnsenderHarTilgangTil(TILFELDIG_PERSON_IDENT, førsteFraværsdag);
+        var resultat = arbeidstakerTjeneste.finnSøkersArbeidsforholdSomArbeidsgiverHarTilgangTil(TILFELDIG_PERSON_IDENT, førsteFraværsdag);
 
         assertThat(resultat).hasSize(1);
         var arbeidsforhold = resultat.getFirst();
@@ -90,12 +91,25 @@ class ArbeidstakerTjenesteTest {
         when(altinnTilgangTjenesteMock.harTilgangTilBedriften("00000000")).thenReturn(false);
         when(altinnTilgangTjenesteMock.harTilgangTilBedriften("00000001")).thenReturn(true);
 
-        var resultat = arbeidstakerTjeneste.finnArbeidsforholdInnsenderHarTilgangTil(TILFELDIG_PERSON_IDENT, førsteFraværsdag);
+        var resultat = arbeidstakerTjeneste.finnSøkersArbeidsforholdSomArbeidsgiverHarTilgangTil(TILFELDIG_PERSON_IDENT, førsteFraværsdag);
 
         assertThat(resultat).hasSize(1);
         var arbeidsforhold = resultat.getFirst();
 
         assertThat(arbeidsforhold.organisasjonsnummer()).isEqualTo("00000001");
         assertThat(arbeidsforhold.ansettelsesperiode()).isEqualTo(ansettelsesPeriode2);
+    }
+    @Test
+    void returnerer_organisasjoner_innsender_har_tilgang_til() {
+        var organisasjoner = List.of("000000000", "000000001", "000000002");
+        var forventetListe = organisasjoner.stream().map(OrganisasjonsnummerDto::new).toList();
+
+        when(altinnTilgangTjenesteMock.hentBedrifterInnsenderHarTilgangTil()).thenReturn(organisasjoner);
+        when(altinnTilgangTjenesteMock.hentBedrifterInnsenderHarTilgangTil()).thenReturn(organisasjoner);
+
+        var resultat = arbeidstakerTjeneste.finnOrganisasjonerInnsenderHarTilgangTil(TILFELDIG_PERSON_IDENT);
+
+        assertThat(resultat).hasSize(3);
+        assertThat(resultat).isEqualTo(forventetListe);
     }
 }

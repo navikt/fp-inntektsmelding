@@ -4,6 +4,8 @@ import jakarta.enterprise.context.ApplicationScoped;
 
 import jakarta.inject.Inject;
 
+import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,25 +32,35 @@ public class ArbeidstakerTjeneste {
         this.altinnTilgangTjeneste = altinnTilgangTjeneste;
     }
 
-    public List<Arbeidsforhold> finnArbeidsforholdInnsenderHarTilgangTil(PersonIdent ident, LocalDate førsteFraværsdag) {
-        var alleArbeidsforhold = arbeidsforholdTjeneste.hentArbeidsforhold(ident, førsteFraværsdag);
-        LOG.info("Fant {} arbeidsforhold i Aa-registeret for {}", alleArbeidsforhold.size(), ident);
+    public List<Arbeidsforhold> finnSøkersArbeidsforholdSomArbeidsgiverHarTilgangTil(PersonIdent ident, LocalDate førsteFraværsdag) {
+        var alleArbeidsforholdTilSøker = arbeidsforholdTjeneste.hentArbeidsforhold(ident, førsteFraværsdag);
+        LOG.info("Fant {} arbeidsforhold i Aa-registeret for {}", alleArbeidsforholdTilSøker.size(), ident);
 
-        if (alleArbeidsforhold.isEmpty()) {
+        if (alleArbeidsforholdTilSøker.isEmpty()) {
             LOG.warn("Fant ingen arbeidsforhold i Aa-registeret for {}", ident);
             return Collections.emptyList();
         }
 
-        var arbeidsforholdInnsenderHarTilgangTil = alleArbeidsforhold
+        var arbeidsforholdArbeisdgiverHarTilgangTil = alleArbeidsforholdTilSøker
             .stream()
             .filter(dto -> altinnTilgangTjeneste.harTilgangTilBedriften(dto.organisasjonsnummer()))
             .toList();
 
-        if (alleArbeidsforhold.size() > arbeidsforholdInnsenderHarTilgangTil.size()) {
-            LOG.info("Innsender har tilgang til {} av {} arbeidsforhold for {}", arbeidsforholdInnsenderHarTilgangTil.size(), alleArbeidsforhold.size(), ident);
+        if (alleArbeidsforholdTilSøker.size() > arbeidsforholdArbeisdgiverHarTilgangTil.size()) {
+            LOG.info("Innsender har tilgang til {} av {} arbeidsforhold for {}", arbeidsforholdArbeisdgiverHarTilgangTil.size(), alleArbeidsforholdTilSøker.size(), ident);
         }
 
         LOG.info("Returnerer informasjon om arbeidsforhold for {}", ident);
-        return arbeidsforholdInnsenderHarTilgangTil;
+        return arbeidsforholdArbeisdgiverHarTilgangTil;
+    }
+
+    public List<OrganisasjonsnummerDto> finnOrganisasjonerInnsenderHarTilgangTil(PersonIdent ident) {
+        var tilgjengeligeOrganisasjoner = altinnTilgangTjeneste.hentBedrifterInnsenderHarTilgangTil().stream()
+            .map(OrganisasjonsnummerDto::new)
+            .toList();
+
+        LOG.info("Innsender har tilgang til {} organisasjoner for {}", tilgjengeligeOrganisasjoner, ident);
+
+        return tilgjengeligeOrganisasjoner;
     }
 }

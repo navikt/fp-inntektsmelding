@@ -207,12 +207,12 @@ public class GrunnlagDtoTjeneste {
     public Optional<SlåOppArbeidstakerResponseDto> finnArbeidsforholdForFnr(PersonInfo personInfo,
                                                                             LocalDate førsteFraværsdag) {
         // TODO Skal vi sjekke noe mtp kode 6/7
-        var arbeidsforholdBrukerHarTilgangTil = arbeidstakerTjeneste.finnArbeidsforholdInnsenderHarTilgangTil(personInfo.fødselsnummer(), førsteFraværsdag);
-        if (arbeidsforholdBrukerHarTilgangTil.isEmpty()) {
+        var arbeidsforholdSøkerHarHosArbeidsgiver = arbeidstakerTjeneste.finnSøkersArbeidsforholdSomArbeidsgiverHarTilgangTil(personInfo.fødselsnummer(), førsteFraværsdag);
+        if (arbeidsforholdSøkerHarHosArbeidsgiver.isEmpty()) {
             return Optional.empty();
         }
 
-        var arbeidsforholdDto = arbeidsforholdBrukerHarTilgangTil.stream()
+        var arbeidsforholdDto = arbeidsforholdSøkerHarHosArbeidsgiver.stream()
             .map(a -> new SlåOppArbeidstakerResponseDto.ArbeidsforholdDto(organisasjonTjeneste.finnOrganisasjon(a.organisasjonsnummer()).navn(),
                 a.organisasjonsnummer()))
             .collect(Collectors.toSet());
@@ -220,6 +220,21 @@ public class GrunnlagDtoTjeneste {
             personInfo.mellomnavn(),
             personInfo.etternavn(),
             arbeidsforholdDto,
+            personInfo.kjønn()));
+    }
+
+
+    public Optional<SlåOppArbeidstakerResponseDto> hentSøkerinfoOgOrganisasjonerArbeidsgiverHarTilgangTil(PersonInfo personInfo) {
+        var organisasjonerArbeidsgiverHarTilgangTil = arbeidstakerTjeneste.finnOrganisasjonerInnsenderHarTilgangTil(personInfo.fødselsnummer());
+
+        var organisasjoner = organisasjonerArbeidsgiverHarTilgangTil.stream()
+            .map(orgnrDto -> new SlåOppArbeidstakerResponseDto.ArbeidsforholdDto(organisasjonTjeneste.finnOrganisasjon(orgnrDto.orgnr()).navn(),
+                orgnrDto.orgnr()))
+            .collect(Collectors.toSet());
+        return Optional.of(new SlåOppArbeidstakerResponseDto(personInfo.fornavn(),
+            personInfo.mellomnavn(),
+            personInfo.etternavn(),
+            organisasjoner,
             personInfo.kjønn()));
     }
 

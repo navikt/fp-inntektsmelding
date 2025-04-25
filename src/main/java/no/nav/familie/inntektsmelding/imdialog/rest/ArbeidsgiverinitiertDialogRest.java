@@ -12,6 +12,10 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
+
+import no.nav.familie.inntektsmelding.koder.Ytelsetype;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +35,7 @@ public class ArbeidsgiverinitiertDialogRest {
 
     public static final String BASE_PATH = "/arbeidsgiverinitiert";
     private static final String HENT_ARBEIDSFORHOLD = "/arbeidsforhold";
+    private static final String HENT_ARBEIDSGIVERE_FOR_UREGISTRERT = "/arbeidsgivereForUregistrert";
     private static final String HENT_OPPLYSNINGER = "/opplysninger";
 
     private GrunnlagDtoTjeneste grunnlagDtoTjeneste;
@@ -70,6 +75,22 @@ public class ArbeidsgiverinitiertDialogRest {
         var dto = grunnlagDtoTjeneste.finnArbeidsforholdForFnr(personInfo, request.førsteFraværsdag());
         return dto.map(d ->Response.ok(d).build()).orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
     }
+
+    @POST
+    @Path(HENT_ARBEIDSGIVERE_FOR_UREGISTRERT)
+    @Produces(MediaType.APPLICATION_JSON + ";charset=utf-8")
+    @Tilgangskontrollert
+    public Response hentArbeidsgivereforUregistrert(@Valid @NotNull ArbeidsgiverinitiertDialogRest.HentArbeidsgivereUregistrert request) {
+        LOG.info("Henter personinformasjon for {}, og organisasjoner som innsender har tilgang til", request.fødselsnummer());
+        var personInfo = grunnlagDtoTjeneste.finnPersoninfo(request.fødselsnummer(), request.ytelseType());
+        if (personInfo == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+        var dto = grunnlagDtoTjeneste.hentSøkerinfoOgOrganisasjonerArbeidsgiverHarTilgangTil(personInfo);
+        return dto.map(d -> Response.ok(d).build()).orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
+    }
+
+    public record HentArbeidsgivereUregistrert(@Valid @NotNull PersonIdent fødselsnummer, @Valid @NotNull Ytelsetype ytelseType) {}
 
     @POST
     @Path(HENT_OPPLYSNINGER)
