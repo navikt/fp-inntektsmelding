@@ -1,11 +1,10 @@
 package no.nav.familie.inntektsmelding.pip;
 
+import java.util.List;
+
 import jakarta.enterprise.context.Dependent;
 
 import no.nav.familie.inntektsmelding.integrasjoner.altinn.AltinnAutoriseringKlient;
-import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
-
-import java.util.List;
 
 @Dependent
 public class AltinnTilgangTjeneste {
