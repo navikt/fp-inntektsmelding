@@ -1,6 +1,7 @@
 package no.nav.familie.inntektsmelding.integrasjoner.fpsak;
 
 import java.net.URI;
+import java.time.LocalDate;
 
 import jakarta.enterprise.context.Dependent;
 import jakarta.validation.Valid;
@@ -27,6 +28,8 @@ public class FpsakKlient {
     private static final Logger LOG = LoggerFactory.getLogger(FpsakKlient.class);
 
     private static final String FPSAK_API = "/api/fordel/sakInntektsmelding";
+    private static final String FPSAK_STATUS_API = "/api/fordel/infoOmSakInntektsmelding";
+
 
     private final RestClient restClient;
     private final RestConfig restConfig;
@@ -40,6 +43,21 @@ public class FpsakKlient {
         this.restConfig = RestConfig.forClient(this.getClass());
     }
 
+
+    public InfoOmSakInntektsmeldingResponse hentInfoOmSak(AktørIdEntitet aktørIdEntitet, Ytelsetype ytelsetype) {
+        var uri = UriBuilder.fromUri(restConfig.endpoint()).path(FPSAK_STATUS_API).build();
+        LOG.info("Henter sakstatus for aktør {}", aktørIdEntitet);
+        var ytelseDto = ytelsetype.equals(Ytelsetype.FORELDREPENGER) ? InntektsmeldingSakRequest.Ytelse.FORELDREPENGER : InntektsmeldingSakRequest.Ytelse.SVANGERSKAPSPENGER;
+        var requestDto = new InntektsmeldingSakRequest(new InntektsmeldingSakRequest.AktørId(aktørIdEntitet.getAktørId()), ytelseDto);
+        var request = RestRequest.newPOSTJson(requestDto, uri, restConfig);
+        try {
+            return restClient.sendReturnOptional(request, InfoOmSakInntektsmeldingResponse.class)
+                .orElseThrow(() -> new IllegalStateException("Klarte ikke hente sakstatus fra fpsak"));
+        } catch (Exception e) {
+            LOG.warn("FP-INNTEKTSMELDING: Integrasjonsfeil mot fpsak. Klarte ikke hente sakstatus. Fikk feil: {}", e.toString());
+            throw e;
+        }
+    }
     public boolean harSøkerSakIFagsystem(AktørIdEntitet aktørIdEntitet, Ytelsetype ytelsetype) {
         var uri = uri();
         LOG.info("Undersøker om aktør {} har en sak på ytelse {}", aktørIdEntitet, ytelsetype);
@@ -64,4 +82,15 @@ public class FpsakKlient {
         protected enum Ytelse{FORELDREPENGER, SVANGERSKAPSPENGER}
     }
     public record SakInntektsmeldingResponse(boolean søkerHarSak){}
+
+    public record InfoOmSakInntektsmeldingResponse(StatusSakInntektsmelding statusInntektsmelding, LocalDate førsteUttaksdato) {}
+
+    public enum StatusSakInntektsmelding {
+        ÅPEN_FOR_BEHANDLING,
+        SØKT_FOR_TIDLIG,
+        //På sikt vil ikke denne være relevant siden det ikke er mulig å sende inntektsmelding før søknad er mottatt (når altinn2 er skrudd av)
+        VENTER_PÅ_SØKNAD,
+        PAPIRSØKNAD_IKKE_REGISTRERT,
+        INGEN_BEHANDLING
+    }
 }
