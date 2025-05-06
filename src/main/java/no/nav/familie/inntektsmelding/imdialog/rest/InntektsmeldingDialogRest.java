@@ -106,11 +106,11 @@ public class InntektsmeldingDialogRest {
         }
         if (ArbeidsgiverinitiertÅrsakDto.NYANSATT.equals(innsendtÅrsak)) {
             tilgang.sjekkAtArbeidsgiverHarTilgangTilBedrift(new OrganisasjonsnummerDto(sendInntektsmeldingRequestDto.arbeidsgiverIdent().ident()));
-            LOG.info("Mottok arbeisgiverinitert inntektsmelding årsak nyansatt for aktørId {}", sendInntektsmeldingRequestDto.aktorId());
+            LOG.info("Mottok arbeidsgiverinitert inntektsmelding årsak nyansatt for aktørId {}", sendInntektsmeldingRequestDto.aktorId());
            return Response.ok(inntektsmeldingMottakTjeneste.mottaArbeidsgiverInitiertNyansattInntektsmelding(sendInntektsmeldingRequestDto)).build();
         } else if (ArbeidsgiverinitiertÅrsakDto.UREGISTRERT.equals(innsendtÅrsak)) {
             tilgang.sjekkAtArbeidsgiverHarTilgangTilBedrift(new OrganisasjonsnummerDto(sendInntektsmeldingRequestDto.arbeidsgiverIdent().ident()));
-            LOG.info("Mottok arbeisgiverinitert inntektsmelding årsak uregistrert for aktørId {}", sendInntektsmeldingRequestDto.aktorId());
+            LOG.info("Mottok arbeidsgiverinitert inntektsmelding årsak uregistrert for aktørId {}", sendInntektsmeldingRequestDto.aktorId());
             return Response.ok(inntektsmeldingMottakTjeneste.mottaArbeidsgiverinitiertUregistrertInntektsmelding(sendInntektsmeldingRequestDto)).build();
         } else {
             tilgang.sjekkAtArbeidsgiverHarTilgangTilBedrift(sendInntektsmeldingRequestDto.foresporselUuid());
