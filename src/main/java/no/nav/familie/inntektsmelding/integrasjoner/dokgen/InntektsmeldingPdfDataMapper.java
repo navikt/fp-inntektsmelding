@@ -52,7 +52,7 @@ public class InntektsmeldingPdfDataMapper {
         }
 
         //Gjelder ikke arbeidsgiverinitiert nyansatt
-        if (forespørselType == ForespørselType.BESTILT_AV_FAGSYSTEM) {
+        if (!ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT.equals(forespørselType)) {
             imDokumentdataBuilder.medMånedInntekt(inntektsmelding.getMånedInntekt())
                 .medNaturalytelser(mapNaturalYtelser(inntektsmelding.getBorfalteNaturalYtelser()))
                 .medIngenBortfaltNaturalytelse(erIngenBortalteNaturalYtelser(inntektsmelding.getBorfalteNaturalYtelser()))

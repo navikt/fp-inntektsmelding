@@ -37,11 +37,17 @@ public class MetrikkerTjeneste {
     // Hvor mange dager er det mellom opprettelse og løsning av oppgaven når inntektsmelding sendes inn via vårt eget skjema
     private static final DistributionSummary OPPGAVE_VARIGHET_INTERN_TELLER = Metrics.summary(APP_NAME + ".oppgaver.varighet.intern");
 
-    // Måler innsending av arbeidsgiverinitiert inntektsmelding
+    // Måler innsending av arbeidsgiverinitiert nyansatt inntektsmelding
     private static final String ARBEIDSGIVERINITIERT_INNSENDING = APP_NAME + ".arbeidsgiverinitiert.innsending";
 
-    // Måler endring av arbeidsgiverinitiert inntektsmelding
+    // Måler innsending av arbeidsgiverinitiert uregistrert inntektsmelding
+    private static final String ARBEIDSGIVERINITIERT_UREGISTRERT_INNSENDING = APP_NAME + ".arbeidsgiverinitiert.uregistrert.innsending";
+
+    // Måler endring av arbeidsgiverinitiert nyansatt inntektsmelding
     private static final String ARBEIDSGIVERINITIERT_ENDRING = APP_NAME + ".arbeidsgiverinitiert.endring";
+
+    // Måler endring av arbeidsgiverinitiert uregistrert inntektsmelding
+    private static final String ARBEIDSGIVERINITIERT_UREGISTRERT_ENDRING = APP_NAME + ".arbeidsgiverinitiert.uregistrert.endring";
 
     // Måler hvor ofte vi gjør redirect fra agi til vanlig forespørsel
     private static final String ARBEIDSGIVERINITIERT_REDIRECT = APP_NAME + ".arbeidsgiverinitiert.redirect";
@@ -139,7 +145,7 @@ public class MetrikkerTjeneste {
         LOG.warn(msg);
     }
 
-    public static void logginnsendtArbeidsgiverinitiertIm(InntektsmeldingEntitet imEntitet) {
+    public static void logginnsendtArbeidsgiverinitiertNyansattIm(InntektsmeldingEntitet imEntitet) {
         try {
             var tags = new ArrayList<Tag>();
             tags.add(new ImmutableTag(TAG_YTELSE, imEntitet.getYtelsetype().name()));
@@ -149,13 +155,33 @@ public class MetrikkerTjeneste {
         }
     }
 
-    public static void loggEndretArbeidsgiverinitiertIm(InntektsmeldingEntitet imEntitet) {
+    public static void logginnsendtArbeidsgiverinitiertUregistrertIm(InntektsmeldingEntitet imEntitet) {
+        try {
+            var tags = new ArrayList<Tag>();
+            tags.add(new ImmutableTag(TAG_YTELSE, imEntitet.getYtelsetype().name()));
+            Metrics.counter(ARBEIDSGIVERINITIERT_UREGISTRERT_INNSENDING, tags).increment();
+        } catch (Exception e) {
+            loggFeil(e, "logginnsendtArbeidsgiverinitiertUregistrertIm");
+        }
+    }
+
+    public static void loggEndretArbeidsgiverinitiertNyansattIm(InntektsmeldingEntitet imEntitet) {
         try {
             var tags = new ArrayList<Tag>();
             tags.add(new ImmutableTag(TAG_YTELSE, imEntitet.getYtelsetype().name()));
             Metrics.counter(ARBEIDSGIVERINITIERT_ENDRING, tags).increment();
         } catch (Exception e) {
             loggFeil(e, "loggEndretArbeidsgiverinitiertIm");
+        }
+    }
+
+    public static void loggEndretArbeidsgiverinitiertUregistrertIm(InntektsmeldingEntitet imEntitet) {
+        try {
+            var tags = new ArrayList<Tag>();
+            tags.add(new ImmutableTag(TAG_YTELSE, imEntitet.getYtelsetype().name()));
+            Metrics.counter(ARBEIDSGIVERINITIERT_UREGISTRERT_ENDRING, tags).increment();
+        } catch (Exception e) {
+            loggFeil(e, "loggEndretArbeidsgiverinitiertUregistrertIm");
         }
     }
 

@@ -74,6 +74,7 @@ public class GrunnlagDtoTjeneste {
         var personDto = lagPersonDto(forespørsel.getAktørId(), forespørsel.getYtelseType());
         var organisasjonDto = lagOrganisasjonDto(organisasjonsnummer);
         var innmelderDto = lagInnmelderDto(forespørsel.getYtelseType());
+        //Todo Anja denne må endres når vi henter skjæringstidspunkt fra fpsak for uregistrert agi
         var datoForInntekter = forespørsel.erArbeidsgiverInitiert() ? forespørsel.getFørsteUttaksdato() : forespørsel.getSkjæringstidspunkt().orElseThrow();
         var inntektDtoer = lagInntekterDto(forespørsel.getUuid(),
             forespørsel.getAktørId(),
@@ -89,13 +90,13 @@ public class GrunnlagDtoTjeneste {
             forespørsel.getUuid(),
             KodeverkMapper.mapForespørselStatus(forespørsel.getStatus()),
             forespørsel.getFørsteUttaksdato(),
-            forespørsel.erArbeidsgiverInitiert() ? finnAnsettelsesperioder(new PersonIdent(personDto.fødselsnummer()), organisasjonsnummer, forespørsel.getFørsteUttaksdato()) : Collections.emptyList());
+            forespørsel.erArbeidsgiverInitiertNyansatt() ? finnAnsettelsesperioder(new PersonIdent(personDto.fødselsnummer()), organisasjonsnummer, forespørsel.getFørsteUttaksdato()) : Collections.emptyList());
     }
 
-    public InntektsmeldingDialogDto lagArbeidsgiverinitiertDialogDto(PersonIdent fødselsnummer,
-                                                                          Ytelsetype ytelsetype,
-                                                                          LocalDate førsteFraværsdag,
-                                                                          String organisasjonsnummer) {
+    public InntektsmeldingDialogDto lagArbeidsgiverinitiertNyansattDialogDto(PersonIdent fødselsnummer,
+                                                                             Ytelsetype ytelsetype,
+                                                                             LocalDate førsteFraværsdag,
+                                                                             String organisasjonsnummer) {
         var personInfo = finnPersoninfo(fødselsnummer, ytelsetype);
 
         var harForespørselPåOrgnrSisteTreMnd = finnForespørslerSisteTreÅr(ytelsetype, førsteFraværsdag, personInfo.aktørId()).stream()
@@ -131,7 +132,7 @@ public class GrunnlagDtoTjeneste {
             finnAnsettelsesperioder(personInfo.fødselsnummer(), organisasjonsnummer, førsteFraværsdag));
     }
 
-    public InntektsmeldingDialogDto lagUregistrertDialogDto(PersonIdent fødselsnummer, Ytelsetype ytelsetype, LocalDate førsteUttaksdato, String organisasjonsnummer) {
+    public InntektsmeldingDialogDto lagArbeidsgiverinitiertUregistrertDialogDto(PersonIdent fødselsnummer, Ytelsetype ytelsetype, LocalDate førsteUttaksdato, String organisasjonsnummer) {
         var personInfo = finnPersoninfo(fødselsnummer, ytelsetype);
 
         var eksisterendeForespørselPåUttaksdato = finnForespørslerSisteTreÅr(ytelsetype, førsteUttaksdato, personInfo.aktørId()).stream()
