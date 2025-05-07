@@ -18,9 +18,9 @@ import no.nav.familie.inntektsmelding.forespørsel.modell.ForespørselEntitet;
 import no.nav.familie.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 import no.nav.familie.inntektsmelding.imdialog.rest.InntektsmeldingDialogDto;
 import no.nav.familie.inntektsmelding.imdialog.rest.SlåOppArbeidstakerResponseDto;
+import no.nav.familie.inntektsmelding.integrasjoner.aareg.Arbeidsforhold;
 import no.nav.familie.inntektsmelding.integrasjoner.aareg.ArbeidsforholdTjeneste;
 import no.nav.familie.inntektsmelding.integrasjoner.aareg.ArbeidstakerTjeneste;
-import no.nav.familie.inntektsmelding.integrasjoner.aareg.dto.AnsettelsesperiodeDto;
 import no.nav.familie.inntektsmelding.integrasjoner.inntektskomponent.InntektTjeneste;
 import no.nav.familie.inntektsmelding.integrasjoner.organisasjon.OrganisasjonTjeneste;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
@@ -32,7 +32,6 @@ import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.metrikker.MetrikkerTjeneste;
 import no.nav.familie.inntektsmelding.typer.dto.KodeverkMapper;
 import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
-import no.nav.vedtak.konfig.Tid;
 import no.nav.vedtak.sikkerhet.kontekst.IdentType;
 import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
 
@@ -75,7 +74,9 @@ public class GrunnlagDtoTjeneste {
         var organisasjonDto = lagOrganisasjonDto(organisasjonsnummer);
         var innmelderDto = lagInnmelderDto(forespørsel.getYtelseType());
         //Todo Anja denne må endres når vi henter skjæringstidspunkt fra fpsak for uregistrert agi
-        var datoForInntekter = forespørsel.erArbeidsgiverInitiert() ? forespørsel.getFørsteUttaksdato() : forespørsel.getSkjæringstidspunkt().orElseThrow();
+        var datoForInntekter = forespørsel.erArbeidsgiverInitiert()
+                               ? forespørsel.getFørsteUttaksdato()
+                               : forespørsel.getSkjæringstidspunkt().orElseThrow();
         var inntektDtoer = lagInntekterDto(forespørsel.getUuid(),
             forespørsel.getAktørId(),
             datoForInntekter,
@@ -90,7 +91,9 @@ public class GrunnlagDtoTjeneste {
             forespørsel.getUuid(),
             KodeverkMapper.mapForespørselStatus(forespørsel.getStatus()),
             forespørsel.getFørsteUttaksdato(),
-            forespørsel.erArbeidsgiverInitiertNyansatt() ? finnAnsettelsesperioder(new PersonIdent(personDto.fødselsnummer()), organisasjonsnummer, forespørsel.getFørsteUttaksdato()) : Collections.emptyList());
+            forespørsel.erArbeidsgiverInitiertNyansatt() ? finnAnsettelsesperioder(new PersonIdent(personDto.fødselsnummer()),
+                organisasjonsnummer,
+                forespørsel.getFørsteUttaksdato()) : Collections.emptyList());
     }
 
     public InntektsmeldingDialogDto lagArbeidsgiverinitiertNyansattDialogDto(PersonIdent fødselsnummer,
@@ -132,7 +135,10 @@ public class GrunnlagDtoTjeneste {
             finnAnsettelsesperioder(personInfo.fødselsnummer(), organisasjonsnummer, førsteFraværsdag));
     }
 
-    public InntektsmeldingDialogDto lagArbeidsgiverinitiertUregistrertDialogDto(PersonIdent fødselsnummer, Ytelsetype ytelsetype, LocalDate førsteUttaksdato, String organisasjonsnummer) {
+    public InntektsmeldingDialogDto lagArbeidsgiverinitiertUregistrertDialogDto(PersonIdent fødselsnummer,
+                                                                                Ytelsetype ytelsetype,
+                                                                                LocalDate førsteUttaksdato,
+                                                                                String organisasjonsnummer) {
         var personInfo = finnPersoninfo(fødselsnummer, ytelsetype);
 
         var eksisterendeForespørselPåUttaksdato = finnForespørslerSisteTreÅr(ytelsetype, førsteUttaksdato, personInfo.aktørId()).stream()
@@ -155,7 +161,7 @@ public class GrunnlagDtoTjeneste {
 
         var inntektDtoer = lagInntekterDto(null,
             personInfo.aktørId(),
-            førsteUttaksdato, // Todo Anja Avklare om vi burde bruke skjæringstidspunkt her? De kan vel være forskjellige?
+            førsteUttaksdato, // Todo Anja denne må endres når vi henter skjæringstidspunkt fra fpsak for uregistrert agi
             organisasjonsnummer);
 
         return new InntektsmeldingDialogDto(personDto,
@@ -179,10 +185,9 @@ public class GrunnlagDtoTjeneste {
             .toList();
     }
 
-    private InntektsmeldingDialogDto.AnsettelsePeriodeDto mapAnsettelsePeriode(AnsettelsesperiodeDto ansettelsesperiode) {
+    private InntektsmeldingDialogDto.AnsettelsePeriodeDto mapAnsettelsePeriode(Arbeidsforhold.Ansettelsesperiode ansettelsesperiode) {
         if (ansettelsesperiode != null) {
-            return new InntektsmeldingDialogDto.AnsettelsePeriodeDto(ansettelsesperiode.periode().fom(),
-                ansettelsesperiode.periode().tom() != null ? ansettelsesperiode.periode().tom() : Tid.TIDENES_ENDE);
+            return new InntektsmeldingDialogDto.AnsettelsePeriodeDto(ansettelsesperiode.fom(), ansettelsesperiode.tom());
         }
         return null;
     }
@@ -191,7 +196,8 @@ public class GrunnlagDtoTjeneste {
         if (førsteUttaksdato == null) {
             return false;
         }
-        return (førsteUttaksdato.isEqual(førsteFraværsdag) || førsteUttaksdato.isBefore(førsteFraværsdag)) && førsteUttaksdato.isAfter(LocalDate.now().minusYears(3));
+        return (førsteUttaksdato.isEqual(førsteFraværsdag) || førsteUttaksdato.isBefore(førsteFraværsdag)) && førsteUttaksdato.isAfter(LocalDate.now()
+            .minusYears(3));
     }
 
     private boolean innenforIntervall(LocalDate førsteFraværsdag, LocalDate førsteUttaksdato) {
@@ -246,7 +252,8 @@ public class GrunnlagDtoTjeneste {
     public Optional<SlåOppArbeidstakerResponseDto> finnArbeidsforholdForFnr(PersonInfo personInfo,
                                                                             LocalDate førsteFraværsdag) {
         // TODO Skal vi sjekke noe mtp kode 6/7
-        var arbeidsforholdSøkerHarHosArbeidsgiver = arbeidstakerTjeneste.finnSøkersArbeidsforholdSomArbeidsgiverHarTilgangTil(personInfo.fødselsnummer(), førsteFraværsdag);
+        var arbeidsforholdSøkerHarHosArbeidsgiver = arbeidstakerTjeneste.finnSøkersArbeidsforholdSomArbeidsgiverHarTilgangTil(personInfo.fødselsnummer(),
+            førsteFraværsdag);
         if (arbeidsforholdSøkerHarHosArbeidsgiver.isEmpty()) {
             return Optional.empty();
         }
@@ -288,11 +295,13 @@ public class GrunnlagDtoTjeneste {
     }
 
     public boolean finnesOrgnummerIAaregPåPerson(PersonIdent personIdent,
-                                                  String organisasjonsnummer,
-                                                  LocalDate førsteUttaksdato) {
+                                                 String organisasjonsnummer,
+                                                 LocalDate førsteUttaksdato) {
         return arbeidsforholdTjeneste.hentArbeidsforhold(personIdent, førsteUttaksdato).stream()
-            .filter(arbeidsforholdDto -> arbeidsforholdDto.organisasjonsnummer().equals(organisasjonsnummer))
-            .anyMatch(arbeidsforhold -> inkludererDato(førsteUttaksdato, arbeidsforhold.ansettelsesperiode().periode().fom(), arbeidsforhold.ansettelsesperiode().periode().tom() == null ? Tid.TIDENES_ENDE : arbeidsforhold.ansettelsesperiode().periode().tom()));
+            .filter(arbeidsforhold -> arbeidsforhold.organisasjonsnummer().equals(organisasjonsnummer))
+            .anyMatch(arbeidsforhold -> inkludererDato(førsteUttaksdato,
+                arbeidsforhold.ansettelsesperiode().fom(),
+                arbeidsforhold.ansettelsesperiode().tom()));
     }
 
     private boolean inkludererDato(LocalDate førsteUttaksdato, LocalDate fom, LocalDate tom) {

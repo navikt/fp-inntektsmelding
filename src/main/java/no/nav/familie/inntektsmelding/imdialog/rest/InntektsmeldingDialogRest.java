@@ -100,12 +100,12 @@ public class InntektsmeldingDialogRest {
     @Produces(MediaType.APPLICATION_JSON + ";charset=utf-8")
     @Tilgangskontrollert
     public Response sendInntektsmelding(@NotNull @Valid SendInntektsmeldingRequestDto sendInntektsmeldingRequestDto) {
-        var innsendtÅrsak = sendInntektsmeldingRequestDto.arbeidsgiverinitiertÅrsak();
-        if (ArbeidsgiverinitiertÅrsakDto.NYANSATT.equals(innsendtÅrsak)) {
+        var arbeidsgiverinitiertÅrsakDto = sendInntektsmeldingRequestDto.arbeidsgiverinitiertÅrsak();
+        if (ArbeidsgiverinitiertÅrsakDto.NYANSATT.equals(arbeidsgiverinitiertÅrsakDto)) {
             tilgang.sjekkAtArbeidsgiverHarTilgangTilBedrift(new OrganisasjonsnummerDto(sendInntektsmeldingRequestDto.arbeidsgiverIdent().ident()));
             LOG.info("Mottok arbeidsgiverinitert inntektsmelding årsak nyansatt for aktørId {}", sendInntektsmeldingRequestDto.aktorId());
            return Response.ok(inntektsmeldingMottakTjeneste.mottaArbeidsgiverInitiertNyansattInntektsmelding(sendInntektsmeldingRequestDto)).build();
-        } else if (ArbeidsgiverinitiertÅrsakDto.UREGISTRERT.equals(innsendtÅrsak)) {
+        } else if (ArbeidsgiverinitiertÅrsakDto.UREGISTRERT.equals(arbeidsgiverinitiertÅrsakDto)) {
             tilgang.sjekkAtArbeidsgiverHarTilgangTilBedrift(new OrganisasjonsnummerDto(sendInntektsmeldingRequestDto.arbeidsgiverIdent().ident()));
             LOG.info("Mottok arbeidsgiverinitert inntektsmelding årsak uregistrert for aktørId {}", sendInntektsmeldingRequestDto.aktorId());
             return Response.ok(inntektsmeldingMottakTjeneste.mottaArbeidsgiverinitiertUregistrertInntektsmelding(sendInntektsmeldingRequestDto)).build();

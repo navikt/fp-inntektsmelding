@@ -133,11 +133,16 @@ class ArbeidsforholdTjenesteTest {
 
         var resultat = arbeidsforholdTjeneste.hentArbeidsforhold(PERSON_IDENT, nå);
 
+        var forventetAnsettelsesperiode = new Arbeidsforhold.Ansettelsesperiode( ansettelsesperiode.periode().fom(),
+            ansettelsesperiode.periode().tom());
+        var forventetAnsettelsesperiode2 = new Arbeidsforhold.Ansettelsesperiode( ansettelsesperiode2.periode().fom(),
+            ansettelsesperiode2.periode().tom());
+
         assertThat(resultat).hasSize(2);
 
-        assertThat(resultat.getFirst().ansettelsesperiode()).isEqualTo(ansettelsesperiode);
+        assertThat(resultat.getFirst().ansettelsesperiode()).isEqualTo(forventetAnsettelsesperiode);
         assertThat(resultat.getFirst().organisasjonsnummer()).isEqualTo("000000001");
-        assertThat(resultat.get(1).ansettelsesperiode()).isEqualTo(ansettelsesperiode2);
+        assertThat(resultat.get(1).ansettelsesperiode()).isEqualTo(forventetAnsettelsesperiode2);
         assertThat(resultat.get(1).organisasjonsnummer()).isEqualTo("000000002");
     }
 }

@@ -213,7 +213,7 @@ class GrunnlagDtoTjenesteTest {
         var personInfo = new PersonInfo("Navn", null, "Navnesen", fnr, aktørId, LocalDate.now(), null, null);
         var orgnr = "999999999";
         when(arbeidstakerTjeneste.finnSøkersArbeidsforholdSomArbeidsgiverHarTilgangTil(fnr, førsteFraværsdag)).thenReturn(List.of(new Arbeidsforhold(orgnr,
-            new AnsettelsesperiodeDto(new PeriodeDto(LocalDate.now().minusMonths(2), Tid.TIDENES_ENDE)))));
+            new Arbeidsforhold.Ansettelsesperiode(LocalDate.now().minusMonths(2), Tid.TIDENES_ENDE))));
         when(organisasjonTjeneste.finnOrganisasjon(orgnr)).thenReturn(new Organisasjon("Bedriften", orgnr));
         // Act
         var response = grunnlagDtoTjeneste.finnArbeidsforholdForFnr(personInfo, førsteFraværsdag).orElse(null);
@@ -325,8 +325,8 @@ class GrunnlagDtoTjenesteTest {
         when(organisasjonTjeneste.finnOrganisasjon(organisasjonsnummer)).thenReturn(
             new Organisasjon("Bedriften", organisasjonsnummer));
         when(arbeidsforholdTjeneste.hentArbeidsforhold(fødselsnummer, førsteDatoMedRefusjon)).thenReturn(List.of(
-            new Arbeidsforhold(organisasjonsnummer, new AnsettelsesperiodeDto(new PeriodeDto(ansattfraDato1, Tid.TIDENES_ENDE))),
-            new Arbeidsforhold(organisasjonsnummer, new AnsettelsesperiodeDto(new PeriodeDto(ansattFraDato2, Tid.TIDENES_ENDE)))));
+            new Arbeidsforhold(organisasjonsnummer, new Arbeidsforhold.Ansettelsesperiode(ansattfraDato1, Tid.TIDENES_ENDE)),
+            new Arbeidsforhold(organisasjonsnummer, new Arbeidsforhold.Ansettelsesperiode(ansattFraDato2, Tid.TIDENES_ENDE))));
 
         var imDialogDto = grunnlagDtoTjeneste.lagArbeidsgiverinitiertNyansattDialogDto(fødselsnummer,
             ytelsetype,
@@ -408,7 +408,7 @@ class GrunnlagDtoTjenesteTest {
         when(organisasjonTjeneste.finnOrganisasjon(organisasjonsnummer)).thenReturn(new Organisasjon("Bedriften",
             organisasjonsnummer));
         when(arbeidsforholdTjeneste.hentArbeidsforhold(any(), any())).thenReturn(List.of(
-            new Arbeidsforhold(organisasjonsnummer, new AnsettelsesperiodeDto(new PeriodeDto(ansattfraDato1, null)))));
+            new Arbeidsforhold(organisasjonsnummer, new Arbeidsforhold.Ansettelsesperiode(ansattfraDato1, Tid.TIDENES_ENDE))));
         when(inntektTjeneste.hentInntekt(aktørId,
             eksFpFørsteUttaksdato,
             LocalDate.now(),
