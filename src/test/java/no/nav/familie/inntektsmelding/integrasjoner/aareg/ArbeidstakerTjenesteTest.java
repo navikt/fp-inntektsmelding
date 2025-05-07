@@ -44,7 +44,7 @@ class ArbeidstakerTjenesteTest {
     @Test
     void returnerer_arbeidstakerinfo_om_dette_finnes() {
         var førsteFraværsdag = LocalDate.now();
-        var ansettelsesperiode = new AnsettelsesperiodeDto(new PeriodeDto(LocalDate.now(), LocalDate.now().plusMonths(2)));
+        var ansettelsesperiode = new Arbeidsforhold.Ansettelsesperiode(LocalDate.now(), LocalDate.now().plusMonths(2));
         when(arbeidsforholdTjenesteMock.hentArbeidsforhold(any(), any())).thenReturn(
             List.of(new Arbeidsforhold("000000000", ansettelsesperiode))
         );
@@ -63,7 +63,7 @@ class ArbeidstakerTjenesteTest {
     @Test
     void verifiserer_arbeidsforhold_detaljer() {
         var førsteFraværsdag = LocalDate.now();
-        var ansettelsesPeriode = new AnsettelsesperiodeDto(new PeriodeDto(LocalDate.now().minusYears(1), Tid.TIDENES_ENDE));
+        var ansettelsesPeriode = new Arbeidsforhold.Ansettelsesperiode(LocalDate.now().minusYears(1), Tid.TIDENES_ENDE);
         when(arbeidsforholdTjenesteMock.hentArbeidsforhold(any(), any())).thenReturn(
             List.of(new Arbeidsforhold("00000000", ansettelsesPeriode)));
         when(altinnTilgangTjenesteMock.harTilgangTilBedriften(any())).thenReturn(true);
@@ -80,8 +80,8 @@ class ArbeidstakerTjenesteTest {
     @Test
     void filtrerer_ut_arbeidsforhold_man_ikke_har_tilgang_til() {
         var førsteFraværsdag = LocalDate.now();
-        var ansettelsesPeriode = new AnsettelsesperiodeDto(new PeriodeDto(LocalDate.now().minusYears(1), Tid.TIDENES_ENDE));
-        var ansettelsesPeriode2 = new AnsettelsesperiodeDto(new PeriodeDto(LocalDate.now().minusYears(1), LocalDate.now().plusMonths(5)));
+        var ansettelsesPeriode = new Arbeidsforhold.Ansettelsesperiode(LocalDate.now().minusYears(1), Tid.TIDENES_ENDE);
+        var ansettelsesPeriode2 = new Arbeidsforhold.Ansettelsesperiode(LocalDate.now().minusYears(1), LocalDate.now().plusMonths(5));
         when(arbeidsforholdTjenesteMock.hentArbeidsforhold(any(), any())).thenReturn(
             List.of(
                 new Arbeidsforhold("00000000", ansettelsesPeriode),
