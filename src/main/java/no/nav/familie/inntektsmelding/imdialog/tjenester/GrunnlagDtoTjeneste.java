@@ -287,19 +287,17 @@ public class GrunnlagDtoTjeneste {
             .toList();
     }
 
-    //Todo avklare om vi må sjekke på ansettelsesperioder her, eller om det er nok at det finnes registreringer på arbeidsforholdet på personen
     public boolean finnesOrgnummerIAaregPåPerson(PersonIdent personIdent,
                                                   String organisasjonsnummer,
                                                   LocalDate førsteUttaksdato) {
         return arbeidsforholdTjeneste.hentArbeidsforhold(personIdent, førsteUttaksdato).stream()
             .filter(arbeidsforholdDto -> arbeidsforholdDto.organisasjonsnummer().equals(organisasjonsnummer))
-            .anyMatch(arbeidsforhold -> inkludererDato(førsteUttaksdato, arbeidsforhold.ansettelsesperiode().periode().fom(), arbeidsforhold.ansettelsesperiode().periode().tom()));
+            .anyMatch(arbeidsforhold -> inkludererDato(førsteUttaksdato, arbeidsforhold.ansettelsesperiode().periode().fom(), arbeidsforhold.ansettelsesperiode().periode().tom() == null ? Tid.TIDENES_ENDE : arbeidsforhold.ansettelsesperiode().periode().tom()));
     }
 
     private boolean inkludererDato(LocalDate førsteUttaksdato, LocalDate fom, LocalDate tom) {
-        var fomLikeEllerEtter = førsteUttaksdato.isEqual(fom) || førsteUttaksdato.isAfter(fom);
+        var fomLikEllerEtter = førsteUttaksdato.isEqual(fom) || førsteUttaksdato.isAfter(fom);
         var tomLikEllerFør = førsteUttaksdato.isEqual(tom) || førsteUttaksdato.isBefore(tom);
-        return fomLikeEllerEtter && tomLikEllerFør;
-
+        return fomLikEllerEtter && tomLikEllerFør;
     }
 }
