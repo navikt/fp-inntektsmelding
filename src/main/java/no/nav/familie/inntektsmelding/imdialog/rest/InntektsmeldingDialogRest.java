@@ -101,9 +101,6 @@ public class InntektsmeldingDialogRest {
     @Tilgangskontrollert
     public Response sendInntektsmelding(@NotNull @Valid SendInntektsmeldingRequestDto sendInntektsmeldingRequestDto) {
         var innsendtÅrsak = sendInntektsmeldingRequestDto.arbeidsgiverinitiertÅrsak();
-        if (innsendtÅrsak == null) {
-            return Response.status(Response.Status.BAD_REQUEST).build();
-        }
         if (ArbeidsgiverinitiertÅrsakDto.NYANSATT.equals(innsendtÅrsak)) {
             tilgang.sjekkAtArbeidsgiverHarTilgangTilBedrift(new OrganisasjonsnummerDto(sendInntektsmeldingRequestDto.arbeidsgiverIdent().ident()));
             LOG.info("Mottok arbeidsgiverinitert inntektsmelding årsak nyansatt for aktørId {}", sendInntektsmeldingRequestDto.aktorId());
