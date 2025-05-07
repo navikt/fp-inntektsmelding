@@ -40,11 +40,11 @@ public class ArbeidsforholdTjeneste {
         return aaregInfo.stream()
             .filter(arb -> OpplysningspliktigArbeidsgiverDto.Type.ORGANISASJON.equals(arb.arbeidsgiver().type()))
             .map(arbeidsforholdDto -> new Arbeidsforhold(arbeidsforholdDto.arbeidsgiver().organisasjonsnummer(),
-                mapAnsettelsesperioder(arbeidsforholdDto)))
+                mapAnsettelsesperiode(arbeidsforholdDto)))
             .toList();
     }
 
-    private Arbeidsforhold.Ansettelsesperiode mapAnsettelsesperioder(ArbeidsforholdDto arbeidsforholdDto) {
+    private Arbeidsforhold.Ansettelsesperiode mapAnsettelsesperiode(ArbeidsforholdDto arbeidsforholdDto) {
         if (arbeidsforholdDto.ansettelsesperiode() == null) {
             return null;
         }
