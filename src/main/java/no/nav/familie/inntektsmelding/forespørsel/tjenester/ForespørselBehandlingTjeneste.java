@@ -257,11 +257,10 @@ public class ForespørselBehandlingTjeneste {
     }
 
     private ForespørselType utledForespørselType(ArbeidsgiverinitiertÅrsak arbeidsgiverinitiertÅrsak) {
-        if (arbeidsgiverinitiertÅrsak == ArbeidsgiverinitiertÅrsak.NYANSATT) {
-            return ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT;
-        } else {
-            throw new IllegalArgumentException("Ukjent arbeidsgiverinitiert årsak: " + arbeidsgiverinitiertÅrsak);
-        }
+        return switch (arbeidsgiverinitiertÅrsak) {
+            case UREGISTRERT -> ForespørselType.ARBEIDSGIVERINITIERT_UREGISTRERT;
+            case NYANSATT -> ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT;
+        };
     }
 
     public NyBeskjedResultat opprettNyBeskjedMedEksternVarsling(SaksnummerDto fagsakSaksnummer,

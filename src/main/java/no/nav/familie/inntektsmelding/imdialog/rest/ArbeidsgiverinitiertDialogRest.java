@@ -103,7 +103,7 @@ public class ArbeidsgiverinitiertDialogRest {
     @Tilgangskontrollert
     public Response hentOpplysninger(@Valid @NotNull OpplysningerRequestDto request) {
         LOG.info("Henter opplysninger for søker {}", request.fødselsnummer());
-        var dto = grunnlagDtoTjeneste.lagArbeidsgiverinitiertDialogDto(request.fødselsnummer(), request.ytelseType(), request.førsteFraværsdag(), request.organisasjonsnummer().orgnr());
+        var dto = grunnlagDtoTjeneste.lagArbeidsgiverinitiertNyansattDialogDto(request.fødselsnummer(), request.ytelseType(), request.førsteFraværsdag(), request.organisasjonsnummer().orgnr());
         return Response.ok(dto).build();
     }
 
@@ -143,7 +143,7 @@ public class ArbeidsgiverinitiertDialogRest {
                 throw new FunksjonellException("ORGNR_FINNES_I_AAREG",tekst, null, null);
             }
 
-            var dto = grunnlagDtoTjeneste.lagUregistrertDialogDto(request.fødselsnummer(), request.ytelseType(), førsteUttaksdato, request.organisasjonsnummer().orgnr());
+            var dto = grunnlagDtoTjeneste.lagArbeidsgiverinitiertUregistrertDialogDto(request.fødselsnummer(), request.ytelseType(), førsteUttaksdato, request.organisasjonsnummer().orgnr());
             return Response.ok(dto).build();
         }
     }

@@ -41,8 +41,7 @@ public class ArbeidstakerTjeneste {
             return Collections.emptyList();
         }
 
-        var arbeidsforholdArbeidsgiverHarTilgangTil = alleArbeidsforholdTilSøker
-            .stream()
+        var arbeidsforholdArbeidsgiverHarTilgangTil = alleArbeidsforholdTilSøker.stream()
             .filter(dto -> altinnTilgangTjeneste.harTilgangTilBedriften(dto.organisasjonsnummer()))
             .toList();
 

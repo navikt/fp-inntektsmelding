@@ -100,11 +100,18 @@ public class InntektsmeldingDialogRest {
     @Produces(MediaType.APPLICATION_JSON + ";charset=utf-8")
     @Tilgangskontrollert
     public Response sendInntektsmelding(@NotNull @Valid SendInntektsmeldingRequestDto sendInntektsmeldingRequestDto) {
-        if (ArbeidsgiverinitiertÅrsakDto.NYANSATT.equals(sendInntektsmeldingRequestDto.arbeidsgiverinitiertÅrsak())) {
-            // Arbeidsgiverinitiert har aldri forespørsel ved første innsending, så sjekker heller direkte på arbeidsgiverIdent i disse sakene
+        var innsendtÅrsak = sendInntektsmeldingRequestDto.arbeidsgiverinitiertÅrsak();
+        if (innsendtÅrsak == null) {
+            return Response.status(Response.Status.BAD_REQUEST).build();
+        }
+        if (ArbeidsgiverinitiertÅrsakDto.NYANSATT.equals(innsendtÅrsak)) {
             tilgang.sjekkAtArbeidsgiverHarTilgangTilBedrift(new OrganisasjonsnummerDto(sendInntektsmeldingRequestDto.arbeidsgiverIdent().ident()));
-            LOG.info("Mottok arbeisgiverinitert inntektsmelding for aktørId {}", sendInntektsmeldingRequestDto.aktorId());
-           return Response.ok(inntektsmeldingMottakTjeneste.mottaArbeidsgiverInitiertInntektsmelding(sendInntektsmeldingRequestDto)).build();
+            LOG.info("Mottok arbeidsgiverinitert inntektsmelding årsak nyansatt for aktørId {}", sendInntektsmeldingRequestDto.aktorId());
+           return Response.ok(inntektsmeldingMottakTjeneste.mottaArbeidsgiverInitiertNyansattInntektsmelding(sendInntektsmeldingRequestDto)).build();
+        } else if (ArbeidsgiverinitiertÅrsakDto.UREGISTRERT.equals(innsendtÅrsak)) {
+            tilgang.sjekkAtArbeidsgiverHarTilgangTilBedrift(new OrganisasjonsnummerDto(sendInntektsmeldingRequestDto.arbeidsgiverIdent().ident()));
+            LOG.info("Mottok arbeidsgiverinitert inntektsmelding årsak uregistrert for aktørId {}", sendInntektsmeldingRequestDto.aktorId());
+            return Response.ok(inntektsmeldingMottakTjeneste.mottaArbeidsgiverinitiertUregistrertInntektsmelding(sendInntektsmeldingRequestDto)).build();
         } else {
             tilgang.sjekkAtArbeidsgiverHarTilgangTilBedrift(sendInntektsmeldingRequestDto.foresporselUuid());
             LOG.info("Mottok inntektsmelding for forespørsel {}", sendInntektsmeldingRequestDto.foresporselUuid());

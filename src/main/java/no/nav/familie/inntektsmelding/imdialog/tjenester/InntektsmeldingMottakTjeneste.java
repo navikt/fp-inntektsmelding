@@ -1,5 +1,7 @@
 package no.nav.familie.inntektsmelding.imdialog.tjenester;
 
+import java.time.LocalDate;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -14,7 +16,9 @@ import no.nav.familie.inntektsmelding.imdialog.modell.InntektsmeldingRepository;
 import no.nav.familie.inntektsmelding.imdialog.rest.InntektsmeldingResponseDto;
 import no.nav.familie.inntektsmelding.imdialog.rest.SendInntektsmeldingRequestDto;
 import no.nav.familie.inntektsmelding.imdialog.task.SendTilJoarkTask;
+import no.nav.familie.inntektsmelding.koder.ArbeidsgiverinitiertÅrsak;
 import no.nav.familie.inntektsmelding.koder.ForespørselStatus;
+import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.metrikker.MetrikkerTjeneste;
 import no.nav.familie.inntektsmelding.typer.dto.KodeverkMapper;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
@@ -66,7 +70,7 @@ public class InntektsmeldingMottakTjeneste {
         return InntektsmeldingMapper.mapFraEntitet(imEntitet, forespørselEntitet);
     }
 
-    public InntektsmeldingResponseDto mottaArbeidsgiverInitiertInntektsmelding(SendInntektsmeldingRequestDto sendInntektsmeldingRequestDto) {
+    public InntektsmeldingResponseDto mottaArbeidsgiverInitiertNyansattInntektsmelding(SendInntektsmeldingRequestDto sendInntektsmeldingRequestDto) {
         var imEnitet = InntektsmeldingMapper.mapTilEntitetArbeidsgiverinitiert(sendInntektsmeldingRequestDto);
         var aktørId = new AktørIdEntitet(sendInntektsmeldingRequestDto.aktorId().id());
         var ytelseType = KodeverkMapper.mapYtelsetype(sendInntektsmeldingRequestDto.ytelse());
@@ -86,33 +90,86 @@ public class InntektsmeldingMottakTjeneste {
             var imEntitet = inntektsmeldingRepository.hentInntektsmelding(imId);
 
             // Metrikker i prometheus
-            MetrikkerTjeneste.loggEndretArbeidsgiverinitiertIm(imEntitet);
+            MetrikkerTjeneste.loggEndretArbeidsgiverinitiertNyansattIm(imEntitet);
 
             return InntektsmeldingMapper.mapFraEntitet(imEntitet, forespørselEnitet);
         } else {
             // Inntektsmelding er ny, ikke endring. Må da opprette og ferdigstille forespørsel slik at denne skal finnes i oversikten på Min side - Arbeidsgiver
-
-            var forespørselUuid = forespørselBehandlingTjeneste.opprettForespørselForArbeidsgiverInitiertIm(ytelseType,
+            var forespørselEnitet = oppretterArbeidsgiverinitiertForespørsel(ytelseType,
                 aktørId,
                 organisasjonsnummer,
-                sendInntektsmeldingRequestDto.startdato(),
-                arbeidsgiverinitiertÅrsak);
-
-            var forespørselEnitet = forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid)
-                .orElseThrow(this::manglerForespørselFeil);
+                arbeidsgiverinitiertÅrsak,
+                sendInntektsmeldingRequestDto.startdato());
 
             var imId = lagreOgLagJournalførTask(imEnitet, forespørselEnitet);
 
-            forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørselUuid, aktørId, organisasjonsnummer,
+            forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørselEnitet.getUuid(), aktørId, organisasjonsnummer,
                 sendInntektsmeldingRequestDto.startdato(), LukkeÅrsak.ORDINÆR_INNSENDING, false);
 
             var imEntitet = inntektsmeldingRepository.hentInntektsmelding(imId);
 
             // Metrikker i prometheus
-            MetrikkerTjeneste.logginnsendtArbeidsgiverinitiertIm(imEntitet);
+            MetrikkerTjeneste.logginnsendtArbeidsgiverinitiertNyansattIm(imEntitet);
 
             return InntektsmeldingMapper.mapFraEntitet(imEntitet, forespørselEnitet);
         }
+    }
+
+    public InntektsmeldingResponseDto mottaArbeidsgiverinitiertUregistrertInntektsmelding(SendInntektsmeldingRequestDto sendInntektsmeldingRequestDto) {
+        var imEnitet = InntektsmeldingMapper.mapTilEntitet(sendInntektsmeldingRequestDto);
+
+        var aktørId = new AktørIdEntitet(sendInntektsmeldingRequestDto.aktorId().id());
+        var ytelseType = KodeverkMapper.mapYtelsetype(sendInntektsmeldingRequestDto.ytelse());
+        var arbeidsgiverinitiertÅrsak = KodeverkMapper.mapArbeidsgiverinitiertÅrsak(sendInntektsmeldingRequestDto.arbeidsgiverinitiertÅrsak());
+        var organisasjonsnummer = new OrganisasjonsnummerDto(sendInntektsmeldingRequestDto.arbeidsgiverIdent().ident());
+        var finnesForespørselFraFør = sendInntektsmeldingRequestDto.foresporselUuid() != null;
+
+        if (finnesForespørselFraFør) {
+            // endring av allerede innsendt inntektsmelding
+            var forespørselEnitet = forespørselBehandlingTjeneste.hentForespørsel(sendInntektsmeldingRequestDto.foresporselUuid())
+                .orElseThrow(this::manglerForespørselFeil);
+
+            var imId = lagreOgLagJournalførTask(imEnitet, forespørselEnitet);
+            var imEntitet = inntektsmeldingRepository.hentInntektsmelding(imId);
+
+            // Metrikker i prometheus
+            MetrikkerTjeneste.loggEndretArbeidsgiverinitiertUregistrertIm(imEntitet);
+
+            return InntektsmeldingMapper.mapFraEntitet(imEntitet, forespørselEnitet);
+        } else {
+            // Inntektsmelding er ny, ikke endring. Må da opprette og ferdigstille forespørsel slik at denne skal finnes i oversikten på Min side - Arbeidsgiver
+            var forespørselEnitet = oppretterArbeidsgiverinitiertForespørsel(ytelseType,
+                aktørId,
+                organisasjonsnummer,
+                arbeidsgiverinitiertÅrsak,
+                sendInntektsmeldingRequestDto.startdato());
+
+            var imId = lagreOgLagJournalførTask(imEnitet, forespørselEnitet);
+
+            forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørselEnitet.getUuid(), aktørId, organisasjonsnummer,
+                sendInntektsmeldingRequestDto.startdato(), LukkeÅrsak.ORDINÆR_INNSENDING, false);
+
+            var imEntitet = inntektsmeldingRepository.hentInntektsmelding(imId);
+
+            // Metrikker i prometheus
+            MetrikkerTjeneste.logginnsendtArbeidsgiverinitiertUregistrertIm(imEntitet);
+
+            return InntektsmeldingMapper.mapFraEntitet(imEntitet, forespørselEnitet);
+        }
+    }
+
+    private ForespørselEntitet oppretterArbeidsgiverinitiertForespørsel(Ytelsetype ytelseType, AktørIdEntitet aktørId,
+                                                                        OrganisasjonsnummerDto organisasjonsnummer,
+                                                                        ArbeidsgiverinitiertÅrsak arbeidsgiverinitiertÅrsak,
+                                                                        LocalDate startdato) {
+        var forespørselUuid = forespørselBehandlingTjeneste.opprettForespørselForArbeidsgiverInitiertIm(ytelseType,
+            aktørId,
+            organisasjonsnummer,
+            startdato,
+            arbeidsgiverinitiertÅrsak);
+
+        return forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid)
+            .orElseThrow(this::manglerForespørselFeil);
     }
 
     private Long lagreOgLagJournalførTask(InntektsmeldingEntitet entitet, ForespørselEntitet forespørsel) {

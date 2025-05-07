@@ -74,6 +74,7 @@ public class GrunnlagDtoTjeneste {
         var personDto = lagPersonDto(forespørsel.getAktørId(), forespørsel.getYtelseType());
         var organisasjonDto = lagOrganisasjonDto(organisasjonsnummer);
         var innmelderDto = lagInnmelderDto(forespørsel.getYtelseType());
+        //Todo Anja denne må endres når vi henter skjæringstidspunkt fra fpsak for uregistrert agi
         var datoForInntekter = forespørsel.erArbeidsgiverInitiert() ? forespørsel.getFørsteUttaksdato() : forespørsel.getSkjæringstidspunkt().orElseThrow();
         var inntektDtoer = lagInntekterDto(forespørsel.getUuid(),
             forespørsel.getAktørId(),
@@ -89,13 +90,13 @@ public class GrunnlagDtoTjeneste {
             forespørsel.getUuid(),
             KodeverkMapper.mapForespørselStatus(forespørsel.getStatus()),
             forespørsel.getFørsteUttaksdato(),
-            forespørsel.erArbeidsgiverInitiert() ? finnAnsettelsesperioder(new PersonIdent(personDto.fødselsnummer()), organisasjonsnummer, forespørsel.getFørsteUttaksdato()) : Collections.emptyList());
+            forespørsel.erArbeidsgiverInitiertNyansatt() ? finnAnsettelsesperioder(new PersonIdent(personDto.fødselsnummer()), organisasjonsnummer, forespørsel.getFørsteUttaksdato()) : Collections.emptyList());
     }
 
-    public InntektsmeldingDialogDto lagArbeidsgiverinitiertDialogDto(PersonIdent fødselsnummer,
-                                                                          Ytelsetype ytelsetype,
-                                                                          LocalDate førsteFraværsdag,
-                                                                          String organisasjonsnummer) {
+    public InntektsmeldingDialogDto lagArbeidsgiverinitiertNyansattDialogDto(PersonIdent fødselsnummer,
+                                                                             Ytelsetype ytelsetype,
+                                                                             LocalDate førsteFraværsdag,
+                                                                             String organisasjonsnummer) {
         var personInfo = finnPersoninfo(fødselsnummer, ytelsetype);
 
         var harForespørselPåOrgnrSisteTreMnd = finnForespørslerSisteTreÅr(ytelsetype, førsteFraværsdag, personInfo.aktørId()).stream()
@@ -131,7 +132,7 @@ public class GrunnlagDtoTjeneste {
             finnAnsettelsesperioder(personInfo.fødselsnummer(), organisasjonsnummer, førsteFraværsdag));
     }
 
-    public InntektsmeldingDialogDto lagUregistrertDialogDto(PersonIdent fødselsnummer, Ytelsetype ytelsetype, LocalDate førsteUttaksdato, String organisasjonsnummer) {
+    public InntektsmeldingDialogDto lagArbeidsgiverinitiertUregistrertDialogDto(PersonIdent fødselsnummer, Ytelsetype ytelsetype, LocalDate førsteUttaksdato, String organisasjonsnummer) {
         var personInfo = finnPersoninfo(fødselsnummer, ytelsetype);
 
         var eksisterendeForespørselPåUttaksdato = finnForespørslerSisteTreÅr(ytelsetype, førsteUttaksdato, personInfo.aktørId()).stream()
@@ -286,19 +287,17 @@ public class GrunnlagDtoTjeneste {
             .toList();
     }
 
-    //Todo avklare om vi må sjekke på ansettelsesperioder her, eller om det er nok at det finnes registreringer på arbeidsforholdet på personen
     public boolean finnesOrgnummerIAaregPåPerson(PersonIdent personIdent,
                                                   String organisasjonsnummer,
                                                   LocalDate førsteUttaksdato) {
         return arbeidsforholdTjeneste.hentArbeidsforhold(personIdent, førsteUttaksdato).stream()
             .filter(arbeidsforholdDto -> arbeidsforholdDto.organisasjonsnummer().equals(organisasjonsnummer))
-            .anyMatch(arbeidsforhold -> inkludererDato(førsteUttaksdato, arbeidsforhold.ansettelsesperiode().periode().fom(), arbeidsforhold.ansettelsesperiode().periode().tom()));
+            .anyMatch(arbeidsforhold -> inkludererDato(førsteUttaksdato, arbeidsforhold.ansettelsesperiode().periode().fom(), arbeidsforhold.ansettelsesperiode().periode().tom() == null ? Tid.TIDENES_ENDE : arbeidsforhold.ansettelsesperiode().periode().tom()));
     }
 
     private boolean inkludererDato(LocalDate førsteUttaksdato, LocalDate fom, LocalDate tom) {
-        var fomLikeEllerEtter = førsteUttaksdato.isEqual(fom) || førsteUttaksdato.isAfter(fom);
+        var fomLikEllerEtter = førsteUttaksdato.isEqual(fom) || førsteUttaksdato.isAfter(fom);
         var tomLikEllerFør = førsteUttaksdato.isEqual(tom) || førsteUttaksdato.isBefore(tom);
-        return fomLikeEllerEtter && tomLikEllerFør;
-
+        return fomLikEllerEtter && tomLikEllerFør;
     }
 }

@@ -123,7 +123,7 @@ public class FpDokgenRestTjeneste {
 
         var arbeidsgiverinitiertÅrsak = mapArbeidsgiverinitiertÅrsak(inntektsmeldingRequest.arbeidsgiverinitiertÅrsakDto);
 
-        var pdf = fpDokgenTjeneste.mapDataOgGenererPdf(inntektsmeldingEntitet, utledForespørselType(arbeidsgiverinitiertÅrsak));
+        var pdf = fpDokgenTjeneste.mapDataOgGenererPdf(inntektsmeldingEntitet, utledForespørselTypeForPdf(arbeidsgiverinitiertÅrsak));
 
         var responseBuilder = Response.ok(pdf);
         responseBuilder.type("application/pdf");
@@ -131,7 +131,7 @@ public class FpDokgenRestTjeneste {
         return responseBuilder.build();
     }
 
-    private ForespørselType utledForespørselType(ArbeidsgiverinitiertÅrsak arbeidsgiverinitiertÅrsak) {
+    private ForespørselType utledForespørselTypeForPdf(ArbeidsgiverinitiertÅrsak arbeidsgiverinitiertÅrsak) {
         if (arbeidsgiverinitiertÅrsak == ArbeidsgiverinitiertÅrsak.NYANSATT) {
             return ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT;
         }
