@@ -10,6 +10,7 @@ import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import no.nav.familie.inntektsmelding.integrasjoner.aareg.dto.ArbeidsforholdDto;
 import no.nav.familie.inntektsmelding.integrasjoner.aareg.dto.OpplysningspliktigArbeidsgiverDto;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.vedtak.konfig.Tid;
@@ -39,9 +40,18 @@ public class ArbeidsforholdTjeneste {
         return aaregInfo.stream()
             .filter(arb -> OpplysningspliktigArbeidsgiverDto.Type.ORGANISASJON.equals(arb.arbeidsgiver().type()))
             .map(arbeidsforholdDto -> new Arbeidsforhold(arbeidsforholdDto.arbeidsgiver().organisasjonsnummer(),
-                arbeidsforholdDto.ansettelsesperiode() != null ? new Arbeidsforhold.Ansettelsesperiode(
-                    arbeidsforholdDto.ansettelsesperiode().periode().fom(),
-                    arbeidsforholdDto.ansettelsesperiode().periode().tom() == null ? Tid.TIDENES_ENDE
-                    : arbeidsforholdDto.ansettelsesperiode().periode().tom()) : null)).toList();
+                mapAnsettelsesperioder(arbeidsforholdDto)))
+            .toList();
+    }
+
+    private Arbeidsforhold.Ansettelsesperiode mapAnsettelsesperioder(ArbeidsforholdDto arbeidsforholdDto) {
+        if (arbeidsforholdDto.ansettelsesperiode() == null) {
+            return null;
+        }
+        var ansettelsesperiodeTom = arbeidsforholdDto.ansettelsesperiode().periode().tom() != null
+                                    ? arbeidsforholdDto.ansettelsesperiode().periode().tom()
+                                    : Tid.TIDENES_ENDE;
+
+        return new Arbeidsforhold.Ansettelsesperiode(arbeidsforholdDto.ansettelsesperiode().periode().fom(), ansettelsesperiodeTom);
     }
 }
