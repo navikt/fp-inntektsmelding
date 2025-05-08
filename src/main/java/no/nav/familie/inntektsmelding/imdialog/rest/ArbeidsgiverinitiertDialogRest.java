@@ -65,17 +65,24 @@ public class ArbeidsgiverinitiertDialogRest {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
         var aktørId = personInfo.aktørId();
-        var eksisterendeForepørslersisteTreÅr  = grunnlagDtoTjeneste.finnForespørslerSisteTreÅr(request.ytelseType(), request.førsteFraværsdag(), aktørId);
+        var eksisterendeForepørslersisteTreÅr = grunnlagDtoTjeneste.finnForespørslerSisteTreÅr(request.ytelseType(),
+            request.førsteFraværsdag(),
+            aktørId);
         if (eksisterendeForepørslersisteTreÅr.isEmpty()) {
             LOG.info("Fant ikke forespørsel siste tre år for aktør {}, spør fpsak.", aktørId);
-            var finnesYtelseIFpsak = fpsakTjeneste.harAktørSakIFagsystem(aktørId, request.ytelseType());
+
+            var infoOmSakRespons = fpsakTjeneste.henterInfoOmSakIFagsystem(aktørId, request.ytelseType());
+            var finnesYtelseIFpsak = FpsakKlient.StatusSakInntektsmelding.ÅPEN_FOR_BEHANDLING.equals(infoOmSakRespons.statusInntektsmelding());
+
             if (!finnesYtelseIFpsak) {
-                var tekst = String.format("Du kan ikke sende inn inntektsmelding på %s for denne personen med aktør id %s",  request.ytelseType(), personInfo.aktørId());
-                throw new FunksjonellException("INGEN_SAK_FUNNET",tekst, null, null);
+                var tekst = String.format("Du kan ikke sende inn inntektsmelding på %s for denne personen med aktør id %s",
+                    request.ytelseType(),
+                    personInfo.aktørId());
+                throw new FunksjonellException("INGEN_SAK_FUNNET", tekst, null, null);
             }
         }
         var dto = grunnlagDtoTjeneste.finnArbeidsforholdForFnr(personInfo, request.førsteFraværsdag());
-        return dto.map(d ->Response.ok(d).build()).orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
+        return dto.map(d -> Response.ok(d).build()).orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
     }
 
     @POST
@@ -125,25 +132,34 @@ public class ArbeidsgiverinitiertDialogRest {
 
         var infoOmsak = fpsakTjeneste.henterInfoOmSakIFagsystem(aktørId, request.ytelseType());
 
-        if (!infoOmsak.statusInntektsmelding().equals(FpsakKlient.StatusSakInntektsmelding.ÅPEN_FOR_BEHANDLING))
-        {
+        if (!infoOmsak.statusInntektsmelding().equals(FpsakKlient.StatusSakInntektsmelding.ÅPEN_FOR_BEHANDLING)) {
             if (infoOmsak.statusInntektsmelding().equals(FpsakKlient.StatusSakInntektsmelding.SØKT_FOR_TIDLIG)) {
                 var ytelseTekst = request.ytelseType().equals(Ytelsetype.FORELDREPENGER) ? "foreldrepenger" : "svangerskapspenger";
-                var tekst = String.format("Du kan ikke sende inn inntektsmelding før fire uker før personen med aktør id %s starter %s ",  personInfo.aktørId(),ytelseTekst);
-                throw new FunksjonellException("SENDT_FOR_TIDLIG",tekst, null, null);
+                var tekst = String.format("Du kan ikke sende inn inntektsmelding før fire uker før personen med aktør id %s starter %s ",
+                    personInfo.aktørId(),
+                    ytelseTekst);
+                throw new FunksjonellException("SENDT_FOR_TIDLIG", tekst, null, null);
             } else {
-                var tekst = String.format("Du kan ikke sende inn inntektsmelding på %s for denne personen med aktør id %s",  request.ytelseType(), personInfo.aktørId());
-                throw new FunksjonellException("INGEN_SAK_FUNNET",tekst, null, null);
+                var tekst = String.format("Du kan ikke sende inn inntektsmelding på %s for denne personen med aktør id %s",
+                    request.ytelseType(),
+                    personInfo.aktørId());
+                throw new FunksjonellException("INGEN_SAK_FUNNET", tekst, null, null);
             }
         } else {
             var førsteUttaksdato = infoOmsak.førsteUttaksdato();
-            var finnesOrgnummerIAaReg = grunnlagDtoTjeneste.finnesOrgnummerIAaregPåPerson(personInfo.fødselsnummer(),request.organisasjonsnummer().orgnr(), førsteUttaksdato);
+            var finnesOrgnummerIAaReg = grunnlagDtoTjeneste.finnesOrgnummerIAaregPåPerson(personInfo.fødselsnummer(),
+                request.organisasjonsnummer().orgnr(),
+                førsteUttaksdato);
             if (finnesOrgnummerIAaReg) {
                 var tekst = "Det finnes rapportering i aa-registeret på organisasjonsnummeret. Nav vil be om inntektsmelding når vi trenger det ";
-                throw new FunksjonellException("ORGNR_FINNES_I_AAREG",tekst, null, null);
+                throw new FunksjonellException("ORGNR_FINNES_I_AAREG", tekst, null, null);
             }
 
-            var dto = grunnlagDtoTjeneste.lagArbeidsgiverinitiertUregistrertDialogDto(request.fødselsnummer(), request.ytelseType(), førsteUttaksdato, request.organisasjonsnummer().orgnr());
+            var dto = grunnlagDtoTjeneste.lagArbeidsgiverinitiertUregistrertDialogDto(request.fødselsnummer(),
+                request.ytelseType(),
+                førsteUttaksdato,
+                request.organisasjonsnummer().orgnr(),
+                infoOmsak.skjæringstidspunkt());
             return Response.ok(dto).build();
         }
     }

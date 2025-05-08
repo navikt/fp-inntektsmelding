@@ -20,10 +20,6 @@ public class FpsakTjeneste {
         this.klient = klient;
     }
 
-    public boolean harAktørSakIFagsystem(AktørIdEntitet aktørIdEntitet, Ytelsetype ytelsetype) {
-        return klient.harSøkerSakIFagsystem(aktørIdEntitet, ytelsetype);
-    }
-
     public FpsakKlient.InfoOmSakInntektsmeldingResponse henterInfoOmSakIFagsystem(AktørIdEntitet aktørIdEntitet, Ytelsetype ytelsetype) {
         return klient.hentInfoOmSak(aktørIdEntitet, ytelsetype);
     }

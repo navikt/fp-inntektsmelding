@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -39,4 +40,20 @@ class FpsakKlientTest {
         assertThat(resultat).isTrue();
     }
 
+    @Test
+    void test_hent_info_om_sak() {
+        var aktørId = new AktørIdEntitet(AKTØR_ID);
+        var ytelse = Ytelsetype.FORELDREPENGER;
+        var førsteUttaksdato = LocalDate.now();
+        var skjæringstidspunkt = førsteUttaksdato.plusDays(1);
+
+        when(restClient.sendReturnOptional(any(),
+            any())).thenReturn(Optional.of(new FpsakKlient.InfoOmSakInntektsmeldingResponse(FpsakKlient.StatusSakInntektsmelding.ÅPEN_FOR_BEHANDLING,
+            førsteUttaksdato, skjæringstidspunkt)));
+        var resultat = fpsakKlient.hentInfoOmSak(aktørId, ytelse);
+
+        assertThat(resultat.statusInntektsmelding()).isEqualTo(FpsakKlient.StatusSakInntektsmelding.ÅPEN_FOR_BEHANDLING);
+        assertThat(resultat.førsteUttaksdato()).isEqualTo(førsteUttaksdato);
+        assertThat(resultat.skjæringstidspunkt()).isEqualTo(skjæringstidspunkt);
+    }
 }
