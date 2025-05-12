@@ -83,7 +83,7 @@ public class FpsakKlient {
     }
     public record SakInntektsmeldingResponse(boolean søkerHarSak){}
 
-    public record InfoOmSakInntektsmeldingResponse(StatusSakInntektsmelding statusInntektsmelding, LocalDate førsteUttaksdato) {}
+    public record InfoOmSakInntektsmeldingResponse(StatusSakInntektsmelding statusInntektsmelding, LocalDate førsteUttaksdato, LocalDate skjæringstidspunkt) {}
 
     public enum StatusSakInntektsmelding {
         ÅPEN_FOR_BEHANDLING,

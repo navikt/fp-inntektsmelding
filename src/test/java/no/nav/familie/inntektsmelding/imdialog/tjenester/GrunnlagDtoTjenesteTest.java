@@ -436,6 +436,7 @@ class GrunnlagDtoTjenesteTest {
         var ytelsetype = Ytelsetype.FORELDREPENGER;
         var eksForespørselDato = LocalDate.now().minusYears(1);
         var førsteUttaksdato = LocalDate.of(2024, 12, 20);
+        var skjæringstidspunkt = LocalDate.of(2024, 12, 21);
         var organisasjonsnummer = "999999999";
         var aktørId = new AktørIdEntitet("9999999999999");
         var forespørsel = new ForespørselEntitet("999999998",
@@ -452,7 +453,7 @@ class GrunnlagDtoTjenesteTest {
         var inntekt3 = new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(35000), YearMonth.of(2025, 3), MånedslønnStatus.BRUKT_I_GJENNOMSNITT);
         var sumInntekt = inntekt1.beløp().add(inntekt2.beløp().add(inntekt3.beløp()));
         var gjennomsnittInntekt = sumInntekt.divide(BigDecimal.valueOf(3),2, RoundingMode.HALF_UP);
-        when(inntektTjeneste.hentInntekt(aktørId, førsteUttaksdato, LocalDate.now(),
+        when(inntektTjeneste.hentInntekt(aktørId, skjæringstidspunkt, LocalDate.now(),
             organisasjonsnummer)).thenReturn(new Inntektsopplysninger(BigDecimal.valueOf(35000),
             organisasjonsnummer,
             List.of(inntekt1, inntekt2, inntekt3)));
@@ -466,7 +467,8 @@ class GrunnlagDtoTjenesteTest {
         var imDialogDto = grunnlagDtoTjeneste.lagArbeidsgiverinitiertUregistrertDialogDto(fødselsnummer,
             ytelsetype,
             førsteUttaksdato,
-            organisasjonsnummer);
+            organisasjonsnummer,
+            skjæringstidspunkt);
 
         // Assert
         assertThat(imDialogDto.person().aktørId()).isEqualTo(aktørId.getAktørId());
@@ -475,6 +477,7 @@ class GrunnlagDtoTjenesteTest {
         assertThat(imDialogDto.arbeidsgiver().organisasjonNavn()).isEqualTo("Bedriften");
         assertThat(imDialogDto.arbeidsgiver().organisasjonNummer()).isEqualTo(organisasjonsnummer);
         assertThat(imDialogDto.førsteUttaksdato()).isEqualTo(førsteUttaksdato);
+        assertThat(imDialogDto.skjæringstidspunkt()).isEqualTo(skjæringstidspunkt);
         assertThat(imDialogDto.forespørselUuid()).isNull();
         assertThat(imDialogDto.inntektsopplysninger().gjennomsnittLønn()).isEqualByComparingTo(gjennomsnittInntekt);
         assertThat(imDialogDto.inntektsopplysninger().månedsinntekter()).hasSize(3);
@@ -507,7 +510,7 @@ class GrunnlagDtoTjenesteTest {
             LocalDate.now(),// Act
             organisasjonsnummer)).thenReturn(new Inntektsopplysninger(BigDecimal.valueOf(52000), organisasjonsnummer, List.of()));
 
-        var imDialogDto = grunnlagDtoTjeneste.lagArbeidsgiverinitiertUregistrertDialogDto(fødselsnummer, ytelsetype, førsteUttaksdato, organisasjonsnummer);
+        var imDialogDto = grunnlagDtoTjeneste.lagArbeidsgiverinitiertUregistrertDialogDto(fødselsnummer, ytelsetype, førsteUttaksdato, organisasjonsnummer, førsteUttaksdato);
 
         // Assert
         assertThat(imDialogDto.person().aktørId()).isEqualTo(aktørId.getAktørId());
@@ -516,6 +519,7 @@ class GrunnlagDtoTjenesteTest {
         assertThat(imDialogDto.arbeidsgiver().organisasjonNavn()).isEqualTo("Bedriften");
         assertThat(imDialogDto.arbeidsgiver().organisasjonNummer()).isEqualTo(organisasjonsnummer);
         assertThat(imDialogDto.førsteUttaksdato()).isEqualTo(førsteUttaksdato);
+        assertThat(imDialogDto.skjæringstidspunkt()).isEqualTo(førsteUttaksdato);
         assertThat(imDialogDto.forespørselUuid()).isEqualTo(forespørsel.getUuid());
         assertThat(imDialogDto.inntektsopplysninger().gjennomsnittLønn()).isEqualByComparingTo(BigDecimal.valueOf(52000));
         assertThat(imDialogDto.ansettelsePerioder()).isEmpty();
