@@ -32,6 +32,7 @@ import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.metrikker.MetrikkerTjeneste;
 import no.nav.familie.inntektsmelding.typer.dto.KodeverkMapper;
 import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
+import no.nav.vedtak.konfig.Tid;
 import no.nav.vedtak.sikkerhet.kontekst.IdentType;
 import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
 
@@ -73,10 +74,7 @@ public class GrunnlagDtoTjeneste {
         var personDto = lagPersonDto(forespørsel.getAktørId(), forespørsel.getYtelseType());
         var organisasjonDto = lagOrganisasjonDto(organisasjonsnummer);
         var innmelderDto = lagInnmelderDto(forespørsel.getYtelseType());
-        //Todo Anja denne må endres når vi henter skjæringstidspunkt fra fpsak for uregistrert agi
-        var datoForInntekter = forespørsel.erArbeidsgiverInitiert()
-                               ? forespørsel.getFørsteUttaksdato()
-                               : forespørsel.getSkjæringstidspunkt().orElseThrow();
+        var datoForInntekter = forespørsel.erArbeidsgiverInitiertNyansatt() ? forespørsel.getFørsteUttaksdato() : forespørsel.getSkjæringstidspunkt().orElse(forespørsel.getFørsteUttaksdato());
         var inntektDtoer = lagInntekterDto(forespørsel.getUuid(),
             forespørsel.getAktørId(),
             datoForInntekter,
@@ -135,15 +133,14 @@ public class GrunnlagDtoTjeneste {
             finnAnsettelsesperioder(personInfo.fødselsnummer(), organisasjonsnummer, førsteFraværsdag));
     }
 
-    public InntektsmeldingDialogDto lagArbeidsgiverinitiertUregistrertDialogDto(PersonIdent fødselsnummer,
-                                                                                Ytelsetype ytelsetype,
-                                                                                LocalDate førsteUttaksdato,
-                                                                                String organisasjonsnummer) {
+    public InntektsmeldingDialogDto lagArbeidsgiverinitiertUregistrertDialogDto(PersonIdent fødselsnummer, Ytelsetype ytelsetype, LocalDate førsteUttaksdato, String organisasjonsnummer,
+                                                                                LocalDate skjæringstidspunkt) {
         var personInfo = finnPersoninfo(fødselsnummer, ytelsetype);
 
         var eksisterendeForespørselPåUttaksdato = finnForespørslerSisteTreÅr(ytelsetype, førsteUttaksdato, personInfo.aktørId()).stream()
             .filter(f -> f.getOrganisasjonsnummer().equals(organisasjonsnummer))
-            .filter(f -> førsteUttaksdato.isEqual(f.getFørsteUttaksdato()))
+            .filter(f -> førsteUttaksdato.isEqual(f.getFørsteUttaksdato()) && f.getSkjæringstidspunkt().isPresent()
+                && skjæringstidspunkt.isEqual(f.getSkjæringstidspunkt().get()))
             .max(Comparator.comparing(ForespørselEntitet::getOpprettetTidspunkt));
 
         if (eksisterendeForespørselPåUttaksdato.isPresent()) {
@@ -161,14 +158,14 @@ public class GrunnlagDtoTjeneste {
 
         var inntektDtoer = lagInntekterDto(null,
             personInfo.aktørId(),
-            førsteUttaksdato, // Todo Anja denne må endres når vi henter skjæringstidspunkt fra fpsak for uregistrert agi
+            skjæringstidspunkt.isEqual(Tid.TIDENES_ENDE) ? førsteUttaksdato : skjæringstidspunkt,
             organisasjonsnummer);
 
         return new InntektsmeldingDialogDto(personDto,
             organisasjonDto,
             innmelderDto,
             inntektDtoer,
-            førsteUttaksdato,
+            skjæringstidspunkt.isEqual(Tid.TIDENES_ENDE) ? førsteUttaksdato : skjæringstidspunkt,
             KodeverkMapper.mapYtelsetype(ytelsetype),
             null,
             KodeverkMapper.mapForespørselStatus(ForespørselStatus.UNDER_BEHANDLING),

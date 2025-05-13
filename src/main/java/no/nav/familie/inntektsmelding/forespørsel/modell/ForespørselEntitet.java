@@ -173,11 +173,6 @@ public class ForespørselEntitet {
         return forespørselType;
     }
 
-    public boolean erArbeidsgiverInitiert() {
-        return ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT.equals(forespørselType)
-            || ForespørselType.ARBEIDSGIVERINITIERT_UREGISTRERT.equals(forespørselType);
-    }
-
     public boolean erArbeidsgiverInitiertNyansatt() {
         return ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT.equals(forespørselType);
     }
