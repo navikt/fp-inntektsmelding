@@ -43,8 +43,9 @@ public class ForespørselTjeneste {
                                                        AktørIdEntitet brukerAktørId,
                                                        OrganisasjonsnummerDto orgnr,
                                                        LocalDate førsteUttaksdato,
-                                                       ForespørselType forespørselType) {
-        return forespørselRepository.lagreForespørsel(null, ytelseType, brukerAktørId.getAktørId(), orgnr.orgnr(),
+                                                       ForespørselType forespørselType,
+                                                       LocalDate skjæringstidspunkt) {
+        return forespørselRepository.lagreForespørsel(skjæringstidspunkt, ytelseType, brukerAktørId.getAktørId(), orgnr.orgnr(),
             null, førsteUttaksdato, forespørselType);
     }
 

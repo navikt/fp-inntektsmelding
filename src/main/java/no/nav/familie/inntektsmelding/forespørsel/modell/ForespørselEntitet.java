@@ -94,6 +94,9 @@ public class ForespørselEntitet {
             this.fagsystemSaksnummer = Objects.requireNonNull(fagsystemSaksnummer, "fagsystemSaksnummer");
             this.skjæringstidspunkt = Objects.requireNonNull(skjæringstidspunkt, "skjæringstidspunkt");
         }
+        if (skjæringstidspunkt != null && forespørselType.equals(ForespørselType.ARBEIDSGIVERINITIERT_UREGISTRERT)) {
+            this.skjæringstidspunkt = skjæringstidspunkt;
+        }
     }
 
     public ForespørselEntitet() {

@@ -14,6 +14,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import no.nav.familie.inntektsmelding.integrasjoner.fpsak.FpsakKlient;
+import no.nav.familie.inntektsmelding.integrasjoner.fpsak.FpsakTjeneste;
+
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -61,6 +64,8 @@ class InntektsmeldingMottakTjenesteTest {
     private InntektsmeldingRepository inntektsmeldingRepository;
     @Mock
     private ProsessTaskTjeneste prosessTaskTjeneste;
+    @Mock
+    private FpsakTjeneste fpsakTjeneste;
 
     private InntektsmeldingMottakTjeneste inntektsmeldingMottakTjeneste;
 
@@ -77,7 +82,7 @@ class InntektsmeldingMottakTjenesteTest {
 
     @BeforeEach
     void setUp() {
-        inntektsmeldingMottakTjeneste = new InntektsmeldingMottakTjeneste(forespørselBehandlingTjeneste, inntektsmeldingRepository, prosessTaskTjeneste);
+        inntektsmeldingMottakTjeneste = new InntektsmeldingMottakTjeneste(forespørselBehandlingTjeneste, inntektsmeldingRepository, prosessTaskTjeneste, fpsakTjeneste);
     }
 
 
@@ -144,7 +149,8 @@ class InntektsmeldingMottakTjenesteTest {
             aktørId,
             new OrganisasjonsnummerDto(orgnr),
             startdato,
-            ArbeidsgiverinitiertÅrsak.NYANSATT)).thenReturn(uuid);
+            ArbeidsgiverinitiertÅrsak.NYANSATT,
+            null)).thenReturn(uuid);
         when(forespørselBehandlingTjeneste.hentForespørsel(uuid)).thenReturn(Optional.of(forespørsel));
         var innsendingDto = new SendInntektsmeldingRequestDto(null,
             new AktørIdDto("9999999999999"),
@@ -263,11 +269,15 @@ class InntektsmeldingMottakTjenesteTest {
             .medArbeidsgiverIdent(orgnr)
             .build();
 
+        var skjæringstidspunkt = startdato.minusDays(2);
+        var infoOmSak = new FpsakKlient.InfoOmSakInntektsmeldingResponse(FpsakKlient.StatusSakInntektsmelding.ÅPEN_FOR_BEHANDLING,startdato,skjæringstidspunkt);
+        when(fpsakTjeneste.henterInfoOmSakIFagsystem(aktørId,Ytelsetype.FORELDREPENGER)).thenReturn(infoOmSak);
         when(forespørselBehandlingTjeneste.opprettForespørselForArbeidsgiverInitiertIm(ytelse,
             aktørId,
             new OrganisasjonsnummerDto(orgnr),
             startdato,
-            ArbeidsgiverinitiertÅrsak.UREGISTRERT)).thenReturn(uuid);
+            ArbeidsgiverinitiertÅrsak.UREGISTRERT,
+            skjæringstidspunkt)).thenReturn(uuid);
         when(forespørselBehandlingTjeneste.hentForespørsel(uuid)).thenReturn(Optional.of(forespørsel));
         var inntekt = BigDecimal.valueOf(100);
         var innsendingDto = new SendInntektsmeldingRequestDto(null,
@@ -292,6 +302,7 @@ class InntektsmeldingMottakTjenesteTest {
             false);
         assertThat(responseDto).isNotNull();
         assertThat(responseDto.refusjon()).hasSize(1);
+        assertThat(responseDto.startdato()).isEqualTo(startdato);
     }
 
     @Test
