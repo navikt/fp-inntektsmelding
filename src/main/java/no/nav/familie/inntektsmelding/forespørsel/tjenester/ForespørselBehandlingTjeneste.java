@@ -229,7 +229,8 @@ public class ForespørselBehandlingTjeneste {
                                                             AktørIdEntitet aktørId,
                                                             OrganisasjonsnummerDto organisasjonsnummer,
                                                             LocalDate førsteFraværsdato,
-                                                            ArbeidsgiverinitiertÅrsak arbeidsgiverinitiertÅrsak) {
+                                                            ArbeidsgiverinitiertÅrsak arbeidsgiverinitiertÅrsak,
+                                                            LocalDate skjæringstidspunkt) {
         var msg = String.format("Oppretter forespørsel for arbeidsgiverinitiert, orgnr: %s, ytelse: %s",
             organisasjonsnummer,
             ytelsetype);
@@ -239,7 +240,8 @@ public class ForespørselBehandlingTjeneste {
             aktørId,
             organisasjonsnummer,
             førsteFraværsdato,
-            forespørselType);
+            forespørselType,
+            skjæringstidspunkt);
 
         var person = personTjeneste.hentPersonInfoFraAktørId(aktørId, ytelsetype);
         var merkelapp = ForespørselTekster.finnMerkelapp(ytelsetype);

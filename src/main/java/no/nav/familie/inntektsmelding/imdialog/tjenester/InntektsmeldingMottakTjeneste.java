@@ -5,6 +5,10 @@ import java.time.LocalDate;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import no.nav.familie.inntektsmelding.integrasjoner.fpsak.FpsakTjeneste;
+
+import no.nav.vedtak.konfig.Tid;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +37,7 @@ public class InntektsmeldingMottakTjeneste {
     private ForespørselBehandlingTjeneste forespørselBehandlingTjeneste;
     private InntektsmeldingRepository inntektsmeldingRepository;
     private ProsessTaskTjeneste prosessTaskTjeneste;
+    private FpsakTjeneste fpsakTjeneste;
 
     InntektsmeldingMottakTjeneste() {
     }
@@ -40,10 +45,12 @@ public class InntektsmeldingMottakTjeneste {
     @Inject
     public InntektsmeldingMottakTjeneste(ForespørselBehandlingTjeneste forespørselBehandlingTjeneste,
                                          InntektsmeldingRepository inntektsmeldingRepository,
-                                         ProsessTaskTjeneste prosessTaskTjeneste) {
+                                         ProsessTaskTjeneste prosessTaskTjeneste,
+                                         FpsakTjeneste fpsakTjeneste) {
         this.forespørselBehandlingTjeneste = forespørselBehandlingTjeneste;
         this.inntektsmeldingRepository = inntektsmeldingRepository;
         this.prosessTaskTjeneste = prosessTaskTjeneste;
+        this.fpsakTjeneste = fpsakTjeneste;
     }
 
     public InntektsmeldingResponseDto mottaInntektsmelding(SendInntektsmeldingRequestDto mottattInntektsmeldingDto) {
@@ -162,11 +169,18 @@ public class InntektsmeldingMottakTjeneste {
                                                                         OrganisasjonsnummerDto organisasjonsnummer,
                                                                         ArbeidsgiverinitiertÅrsak arbeidsgiverinitiertÅrsak,
                                                                         LocalDate startdato) {
+        // dersom uregistrert så må vi hente skjæringstidspunkt fra fpsak. Vi trenger denne for å hente riktig inntektsperioder ved endring av inntektsmelding
+        LocalDate skjæringstidspunkt = Tid.TIDENES_ENDE;
+        if (arbeidsgiverinitiertÅrsak.equals(ArbeidsgiverinitiertÅrsak.UREGISTRERT)) {
+            skjæringstidspunkt = fpsakTjeneste.henterInfoOmSakIFagsystem(aktørId, ytelseType).skjæringstidspunkt();
+        }
+
         var forespørselUuid = forespørselBehandlingTjeneste.opprettForespørselForArbeidsgiverInitiertIm(ytelseType,
             aktørId,
             organisasjonsnummer,
             startdato,
-            arbeidsgiverinitiertÅrsak);
+            arbeidsgiverinitiertÅrsak,
+            skjæringstidspunkt == Tid.TIDENES_ENDE ? null : skjæringstidspunkt);
 
         return forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid)
             .orElseThrow(this::manglerForespørselFeil);

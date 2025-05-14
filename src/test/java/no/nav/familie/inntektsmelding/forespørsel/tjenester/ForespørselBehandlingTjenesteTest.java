@@ -270,7 +270,8 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         var uuid = forespørselBehandlingTjeneste.opprettForespørselForArbeidsgiverInitiertIm(YTELSETYPE,
             new AktørIdEntitet(AKTØR_ID),
             new OrganisasjonsnummerDto(BRREG_ORGNUMMER),
-            FØRSTE_UTTAKSDATO, ArbeidsgiverinitiertÅrsak.NYANSATT);
+            FØRSTE_UTTAKSDATO, ArbeidsgiverinitiertÅrsak.NYANSATT,
+            null);
 
         var lagret = forespørselRepository.hentForespørsel(uuid).orElseThrow();
 
@@ -278,6 +279,26 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         assertThat(lagret.getStatus()).isEqualTo(ForespørselStatus.UNDER_BEHANDLING);
         assertThat(lagret.getOppgaveId()).isEmpty();
         assertThat(lagret.getFørsteUttaksdato()).isEqualTo(FØRSTE_UTTAKSDATO);
+    }
+
+    @Test
+    void skal_opprette_opprette_arbeidsgiverinitiert_forespørsel_med_skjæringstidspunkt() {
+        mockInfoForOpprettelse(AKTØR_ID, YTELSETYPE, BRREG_ORGNUMMER, SAK_ID, OPPGAVE_ID);
+        var forventetSkjæringstidspunkt = FØRSTE_UTTAKSDATO.minusDays(1);
+        var uuid = forespørselBehandlingTjeneste.opprettForespørselForArbeidsgiverInitiertIm(YTELSETYPE,
+            new AktørIdEntitet(AKTØR_ID),
+            new OrganisasjonsnummerDto(BRREG_ORGNUMMER),
+            FØRSTE_UTTAKSDATO,
+            ArbeidsgiverinitiertÅrsak.UREGISTRERT,
+            forventetSkjæringstidspunkt);
+
+        var lagret = forespørselRepository.hentForespørsel(uuid).orElseThrow();
+
+        clearHibernateCache();
+        assertThat(lagret.getStatus()).isEqualTo(ForespørselStatus.UNDER_BEHANDLING);
+        assertThat(lagret.getOppgaveId()).isEmpty();
+        assertThat(lagret.getFørsteUttaksdato()).isEqualTo(FØRSTE_UTTAKSDATO);
+        assertThat(lagret.getSkjæringstidspunkt()).isEqualTo(Optional.of(forventetSkjæringstidspunkt));
     }
 
     @Test
