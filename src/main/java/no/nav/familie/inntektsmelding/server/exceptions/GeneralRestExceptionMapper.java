@@ -48,7 +48,7 @@ public class GeneralRestExceptionMapper implements ExceptionMapper<Throwable> {
             if (feil instanceof FunksjonellException) {
                 var exceptionMelding = getExceptionMelding(feil);
                 if (exceptionMelding.contains("ORGNR_FINNES_I_AAREG")) {
-                    LOG.info("Orgnummer har rapportering i aa-reg feil: {}", exceptionMelding);
+                    LOG.info("Organisasjonsnummer har rapportering i aa-reg feil: {}", exceptionMelding);
                     return finnesIAareg();
                 }
             }

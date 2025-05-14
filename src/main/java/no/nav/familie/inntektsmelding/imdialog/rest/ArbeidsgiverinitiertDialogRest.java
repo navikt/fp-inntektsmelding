@@ -25,6 +25,8 @@ import no.nav.familie.inntektsmelding.server.auth.api.Tilgangskontrollert;
 import no.nav.foreldrepenger.konfig.Environment;
 import no.nav.vedtak.exception.FunksjonellException;
 
+import java.time.LocalDate;
+
 @AutentisertMedTokenX
 @RequestScoped
 @Transactional

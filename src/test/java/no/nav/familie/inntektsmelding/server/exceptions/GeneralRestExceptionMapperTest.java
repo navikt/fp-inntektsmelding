@@ -81,6 +81,38 @@ class GeneralRestExceptionMapperTest {
     }
 
     @Test
+    void skalMappeFunksjonellFeilSendtForTidlig() {
+        var callId = MDCOperations.generateCallId();
+        MDCOperations.putCallId(callId);
+        try (var response = exceptionMapper.toResponse(funksjonellFeilSendtForTidlig())) {
+            assertThat(response.getStatus()).isEqualTo(403);
+            assertThat(response.getEntity()).isInstanceOf(FeilDto.class);
+            var feilDto = (FeilDto) response.getEntity();
+
+            assertThat(feilDto.type()).isEqualTo(FeilType.SENDT_FOR_TIDLIG);
+            assertThat(feilDto.callId()).isEqualTo(callId);
+            assertThat(feilDto.feilmelding()).isEqualTo("Sendt inntektsmelding for tidlig");
+            assertThat(logSniffer.search("Inntektsmelding sendt for tidlig feil", Level.INFO)).hasSize(1);
+        }
+    }
+
+    @Test
+    void skalMappeFunksjonellFeilOrgnrFinnesIAaReg() {
+        var callId = MDCOperations.generateCallId();
+        MDCOperations.putCallId(callId);
+        try (var response = exceptionMapper.toResponse(funksjonellFeilFinnesIAaReg())) {
+            assertThat(response.getStatus()).isEqualTo(403);
+            assertThat(response.getEntity()).isInstanceOf(FeilDto.class);
+            var feilDto = (FeilDto) response.getEntity();
+
+            assertThat(feilDto.type()).isEqualTo(FeilType.FINNES_I_AAREG);
+            assertThat(feilDto.callId()).isEqualTo(callId);
+            assertThat(feilDto.feilmelding()).isEqualTo("Organisasjonsnummer er rapportert i Aa-reg");
+            assertThat(logSniffer.search("Organisasjonsnummer har rapportering i aa-reg feil", Level.INFO)).hasSize(1);
+        }
+    }
+
+    @Test
     void skalMappeVLException() {
         var callId = MDCOperations.generateCallId();
         MDCOperations.putCallId(callId);
@@ -160,6 +192,13 @@ class GeneralRestExceptionMapperTest {
 
     private static FunksjonellException funksjonellFeilSakIkkeFunnet() {
         return new FunksjonellException("INGEN_SAK_FUNNET", "en egen funksjonell melding", null);
+    }
+
+    private static FunksjonellException funksjonellFeilSendtForTidlig() {
+        return new FunksjonellException("SENDT_FOR_TIDLIG", "en egen funksjonell melding", null);
+    }
+    private static FunksjonellException funksjonellFeilFinnesIAaReg() {
+        return new FunksjonellException("ORGNR_FINNES_I_AAREG", "en egen funksjonell melding", null);
     }
 
 }
