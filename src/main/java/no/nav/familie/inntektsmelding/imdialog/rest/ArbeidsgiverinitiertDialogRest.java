@@ -25,6 +25,8 @@ import no.nav.familie.inntektsmelding.server.auth.api.Tilgangskontrollert;
 import no.nav.foreldrepenger.konfig.Environment;
 import no.nav.vedtak.exception.FunksjonellException;
 
+import java.time.LocalDate;
+
 @AutentisertMedTokenX
 @RequestScoped
 @Transactional
@@ -128,12 +130,16 @@ public class ArbeidsgiverinitiertDialogRest {
         if (personInfo == null) {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
+
         var aktørId = personInfo.aktørId();
-
         var infoOmsak = fpsakTjeneste.henterInfoOmSakIFagsystem(aktørId, request.ytelseType());
+        var førsteUttaksdato = infoOmsak.førsteUttaksdato();
+        var søktForTidligGrense = LocalDate.now().plusMonths(1).plusDays(1);
 
+        // bruker !førsteUttaksdato.isBefore fordi første uttaksdato kan i teorien være Tid.TidenesEnde()
         if (!infoOmsak.statusInntektsmelding().equals(FpsakKlient.StatusSakInntektsmelding.ÅPEN_FOR_BEHANDLING)) {
-            if (infoOmsak.statusInntektsmelding().equals(FpsakKlient.StatusSakInntektsmelding.SØKT_FOR_TIDLIG)) {
+            if (infoOmsak.statusInntektsmelding().equals(FpsakKlient.StatusSakInntektsmelding.SØKT_FOR_TIDLIG)
+            || !førsteUttaksdato.isBefore(søktForTidligGrense))  {
                 var ytelseTekst = request.ytelseType().equals(Ytelsetype.FORELDREPENGER) ? "foreldrepenger" : "svangerskapspenger";
                 var tekst = String.format("Du kan ikke sende inn inntektsmelding før fire uker før personen med aktør id %s starter %s ",
                     personInfo.aktørId(),
@@ -146,7 +152,7 @@ public class ArbeidsgiverinitiertDialogRest {
                 throw new FunksjonellException("INGEN_SAK_FUNNET", tekst, null, null);
             }
         } else {
-            var førsteUttaksdato = infoOmsak.førsteUttaksdato();
+
             var finnesOrgnummerIAaReg = grunnlagDtoTjeneste.finnesOrgnummerIAaregPåPerson(personInfo.fødselsnummer(),
                 request.organisasjonsnummer().orgnr(),
                 førsteUttaksdato);
