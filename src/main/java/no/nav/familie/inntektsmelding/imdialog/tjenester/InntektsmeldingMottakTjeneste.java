@@ -45,7 +45,8 @@ public class InntektsmeldingMottakTjeneste {
     @Inject
     public InntektsmeldingMottakTjeneste(ForespørselBehandlingTjeneste forespørselBehandlingTjeneste,
                                          InntektsmeldingRepository inntektsmeldingRepository,
-                                         ProsessTaskTjeneste prosessTaskTjeneste, FpsakTjeneste fpsakTjeneste) {
+                                         ProsessTaskTjeneste prosessTaskTjeneste,
+                                         FpsakTjeneste fpsakTjeneste) {
         this.forespørselBehandlingTjeneste = forespørselBehandlingTjeneste;
         this.inntektsmeldingRepository = inntektsmeldingRepository;
         this.prosessTaskTjeneste = prosessTaskTjeneste;
