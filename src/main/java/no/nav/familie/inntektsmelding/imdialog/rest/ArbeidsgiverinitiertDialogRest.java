@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.nav.familie.inntektsmelding.imdialog.tjenester.GrunnlagDtoTjeneste;
+import no.nav.familie.inntektsmelding.imdialog.tjenester.ValiderUregistrertTjeneste;
 import no.nav.familie.inntektsmelding.integrasjoner.fpsak.FpsakKlient;
 import no.nav.familie.inntektsmelding.integrasjoner.fpsak.FpsakTjeneste;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
@@ -25,18 +26,15 @@ import no.nav.familie.inntektsmelding.server.auth.api.Tilgangskontrollert;
 import no.nav.foreldrepenger.konfig.Environment;
 import no.nav.vedtak.exception.FunksjonellException;
 
-import java.time.LocalDate;
-
 @AutentisertMedTokenX
 @RequestScoped
 @Transactional
 @Consumes(MediaType.APPLICATION_JSON)
 @Path(ArbeidsgiverinitiertDialogRest.BASE_PATH)
 public class ArbeidsgiverinitiertDialogRest {
+    public static final String BASE_PATH = "/arbeidsgiverinitiert";
     private static final Logger LOG = LoggerFactory.getLogger(ArbeidsgiverinitiertDialogRest.class);
     private static final Environment ENV = Environment.current();
-
-    public static final String BASE_PATH = "/arbeidsgiverinitiert";
     private static final String HENT_ARBEIDSFORHOLD = "/arbeidsforhold";
     private static final String HENT_ARBEIDSGIVERE_FOR_UREGISTRERT = "/arbeidsgivereForUregistrert";
     private static final String HENT_OPPLYSNINGER = "/opplysninger";
@@ -44,6 +42,7 @@ public class ArbeidsgiverinitiertDialogRest {
 
     private GrunnlagDtoTjeneste grunnlagDtoTjeneste;
     private FpsakTjeneste fpsakTjeneste;
+    private ValiderUregistrertTjeneste validerUregistrertTjeneste;
 
     ArbeidsgiverinitiertDialogRest() {
         // CDI
@@ -51,9 +50,11 @@ public class ArbeidsgiverinitiertDialogRest {
 
     @Inject
     public ArbeidsgiverinitiertDialogRest(GrunnlagDtoTjeneste grunnlagDtoTjeneste,
-                                          FpsakTjeneste fpsakTjeneste) {
+                                          FpsakTjeneste fpsakTjeneste,
+                                          ValiderUregistrertTjeneste validerUregistrertTjeneste) {
         this.grunnlagDtoTjeneste = grunnlagDtoTjeneste;
         this.fpsakTjeneste = fpsakTjeneste;
+        this.validerUregistrertTjeneste = validerUregistrertTjeneste;
     }
 
     @POST
@@ -104,15 +105,16 @@ public class ArbeidsgiverinitiertDialogRest {
         return dto.map(d -> Response.ok(d).build()).orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
     }
 
-    public record HentArbeidsgivereUregistrert(@Valid @NotNull PersonIdent fødselsnummer, @Valid @NotNull Ytelsetype ytelseType) {}
-
     @POST
     @Path(HENT_OPPLYSNINGER)
     @Produces(MediaType.APPLICATION_JSON + ";charset=utf-8")
     @Tilgangskontrollert
     public Response hentOpplysninger(@Valid @NotNull OpplysningerRequestDto request) {
         LOG.info("Henter opplysninger for søker {}", request.fødselsnummer());
-        var dto = grunnlagDtoTjeneste.lagArbeidsgiverinitiertNyansattDialogDto(request.fødselsnummer(), request.ytelseType(), request.førsteFraværsdag(), request.organisasjonsnummer().orgnr());
+        var dto = grunnlagDtoTjeneste.lagArbeidsgiverinitiertNyansattDialogDto(request.fødselsnummer(),
+            request.ytelseType(),
+            request.førsteFraværsdag(),
+            request.organisasjonsnummer().orgnr());
         return Response.ok(dto).build();
     }
 
@@ -134,39 +136,20 @@ public class ArbeidsgiverinitiertDialogRest {
         var aktørId = personInfo.aktørId();
         var infoOmsak = fpsakTjeneste.henterInfoOmSakIFagsystem(aktørId, request.ytelseType());
         var førsteUttaksdato = infoOmsak.førsteUttaksdato();
-        var søktForTidligGrense = LocalDate.now().plusMonths(1).plusDays(1);
 
-        // bruker !førsteUttaksdato.isBefore fordi første uttaksdato kan i teorien være Tid.TidenesEnde()
-        if (!infoOmsak.statusInntektsmelding().equals(FpsakKlient.StatusSakInntektsmelding.ÅPEN_FOR_BEHANDLING)) {
-            if (infoOmsak.statusInntektsmelding().equals(FpsakKlient.StatusSakInntektsmelding.SØKT_FOR_TIDLIG)
-            || !førsteUttaksdato.isBefore(søktForTidligGrense))  {
-                var ytelseTekst = request.ytelseType().equals(Ytelsetype.FORELDREPENGER) ? "foreldrepenger" : "svangerskapspenger";
-                var tekst = String.format("Du kan ikke sende inn inntektsmelding før fire uker før personen med aktør id %s starter %s ",
-                    personInfo.aktørId(),
-                    ytelseTekst);
-                throw new FunksjonellException("SENDT_FOR_TIDLIG", tekst, null, null);
-            } else {
-                var tekst = String.format("Du kan ikke sende inn inntektsmelding på %s for denne personen med aktør id %s",
-                    request.ytelseType(),
-                    personInfo.aktørId());
-                throw new FunksjonellException("INGEN_SAK_FUNNET", tekst, null, null);
-            }
-        } else {
+        var infoOmSak = fpsakTjeneste.henterInfoOmSakIFagsystem(aktørId, request.ytelseType());
 
-            var finnesOrgnummerIAaReg = grunnlagDtoTjeneste.finnesOrgnummerIAaregPåPerson(personInfo.fødselsnummer(),
-                request.organisasjonsnummer().orgnr(),
-                førsteUttaksdato);
-            if (finnesOrgnummerIAaReg) {
-                var tekst = "Det finnes rapportering i aa-registeret på organisasjonsnummeret. Nav vil be om inntektsmelding når vi trenger det ";
-                throw new FunksjonellException("ORGNR_FINNES_I_AAREG", tekst, null, null);
-            }
+        validerUregistrertTjeneste.validerOmUregistrertKanOpprettes(infoOmSak, førsteUttaksdato,
+            request.ytelseType(), personInfo, request.organisasjonsnummer().orgnr());
 
-            var dto = grunnlagDtoTjeneste.lagArbeidsgiverinitiertUregistrertDialogDto(request.fødselsnummer(),
-                request.ytelseType(),
-                førsteUttaksdato,
-                request.organisasjonsnummer().orgnr(),
-                infoOmsak.skjæringstidspunkt());
-            return Response.ok(dto).build();
-        }
+        var dto = grunnlagDtoTjeneste.lagArbeidsgiverinitiertUregistrertDialogDto(request.fødselsnummer(),
+            request.ytelseType(),
+            førsteUttaksdato,
+            request.organisasjonsnummer().orgnr(),
+            infoOmsak.skjæringstidspunkt());
+        return Response.ok(dto).build();
+    }
+
+    public record HentArbeidsgivereUregistrert(@Valid @NotNull PersonIdent fødselsnummer, @Valid @NotNull Ytelsetype ytelseType) {
     }
 }
