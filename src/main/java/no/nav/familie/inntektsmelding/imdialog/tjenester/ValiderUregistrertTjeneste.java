@@ -13,11 +13,15 @@ import java.time.LocalDate;
 
 @ApplicationScoped
 public class ValiderUregistrertTjeneste {
-    private final GrunnlagDtoTjeneste grunnlagDtoTjeneste;
+    private GrunnlagDtoTjeneste grunnlagDtoTjeneste;
 
     @Inject
     public ValiderUregistrertTjeneste(GrunnlagDtoTjeneste grunnlagDtoTjeneste) {
         this.grunnlagDtoTjeneste = grunnlagDtoTjeneste;
+    }
+
+    ValiderUregistrertTjeneste() {
+        // CDI
     }
 
     public void validerOmUregistrertKanOpprettes(FpsakKlient.InfoOmSakInntektsmeldingResponse infoOmsak,
