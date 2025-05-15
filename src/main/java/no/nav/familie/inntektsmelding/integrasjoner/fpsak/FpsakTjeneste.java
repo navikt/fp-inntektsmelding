@@ -23,5 +23,4 @@ public class FpsakTjeneste {
     public FpsakKlient.InfoOmSakInntektsmeldingResponse henterInfoOmSakIFagsystem(AktørIdEntitet aktørIdEntitet, Ytelsetype ytelsetype) {
         return klient.hentInfoOmSak(aktørIdEntitet, ytelsetype);
     }
-
 }
