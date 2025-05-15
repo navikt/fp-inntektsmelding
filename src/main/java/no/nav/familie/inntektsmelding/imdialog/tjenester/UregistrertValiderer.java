@@ -1,8 +1,5 @@
 package no.nav.familie.inntektsmelding.imdialog.tjenester;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-
 import no.nav.familie.inntektsmelding.integrasjoner.fpsak.FpsakKlient;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonInfo;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
@@ -11,24 +8,14 @@ import no.nav.vedtak.konfig.Tid;
 
 import java.time.LocalDate;
 
-@ApplicationScoped
-public class ValiderUregistrertTjeneste {
-    private GrunnlagDtoTjeneste grunnlagDtoTjeneste;
+public class UregistrertValiderer {
 
-    @Inject
-    public ValiderUregistrertTjeneste(GrunnlagDtoTjeneste grunnlagDtoTjeneste) {
-        this.grunnlagDtoTjeneste = grunnlagDtoTjeneste;
+    private UregistrertValiderer() {
+        // Skjuler default konstruktør
     }
-
-    ValiderUregistrertTjeneste() {
-        // CDI
-    }
-
-    public void validerOmUregistrertKanOpprettes(FpsakKlient.InfoOmSakInntektsmeldingResponse infoOmsak,
-                                                    LocalDate førsteUttaksdato,
+    public static void validerOmUregistrertKanOpprettes(FpsakKlient.InfoOmSakInntektsmeldingResponse infoOmsak,
                                                     Ytelsetype ytelsetype,
-                                                    PersonInfo personInfo,
-                                                    String organisasjonsnummer) {
+                                                    PersonInfo personInfo) {
         if (!infoOmsak.statusInntektsmelding().equals(FpsakKlient.StatusSakInntektsmelding.ÅPEN_FOR_BEHANDLING)) {
             if (infoOmsak.statusInntektsmelding().equals(FpsakKlient.StatusSakInntektsmelding.SØKT_FOR_TIDLIG)) {
                 kastForTidligException(personInfo, ytelsetype);
@@ -43,18 +30,10 @@ public class ValiderUregistrertTjeneste {
             if (førsteUttaksdatoErEtterGrense(infoOmsak.førsteUttaksdato(), søktForTidligGrense)) {
                 kastForTidligException(personInfo, ytelsetype);
             }
-
-            var finnesOrgnummerIAaReg = grunnlagDtoTjeneste.finnesOrgnummerIAaregPåPerson(personInfo.fødselsnummer(),
-                organisasjonsnummer,
-                førsteUttaksdato);
-            if (finnesOrgnummerIAaReg) {
-                var tekst = "Det finnes rapportering i aa-registeret på organisasjonsnummeret. Nav vil be om inntektsmelding når vi trenger det";
-                throw new FunksjonellException("ORGNR_FINNES_I_AAREG", tekst, null, null);
-            }
         }
     }
 
-    private void kastForTidligException(PersonInfo personInfo, Ytelsetype ytelsetype) {
+    private static void kastForTidligException(PersonInfo personInfo, Ytelsetype ytelsetype) {
         var ytelseTekst = ytelsetype.equals(Ytelsetype.FORELDREPENGER) ? "foreldrepenger" : "svangerskapspenger";
         var tekst = String.format("Du kan ikke sende inn inntektsmelding før fire uker før personen med aktør id %s starter %s",
             personInfo.aktørId(),
@@ -62,7 +41,7 @@ public class ValiderUregistrertTjeneste {
         throw new FunksjonellException("SENDT_FOR_TIDLIG", tekst, null, null);
     }
 
-    private boolean førsteUttaksdatoErEtterGrense(LocalDate førsteUttaksdato, LocalDate søktForTidligGrense) {
+    private static boolean førsteUttaksdatoErEtterGrense(LocalDate førsteUttaksdato, LocalDate søktForTidligGrense) {
         return førsteUttaksdato != Tid.TIDENES_ENDE && førsteUttaksdato.isAfter(søktForTidligGrense);
     }
 }

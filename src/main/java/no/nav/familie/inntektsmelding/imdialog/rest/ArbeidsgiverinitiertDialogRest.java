@@ -12,11 +12,12 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import no.nav.familie.inntektsmelding.imdialog.tjenester.UregistrertValiderer;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.nav.familie.inntektsmelding.imdialog.tjenester.GrunnlagDtoTjeneste;
-import no.nav.familie.inntektsmelding.imdialog.tjenester.ValiderUregistrertTjeneste;
 import no.nav.familie.inntektsmelding.integrasjoner.fpsak.FpsakKlient;
 import no.nav.familie.inntektsmelding.integrasjoner.fpsak.FpsakTjeneste;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
@@ -42,7 +43,6 @@ public class ArbeidsgiverinitiertDialogRest {
 
     private GrunnlagDtoTjeneste grunnlagDtoTjeneste;
     private FpsakTjeneste fpsakTjeneste;
-    private ValiderUregistrertTjeneste validerUregistrertTjeneste;
 
     ArbeidsgiverinitiertDialogRest() {
         // CDI
@@ -50,11 +50,9 @@ public class ArbeidsgiverinitiertDialogRest {
 
     @Inject
     public ArbeidsgiverinitiertDialogRest(GrunnlagDtoTjeneste grunnlagDtoTjeneste,
-                                          FpsakTjeneste fpsakTjeneste,
-                                          ValiderUregistrertTjeneste validerUregistrertTjeneste) {
+                                          FpsakTjeneste fpsakTjeneste) {
         this.grunnlagDtoTjeneste = grunnlagDtoTjeneste;
         this.fpsakTjeneste = fpsakTjeneste;
-        this.validerUregistrertTjeneste = validerUregistrertTjeneste;
     }
 
     @POST
@@ -139,8 +137,7 @@ public class ArbeidsgiverinitiertDialogRest {
 
         var infoOmSak = fpsakTjeneste.henterInfoOmSakIFagsystem(aktørId, request.ytelseType());
 
-        validerUregistrertTjeneste.validerOmUregistrertKanOpprettes(infoOmSak, førsteUttaksdato,
-            request.ytelseType(), personInfo, request.organisasjonsnummer().orgnr());
+        UregistrertValiderer.validerOmUregistrertKanOpprettes(infoOmSak, request.ytelseType(), personInfo);
 
         var dto = grunnlagDtoTjeneste.lagArbeidsgiverinitiertUregistrertDialogDto(request.fødselsnummer(),
             request.ytelseType(),

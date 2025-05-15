@@ -11,6 +11,8 @@ import java.util.stream.Collectors;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import no.nav.vedtak.exception.FunksjonellException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -149,6 +151,12 @@ public class GrunnlagDtoTjeneste {
                 MetrikkerTjeneste.loggRedirectFraAGITilVanligForespørsel(forespørsel);
             }
             return lagDialogDto(forespørsel.getUuid());
+        }
+        //Er denne sjekken i det hele tatt er nødvendig?
+        var finnesOrgnummerIAaReg = finnesOrgnummerIAaregPåPerson(fødselsnummer, organisasjonsnummer, førsteUttaksdato);
+        if (finnesOrgnummerIAaReg) {
+            var tekst = "Det finnes rapportering i aa-registeret på organisasjonsnummeret. Nav vil be om inntektsmelding når vi trenger det";
+            throw new FunksjonellException("ORGNR_FINNES_I_AAREG", tekst, null, null);
         }
 
         var personDto = new InntektsmeldingDialogDto.PersonInfoResponseDto(personInfo.fornavn(), personInfo.mellomnavn(), personInfo.etternavn(),
