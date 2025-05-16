@@ -1,6 +1,7 @@
 package no.nav.familie.inntektsmelding.imdialog.tjenester;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -13,8 +14,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
-
+import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,8 +29,6 @@ import no.nav.familie.inntektsmelding.imdialog.rest.InntektsmeldingDialogDto;
 import no.nav.familie.inntektsmelding.integrasjoner.aareg.Arbeidsforhold;
 import no.nav.familie.inntektsmelding.integrasjoner.aareg.ArbeidsforholdTjeneste;
 import no.nav.familie.inntektsmelding.integrasjoner.aareg.ArbeidstakerTjeneste;
-import no.nav.familie.inntektsmelding.integrasjoner.aareg.dto.AnsettelsesperiodeDto;
-import no.nav.familie.inntektsmelding.integrasjoner.aareg.dto.PeriodeDto;
 import no.nav.familie.inntektsmelding.integrasjoner.inntektskomponent.InntektTjeneste;
 import no.nav.familie.inntektsmelding.integrasjoner.inntektskomponent.Inntektsopplysninger;
 import no.nav.familie.inntektsmelding.integrasjoner.organisasjon.Organisasjon;
@@ -41,8 +39,10 @@ import no.nav.familie.inntektsmelding.integrasjoner.person.PersonTjeneste;
 import no.nav.familie.inntektsmelding.koder.ForespørselType;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.typer.dto.MånedslønnStatus;
+import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.familie.inntektsmelding.typer.dto.YtelseTypeDto;
 import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
+import no.nav.vedtak.exception.FunksjonellException;
 import no.nav.vedtak.konfig.Tid;
 import no.nav.vedtak.sikkerhet.kontekst.IdentType;
 import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
@@ -523,6 +523,28 @@ class GrunnlagDtoTjenesteTest {
         assertThat(imDialogDto.forespørselUuid()).isEqualTo(forespørsel.getUuid());
         assertThat(imDialogDto.inntektsopplysninger().gjennomsnittLønn()).isEqualByComparingTo(BigDecimal.valueOf(52000));
         assertThat(imDialogDto.ansettelsePerioder()).isEmpty();
+    }
+
+    @Test
+    void skal_kaste_exception_når_ingen_forespørsel_og_orgnummer_finnes_i_aareg_arbeidsgiverinitiert_uregistrert() {
+        // Arrange
+        var fødselsnummer = new PersonIdent("11111111111");
+        var ytelsetype = Ytelsetype.FORELDREPENGER;
+        var førsteUttaksdato = LocalDate.now().minusMonths(1);
+        var organisasjonsnummer = "999999999";
+        var aktørId = new AktørIdEntitet("9999999999999");
+
+        var personInfo = new PersonInfo("Navn", null, "Navnesen", fødselsnummer, aktørId, LocalDate.now(), null, null);
+
+        when(personTjeneste.hentPersonFraIdent(fødselsnummer, ytelsetype)).thenReturn(personInfo);
+        when(forespørselBehandlingTjeneste.finnForespørslerForAktørId(aktørId, ytelsetype)).thenReturn(List.of());
+        when(arbeidsforholdTjeneste.hentArbeidsforhold(fødselsnummer, førsteUttaksdato)).thenReturn(List.of(new Arbeidsforhold(organisasjonsnummer,new Arbeidsforhold.Ansettelsesperiode(førsteUttaksdato.minusYears(1), Tid.TIDENES_ENDE))));
+
+        var ex = assertThrows(FunksjonellException.class, () -> grunnlagDtoTjeneste.lagArbeidsgiverinitiertUregistrertDialogDto(fødselsnummer, ytelsetype, førsteUttaksdato, organisasjonsnummer, førsteUttaksdato));
+
+        // Assert
+        AssertionsForClassTypes.assertThat(ex.getMessage()).isEqualTo(
+            "FINNES_I_AAREG:Det finnes rapportering i aa-registeret på organisasjonsnummeret. Nav vil be om inntektsmelding når vi trenger det");
     }
 }
 

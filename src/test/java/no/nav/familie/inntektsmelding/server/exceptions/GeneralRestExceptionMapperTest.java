@@ -198,7 +198,7 @@ class GeneralRestExceptionMapperTest {
         return new FunksjonellException("SENDT_FOR_TIDLIG", "en egen funksjonell melding", null);
     }
     private static FunksjonellException funksjonellFeilFinnesIAaReg() {
-        return new FunksjonellException("ORGNR_FINNES_I_AAREG", "en egen funksjonell melding", null);
+        return new FunksjonellException("FINNES_I_AAREG", "en egen funksjonell melding", null);
     }
 
 }
