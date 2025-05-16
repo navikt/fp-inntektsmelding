@@ -156,7 +156,7 @@ public class GrunnlagDtoTjeneste {
         var finnesOrgnummerIAaReg = finnesOrgnummerIAaregPåPerson(fødselsnummer, organisasjonsnummer, førsteUttaksdato);
         if (finnesOrgnummerIAaReg) {
             var tekst = "Det finnes rapportering i aa-registeret på organisasjonsnummeret. Nav vil be om inntektsmelding når vi trenger det";
-            throw new FunksjonellException("ORGNR_FINNES_I_AAREG", tekst, null, null);
+            throw new FunksjonellException("FINNES_I_AAREG", tekst, null, null);
         }
 
         var personDto = new InntektsmeldingDialogDto.PersonInfoResponseDto(personInfo.fornavn(), personInfo.mellomnavn(), personInfo.etternavn(),
