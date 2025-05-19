@@ -9,7 +9,6 @@ import java.net.URI;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,7 +42,7 @@ class ArbeidsgiverNotifikasjonTjenesteTest {
 
         var requestCaptor = ArgumentCaptor.forClass(NySakMutationRequest.class);
 
-        tjeneste.opprettSak(expectedGrupperingsid, expectedMerkelapp, expectedVirksomhetsnummer, expectedTittel, URI.create(expectedLenke), Optional.empty());
+        tjeneste.opprettSak(expectedGrupperingsid, expectedMerkelapp, expectedVirksomhetsnummer, expectedTittel, URI.create(expectedLenke));
 
         Mockito.verify(klient).opprettSak(requestCaptor.capture(), any(NySakResultatResponseProjection.class));
 
@@ -69,44 +68,6 @@ class ArbeidsgiverNotifikasjonTjenesteTest {
             .containsEntry("tittel", expectedTittel)
             .containsEntry("virksomhetsnummer", expectedVirksomhetsnummer)
             .containsEntry("overstyrStatustekstMed", "");
-        assertThat(input.get("mottakere")).isNotNull();
-    }
-
-    @Test
-    void opprett_sak_med_tidspunkt() {
-
-        var expectedGrupperingsid = "id-som-knytter-sak-til-notifikasjon";
-        var expectedVirksomhetsnummer = "2342342334";
-        var expectedTittel = "Inntektsmelding for person";
-        var expectedLenke = "https://inntektsmelding-innsendings-dialog.com";
-        var expectedMerkelapp = Merkelapp.INNTEKTSMELDING_FP;
-        var førsteUttaksdato = LocalDate.of(2025, 1, 1);
-        var forventetFørsteUttaksdato = "2024-12-04T00:00:00";
-
-        var requestCaptor = ArgumentCaptor.forClass(NySakMutationRequest.class);
-
-        tjeneste.opprettSak(expectedGrupperingsid, expectedMerkelapp, expectedVirksomhetsnummer, expectedTittel, URI.create(expectedLenke), Optional.of(
-            førsteUttaksdato));
-
-        Mockito.verify(klient).opprettSak(requestCaptor.capture(), any(NySakResultatResponseProjection.class));
-
-        var request = requestCaptor.getValue();
-
-        var input = request.getInput();
-        assertThat(input).containsOnlyKeys("grupperingsid",
-                "initiellStatus",
-                "lenke",
-                "merkelapp",
-                "tittel",
-                "virksomhetsnummer",
-                "mottakere",
-                "overstyrStatustekstMed",
-                "nesteSteg",
-                "tidspunkt",
-                "tilleggsinformasjon",
-                "hardDelete",
-                "tidspunkt")
-            .containsEntry("tidspunkt", forventetFørsteUttaksdato);
         assertThat(input.get("mottakere")).isNotNull();
     }
 
@@ -198,7 +159,7 @@ class ArbeidsgiverNotifikasjonTjenesteTest {
 
         var requestCaptor = ArgumentCaptor.forClass(NyStatusSakMutationRequest.class);
 
-        tjeneste.ferdigstillSak(expectedId, false, Optional.empty());
+        tjeneste.ferdigstillSak(expectedId, false);
 
         Mockito.verify(klient).oppdaterSakStatus(requestCaptor.capture(), any(NyStatusSakResultatResponseProjection.class));
 
@@ -223,7 +184,7 @@ class ArbeidsgiverNotifikasjonTjenesteTest {
 
         var requestCaptor = ArgumentCaptor.forClass(NyStatusSakMutationRequest.class);
 
-        tjeneste.ferdigstillSak(expectedId, true, Optional.empty());
+        tjeneste.ferdigstillSak(expectedId, true);
 
         Mockito.verify(klient).oppdaterSakStatus(requestCaptor.capture(), any(NyStatusSakResultatResponseProjection.class));
 
@@ -239,32 +200,6 @@ class ArbeidsgiverNotifikasjonTjenesteTest {
         assertThat(input.get("idempotencyKey")).isNull();
         assertThat(input.get("hardDelete")).isNull();
         assertThat(input.get("tidspunkt")).isNull();
-        assertThat(input.get("nyLenkeTilSak")).isNull();
-    }
-
-    @Test
-    void ferdigstill_migrert_sak() {
-        var expectedId = "TestId";
-        var expectedTidspunkt = LocalDate.now().minusWeeks(4).atStartOfDay().format(DateTimeFormatter.ISO_DATE_TIME);
-
-        var requestCaptor = ArgumentCaptor.forClass(NyStatusSakMutationRequest.class);
-
-        tjeneste.ferdigstillSak(expectedId, false, Optional.of(LocalDate.now()));
-
-        Mockito.verify(klient).oppdaterSakStatus(requestCaptor.capture(), any(NyStatusSakResultatResponseProjection.class));
-
-        var request = requestCaptor.getValue();
-
-        var input = request.getInput();
-
-        assertThat(input).containsOnlyKeys("id", "overstyrStatustekstMed", "nyStatus", "idempotencyKey", "hardDelete", "tidspunkt", "nyLenkeTilSak")
-            .containsEntry("id", expectedId)
-            .containsEntry("nyStatus", SaksStatus.FERDIG)
-            .containsEntry("overstyrStatustekstMed", ArbeidsgiverNotifikasjonTjeneste.SAK_STATUS_TEKST)
-            .containsEntry("tidspunkt", expectedTidspunkt);
-
-        assertThat(input.get("idempotencyKey")).isNull();
-        assertThat(input.get("hardDelete")).isNull();
         assertThat(input.get("nyLenkeTilSak")).isNull();
     }
 
