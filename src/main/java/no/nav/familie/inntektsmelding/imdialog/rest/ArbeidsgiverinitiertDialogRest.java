@@ -35,7 +35,6 @@ import no.nav.vedtak.exception.FunksjonellException;
 public class ArbeidsgiverinitiertDialogRest {
     public static final String BASE_PATH = "/arbeidsgiverinitiert";
     private static final Logger LOG = LoggerFactory.getLogger(ArbeidsgiverinitiertDialogRest.class);
-    private static final Environment ENV = Environment.current();
     private static final String HENT_ARBEIDSFORHOLD = "/arbeidsforhold";
     private static final String HENT_ARBEIDSGIVERE_FOR_UREGISTRERT = "/arbeidsgivereForUregistrert";
     private static final String HENT_OPPLYSNINGER = "/opplysninger";
@@ -91,9 +90,6 @@ public class ArbeidsgiverinitiertDialogRest {
     @Produces(MediaType.APPLICATION_JSON + ";charset=utf-8")
     @Tilgangskontrollert
     public Response hentArbeidsgivereforUregistrert(@Valid @NotNull ArbeidsgiverinitiertDialogRest.HentArbeidsgivereUregistrert request) {
-        if (ENV.isProd()) {
-            throw new IllegalStateException("Funksjonen er ikke tilgjengelig i prod");
-        }
         LOG.info("Henter personinformasjon for {}, og organisasjoner som innsender har tilgang til", request.fødselsnummer());
         var personInfo = grunnlagDtoTjeneste.finnPersoninfo(request.fødselsnummer(), request.ytelseType());
         if (personInfo == null) {
@@ -121,9 +117,6 @@ public class ArbeidsgiverinitiertDialogRest {
     @Produces(MediaType.APPLICATION_JSON + ";charset=utf-8")
     @Tilgangskontrollert
     public Response hentOpplysningerUregistrert(@Valid @NotNull OpplysningerUregistrertRequestDto request) {
-        if (ENV.isProd()) {
-            throw new IllegalStateException("Funksjonen er ikke tilgjengelig i prod");
-        }
         LOG.info("Henter opplysninger for søker {}", request.fødselsnummer());
 
         var personInfo = grunnlagDtoTjeneste.finnPersoninfo(request.fødselsnummer(), request.ytelseType());
