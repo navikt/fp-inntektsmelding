@@ -2,7 +2,6 @@ package no.nav.familie.inntektsmelding.forespørsel.rest;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -54,14 +53,14 @@ class ForespørselRestTest {
 
         var fagsakSaksnummer = new SaksnummerDto("SAK");
         var response = forespørselRest.opprettForespørsel(
-            new OpprettForespørselRequest(aktørId, null, LocalDate.now(), YtelseTypeDto.FORELDREPENGER, fagsakSaksnummer, LocalDate.now().plusDays(5), List.of(orgnummer), false));
+            new OpprettForespørselRequest(aktørId, null, LocalDate.now(), YtelseTypeDto.FORELDREPENGER, fagsakSaksnummer, LocalDate.now().plusDays(5), List.of(orgnummer)));
 
         var forventetResultat = new OpprettForespørselResponsNy(List.of(new OpprettForespørselResponsNy.OrganisasjonsnummerMedStatus(orgnummer, ForespørselResultat.FORESPØRSEL_OPPRETTET)));
 
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK_200);
         assertThat(response.getEntity()).isEqualTo(forventetResultat);
         verify(forespørselBehandlingTjeneste).håndterInnkommendeForespørsel(LocalDate.now(), Ytelsetype.FORELDREPENGER,
-            new AktørIdEntitet(aktørId.id()), orgnummer, fagsakSaksnummer, LocalDate.now().plusDays(5), false);
+            new AktørIdEntitet(aktørId.id()), orgnummer, fagsakSaksnummer, LocalDate.now().plusDays(5));
     }
 
     @Test
@@ -74,7 +73,7 @@ class ForespørselRestTest {
 
         var fagsakSaksnummer = new SaksnummerDto("SAK");
         var response = forespørselRest.opprettForespørsel(
-            new OpprettForespørselRequest(aktørId, null, LocalDate.now(), YtelseTypeDto.FORELDREPENGER, fagsakSaksnummer, LocalDate.now().plusDays(5), List.of(orgnummer, orgnummer2), false));
+            new OpprettForespørselRequest(aktørId, null, LocalDate.now(), YtelseTypeDto.FORELDREPENGER, fagsakSaksnummer, LocalDate.now().plusDays(5), List.of(orgnummer, orgnummer2)));
 
         var forventetResultat = new OpprettForespørselResponsNy(List.of(
             new OpprettForespørselResponsNy.OrganisasjonsnummerMedStatus(orgnummer, ForespørselResultat.FORESPØRSEL_OPPRETTET),
@@ -83,7 +82,7 @@ class ForespørselRestTest {
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK_200);
         assertThat(response.getEntity()).isEqualTo(forventetResultat);
 
-        verify(forespørselBehandlingTjeneste, times(2)).håndterInnkommendeForespørsel(any(), any(), any(), any(), any(), any(), anyBoolean());
+        verify(forespørselBehandlingTjeneste, times(2)).håndterInnkommendeForespørsel(any(), any(), any(), any(), any(), any());
     }
 
     private void mockForespørsel() {
@@ -92,7 +91,7 @@ class ForespørselRestTest {
             any(),
             any(),
             any(),
-            any(),
-            anyBoolean())).thenReturn(ForespørselResultat.FORESPØRSEL_OPPRETTET);
+            any()
+        )).thenReturn(ForespørselResultat.FORESPØRSEL_OPPRETTET);
     }
 }

@@ -64,7 +64,7 @@ public class InntektsmeldingMottakTjeneste {
         var entitet = InntektsmeldingMapper.mapTilEntitet(mottattInntektsmeldingDto);
         var imId = lagreOgLagJournalførTask(entitet, forespørselEntitet);
         var lukketForespørsel = forespørselBehandlingTjeneste.ferdigstillForespørsel(mottattInntektsmeldingDto.foresporselUuid(), aktorId, orgnummer,
-            mottattInntektsmeldingDto.startdato(), LukkeÅrsak.ORDINÆR_INNSENDING, false);
+            mottattInntektsmeldingDto.startdato(), LukkeÅrsak.ORDINÆR_INNSENDING);
 
         var imEntitet = inntektsmeldingRepository.hentInntektsmelding(imId);
 
@@ -109,7 +109,7 @@ public class InntektsmeldingMottakTjeneste {
             var imId = lagreOgLagJournalførTask(imEnitet, forespørselEnitet);
 
             forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørselEnitet.getUuid(), aktørId, organisasjonsnummer,
-                sendInntektsmeldingRequestDto.startdato(), LukkeÅrsak.ORDINÆR_INNSENDING, false);
+                sendInntektsmeldingRequestDto.startdato(), LukkeÅrsak.ORDINÆR_INNSENDING);
 
             var imEntitet = inntektsmeldingRepository.hentInntektsmelding(imId);
 
@@ -152,7 +152,7 @@ public class InntektsmeldingMottakTjeneste {
             var imId = lagreOgLagJournalførTask(imEnitet, forespørselEnitet);
 
             forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørselEnitet.getUuid(), aktørId, organisasjonsnummer,
-                sendInntektsmeldingRequestDto.startdato(), LukkeÅrsak.ORDINÆR_INNSENDING, false);
+                sendInntektsmeldingRequestDto.startdato(), LukkeÅrsak.ORDINÆR_INNSENDING);
 
             var imEntitet = inntektsmeldingRepository.hentInntektsmelding(imId);
 

@@ -71,21 +71,19 @@ public class ForespørselRest {
                 førsteUttaksdato,
                 request.organisasjonsnumre());
             List<OpprettForespørselResponsNy.OrganisasjonsnummerMedStatus> organisasjonsnumreMedStatus = new ArrayList<>();
-            var migrering = request.migrering();
+
             request.organisasjonsnumre().forEach(organisasjonsnummer -> {
                 var bleForespørselOpprettet = forespørselBehandlingTjeneste.håndterInnkommendeForespørsel(skjæringstidspunkt,
                     KodeverkMapper.mapYtelsetype(request.ytelsetype()),
                     new AktørIdEntitet(request.aktørId().id()),
                     new OrganisasjonsnummerDto(organisasjonsnummer.orgnr()),
                     fagsakSaksnummer,
-                    førsteUttaksdato,
-                    migrering);
+                    førsteUttaksdato);
 
                 if (ForespørselResultat.FORESPØRSEL_OPPRETTET.equals(bleForespørselOpprettet)) {
-                    if (!migrering) {
-                        MetrikkerTjeneste.loggForespørselOpprettet(KodeverkMapper.mapYtelsetype(request.ytelsetype()));
-                    }
+                    MetrikkerTjeneste.loggForespørselOpprettet(KodeverkMapper.mapYtelsetype(request.ytelsetype()));
                 }
+
                 organisasjonsnumreMedStatus.add(new OpprettForespørselResponsNy.OrganisasjonsnummerMedStatus(organisasjonsnummer,
                     bleForespørselOpprettet));
             });
@@ -150,6 +148,5 @@ public class ForespørselRest {
     private void sjekkErSaksbehandlerkall() {
         tilgang.sjekkAtAnsattHarRollenSaksbehandler();
     }
-
 }
 
