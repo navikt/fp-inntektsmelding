@@ -1,4 +1,4 @@
-package no.nav.familie.inntektsmelding.server.app.forvaltning;
+package no.nav.familie.inntektsmelding.forvaltning;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
