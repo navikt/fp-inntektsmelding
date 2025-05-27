@@ -78,6 +78,10 @@ spec:
           - id: "{{group}}"
           {{/each}}
   accessPolicy:
+    outbound:
+      rules:
+        - application: logging
+          namespace: nais-system
     inbound:
       rules:
         - application: fpinntektsmelding-frontend
