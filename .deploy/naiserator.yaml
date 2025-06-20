@@ -64,6 +64,11 @@ spec:
         collation: nb_NO.UTF8
   secureLogs:
     enabled: true
+  maskinporten:
+    enabled: true
+    scopes:
+      consumes:
+        - name: "digdir:dialogporten.serviceprovider"
   tokenx:
     enabled: true
   azure:
@@ -79,6 +84,10 @@ spec:
           {{/each}}
   accessPolicy:
     outbound:
+      {{#if devOnly}}
+      external:
+        - host: platform.tt02.altinn.no
+      {{/if}}
       rules:
         - application: logging
           namespace: nais-system
