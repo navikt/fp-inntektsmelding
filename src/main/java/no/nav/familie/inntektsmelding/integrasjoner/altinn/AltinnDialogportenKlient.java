@@ -16,7 +16,6 @@ import no.nav.vedtak.felles.integrasjon.rest.TokenFlow;
 import no.nav.vedtak.sikkerhet.oidc.token.impl.GeneriskTokenKlient;
 import no.nav.vedtak.sikkerhet.oidc.token.impl.MaskinportenTokenKlient;
 
-@ApplicationScoped
 @RestClientConfig(tokenConfig = TokenFlow.ADAPTIVE, endpointProperty = "altinn.tre.base.url", scopesProperty = "altinn.scopes")
 public class AltinnDialogportenKlient {
 
@@ -32,6 +31,7 @@ public class AltinnDialogportenKlient {
     private MaskinportenTokenKlient tokenKlient;
     private String inntektsmeldingSkjemaLenke;
 
+    private static AltinnDialogportenKlient instance = new AltinnDialogportenKlient();
 
     private AltinnDialogportenKlient() {
         this(RestClient.client());
@@ -99,6 +99,15 @@ public class AltinnDialogportenKlient {
             .uri(URI.create(tokenAltinn3ExchangeEndpoint))
             .GET()
             .build();
+    }
+
+    public static synchronized AltinnDialogportenKlient instance() {
+        var inst = instance;
+        if (inst == null) {
+            inst = new AltinnDialogportenKlient();
+            instance = inst;
+        }
+        return inst;
     }
 
 }

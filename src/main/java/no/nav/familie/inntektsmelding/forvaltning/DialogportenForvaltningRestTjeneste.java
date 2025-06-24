@@ -28,13 +28,14 @@ public class DialogportenForvaltningRestTjeneste {
     private Tilgang tilgang;
     private AltinnDialogportenKlient altinnDialogportenKlient;
 
-    public DialogportenForvaltningRestTjeneste() {
+    DialogportenForvaltningRestTjeneste() {
         // REST CDI
     }
+
     @Inject
-    public DialogportenForvaltningRestTjeneste(Tilgang tilgang, AltinnDialogportenKlient altinnDialogportenKlient) {
+    public DialogportenForvaltningRestTjeneste(Tilgang tilgang) {
         this.tilgang = tilgang;
-        this.altinnDialogportenKlient = altinnDialogportenKlient;
+        this.altinnDialogportenKlient = AltinnDialogportenKlient.instance();
     }
 
     @POST
