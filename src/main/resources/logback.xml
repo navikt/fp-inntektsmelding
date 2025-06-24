@@ -81,4 +81,5 @@
         <appender-ref ref="stdoutConsoleLogger"/>
     </root>
 
+    <include optional="true" resource="logback-${NAIS_CLUSTER_NAME}.xml"/>
 </configuration>
