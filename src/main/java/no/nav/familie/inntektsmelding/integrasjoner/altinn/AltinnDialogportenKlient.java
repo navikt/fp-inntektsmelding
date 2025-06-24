@@ -16,8 +16,15 @@ import no.nav.vedtak.felles.integrasjon.rest.TokenFlow;
 import no.nav.vedtak.sikkerhet.oidc.token.impl.GeneriskTokenKlient;
 import no.nav.vedtak.sikkerhet.oidc.token.impl.MaskinportenTokenKlient;
 
+import no.nav.vedtak.sikkerhet.oidc.token.impl.OidcTokenResponse;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @RestClientConfig(tokenConfig = TokenFlow.ADAPTIVE, endpointProperty = "altinn.tre.base.url", scopesProperty = "altinn.scopes")
 public class AltinnDialogportenKlient {
+
+    private static final Logger LOG = LoggerFactory.getLogger(AltinnDialogportenKlient.class);
 
     static final String CONTENT_TYPE = "Content-type";
     static final String APPLICATION_FORM_ENCODED = "application/x-www-form-urlencoded";
@@ -86,14 +93,16 @@ public class AltinnDialogportenKlient {
 
     private String veksleTilAltinn3Token(String token) {
         var httpRequest = lagHttpRequest(token);
-        return GeneriskTokenKlient.hentTokenRetryable(httpRequest, null, 3).access_token();
+        var response = GeneriskTokenKlient.hentTokenRetryable(httpRequest, null, 3);
+        LOG.debug("Altinn leverte token av type {} utløper {}", response.token_type(), response.expires_in());
+        return response.access_token();
     }
 
     private HttpRequest lagHttpRequest(String bearerToken) {
         var tokenAltinn3ExchangeEndpoint = restConfig.endpoint().toString() + ALTINN_EXCHANGE_PATH;
         return HttpRequest.newBuilder()
             .header("Cache-Control", "no-cache")
-            .headers(AUTHORIZATION, bearerToken)
+            .header(AUTHORIZATION, bearerToken)
             .header(CONTENT_TYPE, APPLICATION_FORM_ENCODED)
             .timeout(Duration.ofSeconds(3))
             .uri(URI.create(tokenAltinn3ExchangeEndpoint))
