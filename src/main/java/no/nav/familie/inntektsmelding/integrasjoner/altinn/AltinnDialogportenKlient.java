@@ -5,6 +5,8 @@ import java.net.http.HttpRequest;
 import java.time.Duration;
 import java.util.List;
 
+import jakarta.enterprise.context.ApplicationScoped;
+
 import no.nav.foreldrepenger.konfig.Environment;
 import no.nav.vedtak.felles.integrasjon.rest.RestClient;
 import no.nav.vedtak.felles.integrasjon.rest.RestClientConfig;
@@ -14,6 +16,7 @@ import no.nav.vedtak.felles.integrasjon.rest.TokenFlow;
 import no.nav.vedtak.sikkerhet.oidc.token.impl.GeneriskTokenKlient;
 import no.nav.vedtak.sikkerhet.oidc.token.impl.MaskinportenTokenKlient;
 
+@ApplicationScoped
 @RestClientConfig(tokenConfig = TokenFlow.ADAPTIVE, endpointProperty = "altinn.tre.base.url", scopesProperty = "altinn.scopes")
 public class AltinnDialogportenKlient {
 

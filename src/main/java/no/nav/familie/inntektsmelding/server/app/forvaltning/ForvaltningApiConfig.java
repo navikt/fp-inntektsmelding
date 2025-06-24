@@ -10,6 +10,8 @@ import java.util.stream.Collectors;
 
 import jakarta.ws.rs.ApplicationPath;
 
+import no.nav.familie.inntektsmelding.forvaltning.DialogportenForvaltningRestTjeneste;
+
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.slf4j.Logger;
@@ -89,6 +91,10 @@ public class ForvaltningApiConfig extends ResourceConfig {
         classes.add(ProsessTaskRestTjeneste.class);
         classes.add(FpDokgenRestTjeneste.class);
         classes.add(OppgaverForvaltningRestTjeneste.class);
+        if (Environment.current().isDev()) {
+            // kun skal være tilgjengelig i dev for testing
+            classes.add(DialogportenForvaltningRestTjeneste.class);
+        }
         if (Environment.current().isLocal()) {
             classes.add(ForespørselVtpRest.class);
         }
