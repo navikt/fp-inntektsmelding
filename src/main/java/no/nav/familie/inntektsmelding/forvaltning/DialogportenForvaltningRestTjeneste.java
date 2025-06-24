@@ -1,5 +1,6 @@
 package no.nav.familie.inntektsmelding.forvaltning;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -45,6 +46,7 @@ public class DialogportenForvaltningRestTjeneste {
     @POST
     @Path("/opprettDialog")
     @Consumes(MediaType.APPLICATION_JSON)
+    @Operation(description = "Ny Dialog i Dialogporten med en Inntektsmelding transmission", tags = "dialogporten")
     @Tilgangskontrollert
     public Response opprettDialog(@NotNull @Valid OpprettNyDialogDto opprettNyDialogDto) {
         if (IS_PROD) {
