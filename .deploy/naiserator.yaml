@@ -83,14 +83,6 @@ spec:
           - id: "{{group}}"
           {{/each}}
   accessPolicy:
-    outbound:
-      {{#if devOnly}}
-      external:
-        - host: platform.tt02.altinn.no
-      {{/if}}
-      rules:
-        - application: logging
-          namespace: nais-system
     inbound:
       rules:
         - application: fpinntektsmelding-frontend
@@ -111,6 +103,8 @@ spec:
       {{/if}}
     outbound:
       rules:
+        - application: logging
+          namespace: nais-system
         - application: notifikasjon-produsent-api
           namespace: fager
         - application: altinn-rettigheter-proxy
@@ -124,6 +118,8 @@ spec:
         - host: aareg-services.{{environment}}-fss-pub.nais.io
       {{#if devOnly}}
         - host: dokarkiv-q2.{{environment}}-fss-pub.nais.io
+        - host: platform.tt02.altinn.no
       {{else}}
         - host: dokarkiv.{{environment}}-fss-pub.nais.io
+        - host: platform.altinn.no
       {{/if}}
