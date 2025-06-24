@@ -29,7 +29,7 @@ public class AltinnDialogportenKlient {
     private MaskinportenTokenKlient tokenKlient;
     private String inntektsmeldingSkjemaLenke;
 
-    private static AltinnDialogportenKlient instance = new AltinnDialogportenKlient();
+    private static AltinnDialogportenKlient instance;
 
     private AltinnDialogportenKlient() {
         this(RestClient.client());
