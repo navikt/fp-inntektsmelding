@@ -2,7 +2,7 @@ package no.nav.familie.inntektsmelding.integrasjoner.altinn;
 
 import java.util.List;
 
-public record DialogportenRequest (String serviceResource, String party, String externalRefererence, DialogStatus status, Content content, List<Transmission> transmissions){
+public record DialogportenRequest (String serviceResource, String party, String externalRefererence, DialogStatus status, Content content, List<Transmission> transmissions, List<ApiAction> apiActions) {
 
     enum DialogStatus {
         New,
@@ -13,7 +13,21 @@ public record DialogportenRequest (String serviceResource, String party, String 
         Completed,
     }
 
-    protected record Transmission(TransmissionType type, ExtendedType extendedType, Sender sender, Content content){}
+    protected record ApiAction(String name, List<Endpoint> endpoints) {
+        public static final String action = "read";
+    }
+
+    protected record Endpoint(String url, HttpMethod httpMethod, String documentationUrl) {}
+
+    enum HttpMethod {
+        GET,
+        POST,
+        PUT,
+        DELETE,
+        PATCH,
+    }
+
+    protected record Transmission(TransmissionType type, ExtendedType extendedType, Sender sender, Content content, List<Attachment> attachments) {}
 
     enum TransmissionType {
         // For general information, not related to any submissions
@@ -45,5 +59,13 @@ public record DialogportenRequest (String serviceResource, String party, String 
 
     protected record ContentValueItem(String value) {
         public static final String languageCode = "nb";
+    }
+
+    protected record Attachment(List<ContentValueItem> displayName, List<Url> urls) {}
+    protected record Url(String url, String mediaType, AttachmentUrlConsumerType consumerType) {}
+
+    protected enum AttachmentUrlConsumerType {
+        Gui,
+        Api,
     }
 }

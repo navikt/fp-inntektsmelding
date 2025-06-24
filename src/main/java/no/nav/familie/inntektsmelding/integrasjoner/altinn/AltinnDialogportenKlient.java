@@ -20,7 +20,6 @@ public class AltinnDialogportenKlient {
     static final String CONTENT_TYPE = "Content-type";
     static final String APPLICATION_FORM_ENCODED = "application/x-www-form-urlencoded";
     static final String AUTHORIZATION = "Authorization";
-    static final String BASIC_AUTH_HEADER_PREFIX = "Basic ";
 
     private static final String SCOPE = "digdir:dialogporten.serviceprovider";
     public static final String ALTINN_EXCHANGE_PATH = "/authentication/api/v1/exchange/maskinporten";
@@ -28,6 +27,7 @@ public class AltinnDialogportenKlient {
     private final RestClient restClient;
     private final RestConfig restConfig;
     private MaskinportenTokenKlient tokenKlient;
+    private String inntektsmeldingSkjemaLenke;
 
 
     private AltinnDialogportenKlient() {
@@ -38,33 +38,38 @@ public class AltinnDialogportenKlient {
         this.restClient = restClient;
         this.restConfig = RestConfig.forClient(this.getClass());
         this.tokenKlient = null;
+        this.inntektsmeldingSkjemaLenke = Environment.current().getProperty("inntektsmelding.skjema.lenke", "https://arbeidsgiver.intern.dev.nav.no/fp-im-dialog");
     }
 
-    public void opprettDialog() {
+    public String opprettDialog(String organisasjonsnummer, String forespørselUuid) {
         if (tokenKlient == null) {
             tokenKlient = MaskinportenTokenKlient.instance();
         }
         var target = URI.create(restConfig.endpoint().toString() + "/dialogporten/api/v1/serviceowner/dialogs");
-        var bodyRequest = lagDialogportenBody();
+        var bodyRequest = lagDialogportenBody(organisasjonsnummer, forespørselUuid);
         var request = RestRequest.newPOSTJson(bodyRequest, target, restConfig)
             .otherAuthorizationSupplier(this::hentToken);
 
+         return restClient.sendReturnResponseString(request).body();
     }
 
-    private DialogportenRequest lagDialogportenBody() {
-        String orgnr = "999999999";
-        var party = String.format("urn:altinn:organization:identifier-no:%s", orgnr);
+    private DialogportenRequest lagDialogportenBody(String organisasjonsnummer, String forespørselUuid) {
+        var party = String.format("urn:altinn:organization:identifier-no:%s", organisasjonsnummer);
         var contentTransmission = new DialogportenRequest.Content(lagContentValue("Inntektsmelding"), lagContentValue("Sammendrag"));
         var contentRequest = new DialogportenRequest.Content(lagContentValue("Forespørsel om inntektsmelding"), lagContentValue("Forespørsel om inntektsmelding"));
         var transmission = new DialogportenRequest.Transmission(DialogportenRequest.TransmissionType.Request,
             DialogportenRequest.ExtendedType.INNTEKTSMELDING,
             new DialogportenRequest.Sender("ServiceOwner"),
-            contentRequest);
+            contentRequest,
+            List.of());
+        var apiAction = new DialogportenRequest.ApiAction("Hent forespørsel om inntektsmelding",
+            List.of(new DialogportenRequest.Endpoint(inntektsmeldingSkjemaLenke + "/" + forespørselUuid, DialogportenRequest.HttpMethod.GET, null)));
         return new DialogportenRequest(Environment.current().getProperty("altinn.tre.inntektsmelding.ressurs"),
             party,
-            "test",
-            DialogportenRequest.DialogStatus.New, contentTransmission,
-            List.of(transmission));
+            forespørselUuid,
+            DialogportenRequest.DialogStatus.RequiresAttention, contentTransmission,
+            List.of(transmission),
+            List.of(apiAction));
     }
 
     private DialogportenRequest.ContentValue lagContentValue(String verdi) {
