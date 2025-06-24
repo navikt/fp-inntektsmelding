@@ -91,7 +91,7 @@ public class ForvaltningApiConfig extends ResourceConfig {
         classes.add(ProsessTaskRestTjeneste.class);
         classes.add(FpDokgenRestTjeneste.class);
         classes.add(OppgaverForvaltningRestTjeneste.class);
-        if (Environment.current().isDev()) {
+        if (!Environment.current().isProd() ) {
             // kun skal være tilgjengelig i dev for testing
             classes.add(DialogportenForvaltningRestTjeneste.class);
         }
