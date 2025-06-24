@@ -12,7 +12,7 @@ import java.net.http.HttpRequest;
 import java.time.Duration;
 import java.util.List;
 
-@RestClientConfig(tokenConfig = TokenFlow.ADAPTIVE, endpointProperty = "altinn.tre.base.url", scopesProperty = "altinn.scopes")
+@RestClientConfig(tokenConfig = TokenFlow.NO_AUTH_NEEDED, endpointProperty = "altinn.tre.base.url", scopesProperty = "altinn.scopes")
 public class AltinnDialogportenKlient {
 
     private static final Logger LOG = LoggerFactory.getLogger(AltinnDialogportenKlient.class);
