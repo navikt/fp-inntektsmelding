@@ -1,16 +1,20 @@
 package no.nav.familie.inntektsmelding.integrasjoner.altinn;
 
-import no.nav.foreldrepenger.konfig.Environment;
-import no.nav.vedtak.felles.integrasjon.rest.*;
-import no.nav.vedtak.sikkerhet.oidc.token.impl.GeneriskTokenKlient;
-import no.nav.vedtak.sikkerhet.oidc.token.impl.MaskinportenTokenKlient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.net.URI;
 import java.net.http.HttpRequest;
 import java.time.Duration;
 import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import no.nav.foreldrepenger.konfig.Environment;
+import no.nav.vedtak.felles.integrasjon.rest.RestClient;
+import no.nav.vedtak.felles.integrasjon.rest.RestClientConfig;
+import no.nav.vedtak.felles.integrasjon.rest.RestConfig;
+import no.nav.vedtak.felles.integrasjon.rest.RestRequest;
+import no.nav.vedtak.felles.integrasjon.rest.TokenFlow;
+import no.nav.vedtak.sikkerhet.oidc.token.impl.MaskinportenTokenKlient;
 
 // Trenger ikke auth, da vi henter token fra Maskinporten selv og veksler det til Altinn 3 token.
 @RestClientConfig(tokenConfig = TokenFlow.NO_AUTH_NEEDED, endpointProperty = "altinn.tre.base.url", scopesProperty = "maskinporten.dialogporten.scope")
@@ -18,8 +22,8 @@ public class AltinnDialogportenKlient {
 
     private static final Logger LOG = LoggerFactory.getLogger(AltinnDialogportenKlient.class);
 
-    public static final String ALTINN_EXCHANGE_PATH = "/authentication/api/v1/exchange/maskinporten";
-
+    private static final String ALTINN_EXCHANGE_PATH = "/authentication/api/v1/exchange/maskinporten";
+    private static final String ALTINN_RESSURS_PREFIX = "urn:altinn:resource:";
     private final RestClient restClient;
     private final RestConfig restConfig;
     private MaskinportenTokenKlient tokenKlient;
@@ -58,14 +62,15 @@ public class AltinnDialogportenKlient {
             List.of());
         var apiAction = new DialogportenRequest.ApiAction("Hent forespørsel om inntektsmelding",
             List.of(new DialogportenRequest.Endpoint(inntektsmeldingSkjemaLenke + "/" + forespørselUuid, DialogportenRequest.HttpMethod.GET, null)));
-        return new DialogportenRequest(Environment.current().getProperty("altinn.tre.inntektsmelding.ressurs"),
+        var foreldrepengerRessurs = Environment.current().getProperty("altinn.tre.inntektsmelding.ressurs");
+        var altinnressursFP = ALTINN_RESSURS_PREFIX + foreldrepengerRessurs;
+        return new DialogportenRequest(altinnressursFP,
             party,
             forespørselUuid,
             DialogportenRequest.DialogStatus.RequiresAttention, contentTransmission,
             List.of(transmission),
             List.of(apiAction));
     }
-
     private DialogportenRequest.ContentValue lagContentValue(String verdi) {
         return new DialogportenRequest.ContentValue(List.of(new DialogportenRequest.ContentValueItem(verdi)));
     }
