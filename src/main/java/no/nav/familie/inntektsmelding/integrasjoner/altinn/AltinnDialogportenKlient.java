@@ -12,16 +12,12 @@ import java.net.http.HttpRequest;
 import java.time.Duration;
 import java.util.List;
 
-@RestClientConfig(tokenConfig = TokenFlow.NO_AUTH_NEEDED, endpointProperty = "altinn.tre.base.url", scopesProperty = "altinn.scopes")
+// Trenger ikke auth, da vi henter token fra Maskinporten selv og veksler det til Altinn 3 token.
+@RestClientConfig(tokenConfig = TokenFlow.NO_AUTH_NEEDED, endpointProperty = "altinn.tre.base.url", scopesProperty = "maskinporten.dialogporten.scope")
 public class AltinnDialogportenKlient {
 
     private static final Logger LOG = LoggerFactory.getLogger(AltinnDialogportenKlient.class);
 
-    static final String CONTENT_TYPE = "Content-type";
-    static final String APPLICATION_FORM_ENCODED = "application/x-www-form-urlencoded";
-    static final String AUTHORIZATION = "Authorization";
-
-    private static final String SCOPE = "digdir:dialogporten.serviceprovider";
     public static final String ALTINN_EXCHANGE_PATH = "/authentication/api/v1/exchange/maskinporten";
 
     private final RestClient restClient;
@@ -38,14 +34,11 @@ public class AltinnDialogportenKlient {
     AltinnDialogportenKlient(RestClient restClient) {
         this.restClient = restClient;
         this.restConfig = RestConfig.forClient(this.getClass());
-        this.tokenKlient = null;
+        this.tokenKlient = MaskinportenTokenKlient.instance();
         this.inntektsmeldingSkjemaLenke = Environment.current().getProperty("inntektsmelding.skjema.lenke", "https://arbeidsgiver.intern.dev.nav.no/fp-im-dialog");
     }
 
     public String opprettDialog(String organisasjonsnummer, String forespørselUuid) {
-        if (tokenKlient == null) {
-            tokenKlient = MaskinportenTokenKlient.instance();
-        }
         var target = URI.create(restConfig.endpoint().toString() + "/dialogporten/api/v1/serviceowner/dialogs");
         var bodyRequest = lagDialogportenBody(organisasjonsnummer, forespørselUuid);
         var request = RestRequest.newPOSTJson(bodyRequest, target, restConfig)
@@ -78,26 +71,24 @@ public class AltinnDialogportenKlient {
     }
 
     private String hentToken() {
-        var maskinportenToken = tokenKlient.hentMaskinportenToken(SCOPE, null).token();
+        var maskinportenToken = tokenKlient.hentMaskinportenToken(restConfig.scopes(), null).token();
         return veksleTilAltinn3Token(maskinportenToken);
     }
 
     private String veksleTilAltinn3Token(String token) {
         var httpRequest = lagHttpRequest(token);
-        LOG.trace("Altinn henter token for token {}", token);
-        var response = GeneriskTokenKlient.hentTokenRetryable(httpRequest, null, 3);
-        LOG.debug("Altinn leverte token av type {} utløper {}", response.token_type(), response.expires_in());
-        return response.access_token();
+        LOG.trace("Altinn henter token for maskinportentoken {}", token);
+        var response = AltinnExchangeTokenKlient.hentTokenRetryable(httpRequest, 3);
+        LOG.debug("Altinn leverte dialogportentoken {}", response);
+        return response;
     }
 
     private HttpRequest lagHttpRequest(String token) {
-        var tokenAltinn3ExchangeEndpoint = restConfig.endpoint().toString() + ALTINN_EXCHANGE_PATH;
         return HttpRequest.newBuilder()
             .header("Cache-Control", "no-cache")
-            .header(AUTHORIZATION, "Bearer " + token)
-            .header(CONTENT_TYPE, APPLICATION_FORM_ENCODED)
+            .header("Authorization", "Bearer " + token)
             .timeout(Duration.ofSeconds(3))
-            .uri(URI.create(tokenAltinn3ExchangeEndpoint))
+            .uri(URI.create(restConfig.endpoint().toString() + ALTINN_EXCHANGE_PATH))
             .GET()
             .build();
     }
