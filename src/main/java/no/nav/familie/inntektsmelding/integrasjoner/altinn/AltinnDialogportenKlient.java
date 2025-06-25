@@ -77,11 +77,10 @@ public class AltinnDialogportenKlient {
 
     private String veksleTilAltinn3Token(String token) {
         var httpRequest = lagHttpRequest(token);
-        LOG.trace("Altinn henter token for token {}", token);
-        // TODO: Her returneres kun et token som string så ting feiler ved JSON parsing. 30 min gyldighet i dev. Trenger å lage en egen klient for å håndtere dette.
-        var response = GeneriskTokenKlient.hentTokenRetryable(httpRequest, null, 3);
-        LOG.debug("Altinn leverte token av type {} utløper {}", response.token_type(), response.expires_in());
-        return response.access_token();
+        LOG.trace("Altinn henter token for maskinportentoken {}", token);
+        var response = AltinnExchangeTokenKlient.hentTokenRetryable(httpRequest, 3);
+        LOG.debug("Altinn leverte dialogportentoken {}", response);
+        return response;
     }
 
     private HttpRequest lagHttpRequest(String token) {
