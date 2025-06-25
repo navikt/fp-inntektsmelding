@@ -84,16 +84,17 @@ public class AltinnDialogportenKlient {
 
     private String veksleTilAltinn3Token(String token) {
         var httpRequest = lagHttpRequest(token);
+        LOG.trace("Altinn henter token for token {}", token);
         var response = GeneriskTokenKlient.hentTokenRetryable(httpRequest, null, 3);
         LOG.debug("Altinn leverte token av type {} utløper {}", response.token_type(), response.expires_in());
         return response.access_token();
     }
 
-    private HttpRequest lagHttpRequest(String bearerToken) {
+    private HttpRequest lagHttpRequest(String token) {
         var tokenAltinn3ExchangeEndpoint = restConfig.endpoint().toString() + ALTINN_EXCHANGE_PATH;
         return HttpRequest.newBuilder()
             .header("Cache-Control", "no-cache")
-            .header(AUTHORIZATION, bearerToken)
+            .header(AUTHORIZATION, "Bearer " + token)
             .header(CONTENT_TYPE, APPLICATION_FORM_ENCODED)
             .timeout(Duration.ofSeconds(3))
             .uri(URI.create(tokenAltinn3ExchangeEndpoint))
