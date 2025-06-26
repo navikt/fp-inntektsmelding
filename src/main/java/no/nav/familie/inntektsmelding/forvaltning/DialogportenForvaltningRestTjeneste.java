@@ -38,9 +38,9 @@ public class DialogportenForvaltningRestTjeneste {
     }
 
     @Inject
-    public DialogportenForvaltningRestTjeneste(Tilgang tilgang) {
+    public DialogportenForvaltningRestTjeneste(Tilgang tilgang, AltinnDialogportenKlient altinnDialogportenKlient) {
         this.tilgang = tilgang;
-        this.altinnDialogportenKlient = AltinnDialogportenKlient.instance();
+        this.altinnDialogportenKlient = altinnDialogportenKlient;
     }
 
     @POST
