@@ -7,14 +7,13 @@ import java.net.http.HttpRequest;
 
 import jakarta.enterprise.context.Dependent;
 
-import no.nav.vedtak.exception.TekniskException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.kobylynskyi.graphql.codegen.model.graphql.GraphQLRequest;
 import com.kobylynskyi.graphql.codegen.model.graphql.GraphQLResult;
 
+import no.nav.vedtak.exception.TekniskException;
 import no.nav.vedtak.felles.integrasjon.rest.RestClient;
 import no.nav.vedtak.felles.integrasjon.rest.RestClientConfig;
 import no.nav.vedtak.felles.integrasjon.rest.RestConfig;
