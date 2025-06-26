@@ -66,7 +66,7 @@ public class AltinnExchangeTokenKlient {
             .build();
 
         var token = AltinnExchangeTokenKlient.hentTokenRetryable(exchangeRequest, 3);
-        SECURE_LOG.trace("Altinn leverte dialogporten token: {}", token);
+        SECURE_LOG.info("Altinn leverte dialogporten token: {}", token);
         putTokenToCache(cacheKey, token);
         LOG.debug("Hentet altinn token og lagt i cache med nøkkel: {}", cacheKey);
         return token;
