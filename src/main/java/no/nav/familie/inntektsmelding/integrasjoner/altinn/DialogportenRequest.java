@@ -16,6 +16,7 @@ public record DialogportenRequest(@NotNull String serviceResource,
 
     public static final String TEXT_PLAIN = "text/plain";
     public static final String NB = "nb";
+    public static final String ACTION_READ = "read";
 
     enum DialogStatus {
         New,
@@ -26,8 +27,7 @@ public record DialogportenRequest(@NotNull String serviceResource,
         Completed,
     }
 
-    protected record ApiAction(String name, List<Endpoint> endpoints) {
-        public static final String action = "read";
+    protected record ApiAction(String name, List<Endpoint> endpoints, String action) {
     }
 
     protected record Endpoint(String url, HttpMethod httpMethod, String documentationUrl) {
