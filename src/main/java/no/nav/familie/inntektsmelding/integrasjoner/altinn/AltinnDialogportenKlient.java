@@ -71,7 +71,7 @@ public class AltinnDialogportenKlient {
             contentRequest,
             List.of());
         var apiAction = new DialogportenRequest.ApiAction("Hent forespørsel om inntektsmelding",
-            List.of(new DialogportenRequest.Endpoint(inntektsmeldingSkjemaLenke + "/" + forespørselUuid, DialogportenRequest.HttpMethod.GET, null)));
+            List.of(new DialogportenRequest.Endpoint(inntektsmeldingSkjemaLenke + "/" + forespørselUuid, DialogportenRequest.HttpMethod.GET, null)), DialogportenRequest.ACTION_READ);
         var foreldrepengerRessurs = Environment.current().getProperty("altinn.tre.inntektsmelding.ressurs");
         var altinnressursFP = ALTINN_RESSURS_PREFIX + foreldrepengerRessurs;
         return new DialogportenRequest(altinnressursFP,
