@@ -1,9 +1,15 @@
 package no.nav.familie.inntektsmelding.integrasjoner.altinn;
 
 import java.net.URI;
+import java.net.http.HttpResponse;
 import java.util.List;
 
 import jakarta.enterprise.context.ApplicationScoped;
+
+import no.nav.vedtak.exception.IntegrasjonException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import no.nav.foreldrepenger.konfig.Environment;
 import no.nav.vedtak.felles.integrasjon.rest.RestClient;
@@ -15,6 +21,7 @@ import no.nav.vedtak.felles.integrasjon.rest.TokenFlow;
 @ApplicationScoped
 @RestClientConfig(tokenConfig = TokenFlow.NO_AUTH_NEEDED, endpointProperty = "altinn.tre.base.url", scopesProperty = "maskinporten.dialogporten.scope")
 public class AltinnDialogportenKlient {
+    private static final Logger LOG = LoggerFactory.getLogger(AltinnDialogportenKlient.class);
 
     private static final Environment ENV = Environment.current();
 
@@ -42,7 +49,16 @@ public class AltinnDialogportenKlient {
         var request = RestRequest.newPOSTJson(bodyRequest, target, restConfig)
             .otherAuthorizationSupplier(() -> tokenKlient.hentAltinnToken(this.restConfig.scopes()));
 
-         return restClient.sendReturnResponseString(request).body();
+        var response = restClient.sendReturnUnhandled(request);
+        return handleResponse(response);
+    }
+
+    private String handleResponse(HttpResponse<String> response) {
+        if (response.statusCode() >= 200 && response.statusCode() < 300) {
+            return response.body();
+        }
+        LOG.warn("Kall til Altinn dialogporten feilet med statuskode {}. Full feilmelding var: {}", response.statusCode(), response.body());
+        throw new IntegrasjonException("FPINNTEKTSMELDING-542684", "Feil ved kall til dialogporten");
     }
 
     private DialogportenRequest lagDialogportenBody(String organisasjonsnummer, String forespørselUuid) {
