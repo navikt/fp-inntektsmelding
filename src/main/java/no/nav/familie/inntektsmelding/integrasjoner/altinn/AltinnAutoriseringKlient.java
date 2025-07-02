@@ -16,7 +16,8 @@ import no.nav.vedtak.felles.integrasjon.rest.RestConfig;
 import no.nav.vedtak.felles.integrasjon.rest.RestRequest;
 import no.nav.vedtak.felles.integrasjon.rest.TokenFlow;
 
-@RestClientConfig(tokenConfig = TokenFlow.ADAPTIVE, endpointProperty = "altinn.url", scopesProperty = "altinn.scopes")
+// Denne klienten opererer med TokenX derfor trenger man en resource.
+@RestClientConfig(tokenConfig = TokenFlow.ADAPTIVE, endpointProperty = "altinn.rettigheter.proxy.url", scopesProperty = "altinn.rettigheter.proxy.resource")
 public class AltinnAutoriseringKlient {
     private static final String SERVICE_CODE = "4936";
     private static final String SERVICE_EDITION = "1";
