@@ -11,13 +11,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import no.nav.familie.inntektsmelding.integrasjoner.altinn.AltinnAutoriseringKlient;
+import no.nav.familie.inntektsmelding.integrasjoner.altinn.AltinnRettigheterProxyKlient;
 
 @ExtendWith(MockitoExtension.class)
 class AltinnTilgangTjenesteTest {
 
   @Mock
-  private AltinnAutoriseringKlient altinnKlient;
+  private AltinnRettigheterProxyKlient altinnKlient;
 
   private AltinnTilgangTjeneste altinnTilgangTjeneste;
 

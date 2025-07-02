@@ -4,18 +4,18 @@ import java.util.List;
 
 import jakarta.enterprise.context.Dependent;
 
-import no.nav.familie.inntektsmelding.integrasjoner.altinn.AltinnAutoriseringKlient;
+import no.nav.familie.inntektsmelding.integrasjoner.altinn.AltinnRettigheterProxyKlient;
 
 @Dependent
 public class AltinnTilgangTjeneste {
 
-    private final AltinnAutoriseringKlient altinnKlient;
+    private final AltinnRettigheterProxyKlient altinnKlient;
 
-    public AltinnTilgangTjeneste() {
-        this(AltinnAutoriseringKlient.instance());
+    AltinnTilgangTjeneste() {
+        this(AltinnRettigheterProxyKlient.instance());
     }
 
-    public AltinnTilgangTjeneste(AltinnAutoriseringKlient altinnKlient) {
+    public AltinnTilgangTjeneste(AltinnRettigheterProxyKlient altinnKlient) {
         this.altinnKlient = altinnKlient;
     }
 

@@ -1,6 +1,6 @@
 package no.nav.familie.inntektsmelding.integrasjoner.altinn;
 
-import static no.nav.familie.inntektsmelding.integrasjoner.altinn.AltinnAutoriseringKlient.ALTINN_SIZE_LIMIT;
+import static no.nav.familie.inntektsmelding.integrasjoner.altinn.AltinnRettigheterProxyKlient.ALTINN_SIZE_LIMIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -23,7 +23,7 @@ import no.nav.vedtak.sikkerhet.kontekst.BasisKontekst;
 import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
 
 @ExtendWith(MockitoExtension.class)
-class AltinnAutoriseringKlientTest {
+class AltinnRettigheterProxyKlientTest {
     @Mock
     RestClient klient;
 
@@ -34,7 +34,7 @@ class AltinnAutoriseringKlientTest {
 
     @Test
     void sjekkTilgang__har_tilgang_til_en_bedrift() {
-        var altinnAutoriseringKlient = new AltinnAutoriseringKlient(klient);
+        var altinnAutoriseringKlient = new AltinnRettigheterProxyKlient(klient);
 
         when(klient.sendReturnList(any(RestRequest.class), any())).thenReturn(List.of(lagAltinnReportee("Saltrød og høneby", "999999999")));
 
@@ -45,7 +45,7 @@ class AltinnAutoriseringKlientTest {
 
     @Test
     void sjekkTilgang__ikke_tilgang_til_en_bedrift() {
-        var altinnAutoriseringKlient = new AltinnAutoriseringKlient(klient);
+        var altinnAutoriseringKlient = new AltinnRettigheterProxyKlient(klient);
 
         when(klient.sendReturnList(any(RestRequest.class), any())).thenReturn(List.of(lagAltinnReportee("Saltrød og høneby", "999999999")));
 
@@ -55,22 +55,22 @@ class AltinnAutoriseringKlientTest {
 
     @Test
     void sjekkTilgang__har_tilgang_til_bedrift_ved_paginering() {
-        var altinnAutoriseringKlient = new AltinnAutoriseringKlient(klient);
+        var altinnAutoriseringKlient = new AltinnRettigheterProxyKlient(klient);
 
         var side1 = IntStream.rangeClosed(1, ALTINN_SIZE_LIMIT)
             .boxed()
             .map(i -> lagAltinnReportee("Bedrift nr " + i, String.valueOf(999999000 + i)))
             .toList();
         var side2 = List.of(lagAltinnReportee("Bedrift på side 2 AS", "999999999"));
-        when(klient.sendReturnList(any(RestRequest.class), eq(AltinnAutoriseringKlient.AltinnReportee.class))).thenReturn(side1, side2);
+        when(klient.sendReturnList(any(RestRequest.class), eq(AltinnRettigheterProxyKlient.AltinnReportee.class))).thenReturn(side1, side2);
 
         altinnAutoriseringKlient.harTilgangTilBedriften("999999999");
 
         verify(klient, times(2)).sendReturnList(any(RestRequest.class), any());
     }
 
-    private static AltinnAutoriseringKlient.AltinnReportee lagAltinnReportee(String name, String orgnr) {
-        return new AltinnAutoriseringKlient.AltinnReportee(name, "BEDR", orgnr, "900000000", "", "ACTIVE", "BEDR");
+    private static AltinnRettigheterProxyKlient.AltinnReportee lagAltinnReportee(String name, String orgnr) {
+        return new AltinnRettigheterProxyKlient.AltinnReportee(name, "BEDR", orgnr, "900000000", "", "ACTIVE", "BEDR");
     }
 
 

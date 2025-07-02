@@ -18,7 +18,7 @@ import no.nav.vedtak.felles.integrasjon.rest.TokenFlow;
 
 // Denne klienten opererer med TokenX derfor trenger man en resource.
 @RestClientConfig(tokenConfig = TokenFlow.ADAPTIVE, endpointProperty = "altinn.rettigheter.proxy.url", scopesProperty = "altinn.rettigheter.proxy.resource")
-public class AltinnAutoriseringKlient {
+public class AltinnRettigheterProxyKlient {
     private static final String SERVICE_CODE = "4936";
     private static final String SERVICE_EDITION = "1";
     private static final String FILTER_AKTIVE_BEDRIFTER = "Type ne 'Person' and Status eq 'Active'";
@@ -31,25 +31,25 @@ public class AltinnAutoriseringKlient {
      */
     private static final int ALTINN_TOTAL_SIZE_LIMIT = 100_000;
 
-    private static AltinnAutoriseringKlient instance = new AltinnAutoriseringKlient();
+    private static AltinnRettigheterProxyKlient instance = new AltinnRettigheterProxyKlient();
 
     private final RestClient restClient;
     private final RestConfig restConfig;
 
 
-    private AltinnAutoriseringKlient() {
+    private AltinnRettigheterProxyKlient() {
         this(RestClient.client());
     }
 
-    AltinnAutoriseringKlient(RestClient restClient) {
+    AltinnRettigheterProxyKlient(RestClient restClient) {
         this.restClient = restClient;
         this.restConfig = RestConfig.forClient(this.getClass());
     }
 
-    public static synchronized AltinnAutoriseringKlient instance() {
+    public static synchronized AltinnRettigheterProxyKlient instance() {
         var inst = instance;
         if (inst == null) {
-            inst = new AltinnAutoriseringKlient();
+            inst = new AltinnRettigheterProxyKlient();
             instance = inst;
         }
         return inst;
