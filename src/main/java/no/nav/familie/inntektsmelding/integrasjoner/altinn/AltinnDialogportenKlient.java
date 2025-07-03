@@ -43,9 +43,9 @@ public class AltinnDialogportenKlient {
         this.inntektsmeldingSkjemaLenke = ENV.getProperty("inntektsmelding.skjema.lenke", "https://arbeidsgiver.intern.dev.nav.no/fp-im-dialog");
     }
 
-    public String opprettDialog(String organisasjonsnummer, String forespørselUuid) {
+    public String opprettDialog(String organisasjonsnummer, String forespørselUuid, String sakstittel) {
         var target = URI.create(restConfig.endpoint().toString() + "/dialogporten/api/v1/serviceowner/dialogs");
-        var bodyRequest = lagDialogportenBody(organisasjonsnummer, forespørselUuid);
+        var bodyRequest = lagDialogportenBody(organisasjonsnummer, forespørselUuid, sakstittel);
         var request = RestRequest.newPOSTJson(bodyRequest, target, restConfig)
             .otherAuthorizationSupplier(() -> tokenKlient.hentAltinnToken(this.restConfig.scopes()));
 
@@ -61,10 +61,10 @@ public class AltinnDialogportenKlient {
         throw new IntegrasjonException("FPINNTEKTSMELDING-542684", "Feil ved kall til dialogporten");
     }
 
-    private DialogportenRequest lagDialogportenBody(String organisasjonsnummer, String forespørselUuid) {
+    private DialogportenRequest lagDialogportenBody(String organisasjonsnummer, String forespørselUuid, String sakstittel) {
         var party = String.format("urn:altinn:organization:identifier-no:%s", organisasjonsnummer);
-        var contentTransmission = new DialogportenRequest.Content(lagContentValue("Inntektsmelding"), lagContentValue("Sammendrag"));
-        var contentRequest = new DialogportenRequest.Content(lagContentValue("Forespørsel om inntektsmelding"), lagContentValue("Forespørsel om inntektsmelding"));
+        var contentTransmission = new DialogportenRequest.Content(lagContentValue(sakstittel), lagContentValue("Nav trenger inntektsmelding"));
+        var contentRequest = new DialogportenRequest.Content(lagContentValue("Send inn inntektsmelding"), lagContentValue("Send inn inntektsmelding"));
         var transmission = new DialogportenRequest.Transmission(DialogportenRequest.TransmissionType.Request,
             DialogportenRequest.ExtendedType.INNTEKTSMELDING,
             new DialogportenRequest.Sender("ServiceOwner"),
