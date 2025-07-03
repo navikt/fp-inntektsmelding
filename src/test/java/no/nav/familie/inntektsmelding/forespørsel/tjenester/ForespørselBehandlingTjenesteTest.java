@@ -12,6 +12,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+import no.nav.familie.inntektsmelding.integrasjoner.altinn.AltinnDialogportenKlient;
 import no.nav.familie.inntektsmelding.koder.ArbeidsgiverinitiertÅrsak;
 import no.nav.familie.inntektsmelding.koder.ForespørselType;
 import org.junit.jupiter.api.BeforeEach;
@@ -60,6 +61,8 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
     private PersonTjeneste personTjeneste;
     @Mock
     private OrganisasjonTjeneste organisasjonTjeneste;
+    @Mock
+    private AltinnDialogportenKlient altinnDialogportenKlient;
 
     private ForespørselRepository forespørselRepository;
     private ForespørselBehandlingTjeneste forespørselBehandlingTjeneste;
@@ -70,7 +73,8 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         this.forespørselBehandlingTjeneste = new ForespørselBehandlingTjeneste(new ForespørselTjeneste(forespørselRepository),
             arbeidsgiverNotifikasjon,
             personTjeneste,
-            organisasjonTjeneste);
+            organisasjonTjeneste,
+            altinnDialogportenKlient);
     }
 
     @Test

@@ -10,6 +10,8 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import no.nav.familie.inntektsmelding.integrasjoner.altinn.AltinnDialogportenKlient;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +43,7 @@ public class ForespørselBehandlingTjeneste {
     private PersonTjeneste personTjeneste;
     private OrganisasjonTjeneste organisasjonTjeneste;
     private String inntektsmeldingSkjemaLenke;
+    private AltinnDialogportenKlient altinnDialogportenKlient;
 
     public ForespørselBehandlingTjeneste() {
         // CDI
@@ -50,11 +53,12 @@ public class ForespørselBehandlingTjeneste {
     public ForespørselBehandlingTjeneste(ForespørselTjeneste forespørselTjeneste,
                                          ArbeidsgiverNotifikasjon arbeidsgiverNotifikasjon,
                                          PersonTjeneste personTjeneste,
-                                         OrganisasjonTjeneste organisasjonTjeneste) {
+                                         OrganisasjonTjeneste organisasjonTjeneste, AltinnDialogportenKlient altinnDialogportenKlient) {
         this.forespørselTjeneste = forespørselTjeneste;
         this.arbeidsgiverNotifikasjon = arbeidsgiverNotifikasjon;
         this.personTjeneste = personTjeneste;
         this.organisasjonTjeneste = organisasjonTjeneste;
+        this.altinnDialogportenKlient = altinnDialogportenKlient;
         this.inntektsmeldingSkjemaLenke = ENV.getProperty("inntektsmelding.skjema.lenke", "https://arbeidsgiver.intern.dev.nav.no/fp-im-dialog");
     }
 
@@ -180,12 +184,14 @@ public class ForespørselBehandlingTjeneste {
             fagsakSaksnummer,
             førsteUttaksdato);
         var person = personTjeneste.hentPersonInfoFraAktørId(aktørId, ytelsetype);
+
+        var sakstittel = ForespørselTekster.lagSaksTittel(person.mapFulltNavn(), person.fødselsdato());
         var merkelapp = ForespørselTekster.finnMerkelapp(ytelsetype);
         var skjemaUri = URI.create(inntektsmeldingSkjemaLenke + "/" + uuid);
         var arbeidsgiverNotifikasjonSakId = arbeidsgiverNotifikasjon.opprettSak(uuid.toString(),
             merkelapp,
             organisasjonsnummer.orgnr(),
-            ForespørselTekster.lagSaksTittel(person.mapFulltNavn(), person.fødselsdato()),
+            sakstittel,
             skjemaUri);
 
         if (tilleggsinfo != null) {
@@ -211,6 +217,14 @@ public class ForespørselBehandlingTjeneste {
         }
 
         forespørselTjeneste.setOppgaveId(uuid, oppgaveId);
+
+        if (ENV.isDev()) {
+            opprettDialogportenForespørsel(uuid, organisasjonsnummer, sakstittel);
+        }
+    }
+
+    private void opprettDialogportenForespørsel(UUID uuid, OrganisasjonsnummerDto organisasjonsnummer, String sakstittel) {
+        altinnDialogportenKlient.opprettDialog(organisasjonsnummer.orgnr(), uuid.toString(), sakstittel);
     }
 
     public UUID opprettForespørselForArbeidsgiverInitiertIm(Ytelsetype ytelsetype,
