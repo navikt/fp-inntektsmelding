@@ -3,6 +3,7 @@ package no.nav.familie.inntektsmelding.pip;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -12,61 +13,69 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import no.nav.familie.inntektsmelding.integrasjoner.altinn.AltinnRettigheterProxyKlient;
+import no.nav.familie.inntektsmelding.integrasjoner.altinn.ArbeidsgiverAltinnTilgangerKlient;
 
 @ExtendWith(MockitoExtension.class)
 class AltinnTilgangTjenesteTest {
 
-  @Mock
-  private AltinnRettigheterProxyKlient altinnKlient;
+    @Mock
+    private AltinnRettigheterProxyKlient altinnKlient;
 
-  private AltinnTilgangTjeneste altinnTilgangTjeneste;
+    @Mock
+    private ArbeidsgiverAltinnTilgangerKlient arbeidsgiverAltinnTilgangerKlient;
 
-  @BeforeEach
-  void setUp() {
-    altinnTilgangTjeneste = new AltinnTilgangTjeneste(altinnKlient);
-  }
+    private AltinnTilgangTjeneste altinnTilgangTjeneste;
 
-  @Test
-  void harTilgangTilBedriften_skal_returnere_true_når_tilgang_finnes() {
-    String orgNr = "123456789";
-    when(altinnKlient.harTilgangTilBedriften(orgNr)).thenReturn(true);
+    @BeforeEach
+    void setUp() {
+        altinnTilgangTjeneste = new AltinnTilgangTjeneste(altinnKlient, arbeidsgiverAltinnTilgangerKlient);
+    }
 
-    boolean harTilgang = altinnTilgangTjeneste.harTilgangTilBedriften(orgNr);
+    @Test
+    void harTilgangTilBedriften_skal_returnere_true_når_tilgang_finnes() {
+        String orgNr = "123456789";
+        when(altinnKlient.harTilgangTilBedriften(orgNr)).thenReturn(true);
 
-    assertTrue(harTilgang);
-    verify(altinnKlient).harTilgangTilBedriften(orgNr);
-  }
+        boolean harTilgang = altinnTilgangTjeneste.harTilgangTilBedriften(orgNr);
 
-  @Test
-  void harTilgangTilBedriften_skal_returnere_false_når_tilgang_ikke_finnes() {
-    String orgNr = "123456789";
-    when(altinnKlient.harTilgangTilBedriften(orgNr)).thenReturn(false);
+        assertTrue(harTilgang);
+        verify(altinnKlient).harTilgangTilBedriften(orgNr);
+        verifyNoInteractions(arbeidsgiverAltinnTilgangerKlient);
+    }
 
-    boolean harTilgang = altinnTilgangTjeneste.harTilgangTilBedriften(orgNr);
+    @Test
+    void harTilgangTilBedriften_skal_returnere_false_når_tilgang_ikke_finnes() {
+        String orgNr = "123456789";
+        when(altinnKlient.harTilgangTilBedriften(orgNr)).thenReturn(false);
 
-    assertFalse(harTilgang);
-    verify(altinnKlient).harTilgangTilBedriften(orgNr);
-  }
+        boolean harTilgang = altinnTilgangTjeneste.harTilgangTilBedriften(orgNr);
 
-  @Test
-  void manglerTilgangTilBedriften_skal_returnere_true_når_tilgang_ikke_finnes() {
-    String orgNr = "123456789";
-    when(altinnKlient.harTilgangTilBedriften(orgNr)).thenReturn(false);
+        assertFalse(harTilgang);
+        verify(altinnKlient).harTilgangTilBedriften(orgNr);
+        verifyNoInteractions(arbeidsgiverAltinnTilgangerKlient);
+    }
 
-    boolean manglerTilgang = altinnTilgangTjeneste.manglerTilgangTilBedriften(orgNr);
+    @Test
+    void manglerTilgangTilBedriften_skal_returnere_true_når_tilgang_ikke_finnes() {
+        String orgNr = "123456789";
+        when(altinnKlient.harTilgangTilBedriften(orgNr)).thenReturn(false);
 
-    assertTrue(manglerTilgang);
-    verify(altinnKlient).harTilgangTilBedriften(orgNr);
-  }
+        boolean manglerTilgang = altinnTilgangTjeneste.manglerTilgangTilBedriften(orgNr);
 
-  @Test
-  void manglerTilgangTilBedriften_skal_returnere_false_når_tilgang_finnes() {
-    String orgNr = "123456789";
-    when(altinnKlient.harTilgangTilBedriften(orgNr)).thenReturn(true);
+        assertTrue(manglerTilgang);
+        verify(altinnKlient).harTilgangTilBedriften(orgNr);
+        verifyNoInteractions(arbeidsgiverAltinnTilgangerKlient);
+    }
 
-    boolean manglerTilgang = altinnTilgangTjeneste.manglerTilgangTilBedriften(orgNr);
+    @Test
+    void manglerTilgangTilBedriften_skal_returnere_false_når_tilgang_finnes() {
+        String orgNr = "123456789";
+        when(altinnKlient.harTilgangTilBedriften(orgNr)).thenReturn(true);
 
-    assertFalse(manglerTilgang);
-    verify(altinnKlient).harTilgangTilBedriften(orgNr);
-  }
+        boolean manglerTilgang = altinnTilgangTjeneste.manglerTilgangTilBedriften(orgNr);
+
+        assertFalse(manglerTilgang);
+        verify(altinnKlient).harTilgangTilBedriften(orgNr);
+        verifyNoInteractions(arbeidsgiverAltinnTilgangerKlient);
+    }
 }

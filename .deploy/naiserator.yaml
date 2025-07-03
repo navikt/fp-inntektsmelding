@@ -107,6 +107,8 @@ spec:
           namespace: nais-system
         - application: notifikasjon-produsent-api
           namespace: fager
+        - application: arbeidsgiver-altinn-tilganger
+          namespace: fager
         - application: altinn-rettigheter-proxy
           namespace: arbeidsgiver
         - application: fpdokgen
