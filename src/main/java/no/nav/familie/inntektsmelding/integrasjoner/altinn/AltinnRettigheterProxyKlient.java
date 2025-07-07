@@ -99,6 +99,7 @@ public class AltinnRettigheterProxyKlient {
     public List<String> hentBedrifterArbeidsgiverHarTilgangTil() {
         return gjørKallMedPagineringOgRetry().stream()
             .map(AltinnReportee::organizationNumber)
+            .sorted()
             .toList();
     }
 
