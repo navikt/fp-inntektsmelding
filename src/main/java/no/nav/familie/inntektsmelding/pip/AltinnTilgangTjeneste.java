@@ -57,7 +57,7 @@ public class AltinnTilgangTjeneste {
         if (ENV.isDev()) {
             try {
                 var arbeidsgiverHarTilgang = arbeidsgiverAltinnTilgangerKlient.hentBedrifterArbeidsgiverHarTilgangTil(BRUK_ALTINN_TRE_RESSURS);
-                if (harTilgangTil.equals(arbeidsgiverHarTilgang)) {
+                if (!harTilgangTil.equals(arbeidsgiverHarTilgang)) {
                     LOG.debug("ALTINN: Svar fra ny og gammel tilgangsklient er ulikt. Proxy: {}, ArbeidsgiverAltinnTilgangerKlient: {}",
                         harTilgangTil, arbeidsgiverHarTilgang);
                 }
