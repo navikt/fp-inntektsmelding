@@ -38,7 +38,7 @@ public class AltinnTilgangTjeneste {
             try {
                 var arbeidsgiverHarTilgang = arbeidsgiverAltinnTilgangerKlient.harTilgangTilBedriften(orgNr, BRUK_ALTINN_TRE_RESSURS);
                 if (proxyTilgang != arbeidsgiverHarTilgang) {
-                    LOG.info("ALTINN: Svar fra ny og gammel tilgangsklient er ulikt for orgNr: {}. Proxy: {}, ArbeidsgiverAltinnTilgangerKlient: {}",
+                    LOG.debug("ALTINN: Svar fra ny og gammel tilgangsklient er ulikt for orgNr: {}. Proxy: {}, ArbeidsgiverAltinnTilgangerKlient: {}",
                              orgNr, proxyTilgang, arbeidsgiverHarTilgang);
                 }
             } catch (Exception e) {
@@ -57,8 +57,8 @@ public class AltinnTilgangTjeneste {
         if (ENV.isDev()) {
             try {
                 var arbeidsgiverHarTilgang = arbeidsgiverAltinnTilgangerKlient.hentBedrifterArbeidsgiverHarTilgangTil(BRUK_ALTINN_TRE_RESSURS);
-                if (harTilgangTil != arbeidsgiverHarTilgang) {
-                    LOG.info("ALTINN: Svar fra ny og gammel tilgangsklient er ulikt. Proxy: {}, ArbeidsgiverAltinnTilgangerKlient: {}",
+                if (harTilgangTil.equals(arbeidsgiverHarTilgang)) {
+                    LOG.debug("ALTINN: Svar fra ny og gammel tilgangsklient er ulikt. Proxy: {}, ArbeidsgiverAltinnTilgangerKlient: {}",
                         harTilgangTil, arbeidsgiverHarTilgang);
                 }
             } catch (Exception e) {

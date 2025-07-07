@@ -77,7 +77,10 @@ public class ArbeidsgiverAltinnTilgangerKlient {
         } else {
             loggTilganger(tilgangTilOrgNr, ALTINN_TO_TJENESTE);
         }
-        return tilgangTilOrgNr.getOrDefault(finnRiktigAltinnRessurs(brukAltinnTreRessurs), List.of());
+        return tilgangTilOrgNr.getOrDefault(finnRiktigAltinnRessurs(brukAltinnTreRessurs), List.of())
+            .stream()
+            .sorted()
+            .toList();
     }
 
     private static String finnRiktigAltinnRessurs(boolean brukAltinnTreRessurs) {
