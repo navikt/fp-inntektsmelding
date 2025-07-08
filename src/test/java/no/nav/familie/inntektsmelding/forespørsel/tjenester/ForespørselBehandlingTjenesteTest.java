@@ -12,7 +12,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-import no.nav.familie.inntektsmelding.integrasjoner.altinn.AltinnDialogportenKlient;
+import no.nav.familie.inntektsmelding.integrasjoner.altinn.DialogportenKlient;
 import no.nav.familie.inntektsmelding.koder.ArbeidsgiverinitiertÅrsak;
 import no.nav.familie.inntektsmelding.koder.ForespørselType;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,7 +26,7 @@ import no.nav.familie.inntektsmelding.database.JpaExtension;
 import no.nav.familie.inntektsmelding.forespørsel.modell.ForespørselEntitet;
 import no.nav.familie.inntektsmelding.forespørsel.modell.ForespørselRepository;
 import no.nav.familie.inntektsmelding.forvaltning.rest.InntektsmeldingForespørselDto;
-import no.nav.familie.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon.ArbeidsgiverNotifikasjon;
+import no.nav.familie.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon.MinSideArbeidsgiverTjeneste;
 import no.nav.familie.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon.Merkelapp;
 import no.nav.familie.inntektsmelding.integrasjoner.organisasjon.Organisasjon;
 import no.nav.familie.inntektsmelding.integrasjoner.organisasjon.OrganisasjonTjeneste;
@@ -56,13 +56,13 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
     private static final Ytelsetype YTELSETYPE = Ytelsetype.FORELDREPENGER;
 
     @Mock
-    private ArbeidsgiverNotifikasjon arbeidsgiverNotifikasjon;
+    private MinSideArbeidsgiverTjeneste minSideArbeidsgiverTjeneste;
     @Mock
     private PersonTjeneste personTjeneste;
     @Mock
     private OrganisasjonTjeneste organisasjonTjeneste;
     @Mock
-    private AltinnDialogportenKlient altinnDialogportenKlient;
+    private DialogportenKlient dialogportenKlient;
 
     private ForespørselRepository forespørselRepository;
     private ForespørselBehandlingTjeneste forespørselBehandlingTjeneste;
@@ -71,10 +71,10 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
     void setUp() {
         this.forespørselRepository = new ForespørselRepository(getEntityManager());
         this.forespørselBehandlingTjeneste = new ForespørselBehandlingTjeneste(new ForespørselTjeneste(forespørselRepository),
-            arbeidsgiverNotifikasjon,
+            minSideArbeidsgiverTjeneste,
             personTjeneste,
             organisasjonTjeneste,
-            altinnDialogportenKlient);
+            dialogportenKlient);
     }
 
     @Test
@@ -384,7 +384,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             SKJÆRINGSTIDSPUNKT, ForespørselType.BESTILT_AV_FAGSYSTEM);
         forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, SAK_ID);
 
-        when(arbeidsgiverNotifikasjon.slettSak(SAK_ID)).thenReturn(SAK_ID);
+        when(minSideArbeidsgiverTjeneste.slettSak(SAK_ID)).thenReturn(SAK_ID);
 
         forespørselBehandlingTjeneste.slettForespørsel(new SaksnummerDto(SAKSNUMMMER), new OrganisasjonsnummerDto(BRREG_ORGNUMMER), null);
 
@@ -392,7 +392,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
         var lagret = forespørselRepository.hentForespørsel(forespørselUuid);
         assertThat(lagret.map(ForespørselEntitet::getStatus)).isEqualTo(Optional.of(ForespørselStatus.UTGÅTT));
-        verify(arbeidsgiverNotifikasjon, Mockito.times(1)).slettSak(SAK_ID);
+        verify(minSideArbeidsgiverTjeneste, Mockito.times(1)).slettSak(SAK_ID);
     }
 
     @Test
@@ -401,7 +401,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             SKJÆRINGSTIDSPUNKT, ForespørselType.BESTILT_AV_FAGSYSTEM);
         forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, SAK_ID);
 
-        when(arbeidsgiverNotifikasjon.slettSak(SAK_ID)).thenReturn(SAK_ID);
+        when(minSideArbeidsgiverTjeneste.slettSak(SAK_ID)).thenReturn(SAK_ID);
 
         forespørselBehandlingTjeneste.slettForespørsel(new SaksnummerDto(SAKSNUMMMER), null, null);
 
@@ -409,7 +409,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
         var lagret = forespørselRepository.hentForespørsel(forespørselUuid);
         assertThat(lagret.map(ForespørselEntitet::getStatus)).isEqualTo(Optional.of(ForespørselStatus.UTGÅTT));
-        verify(arbeidsgiverNotifikasjon, Mockito.times(1)).slettSak(SAK_ID);
+        verify(minSideArbeidsgiverTjeneste, Mockito.times(1)).slettSak(SAK_ID);
     }
 
     @Test
@@ -435,7 +435,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             null);
 
         when(organisasjonTjeneste.finnOrganisasjon(BRREG_ORGNUMMER)).thenReturn(new Organisasjon("Test A/S", BRREG_ORGNUMMER));
-        when(arbeidsgiverNotifikasjon.opprettNyBeskjedMedEksternVarsling(forespørselUuid.toString(),
+        when(minSideArbeidsgiverTjeneste.opprettNyBeskjedMedEksternVarsling(forespørselUuid.toString(),
             Merkelapp.INNTEKTSMELDING_FP,
             forespørselUuid.toString(),
             BRREG_ORGNUMMER,
@@ -450,7 +450,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         clearHibernateCache();
 
         assertThat(resultat).isEqualTo(NyBeskjedResultat.NY_BESKJED_SENDT);
-        verify(arbeidsgiverNotifikasjon, Mockito.times(1)).opprettNyBeskjedMedEksternVarsling(forespørselUuid.toString(),
+        verify(minSideArbeidsgiverTjeneste, Mockito.times(1)).opprettNyBeskjedMedEksternVarsling(forespørselUuid.toString(),
             Merkelapp.INNTEKTSMELDING_FP,
             forespørselUuid.toString(),
             BRREG_ORGNUMMER,
@@ -591,8 +591,8 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         var sakTittel = ForespørselTekster.lagSaksTittel(personInfo.mapFulltNavn(), personInfo.fødselsdato());
 
         lenient().when(personTjeneste.hentPersonInfoFraAktørId(new AktørIdEntitet(aktørId), ytelsetype)).thenReturn(personInfo);
-        lenient().when(arbeidsgiverNotifikasjon.opprettOppgave(any(), any(), any(), eq(brregOrgnummer), any(), any(), any(), any()))
+        lenient().when(minSideArbeidsgiverTjeneste.opprettOppgave(any(), any(), any(), eq(brregOrgnummer), any(), any(), any(), any()))
             .thenReturn(oppgaveId);
-        lenient().when(arbeidsgiverNotifikasjon.opprettSak(any(), any(), eq(brregOrgnummer), eq(sakTittel), any())).thenReturn(sakId);
+        lenient().when(minSideArbeidsgiverTjeneste.opprettSak(any(), any(), eq(brregOrgnummer), eq(sakTittel), any())).thenReturn(sakId);
     }
 }

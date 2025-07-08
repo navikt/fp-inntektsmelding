@@ -23,20 +23,20 @@ import no.nav.vedtak.mapper.json.DefaultJsonMapper;
 
 @Dependent
 @RestClientConfig(tokenConfig = TokenFlow.AZUREAD_CC, endpointProperty = "arbeidsgiver.notifikasjon.url", endpointDefault = "http://notifikasjon-produsent-api.fager/api/graphql", scopesProperty = "arbeidsgiver.notifikasjon.scopes", scopesDefault = "api://prod-gcp.fager.notifikasjon-produsent-api/.default")
-class ArbeidsgiverNotifikasjonKlient {
+class MinSideArbeidsgiverKlient {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ArbeidsgiverNotifikasjonKlient.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MinSideArbeidsgiverKlient.class);
 
     private static final String ERROR_RESPONSE = "F-102030";
 
     private final RestClient restKlient;
     private final RestConfig restConfig;
 
-    ArbeidsgiverNotifikasjonKlient() {
+    MinSideArbeidsgiverKlient() {
         this(RestClient.client());
     }
 
-    public ArbeidsgiverNotifikasjonKlient(RestClient restKlient) {
+    public MinSideArbeidsgiverKlient(RestClient restKlient) {
         this.restKlient = restKlient;
         this.restConfig = RestConfig.forClient(this.getClass());
     }

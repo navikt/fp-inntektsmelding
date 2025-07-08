@@ -24,16 +24,16 @@ import no.nav.vedtak.felles.integrasjon.rest.RestClient;
 import no.nav.vedtak.felles.integrasjon.rest.RestRequest;
 
 @ExtendWith(MockitoExtension.class)
-class ArbeidsgiverNotifikasjonKlientTest {
+class MinSideArbeidsgiverTjenesteKlientTest {
 
     @Mock
     RestClient restClient;
 
-    private ArbeidsgiverNotifikasjonKlient agKlient;
+    private MinSideArbeidsgiverKlient agKlient;
 
     @BeforeEach
     void setUp() {
-        agKlient = new ArbeidsgiverNotifikasjonKlient(restClient);
+        agKlient = new MinSideArbeidsgiverKlient(restClient);
     }
 
     @Nested

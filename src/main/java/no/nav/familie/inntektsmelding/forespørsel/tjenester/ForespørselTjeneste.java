@@ -29,13 +29,13 @@ public class ForespørselTjeneste {
     public ForespørselTjeneste() {
     }
 
-    public UUID opprettForespørsel(LocalDate skjæringstidspunkt,
-                                   Ytelsetype ytelseType,
-                                   AktørIdEntitet brukerAktørId,
-                                   OrganisasjonsnummerDto orgnr,
-                                   SaksnummerDto fagsakSaksnummer,
-                                   LocalDate førsteUttaksdato) {
-        return forespørselRepository.lagreForespørsel(skjæringstidspunkt, ytelseType, brukerAktørId.getAktørId(), orgnr.orgnr(),
+    public ForespørselEntitet opprettForespørsel(LocalDate skjæringstidspunkt,
+                                                 Ytelsetype ytelseType,
+                                                 AktørIdEntitet brukerAktørId,
+                                                 OrganisasjonsnummerDto orgnr,
+                                                 SaksnummerDto fagsakSaksnummer,
+                                                 LocalDate førsteUttaksdato) {
+        return forespørselRepository.lagreForespørselReturnEntitet(skjæringstidspunkt, ytelseType, brukerAktørId.getAktørId(), orgnr.orgnr(),
             fagsakSaksnummer.saksnr(), førsteUttaksdato, ForespørselType.BESTILT_AV_FAGSYSTEM);
     }
 

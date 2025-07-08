@@ -3,9 +3,11 @@ package no.nav.familie.inntektsmelding.integrasjoner.altinn;
 import java.net.URI;
 import java.net.http.HttpResponse;
 import java.util.List;
+import java.util.UUID;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
+import no.nav.familie.inntektsmelding.forespørsel.modell.ForespørselEntitet;
 import no.nav.vedtak.exception.IntegrasjonException;
 
 import org.slf4j.Logger;
@@ -20,8 +22,8 @@ import no.nav.vedtak.felles.integrasjon.rest.TokenFlow;
 
 @ApplicationScoped
 @RestClientConfig(tokenConfig = TokenFlow.NO_AUTH_NEEDED, endpointProperty = "altinn.tre.base.url", scopesProperty = "maskinporten.dialogporten.scope")
-public class AltinnDialogportenKlient {
-    private static final Logger LOG = LoggerFactory.getLogger(AltinnDialogportenKlient.class);
+public class DialogportenKlient {
+    private static final Logger LOG = LoggerFactory.getLogger(DialogportenKlient.class);
 
     private static final Environment ENV = Environment.current();
 
@@ -32,25 +34,29 @@ public class AltinnDialogportenKlient {
     private final AltinnExchangeTokenKlient tokenKlient;
     private String inntektsmeldingSkjemaLenke;
 
-    AltinnDialogportenKlient() {
+    DialogportenKlient() {
         this(RestClient.client());
     }
 
-    public AltinnDialogportenKlient(RestClient restClient) {
+    public DialogportenKlient(RestClient restClient) {
         this.restClient = restClient;
         this.restConfig = RestConfig.forClient(this.getClass());
         this.tokenKlient = AltinnExchangeTokenKlient.instance();
         this.inntektsmeldingSkjemaLenke = ENV.getProperty("inntektsmelding.skjema.lenke", "https://arbeidsgiver.intern.dev.nav.no/fp-im-dialog");
     }
 
-    public String opprettDialog(String organisasjonsnummer, String forespørselUuid, String sakstittel) {
+    public String opprettDialog(String orgnr, UUID forespørselUuid, String sakstittel) {
         var target = URI.create(restConfig.endpoint().toString() + "/dialogporten/api/v1/serviceowner/dialogs");
-        var bodyRequest = lagDialogportenBody(organisasjonsnummer, forespørselUuid, sakstittel);
+        var bodyRequest = lagDialogportenBody(orgnr, forespørselUuid.toString(), sakstittel);
         var request = RestRequest.newPOSTJson(bodyRequest, target, restConfig)
             .otherAuthorizationSupplier(() -> tokenKlient.hentAltinnToken(this.restConfig.scopes()));
 
         var response = restClient.sendReturnUnhandled(request);
         return handleResponse(response);
+    }
+
+    public String opprettDialog(ForespørselEntitet forespørselEntitet, String sakstittel) {
+        return opprettDialog(forespørselEntitet.getOrganisasjonsnummer(), forespørselEntitet.getUuid(), sakstittel);
     }
 
     private String handleResponse(HttpResponse<String> response) {
