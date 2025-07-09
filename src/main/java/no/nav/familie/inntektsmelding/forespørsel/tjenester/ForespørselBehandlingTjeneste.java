@@ -178,56 +178,56 @@ public class ForespørselBehandlingTjeneste {
         LOG.info(msg);
 
         // Oppretter forespørsel i lokal database
-        var forespørselEntitet = forespørselTjeneste.opprettForespørsel(skjæringstidspunkt,
+        var forespørselUuid = forespørselTjeneste.opprettForespørsel(skjæringstidspunkt,
             ytelsetype,
             aktørId,
             organisasjonsnummer,
             fagsakSaksnummer,
             førsteUttaksdato);
 
-        opprettForespørselMinSideArbeidsgiver(forespørselEntitet);
+        opprettForespørselMinSideArbeidsgiver(forespørselUuid, organisasjonsnummer, aktørId, ytelsetype);
 
         if (ENV.isDev()) {
-            opprettForespørselDialogporten(forespørselEntitet);
+            opprettForespørselDialogporten(forespørselUuid, organisasjonsnummer, aktørId, ytelsetype);
         }
     }
 
-    private void opprettForespørselMinSideArbeidsgiver(ForespørselEntitet forespørselEntitet) {
-        var organisasjon = organisasjonTjeneste.finnOrganisasjon(forespørselEntitet.getOrganisasjonsnummer());
+    private void opprettForespørselMinSideArbeidsgiver(UUID forespørselUuid,  OrganisasjonsnummerDto orgnummer, AktørIdEntitet aktørIdEntitet, Ytelsetype ytelsetype) {
+        var organisasjon = organisasjonTjeneste.finnOrganisasjon(orgnummer.orgnr());
 
-        var person = personTjeneste.hentPersonInfoFraAktørId(forespørselEntitet.getAktørId(), forespørselEntitet.getYtelseType());
+        var person = personTjeneste.hentPersonInfoFraAktørId(aktørIdEntitet, ytelsetype);
 
-        var merkelapp = ForespørselTekster.finnMerkelapp(forespørselEntitet.getYtelseType());
-        var skjemaUri = URI.create(inntektsmeldingSkjemaLenke + "/" + forespørselEntitet.getUuid());
-        var arbeidsgiverNotifikasjonSakId = minSideArbeidsgiverTjeneste.opprettSak(forespørselEntitet.getUuid().toString(),
+        var merkelapp = ForespørselTekster.finnMerkelapp(ytelsetype);
+        var skjemaUri = URI.create(inntektsmeldingSkjemaLenke + "/" + forespørselUuid);
+        var arbeidsgiverNotifikasjonSakId = minSideArbeidsgiverTjeneste.opprettSak(forespørselUuid.toString(),
             merkelapp,
-            forespørselEntitet.getOrganisasjonsnummer(),
+            orgnummer.orgnr(),
             ForespørselTekster.lagSaksTittel(person.mapFulltNavn(), person.fødselsdato()),
             skjemaUri);
 
-        forespørselTjeneste.setArbeidsgiverNotifikasjonSakId(forespørselEntitet.getUuid(), arbeidsgiverNotifikasjonSakId);
+        forespørselTjeneste.setArbeidsgiverNotifikasjonSakId(forespørselUuid, arbeidsgiverNotifikasjonSakId);
 
         String oppgaveId;
         try {
-            oppgaveId = minSideArbeidsgiverTjeneste.opprettOppgave(forespørselEntitet.getUuid().toString(),
+            oppgaveId = minSideArbeidsgiverTjeneste.opprettOppgave(forespørselUuid.toString(),
                 merkelapp,
-                forespørselEntitet.getUuid().toString(),
-                forespørselEntitet.getOrganisasjonsnummer(),
-                ForespørselTekster.lagOppgaveTekst(forespørselEntitet.getYtelseType()),
-                ForespørselTekster.lagVarselTekst(forespørselEntitet.getYtelseType(), organisasjon),
-                ForespørselTekster.lagPåminnelseTekst(forespørselEntitet.getYtelseType(), organisasjon),
+                forespørselUuid.toString(),
+                orgnummer.orgnr(),
+                ForespørselTekster.lagOppgaveTekst(ytelsetype),
+                ForespørselTekster.lagVarselTekst(ytelsetype, organisasjon),
+                ForespørselTekster.lagPåminnelseTekst(ytelsetype, organisasjon),
                 skjemaUri);
         } catch (Exception e) {
             //Manuell rollback er nødvendig fordi sak og oppgave går i to forskjellige kall
             minSideArbeidsgiverTjeneste.slettSak(arbeidsgiverNotifikasjonSakId);
             throw e;
         }
-        forespørselTjeneste.setOppgaveId(forespørselEntitet.getUuid(), oppgaveId);
+        forespørselTjeneste.setOppgaveId(forespørselUuid, oppgaveId);
     }
 
-    private void opprettForespørselDialogporten(ForespørselEntitet forespørselEntitet) {
-        var person = personTjeneste.hentPersonInfoFraAktørId(forespørselEntitet.getAktørId(), forespørselEntitet.getYtelseType());
-        dialogportenKlient.opprettDialog(forespørselEntitet, ForespørselTekster.lagSaksTittel(person.mapFulltNavn(), person.fødselsdato()));
+    private void opprettForespørselDialogporten(UUID forespørselUuid, OrganisasjonsnummerDto orgnummer, AktørIdEntitet aktørIdEntitet, Ytelsetype ytelsetype) {
+        var person = personTjeneste.hentPersonInfoFraAktørId(aktørIdEntitet, ytelsetype);
+        dialogportenKlient.opprettDialog(forespørselUuid, orgnummer, ForespørselTekster.lagSaksTittel(person.mapFulltNavn(), person.fødselsdato()));
     }
 
     public UUID opprettForespørselForArbeidsgiverInitiertIm(Ytelsetype ytelsetype,

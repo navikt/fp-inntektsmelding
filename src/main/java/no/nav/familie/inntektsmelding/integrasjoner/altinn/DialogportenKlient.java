@@ -7,7 +7,7 @@ import java.util.UUID;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
-import no.nav.familie.inntektsmelding.forespørsel.modell.ForespørselEntitet;
+import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.vedtak.exception.IntegrasjonException;
 
 import org.slf4j.Logger;
@@ -45,18 +45,14 @@ public class DialogportenKlient {
         this.inntektsmeldingSkjemaLenke = ENV.getProperty("inntektsmelding.skjema.lenke", "https://arbeidsgiver.intern.dev.nav.no/fp-im-dialog");
     }
 
-    public String opprettDialog(String orgnr, UUID forespørselUuid, String sakstittel) {
+    public String opprettDialog(UUID forespørselUuid, OrganisasjonsnummerDto orgnr, String sakstittel) {
         var target = URI.create(restConfig.endpoint().toString() + "/dialogporten/api/v1/serviceowner/dialogs");
-        var bodyRequest = lagDialogportenBody(orgnr, forespørselUuid.toString(), sakstittel);
+        var bodyRequest = lagDialogportenBody(orgnr, forespørselUuid, sakstittel);
         var request = RestRequest.newPOSTJson(bodyRequest, target, restConfig)
             .otherAuthorizationSupplier(() -> tokenKlient.hentAltinnToken(this.restConfig.scopes()));
 
         var response = restClient.sendReturnUnhandled(request);
         return handleResponse(response);
-    }
-
-    public String opprettDialog(ForespørselEntitet forespørselEntitet, String sakstittel) {
-        return opprettDialog(forespørselEntitet.getOrganisasjonsnummer(), forespørselEntitet.getUuid(), sakstittel);
     }
 
     private String handleResponse(HttpResponse<String> response) {
@@ -67,8 +63,8 @@ public class DialogportenKlient {
         throw new IntegrasjonException("FPINNTEKTSMELDING-542684", "Feil ved kall til dialogporten");
     }
 
-    private DialogportenRequest lagDialogportenBody(String organisasjonsnummer, String forespørselUuid, String sakstittel) {
-        var party = String.format("urn:altinn:organization:identifier-no:%s", organisasjonsnummer);
+    private DialogportenRequest lagDialogportenBody(OrganisasjonsnummerDto organisasjonsnummer, UUID forespørselUuid, String sakstittel) {
+        var party = String.format("urn:altinn:organization:identifier-no:%s", organisasjonsnummer.orgnr());
         var contentTransmission = new DialogportenRequest.Content(lagContentValue(sakstittel), lagContentValue("Nav trenger inntektsmelding"));
         var contentRequest = new DialogportenRequest.Content(lagContentValue("Send inn inntektsmelding"), lagContentValue("Send inn inntektsmelding"));
         var transmission = new DialogportenRequest.Transmission(DialogportenRequest.TransmissionType.Request,
@@ -77,12 +73,12 @@ public class DialogportenKlient {
             contentRequest,
             List.of());
         var apiAction = new DialogportenRequest.ApiAction("Hent forespørsel om inntektsmelding",
-            List.of(new DialogportenRequest.Endpoint(inntektsmeldingSkjemaLenke + "/" + forespørselUuid, DialogportenRequest.HttpMethod.GET, null)), DialogportenRequest.ACTION_READ);
+            List.of(new DialogportenRequest.Endpoint(inntektsmeldingSkjemaLenke + "/" + forespørselUuid.toString(), DialogportenRequest.HttpMethod.GET, null)), DialogportenRequest.ACTION_READ);
         var foreldrepengerRessurs = Environment.current().getProperty("altinn.tre.inntektsmelding.ressurs");
         var altinnressursFP = ALTINN_RESSURS_PREFIX + foreldrepengerRessurs;
         return new DialogportenRequest(altinnressursFP,
             party,
-            forespørselUuid,
+            forespørselUuid.toString(),
             DialogportenRequest.DialogStatus.RequiresAttention, contentTransmission,
             List.of(transmission),
             List.of(apiAction));

@@ -56,7 +56,7 @@ public class DialogportenForvaltningRestTjeneste {
         }
         sjekkAtKallerHarRollenDrift();
         LOG.info("Oppretter en dialog for foresprørselUuid {} og organisasjonsnummer {}", opprettNyDialogDto.forespørselUuid(), opprettNyDialogDto.organisasjonsnummer().orgnr());
-        return Response.accepted(dialogportenKlient.opprettDialog(opprettNyDialogDto.organisasjonsnummer().orgnr(), opprettNyDialogDto.forespørselUuid(), "Foresprøsel om inntektsmelding")).build();
+        return Response.accepted(dialogportenKlient.opprettDialog(opprettNyDialogDto.forespørselUuid(), opprettNyDialogDto.organisasjonsnummer(), "Foresprøsel om inntektsmelding")).build();
     }
 
     private void sjekkAtKallerHarRollenDrift() {
