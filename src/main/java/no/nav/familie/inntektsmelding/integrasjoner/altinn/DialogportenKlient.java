@@ -10,9 +10,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.vedtak.exception.IntegrasjonException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import no.nav.foreldrepenger.konfig.Environment;
 import no.nav.vedtak.felles.integrasjon.rest.RestClient;
 import no.nav.vedtak.felles.integrasjon.rest.RestClientConfig;
@@ -23,8 +20,6 @@ import no.nav.vedtak.felles.integrasjon.rest.TokenFlow;
 @ApplicationScoped
 @RestClientConfig(tokenConfig = TokenFlow.NO_AUTH_NEEDED, endpointProperty = "altinn.tre.base.url", scopesProperty = "maskinporten.dialogporten.scope")
 public class DialogportenKlient {
-    private static final Logger LOG = LoggerFactory.getLogger(DialogportenKlient.class);
-
     private static final Environment ENV = Environment.current();
 
     private static final String ALTINN_RESSURS_PREFIX = "urn:altinn:resource:";
@@ -58,9 +53,10 @@ public class DialogportenKlient {
     private String handleResponse(HttpResponse<String> response) {
         if (response.statusCode() >= 200 && response.statusCode() < 300) {
             return response.body();
+        } else {
+            String msg = String.format("Kall til Altinn dialogporten feilet med statuskode %s. Full feilmelding var: %s", response.statusCode(), response.body());
+            throw new IntegrasjonException("FPINNTEKTSMELDING-542684", msg);
         }
-        LOG.warn("Kall til Altinn dialogporten feilet med statuskode {}. Full feilmelding var: {}", response.statusCode(), response.body());
-        throw new IntegrasjonException("FPINNTEKTSMELDING-542684", "Feil ved kall til dialogporten");
     }
 
     private DialogportenRequest lagDialogportenBody(OrganisasjonsnummerDto organisasjonsnummer, UUID forespørselUuid, String sakstittel) {

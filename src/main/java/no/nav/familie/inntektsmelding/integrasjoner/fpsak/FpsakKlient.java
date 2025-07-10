@@ -12,6 +12,8 @@ import jakarta.ws.rs.core.UriBuilder;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
 
+import no.nav.vedtak.exception.IntegrasjonException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,8 +56,7 @@ public class FpsakKlient {
             return restClient.sendReturnOptional(request, InfoOmSakInntektsmeldingResponse.class)
                 .orElseThrow(() -> new IllegalStateException("Klarte ikke hente sakstatus fra fpsak"));
         } catch (Exception e) {
-            LOG.warn("FP-INNTEKTSMELDING: Integrasjonsfeil mot fpsak. Klarte ikke hente sakstatus. Fikk feil: {}", e.toString());
-            throw e;
+            throw new IntegrasjonException("FPINNTEKTSMELDING-694578", "Integrasjonsfeil mot fpsak. Klarte ikke hente sakstatus. Fikk feil: " + e);
         }
     }
     public boolean harSøkerSakIFagsystem(AktørIdEntitet aktørIdEntitet, Ytelsetype ytelsetype) {
