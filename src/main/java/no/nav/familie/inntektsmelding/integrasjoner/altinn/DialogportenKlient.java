@@ -10,9 +10,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.vedtak.exception.IntegrasjonException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import no.nav.foreldrepenger.konfig.Environment;
 import no.nav.vedtak.felles.integrasjon.rest.RestClient;
 import no.nav.vedtak.felles.integrasjon.rest.RestClientConfig;
@@ -23,8 +20,6 @@ import no.nav.vedtak.felles.integrasjon.rest.TokenFlow;
 @ApplicationScoped
 @RestClientConfig(tokenConfig = TokenFlow.NO_AUTH_NEEDED, endpointProperty = "altinn.tre.base.url", scopesProperty = "maskinporten.dialogporten.scope")
 public class DialogportenKlient {
-    private static final Logger LOG = LoggerFactory.getLogger(DialogportenKlient.class);
-
     private static final Environment ENV = Environment.current();
 
     private static final String ALTINN_RESSURS_PREFIX = "urn:altinn:resource:";
