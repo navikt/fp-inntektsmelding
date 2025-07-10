@@ -1,12 +1,11 @@
 package no.nav.familie.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon;
 
-import static no.nav.familie.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon.ArbeidsgiverNotifikasjonTjeneste.SERVICE_CODE;
-import static no.nav.familie.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon.ArbeidsgiverNotifikasjonTjeneste.SERVICE_EDITION_CODE;
+import static no.nav.familie.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon.MinSideArbeidsgiverTjenesteImpl.SERVICE_CODE;
+import static no.nav.familie.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon.MinSideArbeidsgiverTjenesteImpl.SERVICE_EDITION_CODE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 
 import java.net.URI;
-import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -19,16 +18,16 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class ArbeidsgiverNotifikasjonTjenesteTest {
+class MinSideArbeidsgiverTjenesteTjenesteTest {
 
     @Mock
-    ArbeidsgiverNotifikasjonKlient klient;
+    MinSideArbeidsgiverKlient klient;
 
-    private ArbeidsgiverNotifikasjon tjeneste;
+    private MinSideArbeidsgiverTjeneste tjeneste;
 
     @BeforeEach
     void setUp() {
-        tjeneste = new ArbeidsgiverNotifikasjonTjeneste(klient);
+        tjeneste = new MinSideArbeidsgiverTjenesteImpl(klient);
     }
 
     @Test
@@ -195,7 +194,7 @@ class ArbeidsgiverNotifikasjonTjenesteTest {
         assertThat(input).containsOnlyKeys("id", "overstyrStatustekstMed", "nyStatus", "idempotencyKey", "hardDelete", "tidspunkt", "nyLenkeTilSak")
             .containsEntry("id", expectedId)
             .containsEntry("nyStatus", SaksStatus.FERDIG)
-            .containsEntry("overstyrStatustekstMed", ArbeidsgiverNotifikasjonTjeneste.SAK_STATUS_TEKST_ARBEIDSGIVERINITIERT);
+            .containsEntry("overstyrStatustekstMed", MinSideArbeidsgiverTjenesteImpl.SAK_STATUS_TEKST_ARBEIDSGIVERINITIERT);
 
         assertThat(input.get("idempotencyKey")).isNull();
         assertThat(input.get("hardDelete")).isNull();

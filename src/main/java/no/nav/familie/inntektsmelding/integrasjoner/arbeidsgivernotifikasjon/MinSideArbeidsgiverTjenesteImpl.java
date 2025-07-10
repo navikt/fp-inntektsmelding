@@ -14,7 +14,7 @@ import jakarta.inject.Inject;
 import no.nav.foreldrepenger.konfig.Environment;
 
 @ApplicationScoped
-class ArbeidsgiverNotifikasjonTjeneste implements ArbeidsgiverNotifikasjon {
+class MinSideArbeidsgiverTjenesteImpl implements MinSideArbeidsgiverTjeneste {
 
     static final String SERVICE_CODE = "4936";
     static final String SERVICE_EDITION_CODE = "1";
@@ -23,10 +23,10 @@ class ArbeidsgiverNotifikasjonTjeneste implements ArbeidsgiverNotifikasjon {
     static final Sendevindu VARSEL_SENDEVINDU = Sendevindu.LOEPENDE;
     static final int PÅMINNELSE_ETTER_DAGER = Environment.current().getProperty("paaminnelse.etter.dager", int.class, 14);
 
-    private ArbeidsgiverNotifikasjonKlient klient;
+    private MinSideArbeidsgiverKlient klient;
 
     @Inject
-    public ArbeidsgiverNotifikasjonTjeneste(ArbeidsgiverNotifikasjonKlient klient) {
+    public MinSideArbeidsgiverTjenesteImpl(MinSideArbeidsgiverKlient klient) {
         this.klient = klient;
     }
 

@@ -34,7 +34,6 @@ public class ForespørselRepository {
         this.entityManager = entityManager;
     }
 
-
     public UUID lagreForespørsel(LocalDate skjæringstidspunkt, Ytelsetype ytelsetype, String aktørId, String orgnummer, String fagsakSaksnummer,
                                  LocalDate førsteUttaksdato, ForespørselType forespørselType) {
         var forespørselEntitet = new ForespørselEntitet(orgnummer,

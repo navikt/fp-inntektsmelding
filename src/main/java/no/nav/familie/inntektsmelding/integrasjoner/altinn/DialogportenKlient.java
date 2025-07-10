@@ -3,9 +3,11 @@ package no.nav.familie.inntektsmelding.integrasjoner.altinn;
 import java.net.URI;
 import java.net.http.HttpResponse;
 import java.util.List;
+import java.util.UUID;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
+import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.vedtak.exception.IntegrasjonException;
 
 import org.slf4j.Logger;
@@ -20,8 +22,8 @@ import no.nav.vedtak.felles.integrasjon.rest.TokenFlow;
 
 @ApplicationScoped
 @RestClientConfig(tokenConfig = TokenFlow.NO_AUTH_NEEDED, endpointProperty = "altinn.tre.base.url", scopesProperty = "maskinporten.dialogporten.scope")
-public class AltinnDialogportenKlient {
-    private static final Logger LOG = LoggerFactory.getLogger(AltinnDialogportenKlient.class);
+public class DialogportenKlient {
+    private static final Logger LOG = LoggerFactory.getLogger(DialogportenKlient.class);
 
     private static final Environment ENV = Environment.current();
 
@@ -32,20 +34,20 @@ public class AltinnDialogportenKlient {
     private final AltinnExchangeTokenKlient tokenKlient;
     private String inntektsmeldingSkjemaLenke;
 
-    AltinnDialogportenKlient() {
+    DialogportenKlient() {
         this(RestClient.client());
     }
 
-    public AltinnDialogportenKlient(RestClient restClient) {
+    public DialogportenKlient(RestClient restClient) {
         this.restClient = restClient;
         this.restConfig = RestConfig.forClient(this.getClass());
         this.tokenKlient = AltinnExchangeTokenKlient.instance();
         this.inntektsmeldingSkjemaLenke = ENV.getProperty("inntektsmelding.skjema.lenke", "https://arbeidsgiver.intern.dev.nav.no/fp-im-dialog");
     }
 
-    public String opprettDialog(String organisasjonsnummer, String forespørselUuid, String sakstittel) {
+    public String opprettDialog(UUID forespørselUuid, OrganisasjonsnummerDto orgnr, String sakstittel) {
         var target = URI.create(restConfig.endpoint().toString() + "/dialogporten/api/v1/serviceowner/dialogs");
-        var bodyRequest = lagDialogportenBody(organisasjonsnummer, forespørselUuid, sakstittel);
+        var bodyRequest = lagDialogportenBody(orgnr, forespørselUuid, sakstittel);
         var request = RestRequest.newPOSTJson(bodyRequest, target, restConfig)
             .otherAuthorizationSupplier(() -> tokenKlient.hentAltinnToken(this.restConfig.scopes()));
 
@@ -61,8 +63,8 @@ public class AltinnDialogportenKlient {
         throw new IntegrasjonException("FPINNTEKTSMELDING-542684", "Feil ved kall til dialogporten");
     }
 
-    private DialogportenRequest lagDialogportenBody(String organisasjonsnummer, String forespørselUuid, String sakstittel) {
-        var party = String.format("urn:altinn:organization:identifier-no:%s", organisasjonsnummer);
+    private DialogportenRequest lagDialogportenBody(OrganisasjonsnummerDto organisasjonsnummer, UUID forespørselUuid, String sakstittel) {
+        var party = String.format("urn:altinn:organization:identifier-no:%s", organisasjonsnummer.orgnr());
         var contentTransmission = new DialogportenRequest.Content(lagContentValue(sakstittel), lagContentValue("Nav trenger inntektsmelding"));
         var contentRequest = new DialogportenRequest.Content(lagContentValue("Send inn inntektsmelding"), lagContentValue("Send inn inntektsmelding"));
         var transmission = new DialogportenRequest.Transmission(DialogportenRequest.TransmissionType.Request,
@@ -71,12 +73,12 @@ public class AltinnDialogportenKlient {
             contentRequest,
             List.of());
         var apiAction = new DialogportenRequest.ApiAction("Hent forespørsel om inntektsmelding",
-            List.of(new DialogportenRequest.Endpoint(inntektsmeldingSkjemaLenke + "/" + forespørselUuid, DialogportenRequest.HttpMethod.GET, null)), DialogportenRequest.ACTION_READ);
+            List.of(new DialogportenRequest.Endpoint(inntektsmeldingSkjemaLenke + "/" + forespørselUuid.toString(), DialogportenRequest.HttpMethod.GET, null)), DialogportenRequest.ACTION_READ);
         var foreldrepengerRessurs = Environment.current().getProperty("altinn.tre.inntektsmelding.ressurs");
         var altinnressursFP = ALTINN_RESSURS_PREFIX + foreldrepengerRessurs;
         return new DialogportenRequest(altinnressursFP,
             party,
-            forespørselUuid,
+            forespørselUuid.toString(),
             DialogportenRequest.DialogStatus.RequiresAttention, contentTransmission,
             List.of(transmission),
             List.of(apiAction));

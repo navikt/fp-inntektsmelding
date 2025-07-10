@@ -11,7 +11,9 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import no.nav.familie.inntektsmelding.integrasjoner.altinn.AltinnDialogportenKlient;
+
+import no.nav.familie.inntektsmelding.forespørsel.modell.ForespørselEntitet;
+import no.nav.familie.inntektsmelding.integrasjoner.altinn.DialogportenKlient;
 import no.nav.familie.inntektsmelding.server.auth.api.AutentisertMedAzure;
 import no.nav.familie.inntektsmelding.server.auth.api.Tilgangskontrollert;
 import no.nav.familie.inntektsmelding.server.tilgangsstyring.Tilgang;
@@ -31,16 +33,16 @@ public class DialogportenForvaltningRestTjeneste {
     private static final Logger LOG = LoggerFactory.getLogger(DialogportenForvaltningRestTjeneste.class);
     private static final boolean IS_PROD = Environment.current().isProd();
     private Tilgang tilgang;
-    private AltinnDialogportenKlient altinnDialogportenKlient;
+    private DialogportenKlient dialogportenKlient;
 
     DialogportenForvaltningRestTjeneste() {
         // REST CDI
     }
 
     @Inject
-    public DialogportenForvaltningRestTjeneste(Tilgang tilgang, AltinnDialogportenKlient altinnDialogportenKlient) {
+    public DialogportenForvaltningRestTjeneste(Tilgang tilgang, DialogportenKlient dialogportenKlient) {
         this.tilgang = tilgang;
-        this.altinnDialogportenKlient = altinnDialogportenKlient;
+        this.dialogportenKlient = dialogportenKlient;
     }
 
     @POST
@@ -54,7 +56,7 @@ public class DialogportenForvaltningRestTjeneste {
         }
         sjekkAtKallerHarRollenDrift();
         LOG.info("Oppretter en dialog for foresprørselUuid {} og organisasjonsnummer {}", opprettNyDialogDto.forespørselUuid(), opprettNyDialogDto.organisasjonsnummer().orgnr());
-        return Response.accepted(altinnDialogportenKlient.opprettDialog(opprettNyDialogDto.organisasjonsnummer().orgnr(), opprettNyDialogDto.forespørselUuid().toString(), "Foresprøsel om inntektsmelding")).build();
+        return Response.accepted(dialogportenKlient.opprettDialog(opprettNyDialogDto.forespørselUuid(), opprettNyDialogDto.organisasjonsnummer(), "Foresprøsel om inntektsmelding")).build();
     }
 
     private void sjekkAtKallerHarRollenDrift() {
