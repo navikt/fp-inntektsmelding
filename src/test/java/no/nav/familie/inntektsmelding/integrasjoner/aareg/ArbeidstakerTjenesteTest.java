@@ -7,10 +7,6 @@ import static org.mockito.Mockito.when;
 import java.time.LocalDate;
 import java.util.List;
 
-import no.nav.familie.inntektsmelding.integrasjoner.aareg.dto.AnsettelsesperiodeDto;
-
-import no.nav.familie.inntektsmelding.integrasjoner.aareg.dto.PeriodeDto;
-
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.vedtak.konfig.Tid;
 
@@ -99,6 +95,7 @@ class ArbeidstakerTjenesteTest {
         assertThat(arbeidsforhold.organisasjonsnummer()).isEqualTo("00000001");
         assertThat(arbeidsforhold.ansettelsesperiode()).isEqualTo(ansettelsesPeriode2);
     }
+
     @Test
     void returnerer_organisasjoner_innsender_har_tilgang_til() {
         var organisasjoner = List.of("000000000", "000000001", "000000002");
@@ -108,7 +105,8 @@ class ArbeidstakerTjenesteTest {
 
         var resultat = arbeidstakerTjeneste.finnOrganisasjonerArbeidsgiverHarTilgangTil(TILFELDIG_PERSON_IDENT);
 
-        assertThat(resultat).hasSize(3);
-        assertThat(resultat).isEqualTo(forventetListe);
+        assertThat(resultat)
+            .hasSize(3)
+            .isEqualTo(forventetListe);
     }
 }

@@ -58,9 +58,10 @@ public class DialogportenKlient {
     private String handleResponse(HttpResponse<String> response) {
         if (response.statusCode() >= 200 && response.statusCode() < 300) {
             return response.body();
+        } else {
+            String msg = String.format("Kall til Altinn dialogporten feilet med statuskode %s. Full feilmelding var: %s", response.statusCode(), response.body());
+            throw new IntegrasjonException("FPINNTEKTSMELDING-542684", msg);
         }
-        LOG.warn("Kall til Altinn dialogporten feilet med statuskode {}. Full feilmelding var: {}", response.statusCode(), response.body());
-        throw new IntegrasjonException("FPINNTEKTSMELDING-542684", "Feil ved kall til dialogporten");
     }
 
     private DialogportenRequest lagDialogportenBody(OrganisasjonsnummerDto organisasjonsnummer, UUID forespørselUuid, String sakstittel) {

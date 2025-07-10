@@ -24,7 +24,6 @@ import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.server.auth.api.AutentisertMedTokenX;
 import no.nav.familie.inntektsmelding.server.auth.api.Tilgangskontrollert;
-import no.nav.foreldrepenger.konfig.Environment;
 import no.nav.vedtak.exception.FunksjonellException;
 
 @AutentisertMedTokenX
