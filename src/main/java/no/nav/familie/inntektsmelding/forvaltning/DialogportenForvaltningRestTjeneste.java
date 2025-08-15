@@ -66,7 +66,7 @@ public class DialogportenForvaltningRestTjeneste {
     @Consumes(MediaType.APPLICATION_JSON)
     @Operation(description = "Oppdaterer dialogen i dialoporten til mottatt ", tags = "dialogporten")
     @Tilgangskontrollert
-    public Response ferdigstillerDialog(@NotNull @Pattern(regexp = InputValideringRegex.FRITEKST) String dialogUuid) {
+    public Response ferdigstillerDialog(@NotNull @Pattern(regexp = InputValideringRegex.FRITEKST) @Valid String dialogUuid) {
         if (IS_PROD) {
             throw new IllegalStateException("Kan ikke ferdigstille dialog i produksjon. Bruk testmiljø for dette.");
         }
