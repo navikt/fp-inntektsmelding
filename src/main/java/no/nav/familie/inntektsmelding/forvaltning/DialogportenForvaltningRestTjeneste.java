@@ -73,7 +73,7 @@ public class DialogportenForvaltningRestTjeneste {
         sjekkAtKallerHarRollenDrift();
         LOG.info("Oppdatere en dialog med dialogUuid {}", dialogUuid);
         dialogportenKlient.ferdigstilleDialog(dialogUuid);
-        return Response.accepted(Response.ok()).build();
+        return Response.ok().build();
     }
 
     private void sjekkAtKallerHarRollenDrift() {
