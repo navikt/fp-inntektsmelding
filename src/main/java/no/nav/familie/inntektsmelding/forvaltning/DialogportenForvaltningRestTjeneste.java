@@ -64,7 +64,7 @@ public class DialogportenForvaltningRestTjeneste {
     @POST
     @Path("/ferdigstillerDialog")
     @Consumes(MediaType.APPLICATION_JSON)
-    @Operation(description = "Oppdaterer dialogen i dialoporten til mottatt ", tags = "dialogporten")
+    @Operation(description = "Oppdaterer dialogen i dialogporten til mottatt ", tags = "dialogporten")
     @Tilgangskontrollert
     public Response ferdigstillerDialog(@NotNull @Pattern(regexp = InputValideringRegex.FRITEKST) @Valid String dialogUuid) {
         if (IS_PROD) {
