@@ -58,6 +58,21 @@ public class DialogportenForvaltningRestTjeneste {
         return Response.accepted(dialogportenKlient.opprettDialog(opprettNyDialogDto.forespørselUuid(), opprettNyDialogDto.organisasjonsnummer(), "Foresprøsel om inntektsmelding")).build();
     }
 
+    @POST
+    @Path("/ferdigstillerDialog")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Operation(description = "Oppdaterer dialogen i dialoporten til mottatt ", tags = "dialogporten")
+    @Tilgangskontrollert
+    public Response ferdigstillerDialog(@NotNull String dialogUuid) {
+        if (IS_PROD) {
+            throw new IllegalStateException("Kan ikke ferdigstille dialog i produksjon. Bruk testmiljø for dette.");
+        }
+        sjekkAtKallerHarRollenDrift();
+        LOG.info("Oppdatere en dialog med dialogUuid {}", dialogUuid);
+        dialogportenKlient.ferdigstilleDialog(dialogUuid);
+        return Response.accepted(Response.ok()).build();
+    }
+
     private void sjekkAtKallerHarRollenDrift() {
         tilgang.sjekkAtAnsattHarRollenDrift();
     }

@@ -1,11 +1,15 @@
 package no.nav.familie.inntektsmelding.integrasjoner.altinn;
 
 import java.net.URI;
+import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
 import jakarta.enterprise.context.ApplicationScoped;
+
+import jakarta.validation.constraints.NotNull;
 
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.vedtak.exception.IntegrasjonException;
@@ -16,6 +20,7 @@ import no.nav.vedtak.felles.integrasjon.rest.RestClientConfig;
 import no.nav.vedtak.felles.integrasjon.rest.RestConfig;
 import no.nav.vedtak.felles.integrasjon.rest.RestRequest;
 import no.nav.vedtak.felles.integrasjon.rest.TokenFlow;
+import no.nav.vedtak.mapper.json.DefaultJsonMapper;
 
 @ApplicationScoped
 @RestClientConfig(tokenConfig = TokenFlow.NO_AUTH_NEEDED, endpointProperty = "altinn.tre.base.url", scopesProperty = "maskinporten.dialogporten.scope")
@@ -79,8 +84,22 @@ public class DialogportenKlient {
             List.of(transmission),
             List.of(apiAction));
     }
+
     private DialogportenRequest.ContentValue lagContentValue(String verdi) {
         return new DialogportenRequest.ContentValue(List.of(new DialogportenRequest.ContentValueItem(verdi, DialogportenRequest.NB)), DialogportenRequest.TEXT_PLAIN);
     }
 
+    public void ferdigstilleDialog(String dialogUuid) {
+        var target = URI.create(restConfig.endpoint().toString() + "/dialogporten/api/v1/serviceowner/dialogs/" + dialogUuid);
+
+        var request = new DialogportenPatchRequest(DialogportenPatchRequest.OP_REPLACE,
+                                                   DialogportenPatchRequest.PATH_STATUS,
+                                                   DialogportenRequest.DialogStatus.Completed);
+
+        var method = new RestRequest.Method(RestRequest.WebMethod.PATCH, HttpRequest.BodyPublishers.ofString(DefaultJsonMapper.toJson(List.of(request))));
+        var restRequest = RestRequest.newRequest(method, target, restConfig);
+        var response = restClient.sendReturnUnhandled(restRequest);
+
+        handleResponse(response);
+    }
 }
