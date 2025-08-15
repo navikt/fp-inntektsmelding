@@ -3,18 +3,14 @@ package no.nav.familie.inntektsmelding.integrasjoner.altinn;
 import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
-import jakarta.validation.constraints.NotNull;
-
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
-import no.nav.vedtak.exception.IntegrasjonException;
-
 import no.nav.foreldrepenger.konfig.Environment;
+import no.nav.vedtak.exception.IntegrasjonException;
 import no.nav.vedtak.felles.integrasjon.rest.RestClient;
 import no.nav.vedtak.felles.integrasjon.rest.RestClientConfig;
 import no.nav.vedtak.felles.integrasjon.rest.RestConfig;
