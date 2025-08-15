@@ -89,11 +89,14 @@ public class DialogportenKlient {
         var target = URI.create(restConfig.endpoint().toString() + "/dialogporten/api/v1/serviceowner/dialogs/" + dialogUuid);
 
         var request = new DialogportenPatchRequest(DialogportenPatchRequest.OP_REPLACE,
-                                                   DialogportenPatchRequest.PATH_STATUS,
-                                                   DialogportenRequest.DialogStatus.Completed);
+            DialogportenPatchRequest.PATH_STATUS,
+            DialogportenRequest.DialogStatus.Completed);
 
-        var method = new RestRequest.Method(RestRequest.WebMethod.PATCH, HttpRequest.BodyPublishers.ofString(DefaultJsonMapper.toJson(List.of(request))));
-        var restRequest = RestRequest.newRequest(method, target, restConfig);
+        var method = new RestRequest.Method(RestRequest.WebMethod.PATCH,
+            HttpRequest.BodyPublishers.ofString(DefaultJsonMapper.toJson(List.of(request))));
+        var restRequest = RestRequest.newRequest(method, target, restConfig)
+            .otherAuthorizationSupplier(() -> tokenKlient.hentAltinnToken(this.restConfig.scopes()));
+
         var response = restClient.sendReturnUnhandled(restRequest);
 
         handleResponse(response);
