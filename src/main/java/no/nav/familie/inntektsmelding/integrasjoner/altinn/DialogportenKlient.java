@@ -102,7 +102,7 @@ public class DialogportenKlient {
 
         var patchTransmission = new DialogportenPatchRequest(DialogportenPatchRequest.OP_ADD,
             DialogportenPatchRequest.PATH_TRANSMISSIONS,
-            transmission);
+            List.of(transmission));
 
         var method = new RestRequest.Method(RestRequest.WebMethod.PATCH,
             HttpRequest.BodyPublishers.ofString(DefaultJsonMapper.toJson(List.of(patchStatus, patchTransmission))));
