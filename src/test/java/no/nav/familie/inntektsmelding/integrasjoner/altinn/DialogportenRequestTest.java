@@ -25,7 +25,7 @@ class DialogportenRequestTest {
         DialogportenRequest request = new DialogportenRequest(serviceResource,
             party,
             externalReference,
-            DialogportenRequest.DialogStatus.New,
+            DialogportenRequest.DialogStatus.InProgress,
             new DialogportenRequest.Content(
                 new DialogportenRequest.ContentValue(List.of(new DialogportenRequest.ContentValueItem("Inntektsmelding", DialogportenRequest.NB)), DialogportenRequest.TEXT_PLAIN),
                 new DialogportenRequest.ContentValue(List.of(new DialogportenRequest.ContentValueItem("Sammendrag", DialogportenRequest.NB)), DialogportenRequest.TEXT_PLAIN)),
