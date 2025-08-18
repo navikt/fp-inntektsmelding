@@ -88,12 +88,24 @@ public class DialogportenKlient {
     public void ferdigstilleDialog(String dialogUuid) {
         var target = URI.create(restConfig.endpoint().toString() + "/dialogporten/api/v1/serviceowner/dialogs/" + dialogUuid);
 
-        var request = new DialogportenPatchRequest(DialogportenPatchRequest.OP_REPLACE,
+        var contentRequest = new DialogportenRequest.Content(lagContentValue("Vi har mottatt inntektsmeldingen"), lagContentValue("Vi har mottatt inntektsmeldingen"));
+
+        var transmission = new DialogportenRequest.Transmission(DialogportenRequest.TransmissionType.Acceptance,
+            DialogportenRequest.ExtendedType.INNTEKTSMELDING,
+            new DialogportenRequest.Sender("ServiceOwner"),
+            contentRequest,
+            List.of());
+
+        var patchStatus = new DialogportenPatchRequest(DialogportenPatchRequest.OP_REPLACE,
             DialogportenPatchRequest.PATH_STATUS,
             DialogportenRequest.DialogStatus.Completed);
 
+        var patchTransmission = new DialogportenPatchRequest(DialogportenPatchRequest.OP_ADD,
+            DialogportenPatchRequest.PATH_TRANSMISSIONS,
+            transmission);
+
         var method = new RestRequest.Method(RestRequest.WebMethod.PATCH,
-            HttpRequest.BodyPublishers.ofString(DefaultJsonMapper.toJson(List.of(request))));
+            HttpRequest.BodyPublishers.ofString(DefaultJsonMapper.toJson(List.of(patchStatus, patchTransmission))));
         var restRequest = RestRequest.newRequest(method, target, restConfig)
             .otherAuthorizationSupplier(() -> tokenKlient.hentAltinnToken(this.restConfig.scopes()));
 

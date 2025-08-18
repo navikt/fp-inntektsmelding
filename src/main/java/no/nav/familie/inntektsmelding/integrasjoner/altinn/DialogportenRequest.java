@@ -19,12 +19,12 @@ public record DialogportenRequest(@NotNull String serviceResource,
     public static final String ACTION_READ = "read";
 
     enum DialogStatus {
-        New,
         InProgress,
         Draft,
-        Sent,
         RequiresAttention,
         Completed,
+        Awaiting,
+        NotApplicable,
     }
 
     protected record ApiAction(String name, List<Endpoint> endpoints, String action) {
@@ -56,6 +56,11 @@ public record DialogportenRequest(@NotNull String serviceResource,
 
         // Question/request for more information
         Request,
+
+        Alert,
+        Decision,
+        Submission,
+        Correction
     }
 
     enum ExtendedType {
