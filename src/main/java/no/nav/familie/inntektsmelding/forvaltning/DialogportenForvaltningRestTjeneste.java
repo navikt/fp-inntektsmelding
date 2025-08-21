@@ -72,7 +72,7 @@ public class DialogportenForvaltningRestTjeneste {
         }
         sjekkAtKallerHarRollenDrift();
         LOG.info("Oppdatere en dialog med dialogUuid {}", dialogUuid);
-        dialogportenKlient.ferdigstilleDialog(dialogUuid);
+        dialogportenKlient.ferdigstilleMeldingIDialogporten(UUID.fromString(dialogUuid));
         return Response.ok().build();
     }
 
