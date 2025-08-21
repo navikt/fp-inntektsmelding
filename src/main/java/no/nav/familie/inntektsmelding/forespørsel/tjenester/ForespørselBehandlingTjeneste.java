@@ -131,9 +131,7 @@ public class ForespørselBehandlingTjeneste {
         minSideArbeidsgiverTjeneste.oppdaterSakTilleggsinformasjon(foresporsel.getArbeidsgiverNotifikasjonSakId(),
             ForespørselTekster.lagTilleggsInformasjon(årsak));
         forespørselTjeneste.ferdigstillForespørsel(foresporsel.getArbeidsgiverNotifikasjonSakId()); // Oppdaterer status i forespørsel
-        if (foresporsel.getDialogportenUuid().isPresent()) {
-            dialogportenKlient.ferdigstilleMeldingIDialogporten(foresporselUuid);
-        }
+        foresporsel.getDialogportenUuid().ifPresent(dialogId -> dialogportenKlient.ferdigstilleMeldingIDialogporten(dialogId));
         return foresporsel;
     }
 
