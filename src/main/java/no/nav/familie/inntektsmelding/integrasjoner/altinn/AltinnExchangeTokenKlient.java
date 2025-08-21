@@ -55,7 +55,7 @@ public class AltinnExchangeTokenKlient {
             LOG.debug("Fant altinn token i cache med nøkkel: {}", cacheKey);
             return tokenFromCache;
         }
-        LOG.debug("Fant ingen gyldig altinn token i cache med nøkkel: {}", cacheKey);
+        LOG.debug("Fant ingen gyldig Altinn token i cache med nøkkel: {}", cacheKey);
 
         var exchangeRequest = HttpRequest.newBuilder()
             .header("Cache-Control", "no-cache")
@@ -67,10 +67,10 @@ public class AltinnExchangeTokenKlient {
 
         var token = AltinnExchangeTokenKlient.hentTokenRetryable(exchangeRequest, 3);
         if (!ENV.isProd()) {
-            LOG.debug("Altinn leverte dialogporten token: {}", token);
+            SECURE_LOG.debug("Altinn leverte dialogporten token: {}", token);
         }
         putTokenToCache(cacheKey, token);
-        LOG.debug("Hentet altinn token og lagt i cache med nøkkel: {}", cacheKey);
+        LOG.debug("Altinn-token er hentet og lagret i cache med tilhørende nøkkel: {}", cacheKey);
         return token;
     }
 
@@ -98,7 +98,7 @@ public class AltinnExchangeTokenKlient {
             md.reset();
             return hexString.toString();
         } catch (NoSuchAlgorithmException e) {
-            throw new TekniskException("PKI-845346","MD5 algoritme finnes ikke", e);
+            throw new TekniskException("PKI-845346", "MD5 algoritme finnes ikke", e);
         }
     }
 
@@ -115,7 +115,7 @@ public class AltinnExchangeTokenKlient {
     }
 
     private static String hentToken(HttpRequest request) {
-        try (var client = hentEllerByggHttpClient()) {
+        try (var client = byggHttpClient()) {
             var response = client.send(request, HttpResponse.BodyHandlers.ofString(UTF_8));
             if (response == null || response.body() == null || !responskode2xx(response)) {
                 throw new TekniskException("F-157385", "Kunne ikke hente token");
@@ -134,7 +134,7 @@ public class AltinnExchangeTokenKlient {
         return status >= 200 && status < 300;
     }
 
-    private static HttpClient hentEllerByggHttpClient() {
+    private static HttpClient byggHttpClient() {
         return HttpClient.newBuilder()
             .followRedirects(HttpClient.Redirect.NEVER)
             .connectTimeout(Duration.ofSeconds(2))
