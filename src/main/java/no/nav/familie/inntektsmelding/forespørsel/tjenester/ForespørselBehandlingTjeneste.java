@@ -131,7 +131,7 @@ public class ForespørselBehandlingTjeneste {
         minSideArbeidsgiverTjeneste.oppdaterSakTilleggsinformasjon(foresporsel.getArbeidsgiverNotifikasjonSakId(),
             ForespørselTekster.lagTilleggsInformasjon(årsak));
         forespørselTjeneste.ferdigstillForespørsel(foresporsel.getArbeidsgiverNotifikasjonSakId()); // Oppdaterer status i forespørsel
-        foresporsel.getDialogportenUuid().ifPresent(dialogId -> dialogportenKlient.ferdigstilleMeldingIDialogporten(dialogId));
+        foresporsel.getDialogportenUuid().ifPresent(dialogUuid -> dialogportenKlient.ferdigstilleMeldingIDialogporten(dialogUuid));
         return foresporsel;
     }
 
@@ -189,7 +189,7 @@ public class ForespørselBehandlingTjeneste {
         opprettForespørselMinSideArbeidsgiver(forespørselUuid, organisasjonsnummer, aktørId, ytelsetype);
 
         if (ENV.isDev()) {
-            opprettForespørselDialogporten(forespørselUuid, organisasjonsnummer, aktørId, ytelsetype);
+            opprettForespørselDialogporten(forespørselUuid, organisasjonsnummer, aktørId, ytelsetype, førsteUttaksdato);
         }
     }
 
@@ -226,11 +226,17 @@ public class ForespørselBehandlingTjeneste {
         forespørselTjeneste.setOppgaveId(forespørselUuid, oppgaveId);
     }
 
-    private void opprettForespørselDialogporten(UUID forespørselUuid, OrganisasjonsnummerDto orgnummer, AktørIdEntitet aktørIdEntitet, Ytelsetype ytelsetype) {
+    private void opprettForespørselDialogporten(UUID forespørselUuid,
+                                                OrganisasjonsnummerDto orgnummer,
+                                                AktørIdEntitet aktørIdEntitet,
+                                                Ytelsetype ytelsetype,
+                                                LocalDate førsteUttaksdato) {
         var person = personTjeneste.hentPersonInfoFraAktørId(aktørIdEntitet, ytelsetype);
+
         var dialogPortenUuid = dialogportenKlient.opprettDialog(forespørselUuid,
             orgnummer,
-            ForespørselTekster.lagSaksTittel(person.mapFulltNavn(), person.fødselsdato()));
+            ForespørselTekster.lagSaksTittel(person.mapFulltNavn(), person.fødselsdato()), førsteUttaksdato, ytelsetype);
+
         var vasketString = dialogPortenUuid.replace("\"", "");
         LOG.info("Mottok UUID {} fra dialogporten", vasketString);
         forespørselTjeneste.setDialogportenUuid(forespørselUuid, UUID.fromString(vasketString));

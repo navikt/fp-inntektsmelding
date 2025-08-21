@@ -3,11 +3,13 @@ package no.nav.familie.inntektsmelding.integrasjoner.altinn;
 import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
+import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.foreldrepenger.konfig.Environment;
 import no.nav.vedtak.exception.IntegrasjonException;
@@ -41,9 +43,9 @@ public class DialogportenKlient {
         this.inntektsmeldingSkjemaLenke = ENV.getProperty("inntektsmelding.skjema.lenke", "https://arbeidsgiver.intern.dev.nav.no/fp-im-dialog");
     }
 
-    public String opprettDialog(UUID forespørselUuid, OrganisasjonsnummerDto orgnr, String sakstittel) {
+    public String opprettDialog(UUID forespørselUuid, OrganisasjonsnummerDto orgnr, String sakstittel, LocalDate førsteUttaksdato, Ytelsetype ytelsetype) {
         var target = URI.create(restConfig.endpoint().toString() + "/dialogporten/api/v1/serviceowner/dialogs");
-        var bodyRequest = lagDialogportenBody(orgnr, forespørselUuid, sakstittel);
+        var bodyRequest = lagDialogportenBody(orgnr, forespørselUuid, sakstittel, førsteUttaksdato, ytelsetype);
         var request = RestRequest.newPOSTJson(bodyRequest, target, restConfig)
             .otherAuthorizationSupplier(() -> tokenKlient.hentAltinnToken(this.restConfig.scopes()));
 
@@ -60,23 +62,45 @@ public class DialogportenKlient {
         }
     }
 
-    private DialogportenRequest lagDialogportenBody(OrganisasjonsnummerDto organisasjonsnummer, UUID forespørselUuid, String sakstittel) {
+    private DialogportenRequest lagDialogportenBody(OrganisasjonsnummerDto organisasjonsnummer,
+                                                    UUID forespørselUuid,
+                                                    String sakstittel,
+                                                    LocalDate førsteUttaksdato,
+                                                    Ytelsetype ytelsetype) {
         var party = String.format("urn:altinn:organization:identifier-no:%s", organisasjonsnummer.orgnr());
-        var contentTransmission = new DialogportenRequest.Content(lagContentValue(sakstittel), lagContentValue("Nav trenger inntektsmelding"));
-        var contentRequest = new DialogportenRequest.Content(lagContentValue("Send inn inntektsmelding"), null);
+        var foreldrepengerRessurs = Environment.current().getProperty("altinn.tre.inntektsmelding.ressurs");
+        var altinnressursFP = ALTINN_RESSURS_PREFIX + foreldrepengerRessurs;
+        var summaryDialog = String.format("Nav trenger inntektsmelding for å behandle søknad om %s med startdato %s.",
+            ytelsetype.name().toLowerCase(),
+            førsteUttaksdato);
+        var contentDialog = new DialogportenRequest.Content(lagContentValue(sakstittel), lagContentValue(summaryDialog));
+
+        var contentTransmission = new DialogportenRequest.Content(lagContentValue("Send inn inntektsmelding"), null);
+
+        //usikker på om vi kan gjøre det slik, eller om vi må legge til en guiaction, men den kan ikke ligge på selve transmissionen
+        var attachementTransmission = new DialogportenRequest.Attachment(
+            List.of(new DialogportenRequest.ContentValueItem("Innsending av inntektsmelding", DialogportenRequest.NB)),
+            List.of(new DialogportenRequest.Url(inntektsmeldingSkjemaLenke + "/" + forespørselUuid.toString(), DialogportenRequest.NB,
+                DialogportenRequest.AttachmentUrlConsumerType.Gui)));
+
         var transmission = new DialogportenRequest.Transmission(DialogportenRequest.TransmissionType.Request,
             DialogportenRequest.ExtendedType.INNTEKTSMELDING,
             new DialogportenRequest.Sender("ServiceOwner"),
-            contentRequest,
-            List.of());
-        var apiAction = new DialogportenRequest.ApiAction("Hent forespørsel om inntektsmelding",
-            List.of(new DialogportenRequest.Endpoint(inntektsmeldingSkjemaLenke + "/" + forespørselUuid.toString(), DialogportenRequest.HttpMethod.GET, null)), DialogportenRequest.ACTION_READ);
-        var foreldrepengerRessurs = Environment.current().getProperty("altinn.tre.inntektsmelding.ressurs");
-        var altinnressursFP = ALTINN_RESSURS_PREFIX + foreldrepengerRessurs;
+            contentTransmission,
+            List.of(attachementTransmission));
+
+        var apiAction = new DialogportenRequest.ApiAction(String.format("Innsending av inntektsmelding for %s med startdato %s",
+            ytelsetype.name().toLowerCase(),
+            førsteUttaksdato),
+            List.of(new DialogportenRequest.Endpoint(inntektsmeldingSkjemaLenke + "/" + forespørselUuid, DialogportenRequest.HttpMethod.GET, null)),
+            DialogportenRequest.ACTION_READ);
+
+
         return new DialogportenRequest(altinnressursFP,
             party,
             forespørselUuid.toString(),
-            DialogportenRequest.DialogStatus.RequiresAttention, contentTransmission,
+            DialogportenRequest.DialogStatus.RequiresAttention,
+            contentDialog,
             List.of(transmission),
             List.of(apiAction));
     }
@@ -88,7 +112,15 @@ public class DialogportenKlient {
     public void ferdigstilleMeldingIDialogporten(UUID dialogUuid) {
         var target = URI.create(restConfig.endpoint().toString() + "/dialogporten/api/v1/serviceowner/dialogs/" + dialogUuid);
 
-        var contentRequest = new DialogportenRequest.Content(lagContentValue("Vi har mottatt inntektsmeldingen"), null);
+        var patchStatus = new DialogportenPatchRequest(DialogportenPatchRequest.OP_REPLACE,
+            DialogportenPatchRequest.PATH_STATUS,
+            DialogportenRequest.DialogStatus.Completed);
+
+        var contentRequest = new DialogportenRequest.Content(lagContentValue("Nav har mottatt inntektsmelding"), null);
+
+        var patchContent = new DialogportenPatchRequest(DialogportenPatchRequest.OP_REPLACE,
+            DialogportenPatchRequest.PATH_CONTENT,
+            contentRequest);
 
         var transmission = new DialogportenRequest.Transmission(DialogportenRequest.TransmissionType.Acceptance,
             DialogportenRequest.ExtendedType.INNTEKTSMELDING,
@@ -96,16 +128,12 @@ public class DialogportenKlient {
             contentRequest,
             List.of());
 
-        var patchStatus = new DialogportenPatchRequest(DialogportenPatchRequest.OP_REPLACE,
-            DialogportenPatchRequest.PATH_STATUS,
-            DialogportenRequest.DialogStatus.Completed);
-
         var patchTransmission = new DialogportenPatchRequest(DialogportenPatchRequest.OP_ADD,
             DialogportenPatchRequest.PATH_TRANSMISSIONS,
             List.of(transmission));
 
         var method = new RestRequest.Method(RestRequest.WebMethod.PATCH,
-            HttpRequest.BodyPublishers.ofString(DefaultJsonMapper.toJson(List.of(patchStatus, patchTransmission))));
+            HttpRequest.BodyPublishers.ofString(DefaultJsonMapper.toJson(List.of(patchStatus, patchContent, patchTransmission))));
         var restRequest = RestRequest.newRequest(method, target, restConfig)
             .otherAuthorizationSupplier(() -> tokenKlient.hentAltinnToken(this.restConfig.scopes()));
 

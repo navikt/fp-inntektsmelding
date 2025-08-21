@@ -14,6 +14,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import no.nav.familie.inntektsmelding.integrasjoner.altinn.DialogportenKlient;
+import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.server.auth.api.AutentisertMedAzure;
 import no.nav.familie.inntektsmelding.server.auth.api.Tilgangskontrollert;
 import no.nav.familie.inntektsmelding.server.tilgangsstyring.Tilgang;
@@ -24,6 +25,7 @@ import no.nav.vedtak.util.InputValideringRegex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 @ApplicationScoped
@@ -57,8 +59,10 @@ public class DialogportenForvaltningRestTjeneste {
             throw new IllegalStateException("Kan ikke opprette dialog i produksjon. Bruk testmiljø for dette.");
         }
         sjekkAtKallerHarRollenDrift();
-        LOG.info("Oppretter en dialog for foresprørselUuid {} og organisasjonsnummer {}", opprettNyDialogDto.forespørselUuid(), opprettNyDialogDto.organisasjonsnummer().orgnr());
-        return Response.accepted(dialogportenKlient.opprettDialog(opprettNyDialogDto.forespørselUuid(), opprettNyDialogDto.organisasjonsnummer(), "Foresprøsel om inntektsmelding")).build();
+        LOG.info("Oppretter en dialog for forespørselUuid {} og organisasjonsnummer {}", opprettNyDialogDto.forespørselUuid(), opprettNyDialogDto.organisasjonsnummer().orgnr());
+        return Response.accepted(dialogportenKlient.opprettDialog(opprettNyDialogDto.forespørselUuid(), opprettNyDialogDto.organisasjonsnummer(), "Forespørsel om inntektsmelding",
+            LocalDate.now(),
+            Ytelsetype.FORELDREPENGER)).build();
     }
 
     @POST
