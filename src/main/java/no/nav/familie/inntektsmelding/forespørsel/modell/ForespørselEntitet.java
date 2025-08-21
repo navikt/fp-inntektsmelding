@@ -77,7 +77,7 @@ public class ForespørselEntitet {
     @Column(name = "endret_tid")
     private LocalDateTime endretTidspunkt;
 
-    @Column(name = "dialogporten_uuid", updatable = false)
+    @Column(name = "dialogporten_uuid")
     private UUID dialogportenUuid;
 
     public ForespørselEntitet(String organisasjonsnummer,
