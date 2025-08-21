@@ -231,6 +231,7 @@ public class ForespørselBehandlingTjeneste {
             orgnummer,
             ForespørselTekster.lagSaksTittel(person.mapFulltNavn(), person.fødselsdato()));
         var vasketString = dialogPortenUuid.replace("\"", "");
+        LOG.info("Mottok UUID {} fra dialogporten", vasketString);
         forespørselTjeneste.setDialogportenUuid(forespørselUuid, UUID.fromString(vasketString));
     }
 
