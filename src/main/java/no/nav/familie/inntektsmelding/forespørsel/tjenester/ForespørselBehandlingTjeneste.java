@@ -230,8 +230,8 @@ public class ForespørselBehandlingTjeneste {
         var dialogPortenUuid = dialogportenKlient.opprettDialog(forespørselUuid,
             orgnummer,
             ForespørselTekster.lagSaksTittel(person.mapFulltNavn(), person.fødselsdato()));
-        LOG.info("Mottatt dialogUuid {} fra dialogporten", dialogPortenUuid);
-        forespørselTjeneste.setDialogportenUuid(forespørselUuid, UUID.fromString(dialogPortenUuid));
+        var vasketString = dialogPortenUuid.replace("\"", "");
+        forespørselTjeneste.setDialogportenUuid(forespørselUuid, UUID.fromString(vasketString));
     }
 
     public UUID opprettForespørselForArbeidsgiverInitiertIm(Ytelsetype ytelsetype,
