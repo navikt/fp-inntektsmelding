@@ -66,14 +66,14 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
     }
 
     @Test
-    void skal_lagre_arbeidsgiverinitiert_forespørsel_og_oppdatere_med_dialogporten_uuid() {
-        var uuid = forespørselRepository.lagreForespørsel(null,
+    void skal_lagre_forespørsel_og_oppdatere_med_dialogporten_uuid() {
+        var uuid = forespørselRepository.lagreForespørsel(LocalDate.now(),
             Ytelsetype.FORELDREPENGER,
             "9999999999999",
             "999999999",
-            null,
+            "123",
             LocalDate.now(),
-            ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT);
+            ForespørselType.BESTILT_AV_FAGSYSTEM);
         // UUID versjon 7, som dialogporten gir oss. Kan ikke generere med java.util da den er på versjon 4
         var dialogportenUuid = UUID.fromString("0198cbab-47ec-7aca-82ad-5dc7d4a823d4");
         forespørselRepository.oppdaterDialogportenUuid(uuid, dialogportenUuid);
@@ -81,11 +81,11 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
         var hentet = forespørselRepository.hentForespørsel(uuid).orElse(null);
 
         assertThat(hentet).isNotNull();
-        assertThat(hentet.getSkjæringstidspunkt()).isEmpty();
+        assertThat(hentet.getSkjæringstidspunkt().orElse(null)).isEqualTo(LocalDate.now());
         assertThat(hentet.getOrganisasjonsnummer()).isEqualTo("999999999");
         assertThat(hentet.getAktørId().getAktørId()).isEqualTo("9999999999999");
         assertThat(hentet.getYtelseType()).isEqualTo(Ytelsetype.FORELDREPENGER);
-        assertThat(hentet.getFagsystemSaksnummer()).isEmpty();
+        assertThat(hentet.getFagsystemSaksnummer().orElse(null)).isEqualTo("123");
         assertThat(hentet.getFørsteUttaksdato()).isEqualTo(LocalDate.now());
         assertThat(hentet.getDialogportenUuid().orElse(null)).isEqualTo(dialogportenUuid);
     }
