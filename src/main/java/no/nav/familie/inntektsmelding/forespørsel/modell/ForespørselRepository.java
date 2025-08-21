@@ -206,4 +206,14 @@ public class ForespørselRepository {
         entityManager.flush();
         return forespørselEnitet;
     }
+
+    public void oppdaterDialogportenUuid(UUID forespørselUuid, UUID dialogportenUuid) {
+        var forespørselOpt = hentForespørsel(forespørselUuid);
+        if (forespørselOpt.isPresent()) {
+            var forespørsel = forespørselOpt.get();
+            forespørsel.setDialogportenUuid(dialogportenUuid);
+            entityManager.persist(forespørsel);
+            entityManager.flush();
+        }
+    }
 }
