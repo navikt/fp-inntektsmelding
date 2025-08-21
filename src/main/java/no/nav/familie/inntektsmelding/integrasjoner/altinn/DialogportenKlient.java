@@ -85,7 +85,7 @@ public class DialogportenKlient {
         return new DialogportenRequest.ContentValue(List.of(new DialogportenRequest.ContentValueItem(verdi, DialogportenRequest.NB)), DialogportenRequest.TEXT_PLAIN);
     }
 
-    public void ferdigstilleDialog(String dialogUuid) {
+    public void ferdigstilleMeldingIDialogporten(UUID dialogUuid) {
         var target = URI.create(restConfig.endpoint().toString() + "/dialogporten/api/v1/serviceowner/dialogs/" + dialogUuid);
 
         var contentRequest = new DialogportenRequest.Content(lagContentValue("Vi har mottatt inntektsmeldingen"), null);
