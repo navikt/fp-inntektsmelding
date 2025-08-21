@@ -63,7 +63,7 @@ public class DialogportenKlient {
     private DialogportenRequest lagDialogportenBody(OrganisasjonsnummerDto organisasjonsnummer, UUID forespørselUuid, String sakstittel) {
         var party = String.format("urn:altinn:organization:identifier-no:%s", organisasjonsnummer.orgnr());
         var contentTransmission = new DialogportenRequest.Content(lagContentValue(sakstittel), lagContentValue("Nav trenger inntektsmelding"));
-        var contentRequest = new DialogportenRequest.Content(lagContentValue("Send inn inntektsmelding"), lagContentValue("Send inn inntektsmelding"));
+        var contentRequest = new DialogportenRequest.Content(lagContentValue("Send inn inntektsmelding"), null);
         var transmission = new DialogportenRequest.Transmission(DialogportenRequest.TransmissionType.Request,
             DialogportenRequest.ExtendedType.INNTEKTSMELDING,
             new DialogportenRequest.Sender("ServiceOwner"),
@@ -88,7 +88,7 @@ public class DialogportenKlient {
     public void ferdigstilleDialog(String dialogUuid) {
         var target = URI.create(restConfig.endpoint().toString() + "/dialogporten/api/v1/serviceowner/dialogs/" + dialogUuid);
 
-        var contentRequest = new DialogportenRequest.Content(lagContentValue("Vi har mottatt inntektsmeldingen"), lagContentValue("Vi har mottatt inntektsmeldingen"));
+        var contentRequest = new DialogportenRequest.Content(lagContentValue("Vi har mottatt inntektsmeldingen"), null);
 
         var transmission = new DialogportenRequest.Transmission(DialogportenRequest.TransmissionType.Acceptance,
             DialogportenRequest.ExtendedType.INNTEKTSMELDING,

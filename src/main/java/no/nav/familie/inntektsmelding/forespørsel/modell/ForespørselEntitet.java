@@ -77,6 +77,9 @@ public class ForespørselEntitet {
     @Column(name = "endret_tid")
     private LocalDateTime endretTidspunkt;
 
+    @Column(name = "dialogporten_uuid", updatable = false)
+    private UUID dialogportenUuid;
+
     public ForespørselEntitet(String organisasjonsnummer,
                               LocalDate skjæringstidspunkt,
                               AktørIdEntitet aktørId,
@@ -174,6 +177,14 @@ public class ForespørselEntitet {
 
     public ForespørselType getForespørselType() {
         return forespørselType;
+    }
+
+    void setDialogportenUuid(UUID dialogportenUuid) {
+        this.dialogportenUuid = dialogportenUuid;
+    }
+
+    public Optional<UUID> getDialogportenUuid() {
+        return Optional.ofNullable(dialogportenUuid);
     }
 
     public boolean erArbeidsgiverInitiertNyansatt() {

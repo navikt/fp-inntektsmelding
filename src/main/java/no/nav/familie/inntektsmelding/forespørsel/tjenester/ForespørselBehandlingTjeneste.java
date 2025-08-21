@@ -101,7 +101,7 @@ public class ForespørselBehandlingTjeneste {
             organisasjonsnummerFraRequest,
             skjæringstidspunktFraRequest);
 
-        //Vi sjekker kun mot FERDIGE forespørsler da fpsak allerede har lukket forespørsler som er UNDER_BEHANDLING
+        // Vi sjekker kun mot FERDIGE forespørsler da fpsak allerede har lukket forespørsler som er UNDER_BEHANDLING
         forespørselTjeneste.finnForespørslerForFagsak(fagsakSaksnummer).stream()
             .filter(forespørselEntitet -> organisasjonsnummerFraRequest.orgnr().equals(forespørselEntitet.getOrganisasjonsnummer()))
             .filter(forespørselEntitet -> !skjæringstidspunktFraRequest.equals(forespørselEntitet.getSkjæringstidspunkt().orElse(null)))
@@ -227,7 +227,10 @@ public class ForespørselBehandlingTjeneste {
 
     private void opprettForespørselDialogporten(UUID forespørselUuid, OrganisasjonsnummerDto orgnummer, AktørIdEntitet aktørIdEntitet, Ytelsetype ytelsetype) {
         var person = personTjeneste.hentPersonInfoFraAktørId(aktørIdEntitet, ytelsetype);
-        dialogportenKlient.opprettDialog(forespørselUuid, orgnummer, ForespørselTekster.lagSaksTittel(person.mapFulltNavn(), person.fødselsdato()));
+        var dialogPortenUuid = dialogportenKlient.opprettDialog(forespørselUuid,
+            orgnummer,
+            ForespørselTekster.lagSaksTittel(person.mapFulltNavn(), person.fødselsdato()));
+        forespørselTjeneste.setDialogportenUuid(forespørselUuid, UUID.fromString(dialogPortenUuid));
     }
 
     public UUID opprettForespørselForArbeidsgiverInitiertIm(Ytelsetype ytelsetype,

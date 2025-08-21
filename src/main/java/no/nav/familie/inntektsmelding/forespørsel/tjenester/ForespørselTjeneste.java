@@ -100,4 +100,9 @@ public class ForespørselTjeneste {
     public List<ForespørselEntitet> finnForespørsler(AktørIdEntitet aktørId, Ytelsetype ytelsetype, String orgnr) {
         return forespørselRepository.finnForespørsler(aktørId, ytelsetype, orgnr);
     }
+
+    public void setDialogportenUuid(UUID forespørselUuid, UUID dialogportenUuid) {
+        forespørselRepository.oppdaterDialogportenUuid(forespørselUuid, dialogportenUuid);
+
+    }
 }

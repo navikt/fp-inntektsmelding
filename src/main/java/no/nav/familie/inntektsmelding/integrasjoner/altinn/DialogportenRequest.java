@@ -72,7 +72,7 @@ public record DialogportenRequest(@NotNull String serviceResource,
     protected record Sender(@NotNull String actorType) {
     }
 
-    protected record Content(@NotNull @Valid ContentValue title, @NotNull @Valid ContentValue summary) {
+    protected record Content(@NotNull @Valid ContentValue title, @Valid ContentValue summary) {
     }
 
     protected record ContentValue(@NotNull @NotEmpty @Valid List<ContentValueItem> value, @NotNull String mediaType) {

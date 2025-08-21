@@ -3,6 +3,7 @@ package no.nav.familie.inntektsmelding.forespørsel.modell;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,11 +43,10 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
         assertThat(hentet.getYtelseType()).isEqualTo(Ytelsetype.FORELDREPENGER);
         assertThat(hentet.getFagsystemSaksnummer()).isEmpty();
         assertThat(hentet.getFørsteUttaksdato()).isEqualTo(LocalDate.now());
-
     }
 
     @Test
-    void skal_lagre_forespørsel_bnestilt_fra_fagsystem() {
+    void skal_lagre_forespørsel_bestilt_fra_fagsystem() {
         var uuid = forespørselRepository.lagreForespørsel(LocalDate.now(),
             Ytelsetype.FORELDREPENGER,
             "9999999999999",
@@ -63,5 +63,30 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
         assertThat(hentet.getYtelseType()).isEqualTo(Ytelsetype.FORELDREPENGER);
         assertThat(hentet.getFagsystemSaksnummer().orElseThrow()).isEqualTo("123");
         assertThat(hentet.getFørsteUttaksdato()).isEqualTo(LocalDate.now());
+    }
+
+    @Test
+    void skal_lagre_forespørsel_og_oppdatere_med_dialogporten_uuid() {
+        var uuid = forespørselRepository.lagreForespørsel(LocalDate.now(),
+            Ytelsetype.FORELDREPENGER,
+            "9999999999999",
+            "999999999",
+            "123",
+            LocalDate.now(),
+            ForespørselType.BESTILT_AV_FAGSYSTEM);
+        // UUID versjon 7, som dialogporten gir oss. Kan ikke generere med java.util da den er på versjon 4
+        var dialogportenUuid = UUID.fromString("0198cbab-47ec-7aca-82ad-5dc7d4a823d4");
+        forespørselRepository.oppdaterDialogportenUuid(uuid, dialogportenUuid);
+
+        var hentet = forespørselRepository.hentForespørsel(uuid).orElse(null);
+
+        assertThat(hentet).isNotNull();
+        assertThat(hentet.getSkjæringstidspunkt().orElse(null)).isEqualTo(LocalDate.now());
+        assertThat(hentet.getOrganisasjonsnummer()).isEqualTo("999999999");
+        assertThat(hentet.getAktørId().getAktørId()).isEqualTo("9999999999999");
+        assertThat(hentet.getYtelseType()).isEqualTo(Ytelsetype.FORELDREPENGER);
+        assertThat(hentet.getFagsystemSaksnummer().orElse(null)).isEqualTo("123");
+        assertThat(hentet.getFørsteUttaksdato()).isEqualTo(LocalDate.now());
+        assertThat(hentet.getDialogportenUuid().orElse(null)).isEqualTo(dialogportenUuid);
     }
 }
