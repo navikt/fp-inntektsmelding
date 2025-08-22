@@ -123,10 +123,11 @@ public class DialogportenKlient {
             DialogportenPatchRequest.PATH_CONTENT,
             contentRequest);
 
+        var transmissionContent = new DialogportenRequest.Content(lagContentValue("Inntektsmelding mottatt"), null);
         var transmission = new DialogportenRequest.Transmission(DialogportenRequest.TransmissionType.Acceptance,
             DialogportenRequest.ExtendedType.INNTEKTSMELDING,
             new DialogportenRequest.Sender("ServiceOwner"),
-            contentRequest,
+            transmissionContent,
             List.of());
 
         var patchTransmission = new DialogportenPatchRequest(DialogportenPatchRequest.OP_ADD,
