@@ -77,9 +77,9 @@ public class DialogportenKlient {
 
         var contentTransmission = new DialogportenRequest.Content(lagContentValue("Send inn inntektsmelding"), null);
 
-        //usikker på om vi kan gjøre det slik, eller om vi må legge til en guiaction, men den kan ikke ligge på selve transmissionen
         var attachementTransmission = new DialogportenRequest.Attachment(
-            List.of(new DialogportenRequest.ContentValueItem("Innsending av inntektsmelding", DialogportenRequest.NB)),
+            List.of(new DialogportenRequest.ContentValueItem("Innsending av inntektsmelding på min side - arbeidsgiver hos Nav",
+                DialogportenRequest.NB)),
             List.of(new DialogportenRequest.Url(inntektsmeldingSkjemaLenke + "/" + forespørselUuid.toString(), DialogportenRequest.NB,
                 DialogportenRequest.AttachmentUrlConsumerType.Gui)));
 
@@ -109,14 +109,15 @@ public class DialogportenKlient {
         return new DialogportenRequest.ContentValue(List.of(new DialogportenRequest.ContentValueItem(verdi, DialogportenRequest.NB)), DialogportenRequest.TEXT_PLAIN);
     }
 
-    public void ferdigstilleMeldingIDialogporten(UUID dialogUuid) {
+    public void ferdigstilleMeldingIDialogporten(UUID dialogUuid, String sakstittel, Ytelsetype ytelsetype, LocalDate førsteUttaksdato) {
         var target = URI.create(restConfig.endpoint().toString() + "/dialogporten/api/v1/serviceowner/dialogs/" + dialogUuid);
 
         var patchStatus = new DialogportenPatchRequest(DialogportenPatchRequest.OP_REPLACE,
             DialogportenPatchRequest.PATH_STATUS,
             DialogportenRequest.DialogStatus.Completed);
 
-        var contentRequest = new DialogportenRequest.Content(lagContentValue("Nav har mottatt inntektsmelding"), null);
+        var summaryDialog = String.format("Nav har mottatt inntektsmelding for søknad om %s med startdato %s", ytelsetype.name().toLowerCase(), førsteUttaksdato);
+        var contentRequest = new DialogportenRequest.Content(lagContentValue(sakstittel), lagContentValue(summaryDialog));
 
         var patchContent = new DialogportenPatchRequest(DialogportenPatchRequest.OP_REPLACE,
             DialogportenPatchRequest.PATH_CONTENT,

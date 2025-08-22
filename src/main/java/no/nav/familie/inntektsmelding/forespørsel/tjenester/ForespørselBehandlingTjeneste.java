@@ -126,12 +126,21 @@ public class ForespørselBehandlingTjeneste {
         foresporsel.getOppgaveId().ifPresent(oppgaveId -> minSideArbeidsgiverTjeneste.oppgaveUtført(oppgaveId, OffsetDateTime.now()));
 
         var erArbeidsgiverInitiertInntektsmelding = foresporsel.getOppgaveId().isEmpty();
-        minSideArbeidsgiverTjeneste.ferdigstillSak(foresporsel.getArbeidsgiverNotifikasjonSakId(), erArbeidsgiverInitiertInntektsmelding
-        ); // Oppdaterer status i arbeidsgiver-notifikasjon
+        minSideArbeidsgiverTjeneste.ferdigstillSak(foresporsel.getArbeidsgiverNotifikasjonSakId(), erArbeidsgiverInitiertInntektsmelding);
+
+        // Oppdaterer status i arbeidsgiver-notifikasjon
         minSideArbeidsgiverTjeneste.oppdaterSakTilleggsinformasjon(foresporsel.getArbeidsgiverNotifikasjonSakId(),
             ForespørselTekster.lagTilleggsInformasjon(årsak));
-        forespørselTjeneste.ferdigstillForespørsel(foresporsel.getArbeidsgiverNotifikasjonSakId()); // Oppdaterer status i forespørsel
-        foresporsel.getDialogportenUuid().ifPresent(dialogUuid -> dialogportenKlient.ferdigstilleMeldingIDialogporten(dialogUuid));
+
+        // Oppdaterer status i forespørsel
+        forespørselTjeneste.ferdigstillForespørsel(foresporsel.getArbeidsgiverNotifikasjonSakId());
+
+        //Oppdaterer status i altinn dialogporten
+        foresporsel.getDialogportenUuid().ifPresent(dialogUuid ->
+            dialogportenKlient.ferdigstilleMeldingIDialogporten(dialogUuid,
+                lagSaksTittelForDialogporten(aktorId, foresporsel.getYtelseType()),
+                foresporsel.getYtelseType(),
+                foresporsel.getFørsteUttaksdato()));
         return foresporsel;
     }
 
@@ -231,15 +240,19 @@ public class ForespørselBehandlingTjeneste {
                                                 AktørIdEntitet aktørIdEntitet,
                                                 Ytelsetype ytelsetype,
                                                 LocalDate førsteUttaksdato) {
-        var person = personTjeneste.hentPersonInfoFraAktørId(aktørIdEntitet, ytelsetype);
+        var saksTittelDialog = lagSaksTittelForDialogporten(aktørIdEntitet, ytelsetype);
 
         var dialogPortenUuid = dialogportenKlient.opprettDialog(forespørselUuid,
-            orgnummer,
-            ForespørselTekster.lagSaksTittel(person.mapFulltNavn(), person.fødselsdato()), førsteUttaksdato, ytelsetype);
+            orgnummer, saksTittelDialog, førsteUttaksdato, ytelsetype);
 
-        var vasketString = dialogPortenUuid.replace("\"", "");
-        LOG.info("Mottok UUID {} fra dialogporten", vasketString);
-        forespørselTjeneste.setDialogportenUuid(forespørselUuid, UUID.fromString(vasketString));
+        var vasketDialogUuid = dialogPortenUuid.replace("\"", "");
+        LOG.info("Mottok UUID {} fra dialogporten", vasketDialogUuid);
+        forespørselTjeneste.setDialogportenUuid(forespørselUuid, UUID.fromString(vasketDialogUuid));
+    }
+
+    private String lagSaksTittelForDialogporten(AktørIdEntitet aktørIdEntitet, Ytelsetype ytelsetype) {
+        var person = personTjeneste.hentPersonInfoFraAktørId(aktørIdEntitet, ytelsetype);
+        return ForespørselTekster.lagSaksTittel(person.mapFulltNavn(), person.fødselsdato());
     }
 
     public UUID opprettForespørselForArbeidsgiverInitiertIm(Ytelsetype ytelsetype,
