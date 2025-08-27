@@ -157,14 +157,21 @@ public class ForespørselBehandlingTjeneste {
     }
 
     public void settForespørselTilUtgått(ForespørselEntitet eksisterendeForespørsel, boolean skalOppdatereArbeidsgiverNotifikasjon) {
+        LOG.info("Verdien for skalOppdatereArbeidsgiverNotifikasjon er: {}", skalOppdatereArbeidsgiverNotifikasjon);
+
         if (skalOppdatereArbeidsgiverNotifikasjon) {
             eksisterendeForespørsel.getOppgaveId().ifPresent( oppgaveId -> minSideArbeidsgiverTjeneste.oppgaveUtgått(oppgaveId, OffsetDateTime.now()));
-            minSideArbeidsgiverTjeneste.ferdigstillSak(eksisterendeForespørsel.getArbeidsgiverNotifikasjonSakId(), false); // Oppdaterer status i arbeidsgiver-notifikasjon
+            // Oppdaterer status i arbeidsgiver-notifikasjon
+            minSideArbeidsgiverTjeneste.ferdigstillSak(eksisterendeForespørsel.getArbeidsgiverNotifikasjonSakId(), false);
         }
 
+        // Oppdaterer status til utgått på saken i arbeidsgiverportalen
         minSideArbeidsgiverTjeneste.oppdaterSakTilleggsinformasjon(eksisterendeForespørsel.getArbeidsgiverNotifikasjonSakId(),
             ForespørselTekster.lagTilleggsInformasjon(LukkeÅrsak.UTGÅTT));
         forespørselTjeneste.settForespørselTilUtgått(eksisterendeForespørsel.getArbeidsgiverNotifikasjonSakId());
+        //oppdaterer status til not applicable i altinn dialogporten
+        eksisterendeForespørsel.getDialogportenUuid().ifPresent(dialogUuid ->
+            dialogportenKlient.settMeldingTilUtgåttIDialogporten(dialogUuid, lagSaksTittelForDialogporten(eksisterendeForespørsel.getAktørId(), eksisterendeForespørsel.getYtelseType())));
 
         var msg = String.format("Setter forespørsel til utgått, orgnr: %s, stp: %s, saksnr: %s, ytelse: %s",
             eksisterendeForespørsel.getOrganisasjonsnummer(),
