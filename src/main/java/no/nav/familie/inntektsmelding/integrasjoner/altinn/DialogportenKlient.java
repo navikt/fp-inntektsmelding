@@ -119,8 +119,6 @@ public class DialogportenKlient {
     }
 
     public void ferdigstilleMeldingIDialogporten(UUID dialogUuid, String sakstittel, Ytelsetype ytelsetype, LocalDate førsteUttaksdato) {
-        var target = URI.create(restConfig.endpoint().toString() + "/dialogporten/api/v1/serviceowner/dialogs/" + dialogUuid);
-
         //oppdatere status på meldingen til fullført
         var patchStatus = new DialogportenPatchRequest(DialogportenPatchRequest.OP_REPLACE,
             DialogportenPatchRequest.PATH_STATUS,
@@ -147,13 +145,46 @@ public class DialogportenKlient {
             DialogportenPatchRequest.PATH_TRANSMISSIONS,
             List.of(transmission));
 
+        sendPatchRequest(dialogUuid, List.of(patchStatus, patchContent, patchTransmission));
+    }
+
+    private void sendPatchRequest(UUID dialogUuid, List<DialogportenPatchRequest> oppdateringer) {
+        var target = URI.create(restConfig.endpoint().toString() + "/dialogporten/api/v1/serviceowner/dialogs/" + dialogUuid);
+
         var method = new RestRequest.Method(RestRequest.WebMethod.PATCH,
-            HttpRequest.BodyPublishers.ofString(DefaultJsonMapper.toJson(List.of(patchStatus, patchContent, patchTransmission))));
+            HttpRequest.BodyPublishers.ofString(DefaultJsonMapper.toJson(oppdateringer)));
         var restRequest = RestRequest.newRequest(method, target, restConfig)
             .otherAuthorizationSupplier(() -> tokenKlient.hentAltinnToken(this.restConfig.scopes()));
 
         var response = restClient.sendReturnUnhandled(restRequest);
 
         handleResponse(response);
+    }
+
+    public void settMeldingTilUtgåttIDialogporten(UUID dialogUuid, String sakstittel) {
+        //oppdatere status på meldingen til not applicable
+        var patchStatus = new DialogportenPatchRequest(DialogportenPatchRequest.OP_REPLACE,
+            DialogportenPatchRequest.PATH_STATUS,
+            DialogportenRequest.DialogStatus.NotApplicable);
+
+        //oppdatere innholdet i dialogen
+        var contentRequest = new DialogportenRequest.Content(lagContentValue(sakstittel), lagContentValue("Nav trenger ikke lenger denne inntektsmeldingen"));
+        var patchContent = new DialogportenPatchRequest(DialogportenPatchRequest.OP_REPLACE,
+            DialogportenPatchRequest.PATH_CONTENT,
+            contentRequest);
+
+        //Ny transmission som sier at inntektsmelding ikke lenger er påkrevd
+        var transmissionContent = new DialogportenRequest.Content(lagContentValue("Inntektsmeldingen er ikke lenger påkrevd"), null);
+        var transmission = new DialogportenRequest.Transmission(DialogportenRequest.TransmissionType.Correction,
+            DialogportenRequest.ExtendedType.INNTEKTSMELDING,
+            new DialogportenRequest.Sender("ServiceOwner"),
+            transmissionContent,
+            List.of());
+        var patchTransmission = new DialogportenPatchRequest(DialogportenPatchRequest.OP_ADD,
+            DialogportenPatchRequest.PATH_TRANSMISSIONS,
+            List.of(transmission));
+
+        sendPatchRequest(dialogUuid, List.of(patchStatus, patchContent, patchTransmission));
+
     }
 }
