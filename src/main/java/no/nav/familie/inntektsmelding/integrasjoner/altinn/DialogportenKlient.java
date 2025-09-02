@@ -82,10 +82,10 @@ public class DialogportenKlient {
         var summaryDialog = String.format("Nav trenger inntektsmelding for å behandle søknad om %s med startdato %s.",
             ytelsetype.name().toLowerCase(),
             førsteUttaksdato);
-        var contentDialog = new DialogportenRequest.Content(lagContentValue(sakstittel), lagContentValue(summaryDialog));
+        var contentDialog = new DialogportenRequest.Content(lagContentValue(sakstittel), lagContentValue(summaryDialog), null);
 
         //Oppretter transmission
-        var contentTransmission = new DialogportenRequest.Content(lagContentValue("Send inn inntektsmelding"), null);
+        var contentTransmission = new DialogportenRequest.Content(lagContentValue("Send inn inntektsmelding"), null, null);
         var attachementTransmission = new DialogportenRequest.Attachment(
             List.of(new DialogportenRequest.ContentValueItem("Innsending av inntektsmelding på min side - arbeidsgiver hos Nav",
                 DialogportenRequest.NB)),
@@ -129,13 +129,13 @@ public class DialogportenKlient {
             ytelsetype.name().toLowerCase(),
             førsteUttaksdato.format(
                 DateTimeFormatter.ofPattern("dd.MM.yy")));
-        var contentRequest = new DialogportenRequest.Content(lagContentValue(sakstittel), lagContentValue(summaryDialog));
+        var contentRequest = new DialogportenRequest.Content(lagContentValue(sakstittel), lagContentValue(summaryDialog), null);
         var patchContent = new DialogportenPatchRequest(DialogportenPatchRequest.OP_REPLACE,
             DialogportenPatchRequest.PATH_CONTENT,
             contentRequest);
 
         //Ny transmission som sier at inntektsmelding er mottatt
-        var transmissionContent = new DialogportenRequest.Content(lagContentValue("Inntektsmelding mottatt"), null);
+        var transmissionContent = new DialogportenRequest.Content(lagContentValue("Inntektsmelding mottatt"), null, null);
         var transmission = new DialogportenRequest.Transmission(DialogportenRequest.TransmissionType.Acceptance,
             DialogportenRequest.ExtendedType.INNTEKTSMELDING,
             new DialogportenRequest.Sender("ServiceOwner"),
@@ -167,14 +167,22 @@ public class DialogportenKlient {
             DialogportenPatchRequest.PATH_STATUS,
             DialogportenRequest.DialogStatus.NotApplicable);
 
+        //legger til extended status utgått fordi det ikke finnes en tilsvarende status i dialogporten
+        //denne kan leses maskinelt av mottaker
+        var addDialogExtendedStatus = new DialogportenPatchRequest(DialogportenPatchRequest.OP_ADD,
+            DialogportenPatchRequest.PATH_EXTENDED_STATUS,
+            DialogportenRequest.ExtendedDialogStatus.Expired);
+
         //oppdatere innholdet i dialogen
-        var contentRequest = new DialogportenRequest.Content(lagContentValue(sakstittel), lagContentValue("Nav trenger ikke lenger denne inntektsmeldingen"));
+        var contentRequest = new DialogportenRequest.Content(lagContentValue(sakstittel),
+            lagContentValue("Nav trenger ikke lenger denne inntektsmeldingen"),
+            new DialogportenRequest.ExtendedStatus(new DialogportenRequest.ContentValueItem("Utgått", DialogportenRequest.NB), DialogportenRequest.TEXT_PLAIN));
         var patchContent = new DialogportenPatchRequest(DialogportenPatchRequest.OP_REPLACE,
             DialogportenPatchRequest.PATH_CONTENT,
             contentRequest);
 
         //Ny transmission som sier at inntektsmelding ikke lenger er påkrevd
-        var transmissionContent = new DialogportenRequest.Content(lagContentValue("Inntektsmeldingen er ikke lenger påkrevd"), null);
+        var transmissionContent = new DialogportenRequest.Content(lagContentValue("Inntektsmeldingen er ikke lenger påkrevd"), null, null);
         var transmission = new DialogportenRequest.Transmission(DialogportenRequest.TransmissionType.Correction,
             DialogportenRequest.ExtendedType.INNTEKTSMELDING,
             new DialogportenRequest.Sender("ServiceOwner"),
@@ -184,7 +192,7 @@ public class DialogportenKlient {
             DialogportenPatchRequest.PATH_TRANSMISSIONS,
             List.of(transmission));
 
-        sendPatchRequest(dialogUuid, List.of(patchStatus, patchContent, patchTransmission));
+        sendPatchRequest(dialogUuid, List.of(patchStatus, addDialogExtendedStatus, patchContent, patchTransmission));
 
     }
 }
