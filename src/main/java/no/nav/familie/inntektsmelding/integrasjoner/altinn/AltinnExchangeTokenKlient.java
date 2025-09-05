@@ -67,7 +67,7 @@ public class AltinnExchangeTokenKlient {
 
         var token = AltinnExchangeTokenKlient.hentTokenRetryable(exchangeRequest, 3);
         if (!ENV.isProd()) {
-            SECURE_LOG.debug("Altinn leverte dialogporten token: {}", token);
+            SECURE_LOG.warn("Altinn leverte dialogporten token: {}", token);
         }
         putTokenToCache(cacheKey, token);
         LOG.debug("Altinn-token er hentet og lagret i cache med tilhørende nøkkel: {}", cacheKey);
