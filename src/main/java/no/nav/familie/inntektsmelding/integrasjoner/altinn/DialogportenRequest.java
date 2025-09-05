@@ -26,6 +26,9 @@ public record DialogportenRequest(@NotNull String serviceResource,
         Awaiting,
         NotApplicable,
     }
+    enum ExtendedDialogStatus {
+        Expired,
+    }
 
     protected record ApiAction(String name, List<Endpoint> endpoints, String action) {
     }
@@ -72,7 +75,7 @@ public record DialogportenRequest(@NotNull String serviceResource,
     protected record Sender(@NotNull String actorType) {
     }
 
-    protected record Content(@NotNull @Valid ContentValue title, @Valid ContentValue summary) {
+    protected record Content(@NotNull @Valid ContentValue title, @Valid ContentValue summary, @Valid ExtendedStatus extendedStatus) {
     }
 
     protected record ContentValue(@NotNull @NotEmpty @Valid List<ContentValueItem> value, @NotNull String mediaType) {
@@ -87,6 +90,8 @@ public record DialogportenRequest(@NotNull String serviceResource,
     protected record Url(String url, String mediaType, AttachmentUrlConsumerType consumerType) {
     }
 
+    protected record ExtendedStatus(ContentValueItem value, String mediaType) {
+    }
     protected enum AttachmentUrlConsumerType {
         Gui,
         Api,
