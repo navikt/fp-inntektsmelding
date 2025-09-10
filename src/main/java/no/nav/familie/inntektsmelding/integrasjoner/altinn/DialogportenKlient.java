@@ -169,14 +169,14 @@ public class DialogportenKlient {
 
         //legger til extended status utgått fordi det ikke finnes en tilsvarende status i dialogporten
         //denne kan leses maskinelt av mottaker
-        var addDialogExtendedStatus = new DialogportenPatchRequest(DialogportenPatchRequest.OP_ADD,
+        var addDialogExtendedStatus = new DialogportenPatchRequest(DialogportenPatchRequest.OP_REPLACE,
             DialogportenPatchRequest.PATH_EXTENDED_STATUS,
             DialogportenRequest.ExtendedDialogStatus.Expired);
 
         //oppdatere innholdet i dialogen
         var contentRequest = new DialogportenRequest.Content(lagContentValue(sakstittel),
             lagContentValue("Nav trenger ikke lenger denne inntektsmeldingen"),
-            new DialogportenRequest.ExtendedStatus(new DialogportenRequest.ContentValueItem("Utgått", DialogportenRequest.NB), DialogportenRequest.TEXT_PLAIN));
+            lagContentValue("Utgått"));
         var patchContent = new DialogportenPatchRequest(DialogportenPatchRequest.OP_REPLACE,
             DialogportenPatchRequest.PATH_CONTENT,
             contentRequest);
