@@ -6,7 +6,7 @@
     <parent>
         <groupId>no.nav.foreldrepenger.felles</groupId>
         <artifactId>fp-bom</artifactId>
-        <version>3.6.18</version>
+        <version>4.0.0</version>
     </parent>
 
     <groupId>no.nav.familie.inntektsmelding</groupId>
@@ -18,9 +18,9 @@
         <sonar.projectName>fp-inntektsmelding</sonar.projectName>
         <sonar.projectKey>navikt_fp-inntektsmelding</sonar.projectKey>
 
-        <felles.version>7.5.10</felles.version>
-        <prosesstask.version>5.1.11</prosesstask.version>
-        <fp-kontrakter.version>9.3.8</fp-kontrakter.version>
+        <felles.version>7.6.0</felles.version>
+        <prosesstask.version>5.2.0</prosesstask.version>
+        <fp-kontrakter.version>9.4.1</fp-kontrakter.version>
     </properties>
 
     <dependencyManagement>
@@ -28,7 +28,7 @@
             <dependency>
                 <groupId>no.nav.foreldrepenger.felles</groupId>
                 <artifactId>fp-bom</artifactId>
-                <version>3.6.18</version>
+                <version>4.0.0</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
