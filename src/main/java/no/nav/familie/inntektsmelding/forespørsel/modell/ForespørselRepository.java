@@ -172,9 +172,7 @@ public class ForespørselRepository {
         if (resultList.isEmpty()) {
             return Optional.empty();
         } else if (resultList.size() > 1) {
-            throw new IllegalStateException(
-                "Forventet å finne kun en åpen forespørsel for gitt sak {} og orgnr {}" + fagsakSaksnummer
-                    + organisasjonsnummer);
+            throw new IllegalStateException(String.format("Forventet å finne kun en åpen forespørsel for gitt sak %s og orgnr %s", fagsakSaksnummer, organisasjonsnummer));
         } else {
             return Optional.of(resultList.getFirst());
         }
