@@ -32,6 +32,9 @@ import no.nav.familie.inntektsmelding.server.tilgangsstyring.Tilgang;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.familie.inntektsmelding.typer.dto.SaksnummerDto;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
 @AutentisertMedAzure
 @OpenAPIDefinition(tags = @Tag(name = "oppgaver", description = "Hånstering av feilopprettede saker / oppgaver i arbeidsgiverportalen"))
 @RequestScoped
@@ -67,7 +70,7 @@ public class OppgaverForvaltningRestTjeneste {
         @Parameter(description = "Informasjon om oppgaven") @Valid SlettOppgaveRequest inputDto) {
         sjekkAtKallerHarRollenDrift();
         LOG.info("Sletter oppgave med saksnummer {}", inputDto.saksnummer());
-        forespørselBehandlingTjeneste.slettForespørsel(inputDto.saksnummer(), inputDto.orgnr(), null);
+        forespørselBehandlingTjeneste.slettForespørsel(inputDto.saksnummer(), inputDto.orgnr(), inputDto.getLocalDateStp());
         return Response.ok().build();
     }
 
@@ -92,7 +95,14 @@ public class OppgaverForvaltningRestTjeneste {
         return Response.ok(resultat).build();
     }
 
-    protected record SlettOppgaveRequest(@Valid @NotNull SaksnummerDto saksnummer, @Valid @NotNull OrganisasjonsnummerDto orgnr) {
+    public record SlettOppgaveRequest(@Valid @NotNull SaksnummerDto saksnummer, @Valid @NotNull OrganisasjonsnummerDto orgnr,
+                                         @Parameter(description = "YYYY-MM-DD") String stp) {
+        private LocalDate getLocalDateStp() {
+            if (stp != null) {
+                return LocalDate.parse(stp, DateTimeFormatter.ISO_LOCAL_DATE);
+            }
+            return null;
+        }
     }
 
     private void sjekkAtKallerHarRollenDrift() {
