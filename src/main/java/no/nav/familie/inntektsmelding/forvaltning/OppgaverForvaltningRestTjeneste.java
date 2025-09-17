@@ -70,7 +70,7 @@ public class OppgaverForvaltningRestTjeneste {
         @Parameter(description = "Informasjon om oppgaven") @Valid SlettOppgaveRequest inputDto) {
         sjekkAtKallerHarRollenDrift();
         LOG.info("Sletter oppgave med saksnummer {}", inputDto.saksnummer());
-        forespørselBehandlingTjeneste.slettForespørsel(inputDto.saksnummer(), inputDto.orgnr(), inputDto.getLocalDateStp());
+        forespørselBehandlingTjeneste.slettForespørsel(inputDto.saksnummer(), inputDto.orgnr(), inputDto.stp());
         return Response.ok().build();
     }
 
@@ -96,14 +96,7 @@ public class OppgaverForvaltningRestTjeneste {
     }
 
     public record SlettOppgaveRequest(@Valid @NotNull SaksnummerDto saksnummer, @Valid @NotNull OrganisasjonsnummerDto orgnr,
-                                         @Parameter(description = "YYYY-MM-DD") String stp) {
-        private LocalDate getLocalDateStp() {
-            if (stp != null) {
-                return LocalDate.parse(stp, DateTimeFormatter.ISO_LOCAL_DATE);
-            }
-            return null;
-        }
-    }
+                                         @Valid LocalDate stp) {}
 
     private void sjekkAtKallerHarRollenDrift() {
         tilgang.sjekkAtAnsattHarRollenDrift();
