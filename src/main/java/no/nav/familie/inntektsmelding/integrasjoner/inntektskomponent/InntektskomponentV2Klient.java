@@ -18,7 +18,7 @@ import no.nav.vedtak.felles.integrasjon.rest.TokenFlow;
 
 @ApplicationScoped
 @RestClientConfig(tokenConfig = TokenFlow.AZUREAD_CC, endpointProperty = "inntekt.url",
-    endpointDefault = "http://ikomp.prod-fss-pub.nais.io/rest/v2/inntekt",
+    endpointDefault = "https://ikomp.prod-fss-pub.nais.io/rest/v2/inntekt",
     scopesProperty = "inntekt.scopes", scopesDefault = "api://prod-fss.team-inntekt.ikomp/.default")
 public class InntektskomponentV2Klient {
     private static final Logger LOG = LoggerFactory.getLogger(InntektskomponentV2Klient.class);
