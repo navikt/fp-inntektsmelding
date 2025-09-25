@@ -211,11 +211,6 @@
             <artifactId>jersey-media-json-jackson</artifactId>
         </dependency>
         <dependency>
-            <groupId>no.nav.tjenester</groupId>
-            <artifactId>aordningen-inntektsinformasjon-v1</artifactId>
-            <version>1.7</version>
-        </dependency>
-        <dependency>
             <groupId>no.nav.foreldrepenger.felles</groupId>
             <artifactId>felles-db</artifactId>
         </dependency>

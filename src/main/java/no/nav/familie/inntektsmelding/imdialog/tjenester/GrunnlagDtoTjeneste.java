@@ -22,7 +22,6 @@ import no.nav.familie.inntektsmelding.integrasjoner.aareg.Arbeidsforhold;
 import no.nav.familie.inntektsmelding.integrasjoner.aareg.ArbeidsforholdTjeneste;
 import no.nav.familie.inntektsmelding.integrasjoner.aareg.ArbeidstakerTjeneste;
 import no.nav.familie.inntektsmelding.integrasjoner.inntektskomponent.InntektTjeneste;
-import no.nav.familie.inntektsmelding.integrasjoner.inntektskomponent.Inntektsopplysninger;
 import no.nav.familie.inntektsmelding.integrasjoner.organisasjon.OrganisasjonTjeneste;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonInfo;
@@ -228,17 +227,6 @@ public class GrunnlagDtoTjeneste {
                                                                              String organisasjonsnummer) {
         var inntektsopplysninger = inntektTjeneste.hentInntekt(aktørId, skjæringstidspunkt, LocalDate.now(),
             organisasjonsnummer);
-        try {
-            var iV2 = inntektTjeneste.hentInntektV2(aktørId, skjæringstidspunkt, LocalDate.now(),
-                organisasjonsnummer);
-            if (!Inntektsopplysninger.erLik(inntektsopplysninger, iV2)) {
-                LOG.info("InntektV2 diff for {}", Optional.ofNullable(uuid).map(Object::toString).orElse("aktørId"));
-            } else {
-                LOG.info("InntektV2 er lik for {}", Optional.ofNullable(uuid).map(Object::toString).orElse("aktørId"));
-            }
-        } catch (Exception e) {
-            LOG.info("InntektV2 feil for {}", Optional.ofNullable(uuid).map(Object::toString).orElse("aktørId"), e);
-        }
         if (uuid == null) {
             LOG.info("Inntektsopplysninger for aktørId {} var {}", aktørId, inntektsopplysninger);
         } else {
