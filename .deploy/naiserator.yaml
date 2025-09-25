@@ -95,10 +95,10 @@ spec:
           cluster: {{environment}}-fss
       {{#if devOnly}}
         - application: azure-token-generator
-          namespace: aura
+          namespace: nais
           cluster: dev-gcp
         - application: tokenx-token-generator
-          namespace: aura
+          namespace: nais
           cluster: dev-gcp
       {{/if}}
     outbound:
