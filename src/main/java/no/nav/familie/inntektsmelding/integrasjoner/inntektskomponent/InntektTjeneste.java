@@ -5,7 +5,6 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -22,10 +21,6 @@ import org.slf4j.LoggerFactory;
 
 import no.nav.familie.inntektsmelding.typer.dto.MånedslønnStatus;
 import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
-import no.nav.tjenester.aordningen.inntektsinformasjon.ArbeidsInntektIdent;
-import no.nav.tjenester.aordningen.inntektsinformasjon.inntekt.Inntekt;
-import no.nav.tjenester.aordningen.inntektsinformasjon.inntekt.InntektType;
-import no.nav.tjenester.aordningen.inntektsinformasjon.response.HentInntektListeBolkResponse;
 import no.nav.vedtak.exception.IntegrasjonException;
 import no.nav.vedtak.exception.TekniskException;
 
@@ -34,16 +29,14 @@ public class InntektTjeneste {
     private static final Logger LOG = LoggerFactory.getLogger(InntektTjeneste.class);
     private static final int DAG_I_MÅNED_RAPPORTERINGSFRIST = 5;
     private InntektskomponentKlient inntektskomponentKlient;
-    private InntektskomponentV2Klient inntektskomponentV2Klient;
 
     InntektTjeneste() {
         // CDI
     }
 
     @Inject
-    public InntektTjeneste(InntektskomponentKlient inntektskomponentKlient, InntektskomponentV2Klient inntektskomponentV2Klient) {
+    public InntektTjeneste(InntektskomponentKlient inntektskomponentKlient) {
         this.inntektskomponentKlient = inntektskomponentKlient;
-        this.inntektskomponentV2Klient = inntektskomponentV2Klient;
     }
 
     // Tar inn dagens dato som parameter for å gjøre det enklere å skrive tester
@@ -54,26 +47,7 @@ public class InntektTjeneste {
         var request = lagRequest(aktørId, fomDato, tomDato);
         try {
             var respons = inntektskomponentKlient.finnInntekt(request);
-            var inntekter = oversettRespons(respons, aktørId, organisasjonsnummer);
-            var alleMåneder = inntekter.size() == antallMånederViBerOm
-                              ? inntekter
-                              : fyllInnManglendeMåneder(fomDato, antallMånederViBerOm, inntekter);
-            var kuttetNedTilTreMndInntekt = fjernOverflødigeMånederOmNødvendig(alleMåneder);
-            return beregnSnittOgLeggPåStatus(kuttetNedTilTreMndInntekt, dagensDato, organisasjonsnummer);
-        } catch (IntegrasjonException e) {
-            LOG.warn("Nedetid i inntektskomponenten, returnerer tomme måneder uten snittlønn til frontend. Fikk feil {}", e.getMessage());
-            return lagTomRespons(skjæringstidspunkt, organisasjonsnummer);
-        }
-    }
-
-    public Inntektsopplysninger hentInntektV2(AktørIdEntitet aktørId, LocalDate skjæringstidspunkt, LocalDate dagensDato, String organisasjonsnummer) {
-        var antallMånederViBerOm = finnAntallMånederViMåBeOm(skjæringstidspunkt, dagensDato);
-        var fomDato = skjæringstidspunkt.minusMonths(antallMånederViBerOm);
-        var tomDato = skjæringstidspunkt.minusMonths(1);
-        var request = lagRequest(aktørId, fomDato, tomDato);
-        try {
-            var respons = inntektskomponentV2Klient.finnInntekt(request);
-            var inntekter = oversettResponsV2(respons, organisasjonsnummer);
+            var inntekter = oversettRespons(respons, organisasjonsnummer);
             var alleMåneder = inntekter.size() == antallMånederViBerOm
                               ? inntekter
                               : fyllInnManglendeMåneder(fomDato, antallMånederViBerOm, inntekter);
@@ -100,8 +74,8 @@ public class InntektTjeneste {
                 String.format("Har mappet flere enn 3 måneder med inntekt, ugyldig tilstand. Mappede månedsinntekter var %s", månedsinntekter));
         }
         var totalLønn = månedsinntekter.stream()
-            .filter(m -> m.beløp() != null)
             .map(Inntektsopplysninger.InntektMåned::beløp)
+            .filter(Objects::nonNull)
             .reduce(BigDecimal::add)
             .orElse(BigDecimal.ZERO)
             .max(BigDecimal.ZERO); // hvis inntekt blir < 0 setter vi den til 0 for å unngå negative tall i inntektsmeldingen
@@ -172,43 +146,7 @@ public class InntektTjeneste {
             .toList();
     }
 
-    private List<Månedsinntekt> oversettRespons(HentInntektListeBolkResponse response, AktørIdEntitet aktørId, String organisasjonsnummer) {
-        if (response.getSikkerhetsavvikListe() != null && !response.getSikkerhetsavvikListe().isEmpty()) {
-            throw new IntegrasjonException("FP-535194",
-                String.format("Fikk følgende sikkerhetsavvik ved kall til inntektstjenesten: %s.", byggSikkerhetsavvikString(response)));
-        }
-
-        List<ArbeidsInntektIdent> inntektListeRespons =
-            response.getArbeidsInntektIdentListe() == null ? Collections.emptyList() : response.getArbeidsInntektIdentListe();
-        var inntektPerMånedForBruker = inntektListeRespons.stream()
-            .filter(a -> a.getIdent().getIdentifikator().equals(aktørId.getAktørId()))
-            .findFirst()
-            .map(ArbeidsInntektIdent::getArbeidsInntektMaaned)
-            .orElse(List.of());
-
-        List<Månedsinntekt> månedsInntektListe = new ArrayList<>();
-
-        inntektPerMånedForBruker.forEach(inntektMåned -> {
-            if (inntektMåned.getArbeidsInntektInformasjon() != null && inntektMåned.getArbeidsInntektInformasjon().getInntektListe() != null) {
-                var inntekterPrMåned = inntektMåned.getArbeidsInntektInformasjon()
-                    .getInntektListe()
-                    .stream()
-                    .filter(inntekt -> InntektType.LOENNSINNTEKT.equals(inntekt.getInntektType())
-                        && organisasjonsnummer.equals(inntekt.getVirksomhet().getIdentifikator()))
-                    .collect(Collectors.groupingBy(Inntekt::getUtbetaltIMaaned));
-                inntekterPrMåned.forEach((key, value) -> {
-                    var totalInntektForMnd = value.stream().map(Inntekt::getBeloep)
-                        .filter(Objects::nonNull)
-                        .reduce(BigDecimal::add).orElse(BigDecimal.ZERO);
-                    var inntekt = new Månedsinntekt(key, totalInntektForMnd);
-                    månedsInntektListe.add(inntekt);
-                });
-            }
-        });
-        return månedsInntektListe;
-    }
-
-    private List<Månedsinntekt> oversettResponsV2(List<InntektskomponentV2Klient.Inntektsinformasjon> response, String organisasjonsnummer) {
+    private List<Månedsinntekt> oversettRespons(List<InntektskomponentKlient.Inntektsinformasjon> response, String organisasjonsnummer) {
 
         var månedsinntekter = response.stream()
             .filter(ii -> organisasjonsnummer.equals(ii.underenhet()))
@@ -228,19 +166,6 @@ public class InntektTjeneste {
         var tomÅrMåned = YearMonth.from(tomDato);
 
         return new FinnInntektRequest(aktørId.getAktørId(), fomÅrMåned, tomÅrMåned);
-    }
-
-    private String byggSikkerhetsavvikString(HentInntektListeBolkResponse response) {
-        var stringBuilder = new StringBuilder();
-        var sikkerhetsavvikListe = response.getSikkerhetsavvikListe();
-        if (sikkerhetsavvikListe != null && !sikkerhetsavvikListe.isEmpty()) {
-            stringBuilder.append(sikkerhetsavvikListe.getFirst().getTekst());
-            for (int i = 1; i < sikkerhetsavvikListe.size(); i++) {
-                stringBuilder.append(", ");
-                stringBuilder.append(sikkerhetsavvikListe.get(i).getTekst());
-            }
-        }
-        return stringBuilder.toString();
     }
 
 }

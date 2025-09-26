@@ -30,7 +30,7 @@ public class JacksonJsonConfig implements ContextResolver<ObjectMapper> {
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         objectMapper.disable(SerializationFeature.WRITE_DURATIONS_AS_TIMESTAMPS);
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+        objectMapper.setDefaultPropertyInclusion(JsonInclude.Include.NON_EMPTY);
         return objectMapper;
     }
 

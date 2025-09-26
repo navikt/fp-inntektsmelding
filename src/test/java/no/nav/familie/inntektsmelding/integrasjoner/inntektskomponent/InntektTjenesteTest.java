@@ -18,14 +18,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import no.nav.familie.inntektsmelding.typer.dto.MånedslønnStatus;
 import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
-import no.nav.tjenester.aordningen.inntektsinformasjon.Aktoer;
-import no.nav.tjenester.aordningen.inntektsinformasjon.AktoerType;
-import no.nav.tjenester.aordningen.inntektsinformasjon.ArbeidsInntektIdent;
-import no.nav.tjenester.aordningen.inntektsinformasjon.ArbeidsInntektInformasjon;
-import no.nav.tjenester.aordningen.inntektsinformasjon.ArbeidsInntektMaaned;
-import no.nav.tjenester.aordningen.inntektsinformasjon.inntekt.Inntekt;
-import no.nav.tjenester.aordningen.inntektsinformasjon.inntekt.InntektType;
-import no.nav.tjenester.aordningen.inntektsinformasjon.response.HentInntektListeBolkResponse;
 import no.nav.vedtak.exception.IntegrasjonException;
 
 @ExtendWith(MockitoExtension.class)
@@ -39,7 +31,7 @@ class InntektTjenesteTest {
 
     @BeforeEach
     void setUp() {
-        tjeneste = new InntektTjeneste(klient, null);
+        tjeneste = new InntektTjeneste(klient);
     }
 
     @Test
@@ -49,14 +41,10 @@ class InntektTjenesteTest {
         var dagensDato = stp.plusDays(10);
         var forventetRequest = new FinnInntektRequest(aktørId.getAktørId(), YearMonth.of(2024, 7), YearMonth.of(2024, 9));
 
-        var response = new HentInntektListeBolkResponse();
-        var aiResponse = new ArbeidsInntektIdent();
-        aiResponse.setIdent(new Aktoer(aktørId.getAktørId(), AktoerType.AKTOER_ID));
         var inntekt1 = getInntekt(YearMonth.of(2024,7), BigDecimal.valueOf(25_000));
         var inntekt2 = getInntekt(YearMonth.of(2024,8), BigDecimal.valueOf(25_000));
         var inntekt3 = getInntekt(YearMonth.of(2024,9), BigDecimal.valueOf(25_000));
-        aiResponse.setArbeidsInntektMaaned(List.of(inntekt1, inntekt2, inntekt3));
-        response.setArbeidsInntektIdentListe(Collections.singletonList(aiResponse));
+        var response = List.of(inntekt1, inntekt2, inntekt3);
         when(klient.finnInntekt(forventetRequest)).thenReturn(response);
 
         var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR);
@@ -74,11 +62,7 @@ class InntektTjenesteTest {
         var dagensDato = LocalDate.of(2024,10,15);
         var forventetRequest = new FinnInntektRequest(aktørId.getAktørId(), YearMonth.of(2024, 7), YearMonth.of(2024, 9));
 
-        var response = new HentInntektListeBolkResponse();
-        var aiResponse = new ArbeidsInntektIdent();
-        aiResponse.setIdent(new Aktoer(aktørId.getAktørId(), AktoerType.AKTOER_ID));
-        aiResponse.setArbeidsInntektMaaned(null);
-        response.setArbeidsInntektIdentListe(Collections.singletonList(aiResponse));
+        List<InntektskomponentKlient.Inntektsinformasjon> response = List.of();
         when(klient.finnInntekt(forventetRequest)).thenReturn(response);
 
         var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR);
@@ -96,14 +80,10 @@ class InntektTjenesteTest {
         var dagensDato = LocalDate.of(2024,10,1);
         var forventetRequest = new FinnInntektRequest(aktørId.getAktørId(), YearMonth.of(2024, 6), YearMonth.of(2024, 9));
 
-        var response = new HentInntektListeBolkResponse();
-        var aiResponse = new ArbeidsInntektIdent();
-        aiResponse.setIdent(new Aktoer(aktørId.getAktørId(), AktoerType.AKTOER_ID));
         var inntekt1 = getInntekt(YearMonth.of(2024,6), BigDecimal.valueOf(25_000));
         var inntekt2 = getInntekt(YearMonth.of(2024,7), BigDecimal.valueOf(25_000));
         var inntekt3 = getInntekt(YearMonth.of(2024,8), BigDecimal.valueOf(25_000));
-        aiResponse.setArbeidsInntektMaaned(List.of(inntekt1, inntekt2, inntekt3));
-        response.setArbeidsInntektIdentListe(Collections.singletonList(aiResponse));
+        var response = List.of(inntekt1, inntekt2, inntekt3);
         when(klient.finnInntekt(forventetRequest)).thenReturn(response);
 
         var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR);
@@ -122,15 +102,12 @@ class InntektTjenesteTest {
         var dagensDato = LocalDate.of(2024,10,1);
         var forventetRequest = new FinnInntektRequest(aktørId.getAktørId(), YearMonth.of(2024, 6), YearMonth.of(2024, 9));
 
-        var response = new HentInntektListeBolkResponse();
-        var aiResponse = new ArbeidsInntektIdent();
-        aiResponse.setIdent(new Aktoer(aktørId.getAktørId(), AktoerType.AKTOER_ID));
+
         var inntekt1 = getInntekt(YearMonth.of(2024,6), BigDecimal.valueOf(25_000));
         var inntekt2 = getInntekt(YearMonth.of(2024,7), BigDecimal.valueOf(25_000));
         var inntekt3 = getInntekt(YearMonth.of(2024,8), BigDecimal.valueOf(25_000));
         var inntekt4 = getInntekt(YearMonth.of(2024,9), BigDecimal.valueOf(25_000));
-        aiResponse.setArbeidsInntektMaaned(List.of(inntekt1, inntekt2, inntekt3, inntekt4));
-        response.setArbeidsInntektIdentListe(Collections.singletonList(aiResponse));
+        var response = List.of(inntekt1, inntekt2, inntekt3, inntekt4);
         when(klient.finnInntekt(forventetRequest)).thenReturn(response);
 
 
@@ -149,14 +126,10 @@ class InntektTjenesteTest {
         var dagensDato = LocalDate.of(2024,10,15);
         var forventetRequest = new FinnInntektRequest(aktørId.getAktørId(), YearMonth.of(2024, 7), YearMonth.of(2024, 9));
 
-        var response = new HentInntektListeBolkResponse();
-        var aiResponse = new ArbeidsInntektIdent();
-        aiResponse.setIdent(new Aktoer(aktørId.getAktørId(), AktoerType.AKTOER_ID));
         var inntekt1 = getInntekt(YearMonth.of(2024,7), BigDecimal.valueOf(25_000));
         var inntekt2 = getInntekt(YearMonth.of(2024,8));
         var inntekt3 = getInntekt(YearMonth.of(2024,9), BigDecimal.valueOf(25_000));
-        aiResponse.setArbeidsInntektMaaned(List.of(inntekt1, inntekt2, inntekt3));
-        response.setArbeidsInntektIdentListe(Collections.singletonList(aiResponse));
+        var response = List.of(inntekt1, inntekt2, inntekt3);
         when(klient.finnInntekt(forventetRequest)).thenReturn(response);
 
         var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR);
@@ -174,15 +147,11 @@ class InntektTjenesteTest {
         var dagensDato = LocalDate.of(2024,10,2);
         var forventetRequest = new FinnInntektRequest(aktørId.getAktørId(), YearMonth.of(2024, 6), YearMonth.of(2024, 9));
 
-        var response = new HentInntektListeBolkResponse();
-        var aiResponse = new ArbeidsInntektIdent();
-        aiResponse.setIdent(new Aktoer(aktørId.getAktørId(), AktoerType.AKTOER_ID));
         var inntekt1 = getInntekt(YearMonth.of(2024,6), BigDecimal.valueOf(25_000));
         var inntekt2 = getInntekt(YearMonth.of(2024,7));
         var inntekt3 = getInntekt(YearMonth.of(2024,8), BigDecimal.valueOf(25_000));
         var inntekt4 = getInntekt(YearMonth.of(2024,9));
-        aiResponse.setArbeidsInntektMaaned(List.of(inntekt1, inntekt2, inntekt3, inntekt4));
-        response.setArbeidsInntektIdentListe(Collections.singletonList(aiResponse));
+        var response = List.of(inntekt1, inntekt2, inntekt3, inntekt4);
         when(klient.finnInntekt(forventetRequest)).thenReturn(response);
 
         var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR);
@@ -201,12 +170,7 @@ class InntektTjenesteTest {
         var dagensDato = LocalDate.of(2024,10,15);
         var forventetRequest = new FinnInntektRequest(aktørId.getAktørId(), YearMonth.of(2024, 7), YearMonth.of(2024, 9));
 
-        var response = new HentInntektListeBolkResponse();
-        var aiResponse = new ArbeidsInntektIdent();
-        aiResponse.setIdent(new Aktoer(aktørId.getAktørId(), AktoerType.AKTOER_ID));
-        aiResponse.setArbeidsInntektMaaned(List.of());
-        response.setArbeidsInntektIdentListe(Collections.singletonList(aiResponse));
-        when(klient.finnInntekt(forventetRequest)).thenReturn(response);
+        when(klient.finnInntekt(forventetRequest)).thenReturn(List.of());
 
         var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR);
 
@@ -223,14 +187,10 @@ class InntektTjenesteTest {
         var dagensDato = LocalDate.of(2024,11,4);
         var forventetRequest = new FinnInntektRequest(aktørId.getAktørId(), YearMonth.of(2024, 7), YearMonth.of(2024, 11));
 
-        var response = new HentInntektListeBolkResponse();
-        var aiResponse = new ArbeidsInntektIdent();
-        aiResponse.setIdent(new Aktoer(aktørId.getAktørId(), AktoerType.AKTOER_ID));
         var inntekt1 = getInntekt(YearMonth.of(2024,7), BigDecimal.valueOf(20_000));
         var inntekt2 = getInntekt(YearMonth.of(2024,8), BigDecimal.valueOf(25_000));
         var inntekt3 = getInntekt(YearMonth.of(2024,9), BigDecimal.valueOf(30_000));
-        aiResponse.setArbeidsInntektMaaned(List.of(inntekt1, inntekt2, inntekt3));
-        response.setArbeidsInntektIdentListe(Collections.singletonList(aiResponse));
+        var response = List.of(inntekt1, inntekt2, inntekt3);
         when(klient.finnInntekt(forventetRequest)).thenReturn(response);
 
         var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR);
@@ -250,15 +210,11 @@ class InntektTjenesteTest {
         var dagensDato = LocalDate.of(2024,11,4);
         var forventetRequest = new FinnInntektRequest(aktørId.getAktørId(), YearMonth.of(2024, 7), YearMonth.of(2024, 11));
 
-        var response = new HentInntektListeBolkResponse();
-        var aiResponse = new ArbeidsInntektIdent();
-        aiResponse.setIdent(new Aktoer(aktørId.getAktørId(), AktoerType.AKTOER_ID));
         var inntekt1 = getInntekt(YearMonth.of(2024,7), BigDecimal.valueOf(20_000));
         var inntekt2 = getInntekt(YearMonth.of(2024,8), BigDecimal.valueOf(25_000));
         var inntekt3 = getInntekt(YearMonth.of(2024,9), BigDecimal.valueOf(30_000));
         var inntekt4 = getInntekt(YearMonth.of(2024,10), BigDecimal.valueOf(30_000));
-        aiResponse.setArbeidsInntektMaaned(List.of(inntekt1, inntekt2, inntekt3, inntekt4));
-        response.setArbeidsInntektIdentListe(Collections.singletonList(aiResponse));
+        var response = List.of(inntekt1, inntekt2, inntekt3, inntekt4);
         when(klient.finnInntekt(forventetRequest)).thenReturn(response);
 
         var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR);
@@ -277,14 +233,10 @@ class InntektTjenesteTest {
         var dagensDato = stp.plusDays(10);
         var forventetRequest = new FinnInntektRequest(aktørId.getAktørId(), YearMonth.of(2024, 7), YearMonth.of(2024, 9));
 
-        var response = new HentInntektListeBolkResponse();
-        var aiResponse = new ArbeidsInntektIdent();
-        aiResponse.setIdent(new Aktoer(aktørId.getAktørId(), AktoerType.AKTOER_ID));
         var inntekt1 = getInntekt(YearMonth.of(2024,7), BigDecimal.valueOf(25_000), BigDecimal.valueOf(10_000));
         var inntekt2 = getInntekt(YearMonth.of(2024,8), BigDecimal.valueOf(25_000), BigDecimal.valueOf(5_000));
         var inntekt3 = getInntekt(YearMonth.of(2024,9), BigDecimal.valueOf(25_000));
-        aiResponse.setArbeidsInntektMaaned(List.of(inntekt1, inntekt2, inntekt3));
-        response.setArbeidsInntektIdentListe(Collections.singletonList(aiResponse));
+        var response = List.of(inntekt1, inntekt2, inntekt3);
         when(klient.finnInntekt(forventetRequest)).thenReturn(response);
 
         var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR);
@@ -302,14 +254,10 @@ class InntektTjenesteTest {
         var dagensDato = stp.plusDays(10);
         var forventetRequest = new FinnInntektRequest(aktørId.getAktørId(), YearMonth.of(2024, 7), YearMonth.of(2024, 9));
 
-        var response = new HentInntektListeBolkResponse();
-        var aiResponse = new ArbeidsInntektIdent();
-        aiResponse.setIdent(new Aktoer(aktørId.getAktørId(), AktoerType.AKTOER_ID));
         var inntekt1 = getInntekt(YearMonth.of(2024,7), BigDecimal.valueOf(25_000), BigDecimal.valueOf(10_000));
         var inntekt2 = getInntekt(YearMonth.of(2024,8), BigDecimal.valueOf(25_000), BigDecimal.valueOf(5_000), null);
         var inntekt3 = getInntekt(YearMonth.of(2024,9), BigDecimal.valueOf(25_000), null);
-        aiResponse.setArbeidsInntektMaaned(List.of(inntekt1, inntekt2, inntekt3));
-        response.setArbeidsInntektIdentListe(Collections.singletonList(aiResponse));
+        var response = List.of(inntekt1, inntekt2, inntekt3);
         when(klient.finnInntekt(forventetRequest)).thenReturn(response);
 
         var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR);
@@ -327,15 +275,11 @@ class InntektTjenesteTest {
         var dagensDato = LocalDate.of(2024,11,18);
         var forventetRequest = new FinnInntektRequest(aktørId.getAktørId(), YearMonth.of(2024, 8), YearMonth.of(2024, 11));
 
-        var response = new HentInntektListeBolkResponse();
-        var aiResponse = new ArbeidsInntektIdent();
-        aiResponse.setIdent(new Aktoer(aktørId.getAktørId(), AktoerType.AKTOER_ID));
         var inntekt0 = getInntekt(YearMonth.of(2024,8));
         var inntekt1 = getInntekt(YearMonth.of(2024,9), BigDecimal.valueOf(25_000));
         var inntekt2 = getInntekt(YearMonth.of(2024,10), BigDecimal.valueOf(25_000));
         var inntekt3 = getInntekt(YearMonth.of(2024,11), BigDecimal.valueOf(25_000));
-        aiResponse.setArbeidsInntektMaaned(List.of(inntekt0, inntekt1, inntekt2, inntekt3));
-        response.setArbeidsInntektIdentListe(Collections.singletonList(aiResponse));
+        var response = List.of(inntekt0, inntekt1, inntekt2, inntekt3);
         when(klient.finnInntekt(forventetRequest)).thenReturn(response);
 
         var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR);
@@ -370,14 +314,10 @@ class InntektTjenesteTest {
         var dagensDato = stp.plusDays(10);
         var forventetRequest = new FinnInntektRequest(aktørId.getAktørId(), YearMonth.of(2024, 7), YearMonth.of(2024, 9));
 
-        var response = new HentInntektListeBolkResponse();
-        var aiResponse = new ArbeidsInntektIdent();
-        aiResponse.setIdent(new Aktoer(aktørId.getAktørId(), AktoerType.AKTOER_ID));
         var inntekt1 = getInntekt(YearMonth.of(2024,7), BigDecimal.valueOf(3_000));
         var inntekt2 = getInntekt(YearMonth.of(2024,8), BigDecimal.valueOf(-6_000));
         var inntekt3 = getInntekt(YearMonth.of(2024,9));
-        aiResponse.setArbeidsInntektMaaned(List.of(inntekt1, inntekt2, inntekt3));
-        response.setArbeidsInntektIdentListe(Collections.singletonList(aiResponse));
+        var response = List.of(inntekt1, inntekt2, inntekt3);
         when(klient.finnInntekt(forventetRequest)).thenReturn(response);
 
         var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR);
@@ -403,23 +343,10 @@ class InntektTjenesteTest {
         assertThat(inntektsopplysinger.måneder()).containsAll(forventetListe);
     }
 
-    private static ArbeidsInntektMaaned getInntekt(YearMonth årMåned, BigDecimal... beløp) {
-        var inntektMånedResponse = new ArbeidsInntektMaaned();
-        inntektMånedResponse.setAarMaaned(årMåned);
+    private static InntektskomponentKlient.Inntektsinformasjon getInntekt(YearMonth årMåned, BigDecimal... beløp) {
         List<BigDecimal> alleBeløp = beløp == null ? Collections.emptyList() : Arrays.asList(beløp);
-        var alleInntekter = alleBeløp.stream().map(b -> {
-                var inntekt = new Inntekt();
-                inntekt.setVirksomhet(new Aktoer(ORGNR, AktoerType.ORGANISASJON));
-                inntekt.setInntektType(InntektType.LOENNSINNTEKT);
-                inntekt.setUtbetaltIMaaned(årMåned);
-                inntekt.setBeloep(b);
-                return inntekt;
-            })
-            .toList();
-        var aiInformasjon = new ArbeidsInntektInformasjon();
-        aiInformasjon.setInntektListe(alleInntekter);
-        inntektMånedResponse.setArbeidsInntektInformasjon(aiInformasjon);
-        return inntektMånedResponse;
+        var alleInntekter = alleBeløp.stream().map(b -> new InntektskomponentKlient.Inntekt("Loennsinntekt", b)).toList();
+        return new InntektskomponentKlient.Inntektsinformasjon(årMåned, ORGNR, alleInntekter);
     }
 
 }
