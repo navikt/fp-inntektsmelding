@@ -1,6 +1,5 @@
 package no.nav.familie.inntektsmelding.server;
 
-import java.io.File;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -54,34 +53,10 @@ public class JettyServer {
     }
 
     void bootStrap() throws Exception {
-        konfigurerSikkerhet();
         System.setProperty("task.manager.runner.threads", "4");
         konfigurerLogging();
         migrer(setupDataSource());
         start();
-    }
-
-    private static void konfigurerSikkerhet() {
-        if (ENV.isLocal()) {
-            initTrustStore();
-        }
-    }
-
-    private static void initTrustStore() {
-        final var trustStorePathProp = "javax.net.ssl.trustStore";
-        final var trustStorePasswordProp = "javax.net.ssl.trustStorePassword";
-
-        var defaultLocation = ENV.getProperty("user.home", ".") + "/.modig/truststore.jks";
-        var storePath = ENV.getProperty(trustStorePathProp, defaultLocation);
-        var storeFile = new File(storePath);
-        if (!storeFile.exists()) {
-            throw new IllegalStateException(
-                "Finner ikke truststore i " + storePath + "\n\tKonfrigurer enten som System property '" + trustStorePathProp
-                    + "' eller environment variabel '" + trustStorePathProp.toUpperCase().replace('.', '_') + "'");
-        }
-        var password = ENV.getProperty(trustStorePasswordProp, "changeit");
-        System.setProperty(trustStorePathProp, storeFile.getAbsolutePath());
-        System.setProperty(trustStorePasswordProp, password);
     }
 
     /**
