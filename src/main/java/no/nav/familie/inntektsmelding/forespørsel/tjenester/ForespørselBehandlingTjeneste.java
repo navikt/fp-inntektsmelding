@@ -121,7 +121,6 @@ public class ForespørselBehandlingTjeneste {
         validerOrganisasjon(foresporsel, organisasjonsnummerDto);
         validerStartdato(foresporsel, startdato);
 
-
         // Arbeidsgiverinitierte forespørsler har ingen oppgave
         foresporsel.getOppgaveId().ifPresent(oppgaveId -> minSideArbeidsgiverTjeneste.oppgaveUtført(oppgaveId, OffsetDateTime.now()));
 
@@ -130,7 +129,7 @@ public class ForespørselBehandlingTjeneste {
 
         // Oppdaterer status i arbeidsgiver-notifikasjon
         minSideArbeidsgiverTjeneste.oppdaterSakTilleggsinformasjon(foresporsel.getArbeidsgiverNotifikasjonSakId(),
-            ForespørselTekster.lagTilleggsInformasjon(årsak));
+            ForespørselTekster.lagTilleggsInformasjon(årsak, foresporsel.getFørsteUttaksdato()));
 
         // Oppdaterer status i forespørsel
         forespørselTjeneste.ferdigstillForespørsel(foresporsel.getArbeidsgiverNotifikasjonSakId());
@@ -167,7 +166,7 @@ public class ForespørselBehandlingTjeneste {
 
         // Oppdaterer status til utgått på saken i arbeidsgiverportalen
         minSideArbeidsgiverTjeneste.oppdaterSakTilleggsinformasjon(eksisterendeForespørsel.getArbeidsgiverNotifikasjonSakId(),
-            ForespørselTekster.lagTilleggsInformasjon(LukkeÅrsak.UTGÅTT));
+            ForespørselTekster.lagTilleggsInformasjon(LukkeÅrsak.UTGÅTT, eksisterendeForespørsel.getFørsteUttaksdato()));
         forespørselTjeneste.settForespørselTilUtgått(eksisterendeForespørsel.getArbeidsgiverNotifikasjonSakId());
         //oppdaterer status til not applicable i altinn dialogporten
         eksisterendeForespørsel.getDialogportenUuid().ifPresent(dialogUuid ->
@@ -202,14 +201,15 @@ public class ForespørselBehandlingTjeneste {
             fagsakSaksnummer,
             førsteUttaksdato);
 
-        opprettForespørselMinSideArbeidsgiver(forespørselUuid, organisasjonsnummer, aktørId, ytelsetype);
+        opprettForespørselMinSideArbeidsgiver(forespørselUuid, organisasjonsnummer, aktørId, ytelsetype, førsteUttaksdato);
 
         if (ENV.isDev()) {
             opprettForespørselDialogporten(forespørselUuid, organisasjonsnummer, aktørId, ytelsetype, førsteUttaksdato);
         }
     }
 
-    private void opprettForespørselMinSideArbeidsgiver(UUID forespørselUuid,  OrganisasjonsnummerDto orgnummer, AktørIdEntitet aktørIdEntitet, Ytelsetype ytelsetype) {
+    private void opprettForespørselMinSideArbeidsgiver(UUID forespørselUuid, OrganisasjonsnummerDto orgnummer, AktørIdEntitet aktørIdEntitet, Ytelsetype ytelsetype,
+                                                       LocalDate førsteUttaksdato) {
         var organisasjon = organisasjonTjeneste.finnOrganisasjon(orgnummer.orgnr());
 
         var person = personTjeneste.hentPersonInfoFraAktørId(aktørIdEntitet, ytelsetype);
@@ -221,6 +221,9 @@ public class ForespørselBehandlingTjeneste {
             orgnummer.orgnr(),
             ForespørselTekster.lagSaksTittel(person.mapFulltNavn(), person.fødselsdato()),
             skjemaUri);
+
+        var tilleggsinformasjon = ForespørselTekster.lagTilleggsInformasjon(LukkeÅrsak.ORDINÆR_INNSENDING, førsteUttaksdato);
+        minSideArbeidsgiverTjeneste.oppdaterSakTilleggsinformasjon(arbeidsgiverNotifikasjonSakId, tilleggsinformasjon);
 
         forespørselTjeneste.setArbeidsgiverNotifikasjonSakId(forespørselUuid, arbeidsgiverNotifikasjonSakId);
 
@@ -289,6 +292,9 @@ public class ForespørselBehandlingTjeneste {
             ForespørselTekster.lagSaksTittel(person.mapFulltNavn(), person.fødselsdato()),
             skjemaUri
         );
+
+        var tilleggsinformasjon = ForespørselTekster.lagTilleggsInformasjon(LukkeÅrsak.ORDINÆR_INNSENDING, førsteFraværsdato);
+        minSideArbeidsgiverTjeneste.oppdaterSakTilleggsinformasjon(fagerSakId, tilleggsinformasjon);
 
         forespørselTjeneste.setArbeidsgiverNotifikasjonSakId(uuid, fagerSakId);
 
