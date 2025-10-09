@@ -12,24 +12,32 @@ import no.nav.familie.inntektsmelding.integrasjoner.organisasjon.Organisasjon;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 
 class ForespørselTekster {
-    private static final String OPPGAVE_TEKST_NY = "Innsending av inntektsmelding for %s";
+    protected static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yy");
+
+    static final String SAKSTITTEL = "Inntektsmelding for %s (%s)";
+    static final String TILLEGGSINFORMASJON_UTFØRT_EKSTERN = "Utført i Altinn eller i bedriftens lønns- og personalsystem for første fraværsdag %s";
+    static final String TILLEGGSINFORMASJON_UTGÅTT = "Du trenger ikke lenger å sende inntektsmeldingen for første fraværsdag %s";
+    static final String TILLEGGSINFORMASJON_ORDINÆR = "For første fraværsdag %s";
+    static final String OPPGAVE_TEKST_NY = "Innsending av inntektsmelding for %s";
+
     private static final String VARSEL_TEKST = "%s - orgnr %s: En av dine ansatte har søkt om %s og vi trenger inntektsmelding for å behandle søknaden. Logg inn på Min side – arbeidsgiver hos Nav. Hvis dere sender inn via lønnssystem kan dere fortsette med dette.";
     private static final String BESKJED_FRA_SAKSBEHANDLER_TEKST = "Vi har ennå ikke mottatt inntektsmelding for %s. For at vi skal kunne behandle søknaden om %s, må inntektsmeldingen sendes inn så raskt som mulig.";
     private static final String VARSEL_FRA_SAKSBEHANDLER_TEKST = "%s - orgnr %s: Vi har ennå ikke mottatt inntektsmelding. For at vi skal kunne behandle søknaden om %s, må inntektsmeldingen sendes inn så raskt som mulig.";
-
-    private static final String TILLEGGSINFORMASJON_UTFØRT_EKSTERN = "Utført i Altinn eller i bedriftens lønns- og personalsystem";
-    private static final String TILLEGGSINFORMASJON_UTGÅTT = "Du trenger ikke lenger å sende denne inntektsmeldingen";
 
     private ForespørselTekster() {
         // Skjuler default
     }
 
-    public static String lagTilleggsInformasjon(LukkeÅrsak årsak) {
+    public static String lagTilleggsInformasjon(LukkeÅrsak årsak, LocalDate førsteUttaksdato) {
         return switch (årsak) {
-            case EKSTERN_INNSENDING -> TILLEGGSINFORMASJON_UTFØRT_EKSTERN;
-            case UTGÅTT -> TILLEGGSINFORMASJON_UTGÅTT;
-            default -> null;
+            case EKSTERN_INNSENDING -> TILLEGGSINFORMASJON_UTFØRT_EKSTERN.formatted(førsteUttaksdato.format(DATE_TIME_FORMATTER));
+            case UTGÅTT -> TILLEGGSINFORMASJON_UTGÅTT.formatted(førsteUttaksdato.format(DATE_TIME_FORMATTER));
+            case ORDINÆR_INNSENDING -> lagTilleggsInformasjonOrdinær(førsteUttaksdato);
         };
+    }
+
+    public static String lagTilleggsInformasjonOrdinær(LocalDate førsteFraværsdag) {
+        return TILLEGGSINFORMASJON_ORDINÆR.formatted(førsteFraværsdag.format(DATE_TIME_FORMATTER));
     }
 
     public static String lagOppgaveTekst(Ytelsetype ytelseType) {
@@ -37,7 +45,7 @@ class ForespørselTekster {
     }
 
     public static String lagSaksTittel(String navn, LocalDate fødselsdato) {
-        return String.format("Inntektsmelding for %s (%s)", capitalizeFully(navn), fødselsdato.format(DateTimeFormatter.ofPattern("dd.MM.yy")));
+        return String.format(SAKSTITTEL, capitalizeFully(navn), fødselsdato.format(DATE_TIME_FORMATTER));
     }
 
     public static String lagVarselTekst(Ytelsetype ytelsetype, Organisasjon org) {
@@ -59,7 +67,7 @@ class ForespørselTekster {
         };
     }
 
-    public static String mapYtelsestypeNavn(Ytelsetype ytelsetype) {
+    static String mapYtelsestypeNavn(Ytelsetype ytelsetype) {
         return switch (ytelsetype) {
             case FORELDREPENGER -> "foreldrepenger";
             case SVANGERSKAPSPENGER -> "svangerskapspenger";
