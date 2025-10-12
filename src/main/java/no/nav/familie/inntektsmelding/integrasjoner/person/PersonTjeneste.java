@@ -2,16 +2,13 @@ package no.nav.familie.inntektsmelding.integrasjoner.person;
 
 import java.net.SocketTimeoutException;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.ProcessingException;
-
-import no.nav.pdl.KjoennResponseProjection;
-
-import no.nav.pdl.KjoennType;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,18 +17,23 @@ import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
 import no.nav.pdl.Foedselsdato;
 import no.nav.pdl.FoedselsdatoResponseProjection;
+import no.nav.pdl.FolkeregisteridentifikatorResponseProjection;
 import no.nav.pdl.HentIdenterQueryRequest;
 import no.nav.pdl.HentPersonQueryRequest;
 import no.nav.pdl.IdentGruppe;
 import no.nav.pdl.IdentInformasjon;
 import no.nav.pdl.IdentInformasjonResponseProjection;
 import no.nav.pdl.IdentlisteResponseProjection;
+import no.nav.pdl.KjoennResponseProjection;
+import no.nav.pdl.KjoennType;
 import no.nav.pdl.NavnResponseProjection;
 import no.nav.pdl.Person;
 import no.nav.pdl.PersonResponseProjection;
 import no.nav.pdl.TelefonnummerResponseProjection;
 import no.nav.vedtak.exception.IntegrasjonException;
 import no.nav.vedtak.exception.VLException;
+import no.nav.vedtak.felles.integrasjon.person.FalskIdentitet;
+import no.nav.vedtak.felles.integrasjon.person.PersonMappers;
 import no.nav.vedtak.felles.integrasjon.person.Persondata;
 import no.nav.vedtak.sikkerhet.kontekst.IdentType;
 import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
@@ -55,6 +57,7 @@ public class PersonTjeneste {
         request.setIdent(aktørId.getAktørId());
 
         var projection = new PersonResponseProjection().navn(new NavnResponseProjection().fornavn().mellomnavn().etternavn())
+            .folkeregisteridentifikator(new FolkeregisteridentifikatorResponseProjection().identifikasjonsnummer().status())
             .foedselsdato(new FoedselsdatoResponseProjection().foedselsdato());
 
         PersonIdent personIdent = hentPersonidentForAktørId(aktørId).orElseThrow(
@@ -62,6 +65,12 @@ public class PersonTjeneste {
 
         LOG.info("Henter personobjekt");
         var person = pdlKlient.hentPerson(utledYtelse(ytelseType), request, projection);
+
+        var falskId = finnEvtFalskId(person, Optional.of(aktørId), personIdent);
+        if (falskId != null) {
+            return falskId;
+        }
+
         var navn = person.getNavn().getFirst();
 
         return new PersonInfo(navn.getFornavn(), navn.getMellomnavn(), navn.getEtternavn(), personIdent, aktørId, mapFødselsdato(person), null, null);
@@ -72,17 +81,40 @@ public class PersonTjeneste {
         request.setIdent(personIdent.getIdent());
 
         var projection = new PersonResponseProjection().navn(new NavnResponseProjection().fornavn().mellomnavn().etternavn())
+            .folkeregisteridentifikator(new FolkeregisteridentifikatorResponseProjection().identifikasjonsnummer().status())
             .kjoenn(new KjoennResponseProjection().kjoenn())
             .telefonnummer(new TelefonnummerResponseProjection().landskode().nummer())
             .foedselsdato(new FoedselsdatoResponseProjection().foedselsdato());
 
         var aktørId = finnAktørIdForIdent(personIdent);
         var person = pdlKlient.hentPerson(utledYtelse(ytelseType), request, projection);
+
+        var falskId = finnEvtFalskId(person, aktørId, personIdent);
+        if (falskId != null) {
+            return falskId;
+        }
+
         var navn = person.getNavn().getFirst();
         var kjønn = person.getKjoenn().isEmpty() ? PersonInfo.Kjønn.UKJENT : mapKjønn(person.getKjoenn().getFirst().getKjoenn());
 
         return new PersonInfo(navn.getFornavn(), navn.getMellomnavn(), navn.getEtternavn(), personIdent, aktørId.orElse(null), mapFødselsdato(person),
             mapTelefonnummer(person), kjønn);
+    }
+
+    private PersonInfo finnEvtFalskId(Person person, Optional<AktørIdEntitet> aktørId, PersonIdent personIdent) {
+        if (PersonMappers.manglerIdentifikator(person)) {
+            var brukId = aktørId.map(AktørIdEntitet::getAktørId).orElseGet(personIdent::getIdent);
+            var falskId = FalskIdentitet.finnFalskIdentitet(brukId, pdlKlient).orElse(null);
+            if (falskId != null) {
+                var oppdeltNavn = Arrays.stream(falskId.navn().split(" ")).toList();
+                var fornavn = !oppdeltNavn.isEmpty() ? oppdeltNavn.getFirst() : "";
+                var mellomnavn = oppdeltNavn.size() > 2 ? oppdeltNavn.get(1) : null;
+                var etternavn = oppdeltNavn.size() > 1 ? oppdeltNavn.getLast() : "";
+                return new PersonInfo(fornavn, mellomnavn, etternavn, personIdent, aktørId.orElse(null), falskId.fødselsdato(),
+                    null, PersonInfo.Kjønn.UKJENT);
+            }
+        }
+        return null;
     }
 
     private PersonInfo.Kjønn mapKjønn(KjoennType kjønn) {
