@@ -141,7 +141,7 @@ public class DialogportenKlient {
         var contentAttachement = List.of(new DialogportenRequest.ContentValueItem("Kvittering for inntektsmelding", DialogportenRequest.NB));
         var url = inntektsmeldingSkjemaLenke + "/server/api/ekstern/kvittering/" + forespørselUuid;
         var urlApi = List.of(new DialogportenRequest.Url(url, DialogportenRequest.TEXT_PLAIN, DialogportenRequest.AttachmentUrlConsumerType.Api));
-        var urlGui = List.of(new DialogportenRequest.Url(url, DialogportenRequest.NB, DialogportenRequest.AttachmentUrlConsumerType.Gui));
+        var urlGui = List.of(new DialogportenRequest.Url(url, DialogportenRequest.TEXT_PLAIN, DialogportenRequest.AttachmentUrlConsumerType.Gui));
         var kvitteringApi = new DialogportenRequest.Attachment(contentAttachement, urlApi);
         var kvitteringGui = new DialogportenRequest.Attachment(contentAttachement, urlGui);
 
