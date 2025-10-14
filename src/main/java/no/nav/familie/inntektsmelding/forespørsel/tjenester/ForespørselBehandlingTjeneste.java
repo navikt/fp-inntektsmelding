@@ -139,7 +139,8 @@ public class ForespørselBehandlingTjeneste {
             dialogportenKlient.ferdigstilleMeldingIDialogporten(dialogUuid,
                 lagSaksTittelForDialogporten(aktorId, foresporsel.getYtelseType()),
                 foresporsel.getYtelseType(),
-                foresporsel.getFørsteUttaksdato()));
+                foresporsel.getFørsteUttaksdato(),
+                foresporsel.getUuid()));
         return foresporsel;
     }
 

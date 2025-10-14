@@ -76,7 +76,7 @@ public class DialogportenForvaltningRestTjeneste {
         }
         sjekkAtKallerHarRollenDrift();
         LOG.info("Oppdatere en dialog med dialogUuid {}", dialogUuid);
-        dialogportenKlient.ferdigstilleMeldingIDialogporten(UUID.fromString(dialogUuid), "Sakstittel", Ytelsetype.FORELDREPENGER, LocalDate.now());
+        dialogportenKlient.ferdigstilleMeldingIDialogporten(UUID.fromString(dialogUuid), "Sakstittel", Ytelsetype.FORELDREPENGER, LocalDate.now(), null);
         return Response.ok().build();
     }
 
