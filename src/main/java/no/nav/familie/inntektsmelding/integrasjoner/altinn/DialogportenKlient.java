@@ -41,7 +41,7 @@ public class DialogportenKlient {
         this.restClient = restClient;
         this.restConfig = RestConfig.forClient(this.getClass());
         this.tokenKlient = AltinnExchangeTokenKlient.instance();
-        this.inntektsmeldingSkjemaLenke = ENV.getProperty("inntektsmelding.skjema.lenke", "https://arbeidsgiver.intern.dev.nav.no/fp-im-dialog");
+        this.inntektsmeldingSkjemaLenke = ENV.getProperty("inntektsmelding.skjema.lenke", "https://arbeidsgiver.nav.no/fp-im-dialog");
     }
 
     public String opprettDialog(UUID forespørselUuid,
