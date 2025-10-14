@@ -18,6 +18,7 @@
     "27e77109-fef2-48ce-a174-269074490353"
   ],
   "db": {
+    "dbVersion": "POSTGRES_16",
     "dbTier": "db-f1-micro",
     "dbDiskAutoresize": "false",
     "dbHighAvailability": "false",

@@ -53,7 +53,7 @@ spec:
         - id: elastic
   gcp:
     sqlInstances:
-      - type: POSTGRES_15
+      - type: {{db.dbVersion}}
         databases:
           - name: fpinntektsmelding
             envVarPrefix: DB

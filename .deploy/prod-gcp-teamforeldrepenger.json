@@ -18,6 +18,7 @@
     "73107205-17ec-4a07-a56e-e0a8542f90c9"
   ],
   "db": {
+    "dbVersion": "POSTGRES_15",
     "dbTier": "db-custom-1-3840",
     "dbDiskAutoresize": "true",
     "dbHighAvailability": "true",
