@@ -118,7 +118,8 @@ public class DialogportenKlient {
             DialogportenRequest.TEXT_PLAIN);
     }
 
-    public void ferdigstilleMeldingIDialogporten(UUID dialogUuid, String sakstittel, Ytelsetype ytelsetype, LocalDate førsteUttaksdato) {
+    public void ferdigstilleMeldingIDialogporten(UUID dialogUuid, String sakstittel, Ytelsetype ytelsetype, LocalDate førsteUttaksdato,
+                                                 UUID forespørselUuid) {
         //oppdatere status på meldingen til fullført
         var patchStatus = new DialogportenPatchRequest(DialogportenPatchRequest.OP_REPLACE,
             DialogportenPatchRequest.PATH_STATUS,
@@ -134,13 +135,22 @@ public class DialogportenKlient {
             DialogportenPatchRequest.PATH_CONTENT,
             contentRequest);
 
-        //Ny transmission som sier at inntektsmelding er mottatt
+        //Ny transmission som sier at inntektsmelding er mottatt og med en lenke til kvittering
         var transmissionContent = new DialogportenRequest.Content(lagContentValue("Inntektsmelding mottatt"), null, null);
+        //attachement med kvittering
+        var contentAttachement = List.of(new DialogportenRequest.ContentValueItem("Kvittering for inntektsmelding", DialogportenRequest.NB));
+        var url = inntektsmeldingSkjemaLenke + "/server/api/ekstern/kvittering/" + forespørselUuid;
+        var urlApi = List.of(new DialogportenRequest.Url(url, DialogportenRequest.TEXT_PLAIN, DialogportenRequest.AttachmentUrlConsumerType.Api));
+        var urlGui = List.of(new DialogportenRequest.Url(url, DialogportenRequest.TEXT_PLAIN, DialogportenRequest.AttachmentUrlConsumerType.Gui));
+        var kvitteringApi = new DialogportenRequest.Attachment(contentAttachement, urlApi);
+        var kvitteringGui = new DialogportenRequest.Attachment(contentAttachement, urlGui);
+
         var transmission = new DialogportenRequest.Transmission(DialogportenRequest.TransmissionType.Acceptance,
             DialogportenRequest.ExtendedType.INNTEKTSMELDING,
             new DialogportenRequest.Sender("ServiceOwner"),
             transmissionContent,
-            List.of());
+            List.of(kvitteringApi, kvitteringGui));
+        //patch
         var patchTransmission = new DialogportenPatchRequest(DialogportenPatchRequest.OP_ADD,
             DialogportenPatchRequest.PATH_TRANSMISSIONS,
             List.of(transmission));

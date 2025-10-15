@@ -9,6 +9,8 @@ import jakarta.ws.rs.ApplicationPath;
 
 import no.nav.familie.inntektsmelding.imdialog.rest.ArbeidsgiverinitiertDialogRest;
 
+import no.nav.familie.inntektsmelding.imdialog.rest.KvitteringRest;
+
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.slf4j.Logger;
@@ -56,7 +58,8 @@ public class ApiConfig extends ResourceConfig {
         return Set.of(ForespørselRest.class,
             InntektsmeldingDialogRest.class,
             InntektsmeldingFpsakRest.class,
-            ArbeidsgiverinitiertDialogRest.class);
+            ArbeidsgiverinitiertDialogRest.class,
+            KvitteringRest.class);
     }
 
     private Map<String, Object> getApplicationProperties() {
