@@ -62,7 +62,7 @@ public class ForespørselBehandlingTjeneste {
         this.personTjeneste = personTjeneste;
         this.organisasjonTjeneste = organisasjonTjeneste;
         this.dialogportenKlient = dialogportenKlient;
-        this.inntektsmeldingSkjemaLenke = ENV.getProperty("inntektsmelding.skjema.lenke", "https://arbeidsgiver.intern.dev.nav.no/fp-im-dialog");
+        this.inntektsmeldingSkjemaLenke = ENV.getProperty("inntektsmelding.skjema.lenke", "https://arbeidsgiver.nav.no/fp-im-dialog");
     }
 
     public ForespørselResultat håndterInnkommendeForespørsel(LocalDate skjæringstidspunkt,

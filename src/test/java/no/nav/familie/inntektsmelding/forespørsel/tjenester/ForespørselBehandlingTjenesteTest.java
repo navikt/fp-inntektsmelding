@@ -423,7 +423,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             SAKSNUMMMER,
             SKJÆRINGSTIDSPUNKT, ForespørselType.BESTILT_AV_FAGSYSTEM);
         forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, SAK_ID);
-        var uri = URI.create(String.format("https://arbeidsgiver.intern.dev.nav.no/fp-im-dialog/%s", forespørselUuid.toString()));
+        var uri = URI.create(String.format("https://arbeidsgiver.nav.no/fp-im-dialog/%s", forespørselUuid.toString()));
 
         var personInfo = new PersonInfo("Navn",
             null,
