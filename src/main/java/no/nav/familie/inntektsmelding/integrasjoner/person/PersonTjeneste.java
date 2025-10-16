@@ -2,7 +2,6 @@ package no.nav.familie.inntektsmelding.integrasjoner.person;
 
 import java.net.SocketTimeoutException;
 import java.time.LocalDate;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,7 +14,6 @@ import org.slf4j.LoggerFactory;
 
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
-import no.nav.pdl.Foedselsdato;
 import no.nav.pdl.FoedselsdatoResponseProjection;
 import no.nav.pdl.FolkeregisteridentifikatorResponseProjection;
 import no.nav.pdl.HentIdenterQueryRequest;
@@ -41,6 +39,7 @@ import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
 @ApplicationScoped
 public class PersonTjeneste {
     private static final Logger LOG = LoggerFactory.getLogger(PersonTjeneste.class);
+    private static final LocalDate DUMMY_FØDSELSDATO = LocalDate.of(1900, 1, 1);
     private PdlKlient pdlKlient;
 
     PersonTjeneste() {
@@ -106,12 +105,9 @@ public class PersonTjeneste {
             var brukId = aktørId.map(AktørIdEntitet::getAktørId).orElseGet(personIdent::getIdent);
             var falskId = FalskIdentitet.finnFalskIdentitet(brukId, pdlKlient).orElse(null);
             if (falskId != null) {
-                var oppdeltNavn = Arrays.stream(falskId.navn().split(" ")).toList();
-                var fornavn = !oppdeltNavn.isEmpty() ? oppdeltNavn.getFirst() : "";
-                var mellomnavn = oppdeltNavn.size() > 2 ? oppdeltNavn.get(1) : null;
-                var etternavn = oppdeltNavn.size() > 1 ? oppdeltNavn.getLast() : "";
-                return new PersonInfo(fornavn, mellomnavn, etternavn, personIdent, aktørId.orElse(null), falskId.fødselsdato(),
-                    null, PersonInfo.Kjønn.UKJENT);
+                var brukFødselsdato = Optional.ofNullable(falskId.fødselsdato()).orElse(DUMMY_FØDSELSDATO);
+                return new PersonInfo(falskId.fornavn(), falskId.mellomnavn(), falskId.etternavn(), personIdent,
+                    aktørId.orElse(null), brukFødselsdato, null, mapKjønn(falskId.kjønn()));
             }
         }
         return null;
@@ -143,7 +139,7 @@ public class PersonTjeneste {
     }
 
     private LocalDate mapFødselsdato(Person person) {
-        return person.getFoedselsdato().stream().map(Foedselsdato::getFoedselsdato).findFirst().map(LocalDate::parse).orElse(null);
+        return PersonMappers.mapFødselsdato(person).orElse(null);
     }
 
     private String mapTelefonnummer(Person person) {
