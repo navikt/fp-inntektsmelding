@@ -80,7 +80,7 @@ public class JoarkTjeneste {
             .medBehandlingstema(mapBehandlingTema(inntektsmeldingEntitet.getYtelsetype()))
             .medDatoMottatt(inntektsmeldingEntitet.getOpprettetTidspunkt().toLocalDate())
             .medTema("FOR")
-            .medEksternReferanseId(UUID.randomUUID().toString())
+            .medEksternReferanseId(inntektsmeldingEntitet.getUuid().map(UUID::toString).orElse(UUID.randomUUID().toString()))
             .medJournalfoerendeEnhet(JOURNALFØRENDE_ENHET)
             .medKanal(KANAL)
             .medDokumenter(lagDokumenter(xmlAvInntektsmelding, pdf));

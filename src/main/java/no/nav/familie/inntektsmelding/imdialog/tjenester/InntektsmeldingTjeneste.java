@@ -1,6 +1,7 @@
 package no.nav.familie.inntektsmelding.imdialog.tjenester;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -33,6 +34,11 @@ public class InntektsmeldingTjeneste {
     public InntektsmeldingEntitet hentInntektsmelding(long inntektsmeldingId) {
         return inntektsmeldingRepository.hentInntektsmelding(inntektsmeldingId);
     }
+
+    public Optional<InntektsmeldingEntitet> hentInntektsmelding(UUID inntektsmeldingUuid) {
+        return inntektsmeldingRepository.hentInntektsmelding(inntektsmeldingUuid);
+    }
+
 
     public List<InntektsmeldingEntitet> hentInntektsmeldinger(UUID forespørselUuid) {
         var forespørsel = forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid)

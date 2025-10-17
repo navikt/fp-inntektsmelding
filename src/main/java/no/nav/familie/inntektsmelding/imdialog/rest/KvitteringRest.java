@@ -1,6 +1,7 @@
 package no.nav.familie.inntektsmelding.imdialog.rest;
 
 import java.util.Comparator;
+import java.util.Optional;
 import java.util.UUID;
 
 import jakarta.enterprise.context.RequestScoped;
@@ -49,7 +50,7 @@ public class KvitteringRest {
     @Path("/kvittering/{uuid}")
     @Produces("application/pdf")
     @Tilgangskontrollert
-    public Response hentKvittering(@NotNull @Valid @PathParam("uuid") UUID forespørselUuid) {
+    public Response hentKvitteringForespørsel(@NotNull @Valid @PathParam("uuid") UUID forespørselUuid) {
         tilgang.sjekkAtArbeidsgiverHarTilgangTilBedrift(forespørselUuid);
 
         LOG.info("Henter inntektsmelding for forespørsel uuid {}", forespørselUuid);
@@ -66,5 +67,24 @@ public class KvitteringRest {
         responseBuilder.type("application/pdf");
         responseBuilder.header("Content-Disposition", "attachment; filename=inntektsmelding.pdf");
         return responseBuilder.build();
+    }
+
+    @GET
+    @Path("/kvittering/inntektsmelding/{uuid}")
+    @Produces("application/pdf")
+    @Tilgangskontrollert
+    public Response hentKvitteringInntektsmelding(@NotNull @Valid @PathParam("uuid") UUID inntektsmeldingUuid) {
+        var im = inntektsmeldingTjeneste.hentInntektsmelding(inntektsmeldingUuid).orElse(null);
+        if (im == null) {
+            LOG.info("Finner ikke inntektsmelding med uuid {}", inntektsmeldingUuid);
+            return Response.status(Response.Status.NO_CONTENT).build();
+        } else {
+            tilgang.sjekkAtArbeidsgiverHarTilgangTilBedrift(im.getId());
+            var pdf = inntektsmeldingTjeneste.hentPDF(im.getId());
+            var responseBuilder = Response.ok(pdf);
+            responseBuilder.type("application/pdf");
+            responseBuilder.header("Content-Disposition", "attachment; filename=inntektsmelding.pdf");
+            return responseBuilder.build();
+        }
     }
 }

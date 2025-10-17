@@ -113,7 +113,9 @@ public class ForespørselBehandlingTjeneste {
                                                      AktørIdEntitet aktorId,
                                                      OrganisasjonsnummerDto organisasjonsnummerDto,
                                                      LocalDate startdato,
-                                                     LukkeÅrsak årsak) {
+                                                     LukkeÅrsak årsak,
+                                                     // inntektsmeldingUuid er optional fordi vi ikke har inntektsmeldingen lagret hvis den er innsendt via Altinn / LPS'er
+                                                     Optional<UUID> inntektsmeldingUuid) {
         var foresporsel = forespørselTjeneste.hentForespørsel(foresporselUuid)
             .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel for inntektsmelding, ugyldig tilstand"));
 
@@ -140,7 +142,7 @@ public class ForespørselBehandlingTjeneste {
                 lagSaksTittelForDialogporten(aktorId, foresporsel.getYtelseType()),
                 foresporsel.getYtelseType(),
                 foresporsel.getFørsteUttaksdato(),
-                foresporsel.getUuid()));
+                inntektsmeldingUuid));
         return foresporsel;
     }
 
@@ -353,7 +355,7 @@ public class ForespørselBehandlingTjeneste {
                 f.getAktørId(),
                 new OrganisasjonsnummerDto(f.getOrganisasjonsnummer()),
                 f.getFørsteUttaksdato(),
-                LukkeÅrsak.EKSTERN_INNSENDING);
+                LukkeÅrsak.EKSTERN_INNSENDING, Optional.empty());
             MetrikkerTjeneste.loggForespørselLukkEkstern(lukketForespørsel);
         });
     }

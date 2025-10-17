@@ -254,5 +254,25 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
         assertThat(etterLagring.get(1).getKontaktperson().getNavn()).isEqualTo(im1.getKontaktperson().getNavn());
     }
 
+    @Test
+    void skal_hente_inntektsmelding_fra_uuid() {
+        // Arrange
+        var førLagring = InntektsmeldingEntitet.builder()
+            .medAktørId(new AktørIdEntitet("9999999999999"))
+            .medKontaktperson(new KontaktpersonEntitet("Testy test", "999999999"))
+            .medYtelsetype(Ytelsetype.FORELDREPENGER)
+            .medMånedInntekt(BigDecimal.valueOf(4000))
+            .medStartDato(LocalDate.now())
+            .medArbeidsgiverIdent("999999999")
+            .build();
+
+        var uuid = førLagring.getUuid().orElseThrow();
+        // Act
+        inntektsmeldingRepository.lagreInntektsmelding(førLagring);
+        var etterLagring = inntektsmeldingRepository.hentInntektsmelding(uuid);
+
+        // Assert
+        assertThat(etterLagring).isPresent();
+    }
 
 }
