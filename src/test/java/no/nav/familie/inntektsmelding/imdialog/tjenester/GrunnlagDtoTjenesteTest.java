@@ -544,7 +544,7 @@ class GrunnlagDtoTjenesteTest {
 
         // Assert
         AssertionsForClassTypes.assertThat(ex.getMessage()).isEqualTo(
-            "FINNES_I_AAREG:Det finnes rapportering i aa-registeret på organisasjonsnummeret. Nav vil be om inntektsmelding når vi trenger det");
+            "FINNES_I_AAREG: Det finnes rapportering i aa-registeret på organisasjonsnummeret. Nav vil be om inntektsmelding når vi trenger det");
     }
 }
 

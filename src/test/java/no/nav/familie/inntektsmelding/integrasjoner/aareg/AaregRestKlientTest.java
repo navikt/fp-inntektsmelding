@@ -131,7 +131,7 @@ class AaregRestKlientTest {
         var exception = assertThrows(IntegrasjonException.class,
             () -> aaregRestKlient.finnArbeidsforholdForArbeidstaker(ident, LocalDate.now()));
         assertThat(exception.getMessage())
-            .isEqualTo("FP-w00t:Ukjent feil");
+            .isEqualTo("FP-w00t: Ukjent feil");
     }
 
     @Test
