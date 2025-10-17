@@ -30,7 +30,6 @@ import no.nav.pdl.PersonResponseProjection;
 import no.nav.pdl.TelefonnummerResponseProjection;
 import no.nav.vedtak.exception.IntegrasjonException;
 import no.nav.vedtak.exception.VLException;
-import no.nav.vedtak.felles.integrasjon.person.FalskIdentitet;
 import no.nav.vedtak.felles.integrasjon.person.PersonMappers;
 import no.nav.vedtak.felles.integrasjon.person.Persondata;
 import no.nav.vedtak.sikkerhet.kontekst.IdentType;
@@ -39,7 +38,7 @@ import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
 @ApplicationScoped
 public class PersonTjeneste {
     private static final Logger LOG = LoggerFactory.getLogger(PersonTjeneste.class);
-    private static final LocalDate DUMMY_FØDSELSDATO = LocalDate.of(1900, 1, 1);
+
     private PdlKlient pdlKlient;
 
     PersonTjeneste() {
@@ -65,9 +64,9 @@ public class PersonTjeneste {
         LOG.info("Henter personobjekt");
         var person = pdlKlient.hentPerson(utledYtelse(ytelseType), request, projection);
 
-        var falskId = finnEvtFalskId(person, Optional.of(aktørId), personIdent);
-        if (falskId != null) {
-            return falskId;
+        if (PersonMappers.manglerIdentifikator(person)) {
+            LOG.warn("Person uten aktiv Folkeregisteridentifikator - sjekk om falsk eller utgått identitet. AktørId: {}", aktørId.getAktørId());
+            throw new IllegalStateException("Person uten aktiv Folkeregisteridentifikator" + aktørId);
         }
 
         var navn = person.getNavn().getFirst();
@@ -88,9 +87,11 @@ public class PersonTjeneste {
         var aktørId = finnAktørIdForIdent(personIdent);
         var person = pdlKlient.hentPerson(utledYtelse(ytelseType), request, projection);
 
-        var falskId = finnEvtFalskId(person, aktørId, personIdent);
-        if (falskId != null) {
-            return falskId;
+        if (PersonMappers.manglerIdentifikator(person)) {
+            var logAktørId = aktørId.map(AktørIdEntitet::toString).orElse("ManglerAktørId");
+            LOG.warn("Person uten aktiv Folkeregisteridentifikator - sjekk om falsk eller utgått identitet. Oppgitt Ident {}. AktørId {}",
+                personIdent.getIdent(), logAktørId);
+            throw new IllegalStateException("Person uten aktiv Folkeregisteridentifikator" + personIdent);
         }
 
         var navn = person.getNavn().getFirst();
@@ -98,19 +99,6 @@ public class PersonTjeneste {
 
         return new PersonInfo(navn.getFornavn(), navn.getMellomnavn(), navn.getEtternavn(), personIdent, aktørId.orElse(null), mapFødselsdato(person),
             mapTelefonnummer(person), kjønn);
-    }
-
-    private PersonInfo finnEvtFalskId(Person person, Optional<AktørIdEntitet> aktørId, PersonIdent personIdent) {
-        if (PersonMappers.manglerIdentifikator(person)) {
-            var brukId = aktørId.map(AktørIdEntitet::getAktørId).orElseGet(personIdent::getIdent);
-            var falskId = FalskIdentitet.finnFalskIdentitet(brukId, pdlKlient).orElse(null);
-            if (falskId != null) {
-                var brukFødselsdato = Optional.ofNullable(falskId.fødselsdato()).orElse(DUMMY_FØDSELSDATO);
-                return new PersonInfo(falskId.fornavn(), falskId.mellomnavn(), falskId.etternavn(), personIdent,
-                    aktørId.orElse(null), brukFødselsdato, null, mapKjønn(falskId.kjønn()));
-            }
-        }
-        return null;
     }
 
     private PersonInfo.Kjønn mapKjønn(KjoennType kjønn) {
@@ -130,6 +118,7 @@ public class PersonTjeneste {
             () -> new IllegalStateException("Finner ikke personnummer for id " + aktørIdEntitet));
     }
 
+    // TODO: Er denne nødvendig? Brukes kun i tester nå. Fjern om mulig.
     public PersonInfo hentInnloggetPerson(Ytelsetype ytelsetype) {
         if (!KontekstHolder.harKontekst() || !IdentType.EksternBruker.equals(KontekstHolder.getKontekst().getIdentType())) {
             throw new IllegalStateException("Mangler innlogget bruker kontekst.");
