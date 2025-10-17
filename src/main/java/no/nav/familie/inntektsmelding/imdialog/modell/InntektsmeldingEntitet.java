@@ -6,6 +6,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
 
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
@@ -45,6 +47,9 @@ public class InntektsmeldingEntitet {
 
     @Column(name = "arbeidsgiver_ident")
     private String arbeidsgiverIdent;
+
+    @Column(name = "uuid")
+    private UUID uuid;
 
     @OneToOne(cascade = CascadeType.ALL, mappedBy = "inntektsmelding")
     private KontaktpersonEntitet kontaktperson;
@@ -142,6 +147,11 @@ public class InntektsmeldingEntitet {
 
     public List<EndringsårsakEntitet> getEndringsårsaker() {
         return endringsårsaker;
+    }
+
+    // TODO Sett notNullable og fjern Optional. Denne er optional helt til etterpopulering av feltet er fullført
+    public Optional<UUID> getUuid() {
+        return Optional.ofNullable(uuid);
     }
 
     private void leggTilRefusjonsendring(RefusjonsendringEntitet refusjonsendringEntitet) {
@@ -289,6 +299,7 @@ public class InntektsmeldingEntitet {
             Objects.requireNonNull(kladd.månedInntekt, "månedsinntekt");
             validerRefusjonsperioder();
             validerNaturalytelser();
+            kladd.uuid = UUID.randomUUID();
             return kladd;
         }
 

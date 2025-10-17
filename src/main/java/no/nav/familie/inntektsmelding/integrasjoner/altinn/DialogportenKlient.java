@@ -6,6 +6,7 @@ import java.net.http.HttpResponse;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -119,7 +120,7 @@ public class DialogportenKlient {
     }
 
     public void ferdigstilleMeldingIDialogporten(UUID dialogUuid, String sakstittel, Ytelsetype ytelsetype, LocalDate førsteUttaksdato,
-                                                 UUID forespørselUuid) {
+                                                 Optional<UUID> inntektsmeldingUuid) {
         //oppdatere status på meldingen til fullført
         var patchStatus = new DialogportenPatchRequest(DialogportenPatchRequest.OP_REPLACE,
             DialogportenPatchRequest.PATH_STATUS,
@@ -128,28 +129,33 @@ public class DialogportenKlient {
         //oppdatere innholdet i dialogen
         var summaryDialog = String.format("Nav har mottatt inntektsmelding for søknad om %s med startdato %s",
             ytelsetype.name().toLowerCase(),
-            førsteUttaksdato.format(
-                DateTimeFormatter.ofPattern("dd.MM.yy")));
+                førsteUttaksdato.format(
+                        DateTimeFormatter.ofPattern("dd.MM.yy")));
         var contentRequest = new DialogportenRequest.Content(lagContentValue(sakstittel), lagContentValue(summaryDialog), null);
         var patchContent = new DialogportenPatchRequest(DialogportenPatchRequest.OP_REPLACE,
-            DialogportenPatchRequest.PATH_CONTENT,
-            contentRequest);
+                DialogportenPatchRequest.PATH_CONTENT,
+                contentRequest);
 
         //Ny transmission som sier at inntektsmelding er mottatt og med en lenke til kvittering
         var transmissionContent = new DialogportenRequest.Content(lagContentValue("Inntektsmelding mottatt"), null, null);
+
         //attachement med kvittering
-        var contentAttachement = List.of(new DialogportenRequest.ContentValueItem("Kvittering for inntektsmelding", DialogportenRequest.NB));
-        var url = inntektsmeldingSkjemaLenke + "/server/api/ekstern/kvittering/" + forespørselUuid;
-        var urlApi = List.of(new DialogportenRequest.Url(url, DialogportenRequest.TEXT_PLAIN, DialogportenRequest.AttachmentUrlConsumerType.Api));
-        var urlGui = List.of(new DialogportenRequest.Url(url, DialogportenRequest.TEXT_PLAIN, DialogportenRequest.AttachmentUrlConsumerType.Gui));
-        var kvitteringApi = new DialogportenRequest.Attachment(contentAttachement, urlApi);
-        var kvitteringGui = new DialogportenRequest.Attachment(contentAttachement, urlGui);
+        var apiActions = inntektsmeldingUuid.map(imUuid -> {
+            var contentAttachement = List.of(new DialogportenRequest.ContentValueItem("Kvittering for inntektsmelding", DialogportenRequest.NB));
+            var url = inntektsmeldingSkjemaLenke + "/server/api/ekstern/kvittering/inntektsmelding/" + imUuid;
+            var urlApi = List.of(new DialogportenRequest.Url(url, DialogportenRequest.TEXT_PLAIN, DialogportenRequest.AttachmentUrlConsumerType.Api));
+            var urlGui = List.of(new DialogportenRequest.Url(url, DialogportenRequest.TEXT_PLAIN, DialogportenRequest.AttachmentUrlConsumerType.Gui));
+            var kvitteringApi = new DialogportenRequest.Attachment(contentAttachement, urlApi);
+            var kvitteringGui = new DialogportenRequest.Attachment(contentAttachement, urlGui);
+            return List.of(kvitteringApi, kvitteringGui);
+        }).orElse(List.of());
 
         var transmission = new DialogportenRequest.Transmission(DialogportenRequest.TransmissionType.Acceptance,
             DialogportenRequest.ExtendedType.INNTEKTSMELDING,
             new DialogportenRequest.Sender("ServiceOwner"),
             transmissionContent,
-            List.of(kvitteringApi, kvitteringGui));
+            apiActions);
+
         //patch
         var patchTransmission = new DialogportenPatchRequest(DialogportenPatchRequest.OP_ADD,
             DialogportenPatchRequest.PATH_TRANSMISSIONS,
@@ -203,6 +209,5 @@ public class DialogportenKlient {
             List.of(transmission));
 
         sendPatchRequest(dialogUuid, List.of(patchStatus, addDialogExtendedStatus, patchContent, patchTransmission));
-
     }
 }
