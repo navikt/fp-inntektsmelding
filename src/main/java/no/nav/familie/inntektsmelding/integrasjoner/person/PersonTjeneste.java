@@ -9,29 +9,28 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.ProcessingException;
 
-import no.nav.pdl.KjoennResponseProjection;
-
-import no.nav.pdl.KjoennType;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
-import no.nav.pdl.Foedselsdato;
 import no.nav.pdl.FoedselsdatoResponseProjection;
+import no.nav.pdl.FolkeregisteridentifikatorResponseProjection;
 import no.nav.pdl.HentIdenterQueryRequest;
 import no.nav.pdl.HentPersonQueryRequest;
 import no.nav.pdl.IdentGruppe;
 import no.nav.pdl.IdentInformasjon;
 import no.nav.pdl.IdentInformasjonResponseProjection;
 import no.nav.pdl.IdentlisteResponseProjection;
+import no.nav.pdl.KjoennResponseProjection;
+import no.nav.pdl.KjoennType;
 import no.nav.pdl.NavnResponseProjection;
 import no.nav.pdl.Person;
 import no.nav.pdl.PersonResponseProjection;
 import no.nav.pdl.TelefonnummerResponseProjection;
 import no.nav.vedtak.exception.IntegrasjonException;
 import no.nav.vedtak.exception.VLException;
+import no.nav.vedtak.felles.integrasjon.person.PersonMappers;
 import no.nav.vedtak.felles.integrasjon.person.Persondata;
 import no.nav.vedtak.sikkerhet.kontekst.IdentType;
 import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
@@ -39,6 +38,7 @@ import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
 @ApplicationScoped
 public class PersonTjeneste {
     private static final Logger LOG = LoggerFactory.getLogger(PersonTjeneste.class);
+
     private PdlKlient pdlKlient;
 
     PersonTjeneste() {
@@ -55,6 +55,7 @@ public class PersonTjeneste {
         request.setIdent(aktørId.getAktørId());
 
         var projection = new PersonResponseProjection().navn(new NavnResponseProjection().fornavn().mellomnavn().etternavn())
+            .folkeregisteridentifikator(new FolkeregisteridentifikatorResponseProjection().identifikasjonsnummer().status())
             .foedselsdato(new FoedselsdatoResponseProjection().foedselsdato());
 
         PersonIdent personIdent = hentPersonidentForAktørId(aktørId).orElseThrow(
@@ -62,6 +63,12 @@ public class PersonTjeneste {
 
         LOG.info("Henter personobjekt");
         var person = pdlKlient.hentPerson(utledYtelse(ytelseType), request, projection);
+
+        if (PersonMappers.manglerIdentifikator(person)) {
+            LOG.warn("Person uten aktiv Folkeregisteridentifikator - sjekk om falsk eller utgått identitet. AktørId: {}", aktørId.getAktørId());
+            throw new IllegalStateException("Person uten aktiv Folkeregisteridentifikator" + aktørId);
+        }
+
         var navn = person.getNavn().getFirst();
 
         return new PersonInfo(navn.getFornavn(), navn.getMellomnavn(), navn.getEtternavn(), personIdent, aktørId, mapFødselsdato(person), null, null);
@@ -72,12 +79,21 @@ public class PersonTjeneste {
         request.setIdent(personIdent.getIdent());
 
         var projection = new PersonResponseProjection().navn(new NavnResponseProjection().fornavn().mellomnavn().etternavn())
+            .folkeregisteridentifikator(new FolkeregisteridentifikatorResponseProjection().identifikasjonsnummer().status())
             .kjoenn(new KjoennResponseProjection().kjoenn())
             .telefonnummer(new TelefonnummerResponseProjection().landskode().nummer())
             .foedselsdato(new FoedselsdatoResponseProjection().foedselsdato());
 
         var aktørId = finnAktørIdForIdent(personIdent);
         var person = pdlKlient.hentPerson(utledYtelse(ytelseType), request, projection);
+
+        if (PersonMappers.manglerIdentifikator(person)) {
+            var logAktørId = aktørId.map(AktørIdEntitet::toString).orElse("ManglerAktørId");
+            LOG.warn("Person uten aktiv Folkeregisteridentifikator - sjekk om falsk eller utgått identitet. Oppgitt Ident {}. AktørId {}",
+                personIdent.getIdent(), logAktørId);
+            throw new IllegalStateException("Person uten aktiv Folkeregisteridentifikator" + personIdent);
+        }
+
         var navn = person.getNavn().getFirst();
         var kjønn = person.getKjoenn().isEmpty() ? PersonInfo.Kjønn.UKJENT : mapKjønn(person.getKjoenn().getFirst().getKjoenn());
 
@@ -102,6 +118,7 @@ public class PersonTjeneste {
             () -> new IllegalStateException("Finner ikke personnummer for id " + aktørIdEntitet));
     }
 
+    // TODO: Er denne nødvendig? Brukes kun i tester nå. Fjern om mulig.
     public PersonInfo hentInnloggetPerson(Ytelsetype ytelsetype) {
         if (!KontekstHolder.harKontekst() || !IdentType.EksternBruker.equals(KontekstHolder.getKontekst().getIdentType())) {
             throw new IllegalStateException("Mangler innlogget bruker kontekst.");
@@ -111,7 +128,7 @@ public class PersonTjeneste {
     }
 
     private LocalDate mapFødselsdato(Person person) {
-        return person.getFoedselsdato().stream().map(Foedselsdato::getFoedselsdato).findFirst().map(LocalDate::parse).orElse(null);
+        return PersonMappers.mapFødselsdato(person).orElse(null);
     }
 
     private String mapTelefonnummer(Person person) {

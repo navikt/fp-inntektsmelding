@@ -39,7 +39,7 @@ class UregistrertValidererTest {
             PERSON_INFO));
 
         assertThat(ex.getMessage()).isEqualTo(
-            "INGEN_SAK_FUNNET:Du kan ikke sende inn inntektsmelding på FORELDREPENGER for denne personen med aktør id AktørIdEntitet{aktørId='*********1234'}");
+            "INGEN_SAK_FUNNET: Du kan ikke sende inn inntektsmelding på FORELDREPENGER for denne personen med aktør id AktørIdEntitet{aktørId='*********1234'}");
     }
 
     @Test
@@ -53,7 +53,7 @@ class UregistrertValidererTest {
             PERSON_INFO));
 
         assertThat(ex.getMessage()).isEqualTo(
-            "SENDT_FOR_TIDLIG:Du kan ikke sende inn inntektsmelding før fire uker før personen med aktør id AktørIdEntitet{aktørId='*********1234'} starter foreldrepenger");
+            "SENDT_FOR_TIDLIG: Du kan ikke sende inn inntektsmelding før fire uker før personen med aktør id AktørIdEntitet{aktørId='*********1234'} starter foreldrepenger");
     }
 
     @Test
@@ -68,7 +68,7 @@ class UregistrertValidererTest {
             PERSON_INFO));
 
         assertThat(ex.getMessage()).isEqualTo(
-            "SENDT_FOR_TIDLIG:Du kan ikke sende inn inntektsmelding før fire uker før personen med aktør id AktørIdEntitet{aktørId='*********1234'} starter foreldrepenger");
+            "SENDT_FOR_TIDLIG: Du kan ikke sende inn inntektsmelding før fire uker før personen med aktør id AktørIdEntitet{aktørId='*********1234'} starter foreldrepenger");
     }
 
     @Test

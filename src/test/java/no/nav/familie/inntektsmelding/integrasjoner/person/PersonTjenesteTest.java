@@ -19,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.pdl.Foedselsdato;
+import no.nav.pdl.Folkeregisteridentifikator;
 import no.nav.pdl.Navn;
 import no.nav.pdl.Person;
 import no.nav.pdl.Telefonnummer;
@@ -64,6 +65,7 @@ class PersonTjenesteTest {
         pdlPerson.setTelefonnummer(List.of(pdlTelefonnummer));
         pdlPerson.setFoedselsdato(List.of(pdlFødselsdato));
         pdlPerson.setKjoenn(List.of());
+        pdlPerson.setFolkeregisteridentifikator(List.of(new Folkeregisteridentifikator("01234567890", "I_BRUK", "FNR", null,null)));
 
         var kontekst = RequestKontekst.forRequest("11839798115", null, IdentType.EksternBruker, null, null, new HashSet<>());
         when(KontekstHolder.harKontekst()).thenReturn(true);
