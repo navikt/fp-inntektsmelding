@@ -30,6 +30,15 @@ public interface Tilgang {
     void sjekkAtArbeidsgiverHarTilgangTilBedrift(long inntektsmeldingId);
 
     /**
+     * Her hentes organisasjonsnummer knyttet til en tidligere innsendt inntektsmelding (fra PIP tjenesten),
+     * og deretter sjekkes det i Altinn om brukeren som initierte kallet, har tilgang til den aktuelle bedriften.
+     *
+     * @param inntektsmeldingUuid - UUID som unikt identifiserer en tidligere innsendt inntektsmelding.
+     * @throws no.nav.vedtak.exception.ManglerTilgangException om tilgangen ikke er gitt.
+     */
+    void sjekkAtArbeidsgiverHarTilgangTilInntektsmelding(UUID inntektsmeldingUuid);
+
+    /**
      * Sjekker om den Nav ansatte som prøver å utføre operasjonen har en DRIFT rolle.
      * Brukes kun i swagger sammenheng.
      *

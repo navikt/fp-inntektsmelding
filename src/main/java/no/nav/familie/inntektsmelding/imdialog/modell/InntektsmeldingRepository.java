@@ -53,11 +53,7 @@ public class InntektsmeldingRepository {
                 "FROM InntektsmeldingEntitet where uuid = :oppgittUuid",
                 InntektsmeldingEntitet.class)
             .setParameter("oppgittUuid", uuid);
-        var res = query.getResultList();
-        if (res.size() > 1) {
-            throw new IllegalStateException(String.format("Forventet å finne kun en åpen inntektsmelding med uuid %s, men fant %s", uuid, res.size()));
-        }
-        return res.stream().findFirst();
+        return Optional.ofNullable(query.getSingleResultOrNull());
     }
 
     public InntektsmeldingEntitet hentInntektsmelding(long inntektsmeldingId) {

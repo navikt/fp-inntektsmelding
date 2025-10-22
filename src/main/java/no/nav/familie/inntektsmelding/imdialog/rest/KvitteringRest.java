@@ -74,16 +74,16 @@ public class KvitteringRest {
     @Produces("application/pdf")
     @Tilgangskontrollert
     public Response hentKvitteringInntektsmelding(@NotNull @Valid @PathParam("uuid") UUID inntektsmeldingUuid) {
+        tilgang.sjekkAtArbeidsgiverHarTilgangTilInntektsmelding(inntektsmeldingUuid);
         var im = inntektsmeldingTjeneste.hentInntektsmelding(inntektsmeldingUuid).orElse(null);
         if (im == null) {
             LOG.info("Finner ikke inntektsmelding med uuid {}", inntektsmeldingUuid);
             return Response.status(Response.Status.NO_CONTENT).build();
         } else {
-            tilgang.sjekkAtArbeidsgiverHarTilgangTilBedrift(im.getId());
             var pdf = inntektsmeldingTjeneste.hentPDF(im.getId());
             var responseBuilder = Response.ok(pdf);
             responseBuilder.type("application/pdf");
-            responseBuilder.header("Content-Disposition", "attachment; filename=inntektsmelding.pdf");
+            responseBuilder.header("Content-Disposition", String.format("attachment; filename=inntektsmelding-%s.pdf", inntektsmeldingUuid));
             return responseBuilder.build();
         }
     }

@@ -72,6 +72,21 @@ public class TilgangTjeneste implements Tilgang {
         sjekkBorgersAltinnTilgangTilOrganisasjon(orgNrSet);
     }
 
+
+    @Override
+    public void sjekkAtArbeidsgiverHarTilgangTilInntektsmelding(UUID inntektsmeldingUUID) {
+        sjekkErBorger();
+
+        var orgNrSet = Optional.of(inntektsmeldingUUID)
+            .stream()
+            .map(pipTjeneste::hentInntektsmeldingOrganisasjonsnummerFor)
+            .filter(Objects::nonNull)
+            .map(OrganisasjonsnummerDto::orgnr)
+            .collect(Collectors.toSet());
+
+        sjekkBorgersAltinnTilgangTilOrganisasjon(orgNrSet);
+    }
+
     @Override
     public void sjekkAtAnsattHarRollenDrift() {
         var kontekst = KontekstHolder.getKontekst();
