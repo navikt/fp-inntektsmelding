@@ -80,7 +80,7 @@ spec:
           - "azp_name"
         groups:
           {{#each groups as |group|}}
-          - id: "{{group}}"
+          - id: "{{group.uuid}}"
           {{/each}}
   accessPolicy:
     inbound:
