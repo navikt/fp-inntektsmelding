@@ -34,4 +34,11 @@ public class PipTjeneste {
             .map(f -> new OrganisasjonsnummerDto(f.getArbeidsgiverIdent()))
             .orElse(null);
     }
+
+    public OrganisasjonsnummerDto hentInntektsmeldingOrganisasjonsnummerFor(UUID inntektsmeldingUuid) {
+        return inntektsmeldingTjeneste.hentInntektsmelding(inntektsmeldingUuid)
+            .map(im -> new OrganisasjonsnummerDto(im.getArbeidsgiverIdent()))
+            .orElse(null);
+    }
+
 }

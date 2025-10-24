@@ -15,6 +15,8 @@ import java.util.Optional;
 import no.nav.familie.inntektsmelding.integrasjoner.altinn.DialogportenKlient;
 import no.nav.familie.inntektsmelding.koder.ArbeidsgiverinitiertÅrsak;
 import no.nav.familie.inntektsmelding.koder.ForespørselType;
+
+import org.jboss.jdeparser.FormatPreferences;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -142,7 +144,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             lagret.getAktørId(),
             new OrganisasjonsnummerDto(lagret.getOrganisasjonsnummer()),
             lagret.getFørsteUttaksdato(),
-            LukkeÅrsak.EKSTERN_INNSENDING);
+            LukkeÅrsak.EKSTERN_INNSENDING, Optional.empty());
 
         assertThat(fpEntitet.getStatus()).isEqualTo(ForespørselStatus.FERDIG);
 
@@ -178,7 +180,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             lagret.getAktørId(),
             new OrganisasjonsnummerDto(lagret.getOrganisasjonsnummer()),
             lagret.getFørsteUttaksdato(),
-            LukkeÅrsak.EKSTERN_INNSENDING);
+            LukkeÅrsak.EKSTERN_INNSENDING, Optional.empty());
 
         assertThat(fpEntitet.getStatus()).isEqualTo(ForespørselStatus.FERDIG);
 
@@ -213,7 +215,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             lagret.getAktørId(),
             new OrganisasjonsnummerDto(lagret.getOrganisasjonsnummer()),
             lagret.getFørsteUttaksdato(),
-            LukkeÅrsak.ORDINÆR_INNSENDING);
+            LukkeÅrsak.ORDINÆR_INNSENDING, Optional.empty());
 
         assertThat(fpEntitet.getStatus()).isEqualTo(ForespørselStatus.FERDIG);
 
@@ -280,7 +282,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             new AktørIdEntitet(AKTØR_ID),
             new OrganisasjonsnummerDto(BRREG_ORGNUMMER),
             SKJÆRINGSTIDSPUNKT,
-            LukkeÅrsak.EKSTERN_INNSENDING);
+            LukkeÅrsak.EKSTERN_INNSENDING, Optional.empty());
 
         clearHibernateCache();
 
@@ -298,7 +300,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             new AktørIdEntitet(AKTØR_ID),
             new OrganisasjonsnummerDto(BRREG_ORGNUMMER),
             FØRSTE_UTTAKSDATO,
-            LukkeÅrsak.EKSTERN_INNSENDING);
+            LukkeÅrsak.EKSTERN_INNSENDING, Optional.empty());
 
         clearHibernateCache();
 

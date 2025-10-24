@@ -63,10 +63,10 @@ public class InntektsmeldingMottakTjeneste {
         var orgnummer = new OrganisasjonsnummerDto(mottattInntektsmeldingDto.arbeidsgiverIdent().ident());
         var entitet = InntektsmeldingMapper.mapTilEntitet(mottattInntektsmeldingDto);
         var imId = lagreOgLagJournalførTask(entitet, forespørselEntitet);
-        var lukketForespørsel = forespørselBehandlingTjeneste.ferdigstillForespørsel(mottattInntektsmeldingDto.foresporselUuid(), aktorId, orgnummer,
-            mottattInntektsmeldingDto.startdato(), LukkeÅrsak.ORDINÆR_INNSENDING);
-
         var imEntitet = inntektsmeldingRepository.hentInntektsmelding(imId);
+        var lukketForespørsel = forespørselBehandlingTjeneste.ferdigstillForespørsel(mottattInntektsmeldingDto.foresporselUuid(), aktorId, orgnummer,
+            mottattInntektsmeldingDto.startdato(), LukkeÅrsak.ORDINÆR_INNSENDING, imEntitet.getUuid());
+
 
         // Metrikker i prometheus
         MetrikkerTjeneste.loggForespørselLukkIntern(lukketForespørsel);
@@ -100,6 +100,7 @@ public class InntektsmeldingMottakTjeneste {
             return InntektsmeldingMapper.mapFraEntitet(imEntitet, forespørselEnitet);
         } else {
             // Inntektsmelding er ny, ikke endring. Må da opprette og ferdigstille forespørsel slik at denne skal finnes i oversikten på Min side - Arbeidsgiver
+            // TODO TFP-6425 Både opprettelse og ferdigstillelse her må synkes med dialogporten
             var forespørselEnitet = oppretterArbeidsgiverinitiertForespørsel(ytelseType,
                 aktørId,
                 organisasjonsnummer,
@@ -107,11 +108,11 @@ public class InntektsmeldingMottakTjeneste {
                 sendInntektsmeldingRequestDto.startdato());
 
             var imId = lagreOgLagJournalførTask(imEnitet, forespørselEnitet);
+            var imEntitet = inntektsmeldingRepository.hentInntektsmelding(imId);
 
             forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørselEnitet.getUuid(), aktørId, organisasjonsnummer,
-                sendInntektsmeldingRequestDto.startdato(), LukkeÅrsak.ORDINÆR_INNSENDING);
+                sendInntektsmeldingRequestDto.startdato(), LukkeÅrsak.ORDINÆR_INNSENDING, imEntitet.getUuid());
 
-            var imEntitet = inntektsmeldingRepository.hentInntektsmelding(imId);
 
             // Metrikker i prometheus
             MetrikkerTjeneste.logginnsendtArbeidsgiverinitiertNyansattIm(imEntitet);
@@ -143,6 +144,7 @@ public class InntektsmeldingMottakTjeneste {
             return InntektsmeldingMapper.mapFraEntitet(imEntitet, forespørselEnitet);
         } else {
             // Inntektsmelding er ny, ikke endring. Må da opprette og ferdigstille forespørsel slik at denne skal finnes i oversikten på Min side - Arbeidsgiver
+            // TODO TFP-6425 Både opprettelse og ferdigstillelse her må synkes med dialogporten
             var forespørselEnitet = oppretterArbeidsgiverinitiertForespørsel(ytelseType,
                 aktørId,
                 organisasjonsnummer,
@@ -150,11 +152,11 @@ public class InntektsmeldingMottakTjeneste {
                 sendInntektsmeldingRequestDto.startdato());
 
             var imId = lagreOgLagJournalførTask(imEnitet, forespørselEnitet);
+            var imEntitet = inntektsmeldingRepository.hentInntektsmelding(imId);
 
             forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørselEnitet.getUuid(), aktørId, organisasjonsnummer,
-                sendInntektsmeldingRequestDto.startdato(), LukkeÅrsak.ORDINÆR_INNSENDING);
+                sendInntektsmeldingRequestDto.startdato(), LukkeÅrsak.ORDINÆR_INNSENDING, imEntitet.getUuid());
 
-            var imEntitet = inntektsmeldingRepository.hentInntektsmelding(imId);
 
             // Metrikker i prometheus
             MetrikkerTjeneste.logginnsendtArbeidsgiverinitiertUregistrertIm(imEntitet);
