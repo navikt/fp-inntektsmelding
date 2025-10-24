@@ -14,8 +14,14 @@
     "https://fpinntektsmelding.intern.dev.nav.no"
   ],
   "groups": [
-    "f1b82579-c5b5-4617-9673-8ace5ff67f63",
-    "27e77109-fef2-48ce-a174-269074490353"
+    {
+      "uuid": "27e77109-fef2-48ce-a174-269074490353",
+      "kommentar": "saksbehandler"
+    },
+    {
+      "uuid": "f1b82579-c5b5-4617-9673-8ace5ff67f63",
+      "kommentar": "drift"
+    }
   ],
   "db": {
     "dbVersion": "POSTGRES_17",
