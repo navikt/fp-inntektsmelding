@@ -53,7 +53,6 @@ class DialogportenKlientTjenesteTest {
 
     @Test
     void opprettFerdigstillPatchRequest() {
-
         var ferdigstillPatchRequest = DialogportenKlientTjeneste.opprettFerdigstillPatchRequest("Sakstittel",
             Ytelsetype.FORELDREPENGER,
             FØRSTE_UTTAKSDATO,
@@ -85,7 +84,6 @@ class DialogportenKlientTjenesteTest {
 
     @Test
     void opprettFerdigstillPatchRequestLukketEksternt() {
-
         var ferdigstillPatchRequest = DialogportenKlientTjeneste.opprettFerdigstillPatchRequest("Sakstittel",
             Ytelsetype.FORELDREPENGER,
             FØRSTE_UTTAKSDATO,
