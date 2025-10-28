@@ -7,6 +7,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import java.util.UUID;
 
+import no.nav.familie.inntektsmelding.forespørsel.tjenester.LukkeÅrsak;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -27,6 +29,7 @@ class DialogportenKlientTjenesteTest {
     @Test
     void opprettDialogRequest() {
         var party = "urn:altinn:organization:identifier-no:999999999";
+
         var opprettRequest = DialogportenKlientTjeneste.opprettDialogRequest(ORGANISASJONSNUMMER,
             FORESPØRSEL_UUID, "Sakstittel", FØRSTE_UTTAKSDATO, Ytelsetype.FORELDREPENGER, INNTEKTSMELDING_SKJEMA_LENKE);
 
@@ -58,17 +61,16 @@ class DialogportenKlientTjenesteTest {
             null,
             INNTEKTSMELDING_SKJEMA_LENKE);
 
-        assertThat(ferdigstillPatchRequest).hasSize(3);
         var ops = ferdigstillPatchRequest.stream().map(DialogportenPatchRequest::op).toList();
-        assertThat(ops).contains(DialogportenPatchRequest.OP_ADD, DialogportenPatchRequest.OP_REPLACE);
-
         var paths = ferdigstillPatchRequest.stream().map(DialogportenPatchRequest::path).toList();
+        var patchValue = ferdigstillPatchRequest.stream().map(DialogportenPatchRequest::value).toList();
+
+        assertThat(ferdigstillPatchRequest).hasSize(3);
+        assertThat(ops).contains(DialogportenPatchRequest.OP_ADD, DialogportenPatchRequest.OP_REPLACE);
         assertThat(paths).contains(DialogportenPatchRequest.PATH_STATUS,
             DialogportenPatchRequest.PATH_CONTENT,
             DialogportenPatchRequest.PATH_TRANSMISSIONS);
-        var patchValue = ferdigstillPatchRequest.stream().map(DialogportenPatchRequest::value).toList();
-
-        assertThat(ferdigstillPatchRequest.get(0).op()).isEqualTo(DialogportenPatchRequest.OP_REPLACE);
+        assertThat(ferdigstillPatchRequest.getFirst().op()).isEqualTo(DialogportenPatchRequest.OP_REPLACE);
         assertThat(ferdigstillPatchRequest.get(1).value().toString()).contains(String.format(
             "Nav har mottatt inntektsmelding for søknad om foreldrepenger med startdato %s",
             FØRSTE_UTTAKSDATO.format(DateTimeFormatter.ofPattern("dd.MM.yy"))));
@@ -79,8 +81,36 @@ class DialogportenKlientTjenesteTest {
         assertThat(patchValue.toString()).contains("Inntektsmelding er mottatt");
         assertThat(patchValue.toString()).contains("Kvittering for inntektsmelding");
         assertThat(patchValue.toString()).contains("url=https://arbeidsgiver.nav.no/fp-im-dialog/server/api/ekstern/kvittering/inntektsmelding/");
+    }
 
+    @Test
+    void opprettFerdigstillPatchRequestLukketEksternt() {
 
+        var ferdigstillPatchRequest = DialogportenKlientTjeneste.opprettFerdigstillPatchRequest("Sakstittel",
+            Ytelsetype.FORELDREPENGER,
+            FØRSTE_UTTAKSDATO,
+            Optional.of(FORESPØRSEL_UUID),
+            LukkeÅrsak.EKSTERN_INNSENDING,
+            INNTEKTSMELDING_SKJEMA_LENKE);
+
+        var ops = ferdigstillPatchRequest.stream().map(DialogportenPatchRequest::op).toList();
+        var paths = ferdigstillPatchRequest.stream().map(DialogportenPatchRequest::path).toList();
+        var patchValue = ferdigstillPatchRequest.stream().map(DialogportenPatchRequest::value).toList();
+
+        assertThat(ferdigstillPatchRequest).hasSize(3);
+        assertThat(ops).contains(DialogportenPatchRequest.OP_ADD, DialogportenPatchRequest.OP_REPLACE);
+        assertThat(paths).contains(DialogportenPatchRequest.PATH_STATUS,
+            DialogportenPatchRequest.PATH_CONTENT,
+            DialogportenPatchRequest.PATH_TRANSMISSIONS);
+        assertThat(ferdigstillPatchRequest.getFirst().op()).isEqualTo(DialogportenPatchRequest.OP_REPLACE);
+        assertThat(ferdigstillPatchRequest.get(1).value().toString()).contains(String.format(
+            "Nav har mottatt inntektsmelding for søknad om foreldrepenger med startdato %s",
+            FØRSTE_UTTAKSDATO.format(DateTimeFormatter.ofPattern("dd.MM.yy"))));
+        assertThat(ferdigstillPatchRequest.get(2).op()).isEqualTo(DialogportenPatchRequest.OP_ADD);
+        assertThat(ferdigstillPatchRequest.get(2).path()).isEqualTo(DialogportenPatchRequest.PATH_TRANSMISSIONS);
+        assertThat(patchValue).hasSize(3);
+        assertThat(patchValue.toString()).contains("Completed");
+        assertThat(patchValue.toString()).contains("Utført i Altinn eller i bedriftens lønns- og personalsystem. Ingen kvittering");
     }
 
     @Test
