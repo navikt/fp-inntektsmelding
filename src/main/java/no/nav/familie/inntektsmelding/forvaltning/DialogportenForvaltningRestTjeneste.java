@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
+import java.util.Optional;
 import java.util.UUID;
 
 @ApplicationScoped
@@ -76,7 +77,7 @@ public class DialogportenForvaltningRestTjeneste {
         }
         sjekkAtKallerHarRollenDrift();
         LOG.info("Oppdatere en dialog med dialogUuid {}", dialogUuid);
-        dialogportenKlient.ferdigstilleMeldingIDialogporten(UUID.fromString(dialogUuid), "Sakstittel", Ytelsetype.FORELDREPENGER, LocalDate.now(), null);
+        dialogportenKlient.ferdigstillDialog(UUID.fromString(dialogUuid), "Sakstittel", Ytelsetype.FORELDREPENGER, LocalDate.now(), Optional.empty(),null);
         return Response.ok().build();
     }
 
