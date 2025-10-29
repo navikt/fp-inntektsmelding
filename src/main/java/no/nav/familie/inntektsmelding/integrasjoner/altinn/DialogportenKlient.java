@@ -48,7 +48,7 @@ public class DialogportenKlient {
                                 LocalDate førsteUttaksdato,
                                 Ytelsetype ytelsetype) {
         var target = URI.create(restConfig.endpoint().toString() + "/dialogporten/api/v1/serviceowner/dialogs");
-        var opprettRequest = DialogportenKlientTjeneste.opprettDialogRequest(orgnr,
+        var opprettRequest = DialogportenRequestMapper.opprettDialogRequest(orgnr,
             forespørselUuid,
             sakstittel,
             førsteUttaksdato,
@@ -67,7 +67,7 @@ public class DialogportenKlient {
                                   LocalDate førsteUttaksdato,
                                   Optional<UUID> inntektsmeldingUuid,
                                   LukkeÅrsak lukkeÅrsak) {
-        var patchRequestFerdig = DialogportenKlientTjeneste.opprettFerdigstillPatchRequest(sakstittel,
+        var patchRequestFerdig = DialogportenRequestMapper.opprettFerdigstillPatchRequest(sakstittel,
             ytelsetype,
             førsteUttaksdato,
             inntektsmeldingUuid,
@@ -77,7 +77,7 @@ public class DialogportenKlient {
     }
 
     public void settDialogTilUtgått(UUID dialogUuid, String sakstittel) {
-        var patchRequestUtgått = DialogportenKlientTjeneste.opprettUtgåttPatchRequest(sakstittel);
+        var patchRequestUtgått = DialogportenRequestMapper.opprettUtgåttPatchRequest(sakstittel);
         sendPatchRequest(dialogUuid, patchRequestUtgått);
     }
 

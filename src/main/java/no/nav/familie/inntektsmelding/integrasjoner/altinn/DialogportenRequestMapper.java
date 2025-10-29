@@ -11,8 +11,12 @@ import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.foreldrepenger.konfig.Environment;
 
-public class DialogportenKlientTjeneste {
+public class DialogportenRequestMapper {
     private static final String ALTINN_RESSURS_PREFIX = "urn:altinn:resource:";
+
+    private DialogportenRequestMapper(){
+        //statisk klasse
+    }
 
     public static DialogportenRequest opprettDialogRequest(OrganisasjonsnummerDto organisasjonsnummer,
                                                            UUID forespørselUuid,

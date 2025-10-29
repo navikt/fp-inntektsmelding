@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 
-class DialogportenKlientTjenesteTest {
+class DialogportenRequestMapperTest {
     private static final String SERVICE_RESOURCE = "urn:altinn:resource:nav_foreldrepenger_inntektsmelding";
     private final OrganisasjonsnummerDto ORGANISASJONSNUMMER = new OrganisasjonsnummerDto("999999999");
     private final UUID FORESPØRSEL_UUID = UUID.randomUUID();
@@ -30,7 +30,7 @@ class DialogportenKlientTjenesteTest {
     void opprettDialogRequest() {
         var party = "urn:altinn:organization:identifier-no:999999999";
 
-        var opprettRequest = DialogportenKlientTjeneste.opprettDialogRequest(ORGANISASJONSNUMMER,
+        var opprettRequest = DialogportenRequestMapper.opprettDialogRequest(ORGANISASJONSNUMMER,
             FORESPØRSEL_UUID, "Sakstittel", FØRSTE_UTTAKSDATO, Ytelsetype.FORELDREPENGER, INNTEKTSMELDING_SKJEMA_LENKE);
 
         var transmissionContent = opprettRequest.transmissions().getFirst().content().title().value().getFirst().value();
@@ -53,7 +53,7 @@ class DialogportenKlientTjenesteTest {
 
     @Test
     void opprettFerdigstillPatchRequest() {
-        var ferdigstillPatchRequest = DialogportenKlientTjeneste.opprettFerdigstillPatchRequest("Sakstittel",
+        var ferdigstillPatchRequest = DialogportenRequestMapper.opprettFerdigstillPatchRequest("Sakstittel",
             Ytelsetype.FORELDREPENGER,
             FØRSTE_UTTAKSDATO,
             Optional.of(FORESPØRSEL_UUID),
@@ -84,7 +84,7 @@ class DialogportenKlientTjenesteTest {
 
     @Test
     void opprettFerdigstillPatchRequestLukketEksternt() {
-        var ferdigstillPatchRequest = DialogportenKlientTjeneste.opprettFerdigstillPatchRequest("Sakstittel",
+        var ferdigstillPatchRequest = DialogportenRequestMapper.opprettFerdigstillPatchRequest("Sakstittel",
             Ytelsetype.FORELDREPENGER,
             FØRSTE_UTTAKSDATO,
             Optional.of(FORESPØRSEL_UUID),
@@ -113,7 +113,7 @@ class DialogportenKlientTjenesteTest {
 
     @Test
     void opprettUtgåttPatchRequest() {
-        var utgåttRequest = DialogportenKlientTjeneste.opprettUtgåttPatchRequest("sakstittel");
+        var utgåttRequest = DialogportenRequestMapper.opprettUtgåttPatchRequest("sakstittel");
 
         var ops = utgåttRequest.stream().map(DialogportenPatchRequest::op).toList();
         var paths = utgåttRequest.stream().map(DialogportenPatchRequest::path).toList();
