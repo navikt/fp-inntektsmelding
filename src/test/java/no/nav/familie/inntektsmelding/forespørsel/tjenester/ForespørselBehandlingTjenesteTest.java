@@ -11,12 +11,12 @@ import java.net.URI;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 import no.nav.familie.inntektsmelding.integrasjoner.altinn.DialogportenKlient;
 import no.nav.familie.inntektsmelding.koder.ArbeidsgiverinitiertÅrsak;
 import no.nav.familie.inntektsmelding.koder.ForespørselType;
 
+import org.jboss.jdeparser.FormatPreferences;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -415,7 +415,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
     }
 
     @Test
-    void skal_opprette_ny_beskjed_med_ekstern_varsling() {
+    void skal_opprette_ny_beskjed() {
         String varseltekst = "TEST A/S - orgnr 974760673: Vi har ennå ikke mottatt inntektsmelding. For at vi skal kunne behandle søknaden om foreldrepenger, må inntektsmeldingen sendes inn så raskt som mulig.";
         String beskjedtekst = "Vi har ennå ikke mottatt inntektsmelding for Navn Navnesen. For at vi skal kunne behandle søknaden om foreldrepenger, må inntektsmeldingen sendes inn så raskt som mulig.";
         var forespørselUuid = forespørselRepository.lagreForespørsel(SKJÆRINGSTIDSPUNKT,
@@ -437,7 +437,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             null);
 
         when(organisasjonTjeneste.finnOrganisasjon(BRREG_ORGNUMMER)).thenReturn(new Organisasjon("Test A/S", BRREG_ORGNUMMER));
-        when(minSideArbeidsgiverTjeneste.sendNyBeskjedMedEksternVarsling(forespørselUuid.toString(),
+        when(minSideArbeidsgiverTjeneste.opprettNyBeskjedMedEksternVarsling(forespørselUuid.toString(),
             Merkelapp.INNTEKTSMELDING_FP,
             forespørselUuid.toString(),
             BRREG_ORGNUMMER,
@@ -452,58 +452,12 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         clearHibernateCache();
 
         assertThat(resultat).isEqualTo(NyBeskjedResultat.NY_BESKJED_SENDT);
-        verify(minSideArbeidsgiverTjeneste, Mockito.times(1)).sendNyBeskjedMedEksternVarsling(forespørselUuid.toString(),
+        verify(minSideArbeidsgiverTjeneste, Mockito.times(1)).opprettNyBeskjedMedEksternVarsling(forespørselUuid.toString(),
             Merkelapp.INNTEKTSMELDING_FP,
             forespørselUuid.toString(),
             BRREG_ORGNUMMER,
             beskjedtekst,
             varseltekst,
-            uri);
-    }
-
-    @Test
-    void skal_opprette_ny_beskjed_med_kvitteringslenke() {
-        String beskjedtekst = "Innsendt inntektsmelding.";
-        var forespørselUuid = forespørselRepository.lagreForespørsel(SKJÆRINGSTIDSPUNKT,
-            Ytelsetype.FORELDREPENGER,
-            AKTØR_ID,
-            BRREG_ORGNUMMER,
-            SAKSNUMMMER,
-            SKJÆRINGSTIDSPUNKT, ForespørselType.BESTILT_AV_FAGSYSTEM);
-        var imUuid = UUID.randomUUID();
-        forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, SAK_ID);
-        var uri = URI.create(String.format("https://arbeidsgiver.nav.no/fp-im-dialog/server/api/ekstern/kvittering/inntektsmelding/%s", imUuid));
-
-        var personInfo = new PersonInfo("Navn",
-            null,
-            "Navnesen",
-            new PersonIdent("01019100000"),
-            new AktørIdEntitet(AKTØR_ID),
-            LocalDate.of(1991, 1, 1).minusYears(30),
-            null,
-            null);
-
-        when(minSideArbeidsgiverTjeneste.sendNyBeskjedMedKvittering(forespørselUuid.toString(),
-            Merkelapp.INNTEKTSMELDING_FP,
-            forespørselUuid.toString(),
-            BRREG_ORGNUMMER,
-            beskjedtekst,
-            uri)).thenReturn("beskjedId");
-
-        var res = forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørselUuid,
-            new AktørIdEntitet(AKTØR_ID),
-            new OrganisasjonsnummerDto(BRREG_ORGNUMMER),
-            SKJÆRINGSTIDSPUNKT,
-            LukkeÅrsak.EKSTERN_INNSENDING, Optional.of(imUuid));
-
-        clearHibernateCache();
-
-        assertThat(res).isNotNull();
-        verify(minSideArbeidsgiverTjeneste, Mockito.times(1)).sendNyBeskjedMedKvittering(forespørselUuid.toString(),
-            Merkelapp.INNTEKTSMELDING_FP,
-            forespørselUuid.toString(),
-            BRREG_ORGNUMMER,
-            beskjedtekst,
             uri);
     }
 

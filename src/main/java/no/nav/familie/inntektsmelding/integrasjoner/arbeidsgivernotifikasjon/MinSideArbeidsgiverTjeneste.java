@@ -26,19 +26,12 @@ public interface MinSideArbeidsgiverTjeneste {
 
     String slettSak(String id);
 
-    String sendNyBeskjedMedKvittering(String grupperingsid,
-                                           Merkelapp merkelapp,
-                                           String eksternId,
-                                           String virksomhetsnummer,
-                                           String beskjedTekst,
-                                           URI kvitteringLenke);
-
-    String sendNyBeskjedMedEksternVarsling(String grupperingsid,
-                                           Merkelapp merkelapp,
-                                           String eksternId,
-                                           String virksomhetsnummer,
-                                           String beskjedTekst,
-                                           String varselTekst,
-                                           URI lenke);
+    String opprettNyBeskjedMedEksternVarsling(String grupperingsid,
+                                              Merkelapp merkelapp,
+                                              String eksternId,
+                                              String virksomhetsnummer,
+                                              String beskjedTekst,
+                                              String varselTekst,
+                                              URI lenke);
 
 }
