@@ -59,11 +59,11 @@ public class InntektsmeldingMottakTjeneste {
             throw new IllegalStateException("Kan ikke motta nye inntektsmeldinger på utgåtte forespørsler");
         }
 
-        var aktorId = new AktørIdEntitet(mottattInntektsmeldingDto.aktorId().id());
-        var orgnummer = new OrganisasjonsnummerDto(mottattInntektsmeldingDto.arbeidsgiverIdent().ident());
         var entitet = InntektsmeldingMapper.mapTilEntitet(mottattInntektsmeldingDto);
         var imId = lagreOgLagJournalførTask(entitet, forespørselEntitet);
         var imEntitet = inntektsmeldingRepository.hentInntektsmelding(imId);
+        var orgnummer = new OrganisasjonsnummerDto(mottattInntektsmeldingDto.arbeidsgiverIdent().ident());
+        var aktorId = new AktørIdEntitet(mottattInntektsmeldingDto.aktorId().id());
         var lukketForespørsel = forespørselBehandlingTjeneste.ferdigstillForespørsel(mottattInntektsmeldingDto.foresporselUuid(), aktorId, orgnummer,
             mottattInntektsmeldingDto.startdato(), LukkeÅrsak.ORDINÆR_INNSENDING, imEntitet.getUuid());
 
