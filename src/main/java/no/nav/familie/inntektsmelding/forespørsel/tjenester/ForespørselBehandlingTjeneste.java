@@ -138,11 +138,12 @@ public class ForespørselBehandlingTjeneste {
 
         //Oppdaterer status i altinn dialogporten
         foresporsel.getDialogportenUuid().ifPresent(dialogUuid ->
-            dialogportenKlient.ferdigstilleMeldingIDialogporten(dialogUuid,
+            dialogportenKlient.ferdigstillDialog(dialogUuid,
                 lagSaksTittelForDialogporten(aktorId, foresporsel.getYtelseType()),
                 foresporsel.getYtelseType(),
                 foresporsel.getFørsteUttaksdato(),
-                inntektsmeldingUuid));
+                inntektsmeldingUuid,
+                årsak));
         return foresporsel;
     }
 
@@ -173,7 +174,7 @@ public class ForespørselBehandlingTjeneste {
         forespørselTjeneste.settForespørselTilUtgått(eksisterendeForespørsel.getArbeidsgiverNotifikasjonSakId());
         //oppdaterer status til not applicable i altinn dialogporten
         eksisterendeForespørsel.getDialogportenUuid().ifPresent(dialogUuid ->
-            dialogportenKlient.settMeldingTilUtgåttIDialogporten(dialogUuid, lagSaksTittelForDialogporten(eksisterendeForespørsel.getAktørId(), eksisterendeForespørsel.getYtelseType())));
+            dialogportenKlient.settDialogTilUtgått(dialogUuid, lagSaksTittelForDialogporten(eksisterendeForespørsel.getAktørId(), eksisterendeForespørsel.getYtelseType())));
 
         var msg = String.format("Setter forespørsel til utgått, orgnr: %s, stp: %s, saksnr: %s, ytelse: %s",
             eksisterendeForespørsel.getOrganisasjonsnummer(),

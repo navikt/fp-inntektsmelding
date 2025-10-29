@@ -4,13 +4,13 @@ import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
+import no.nav.familie.inntektsmelding.forespørsel.tjenester.LukkeÅrsak;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.foreldrepenger.konfig.Environment;
@@ -26,13 +26,10 @@ import no.nav.vedtak.mapper.json.DefaultJsonMapper;
 @RestClientConfig(tokenConfig = TokenFlow.NO_AUTH_NEEDED, endpointProperty = "altinn.tre.base.url", scopesProperty = "maskinporten.dialogporten.scope")
 public class DialogportenKlient {
     private static final Environment ENV = Environment.current();
-
-    private static final String ALTINN_RESSURS_PREFIX = "urn:altinn:resource:";
-
     private final RestClient restClient;
     private final RestConfig restConfig;
     private final AltinnExchangeTokenKlient tokenKlient;
-    private String inntektsmeldingSkjemaLenke;
+    private final String inntektsmeldingSkjemaLenke;
 
     DialogportenKlient() {
         this(RestClient.client());
@@ -51,117 +48,37 @@ public class DialogportenKlient {
                                 LocalDate førsteUttaksdato,
                                 Ytelsetype ytelsetype) {
         var target = URI.create(restConfig.endpoint().toString() + "/dialogporten/api/v1/serviceowner/dialogs");
-        var bodyRequest = lagDialogportenBody(orgnr, forespørselUuid, sakstittel, førsteUttaksdato, ytelsetype);
-        var request = RestRequest.newPOSTJson(bodyRequest, target, restConfig)
+        var opprettRequest = DialogportenRequestMapper.opprettDialogRequest(orgnr,
+            forespørselUuid,
+            sakstittel,
+            førsteUttaksdato,
+            ytelsetype,
+            inntektsmeldingSkjemaLenke);
+        var request = RestRequest.newPOSTJson(opprettRequest, target, restConfig)
             .otherAuthorizationSupplier(() -> tokenKlient.hentAltinnToken(this.restConfig.scopes()));
 
         var response = restClient.sendReturnUnhandled(request);
         return handleResponse(response);
     }
 
-    private String handleResponse(HttpResponse<String> response) {
-        if (response.statusCode() >= 200 && response.statusCode() < 300) {
-            return response.body();
-        } else {
-            String msg = String.format("Kall til Altinn dialogporten feilet med statuskode %s. Full feilmelding var: %s",
-                response.statusCode(),
-                response.body());
-            throw new IntegrasjonException("FPINNTEKTSMELDING-542684", msg);
-        }
+    public void ferdigstillDialog(UUID dialogUuid,
+                                  String sakstittel,
+                                  Ytelsetype ytelsetype,
+                                  LocalDate førsteUttaksdato,
+                                  Optional<UUID> inntektsmeldingUuid,
+                                  LukkeÅrsak lukkeÅrsak) {
+        var patchRequestFerdig = DialogportenRequestMapper.opprettFerdigstillPatchRequest(sakstittel,
+            ytelsetype,
+            førsteUttaksdato,
+            inntektsmeldingUuid,
+            lukkeÅrsak,
+            inntektsmeldingSkjemaLenke);
+        sendPatchRequest(dialogUuid, patchRequestFerdig);
     }
 
-    private DialogportenRequest lagDialogportenBody(OrganisasjonsnummerDto organisasjonsnummer,
-                                                    UUID forespørselUuid,
-                                                    String sakstittel,
-                                                    LocalDate førsteUttaksdato,
-                                                    Ytelsetype ytelsetype) {
-        var party = String.format("urn:altinn:organization:identifier-no:%s", organisasjonsnummer.orgnr());
-        var foreldrepengerRessurs = Environment.current().getProperty("altinn.tre.inntektsmelding.ressurs");
-        var altinnressursFP = ALTINN_RESSURS_PREFIX + foreldrepengerRessurs;
-
-        //Oppretter dialog
-        var summaryDialog = String.format("Nav trenger inntektsmelding for å behandle søknad om %s med startdato %s.",
-            ytelsetype.name().toLowerCase(),
-            førsteUttaksdato);
-        var contentDialog = new DialogportenRequest.Content(lagContentValue(sakstittel), lagContentValue(summaryDialog), null);
-
-        //Oppretter transmission
-        var contentTransmission = new DialogportenRequest.Content(lagContentValue("Send inn inntektsmelding"), null, null);
-        var attachementTransmission = new DialogportenRequest.Attachment(
-            List.of(new DialogportenRequest.ContentValueItem("Innsending av inntektsmelding på min side - arbeidsgiver hos Nav",
-                DialogportenRequest.NB)),
-            List.of(new DialogportenRequest.Url(inntektsmeldingSkjemaLenke + "/" + forespørselUuid.toString(), DialogportenRequest.NB,
-                DialogportenRequest.AttachmentUrlConsumerType.Gui)));
-        var transmission = new DialogportenRequest.Transmission(DialogportenRequest.TransmissionType.Request,
-            DialogportenRequest.ExtendedType.INNTEKTSMELDING,
-            new DialogportenRequest.Sender("ServiceOwner"),
-            contentTransmission,
-            List.of(attachementTransmission));
-
-        //oppretter api action
-        var apiAction = new DialogportenRequest.ApiAction(String.format("Innsending av inntektsmelding for %s med startdato %s",
-            ytelsetype.name().toLowerCase(),
-            førsteUttaksdato.format(DateTimeFormatter.ofPattern("dd.MM.yy"))),
-            List.of(new DialogportenRequest.Endpoint(inntektsmeldingSkjemaLenke + "/" + forespørselUuid, DialogportenRequest.HttpMethod.GET, null)),
-            DialogportenRequest.ACTION_READ);
-
-        return new DialogportenRequest(altinnressursFP,
-            party,
-            forespørselUuid.toString(),
-            DialogportenRequest.DialogStatus.RequiresAttention,
-            contentDialog,
-            List.of(transmission),
-            List.of(apiAction));
-    }
-
-    private DialogportenRequest.ContentValue lagContentValue(String verdi) {
-        return new DialogportenRequest.ContentValue(List.of(new DialogportenRequest.ContentValueItem(verdi, DialogportenRequest.NB)),
-            DialogportenRequest.TEXT_PLAIN);
-    }
-
-    public void ferdigstilleMeldingIDialogporten(UUID dialogUuid, String sakstittel, Ytelsetype ytelsetype, LocalDate førsteUttaksdato,
-                                                 Optional<UUID> inntektsmeldingUuid) {
-        //oppdatere status på meldingen til fullført
-        var patchStatus = new DialogportenPatchRequest(DialogportenPatchRequest.OP_REPLACE,
-            DialogportenPatchRequest.PATH_STATUS,
-            DialogportenRequest.DialogStatus.Completed);
-
-        //oppdatere innholdet i dialogen
-        var summaryDialog = String.format("Nav har mottatt inntektsmelding for søknad om %s med startdato %s",
-            ytelsetype.name().toLowerCase(),
-                førsteUttaksdato.format(
-                        DateTimeFormatter.ofPattern("dd.MM.yy")));
-        var contentRequest = new DialogportenRequest.Content(lagContentValue(sakstittel), lagContentValue(summaryDialog), null);
-        var patchContent = new DialogportenPatchRequest(DialogportenPatchRequest.OP_REPLACE,
-                DialogportenPatchRequest.PATH_CONTENT,
-                contentRequest);
-
-        //Ny transmission som sier at inntektsmelding er mottatt og med en lenke til kvittering
-        var transmissionContent = new DialogportenRequest.Content(lagContentValue("Inntektsmelding mottatt"), null, null);
-
-        //attachement med kvittering
-        var apiActions = inntektsmeldingUuid.map(imUuid -> {
-            var contentAttachement = List.of(new DialogportenRequest.ContentValueItem("Kvittering for inntektsmelding", DialogportenRequest.NB));
-            var url = inntektsmeldingSkjemaLenke + "/server/api/ekstern/kvittering/inntektsmelding/" + imUuid;
-            var urlApi = List.of(new DialogportenRequest.Url(url, DialogportenRequest.TEXT_PLAIN, DialogportenRequest.AttachmentUrlConsumerType.Api));
-            var urlGui = List.of(new DialogportenRequest.Url(url, DialogportenRequest.TEXT_PLAIN, DialogportenRequest.AttachmentUrlConsumerType.Gui));
-            var kvitteringApi = new DialogportenRequest.Attachment(contentAttachement, urlApi);
-            var kvitteringGui = new DialogportenRequest.Attachment(contentAttachement, urlGui);
-            return List.of(kvitteringApi, kvitteringGui);
-        }).orElse(List.of());
-
-        var transmission = new DialogportenRequest.Transmission(DialogportenRequest.TransmissionType.Acceptance,
-            DialogportenRequest.ExtendedType.INNTEKTSMELDING,
-            new DialogportenRequest.Sender("ServiceOwner"),
-            transmissionContent,
-            apiActions);
-
-        //patch
-        var patchTransmission = new DialogportenPatchRequest(DialogportenPatchRequest.OP_ADD,
-            DialogportenPatchRequest.PATH_TRANSMISSIONS,
-            List.of(transmission));
-
-        sendPatchRequest(dialogUuid, List.of(patchStatus, patchContent, patchTransmission));
+    public void settDialogTilUtgått(UUID dialogUuid, String sakstittel) {
+        var patchRequestUtgått = DialogportenRequestMapper.opprettUtgåttPatchRequest(sakstittel);
+        sendPatchRequest(dialogUuid, patchRequestUtgått);
     }
 
     private void sendPatchRequest(UUID dialogUuid, List<DialogportenPatchRequest> oppdateringer) {
@@ -177,37 +94,14 @@ public class DialogportenKlient {
         handleResponse(response);
     }
 
-    public void settMeldingTilUtgåttIDialogporten(UUID dialogUuid, String sakstittel) {
-        //oppdatere status på meldingen til not applicable
-        var patchStatus = new DialogportenPatchRequest(DialogportenPatchRequest.OP_REPLACE,
-            DialogportenPatchRequest.PATH_STATUS,
-            DialogportenRequest.DialogStatus.NotApplicable);
-
-        //legger til extended status utgått fordi det ikke finnes en tilsvarende status i dialogporten
-        //denne kan leses maskinelt av mottaker
-        var addDialogExtendedStatus = new DialogportenPatchRequest(DialogportenPatchRequest.OP_REPLACE,
-            DialogportenPatchRequest.PATH_EXTENDED_STATUS,
-            DialogportenRequest.ExtendedDialogStatus.Expired);
-
-        //oppdatere innholdet i dialogen
-        var contentRequest = new DialogportenRequest.Content(lagContentValue(sakstittel),
-            lagContentValue("Nav trenger ikke lenger denne inntektsmeldingen"),
-            lagContentValue("Utgått"));
-        var patchContent = new DialogportenPatchRequest(DialogportenPatchRequest.OP_REPLACE,
-            DialogportenPatchRequest.PATH_CONTENT,
-            contentRequest);
-
-        //Ny transmission som sier at inntektsmelding ikke lenger er påkrevd
-        var transmissionContent = new DialogportenRequest.Content(lagContentValue("Inntektsmeldingen er ikke lenger påkrevd"), null, null);
-        var transmission = new DialogportenRequest.Transmission(DialogportenRequest.TransmissionType.Correction,
-            DialogportenRequest.ExtendedType.INNTEKTSMELDING,
-            new DialogportenRequest.Sender("ServiceOwner"),
-            transmissionContent,
-            List.of());
-        var patchTransmission = new DialogportenPatchRequest(DialogportenPatchRequest.OP_ADD,
-            DialogportenPatchRequest.PATH_TRANSMISSIONS,
-            List.of(transmission));
-
-        sendPatchRequest(dialogUuid, List.of(patchStatus, addDialogExtendedStatus, patchContent, patchTransmission));
+    private String handleResponse(HttpResponse<String> response) {
+        if (response.statusCode() >= 200 && response.statusCode() < 300) {
+            return response.body();
+        } else {
+            String msg = String.format("Kall til Altinn dialogporten feilet med statuskode %s. Full feilmelding var: %s",
+                response.statusCode(),
+                response.body());
+            throw new IntegrasjonException("FPINNTEKTSMELDING-542684", msg);
+        }
     }
 }

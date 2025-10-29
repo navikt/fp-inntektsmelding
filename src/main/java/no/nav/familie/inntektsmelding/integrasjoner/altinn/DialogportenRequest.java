@@ -27,7 +27,7 @@ public record DialogportenRequest(@NotNull String serviceResource,
         NotApplicable,
     }
     enum ExtendedDialogStatus {
-        Expired,
+        Utgått,
     }
 
     protected record ApiAction(String name, List<Endpoint> endpoints, String action) {
