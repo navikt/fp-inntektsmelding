@@ -463,7 +463,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
     @Test
     void skal_opprette_ny_beskjed_med_kvitteringslenke() {
-        String beskjedtekst = "Kopi av innsendt inntektsmelding.";
+        String beskjedtekst = "Innsendt inntektsmelding.";
         var forespørselUuid = forespørselRepository.lagreForespørsel(SKJÆRINGSTIDSPUNKT,
             Ytelsetype.FORELDREPENGER,
             AKTØR_ID,
