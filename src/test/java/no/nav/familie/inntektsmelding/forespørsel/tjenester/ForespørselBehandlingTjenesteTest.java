@@ -489,7 +489,6 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             BRREG_ORGNUMMER,
             beskjedtekst,
             uri)).thenReturn("beskjedId");
-        when(personTjeneste.hentPersonInfoFraAktørId(new AktørIdEntitet(AKTØR_ID), Ytelsetype.FORELDREPENGER)).thenReturn(personInfo);
 
         var res = forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørselUuid,
             new AktørIdEntitet(AKTØR_ID),
