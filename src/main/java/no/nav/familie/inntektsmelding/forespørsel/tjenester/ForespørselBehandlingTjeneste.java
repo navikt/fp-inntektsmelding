@@ -10,7 +10,10 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import no.nav.familie.inntektsmelding.imdialog.rest.KvitteringRest;
 import no.nav.familie.inntektsmelding.integrasjoner.altinn.DialogportenKlient;
+
+import no.nav.familie.inntektsmelding.server.app.api.ApiConfig;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -133,10 +136,19 @@ public class ForespørselBehandlingTjeneste {
         minSideArbeidsgiverTjeneste.oppdaterSakTilleggsinformasjon(foresporsel.getArbeidsgiverNotifikasjonSakId(),
             ForespørselTekster.lagTilleggsInformasjon(årsak, foresporsel.getFørsteUttaksdato()));
 
+        if (!Environment.current().isProd()) {
+            inntektsmeldingUuid.ifPresent(imUuid -> {
+                var merkelapp = ForespørselTekster.finnMerkelapp(foresporsel.getYtelseType());
+                var beskjedTekst = ForespørselTekster.lagBeskjedOmKvitteringTekst();
+                var kvitteringUrl = URI.create(inntektsmeldingSkjemaLenke + "/server/api/ekstern/kvittering/inntektsmelding/" +  imUuid);
+                minSideArbeidsgiverTjeneste.sendNyBeskjedMedKvittering(foresporselUuid.toString(), merkelapp, foresporselUuid.toString(), organisasjonsnummerDto.orgnr(), beskjedTekst, kvitteringUrl);
+            });
+        }
+
         // Oppdaterer status i forespørsel
         forespørselTjeneste.ferdigstillForespørsel(foresporsel.getArbeidsgiverNotifikasjonSakId());
 
-        //Oppdaterer status i altinn dialogporten
+        // Oppdaterer status i altinn dialogporten
         foresporsel.getDialogportenUuid().ifPresent(dialogUuid ->
             dialogportenKlient.ferdigstillDialog(dialogUuid,
                 lagSaksTittelForDialogporten(aktorId, foresporsel.getYtelseType()),
@@ -335,7 +347,7 @@ public class ForespørselBehandlingTjeneste {
         var varselTekst = ForespørselTekster.lagVarselFraSaksbehandlerTekst(forespørsel.getYtelseType(), organisasjon);
         var beskjedTekst = ForespørselTekster.lagBeskjedFraSaksbehandlerTekst(forespørsel.getYtelseType(), person.mapFulltNavn());
 
-        minSideArbeidsgiverTjeneste.opprettNyBeskjedMedEksternVarsling(forespørselUuid.toString(),
+        minSideArbeidsgiverTjeneste.sendNyBeskjedMedEksternVarsling(forespørselUuid.toString(),
             merkelapp,
             forespørselUuid.toString(),
             organisasjonsnummer.orgnr(),

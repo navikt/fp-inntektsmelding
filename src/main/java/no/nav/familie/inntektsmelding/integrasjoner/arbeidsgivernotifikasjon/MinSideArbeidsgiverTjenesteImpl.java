@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -100,13 +101,34 @@ class MinSideArbeidsgiverTjenesteImpl implements MinSideArbeidsgiverTjeneste {
     }
 
     @Override
-    public String opprettNyBeskjedMedEksternVarsling(String grupperingsid,
-                                                     Merkelapp beskjedMerkelapp,
-                                                     String eksternId,
-                                                     String organisasjonsnumme,
-                                                     String beskjedTekst,
-                                                     String varselTekst,
-                                                     URI oppgaveLenke) {
+    public String sendNyBeskjedMedEksternVarsling(String grupperingsid,
+                                                  Merkelapp beskjedMerkelapp,
+                                                  String eksternId,
+                                                  String organisasjonsnummer,
+                                                  String beskjedTekst,
+                                                  String varselTekst,
+                                                  URI oppgaveLenke) {
+        return sendNyBeskjed(grupperingsid, beskjedMerkelapp, eksternId, organisasjonsnummer, beskjedTekst, Optional.of(varselTekst), oppgaveLenke);
+    }
+
+    @Override
+    public String sendNyBeskjedMedKvittering(String grupperingsid,
+                                Merkelapp beskjedMerkelapp,
+                                String eksternId,
+                                String organisasjonsnummer,
+                                String beskjedTekst,
+                                URI lenke) {
+        return sendNyBeskjed(grupperingsid, beskjedMerkelapp, eksternId, organisasjonsnummer, beskjedTekst, Optional.empty(), lenke);
+    }
+
+
+    private String sendNyBeskjed(String grupperingsid,
+                                 Merkelapp beskjedMerkelapp,
+                                 String eksternId,
+                                 String organisasjonsnumme,
+                                 String beskjedTekst,
+                                 Optional<String> varselTekst,
+                                 URI oppgaveLenke) {
         var beskjedInput = NyBeskjedInput.builder()
             .setNotifikasjon(NotifikasjonInput.builder()
                 .setMerkelapp(beskjedMerkelapp.getBeskrivelse())
@@ -119,7 +141,7 @@ class MinSideArbeidsgiverTjenesteImpl implements MinSideArbeidsgiverTjeneste {
                 .setEksternId(UUID.randomUUID().toString())
                 .setGrupperingsid(grupperingsid)
                 .build())
-            .setEksterneVarsler(List.of(lagEksternVarselAltinn(varselTekst, 0)))
+            .setEksterneVarsler(varselTekst.map(tekst ->List.of(lagEksternVarselAltinn(tekst, 0))).orElse(List.of()))
             .build();
         var beskjedRequest = new NyBeskjedMutationRequest();
         beskjedRequest.setNyBeskjed(beskjedInput);
