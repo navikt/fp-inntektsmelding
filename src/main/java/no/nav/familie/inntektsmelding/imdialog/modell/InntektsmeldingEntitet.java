@@ -297,7 +297,7 @@ public class InntektsmeldingEntitet {
         public InntektsmeldingEntitet build() {
             Objects.requireNonNull(kladd.startDato, "startdato");
             Objects.requireNonNull(kladd.månedInntekt, "månedsinntekt");
-            validerRefusjonsperioder();
+            validerRefusjon();
             validerNaturalytelser();
             kladd.uuid = UUID.randomUUID();
             return kladd;
@@ -311,7 +311,12 @@ public class InntektsmeldingEntitet {
             }
         }
 
-        private void validerRefusjonsperioder() {
+        private void validerRefusjon() {
+            // Kan ikke oppgi refusjon uten opphørsdato (selv om denne er tidenes ende), og gir ikke mening å oppgi opphørsdato uten refusjon
+            if (kladd.månedRefusjon != null || kladd.opphørsdatoRefusjon != null) {
+                Objects.requireNonNull(kladd.månedRefusjon, "månedRefusjon");
+                Objects.requireNonNull(kladd.opphørsdatoRefusjon, "opphørsdatoRefusjon");
+            }
             if (!kladd.getRefusjonsendringer().isEmpty() && kladd.getMånedRefusjon() == null) {
                 throw new TekniskException("FPINNTEKTSMELDING_REFUSJON_1",
                     String.format("Kan ikke ha refusjonsendringer når det ikke er oppgitt refusjon. Endringer var %s",
