@@ -1,7 +1,6 @@
 package no.nav.familie.inntektsmelding.imdialog.rest;
 
 import java.util.Comparator;
-import java.util.Optional;
 import java.util.UUID;
 
 import jakarta.enterprise.context.RequestScoped;
