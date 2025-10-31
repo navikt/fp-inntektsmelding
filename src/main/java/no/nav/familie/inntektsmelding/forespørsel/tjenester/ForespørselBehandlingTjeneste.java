@@ -10,10 +10,7 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import no.nav.familie.inntektsmelding.imdialog.rest.KvitteringRest;
 import no.nav.familie.inntektsmelding.integrasjoner.altinn.DialogportenKlient;
-
-import no.nav.familie.inntektsmelding.server.app.api.ApiConfig;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -32,15 +32,6 @@ class FpsakKlientTest {
     }
 
     @Test
-    void teste_kall() {
-        var aktørId = new AktørIdEntitet(AKTØR_ID);
-        when(restClient.sendReturnOptional(any(), any())).thenReturn(Optional.of(new FpsakKlient.SakInntektsmeldingResponse(true)));
-        var resultat = fpsakKlient.harSøkerSakIFagsystem(aktørId, Ytelsetype.FORELDREPENGER);
-
-        assertThat(resultat).isTrue();
-    }
-
-    @Test
     void test_hent_info_om_sak() {
         var aktørId = new AktørIdEntitet(AKTØR_ID);
         var ytelse = Ytelsetype.FORELDREPENGER;

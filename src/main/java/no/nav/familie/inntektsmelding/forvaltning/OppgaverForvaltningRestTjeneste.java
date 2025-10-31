@@ -33,7 +33,6 @@ import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.familie.inntektsmelding.typer.dto.SaksnummerDto;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 
 @AutentisertMedAzure
 @OpenAPIDefinition(tags = @Tag(name = "oppgaver", description = "Hånstering av feilopprettede saker / oppgaver i arbeidsgiverportalen"))
