@@ -17,6 +17,8 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import no.nav.familie.inntektsmelding.koder.Ytelsetype;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,9 +83,12 @@ public class KvitteringRest {
             return Response.status(Response.Status.NO_CONTENT).build();
         } else {
             var pdf = inntektsmeldingTjeneste.hentPDF(im.getId());
+            var ytelsetekst = im.getYtelsetype().equals(Ytelsetype.FORELDREPENGER) ? "foreldrepenger" : "svangerskapspenger";
+            var siste12TegnFraUuid = inntektsmeldingUuid.toString().substring(inntektsmeldingUuid.toString().length() - 12);
             var responseBuilder = Response.ok(pdf);
             responseBuilder.type("application/pdf");
-            responseBuilder.header("Content-Disposition", String.format("attachment; filename=inntektsmelding-%s.pdf", inntektsmeldingUuid));
+            responseBuilder.header("Content-Disposition", String.format("attachment; filename=inntektsmelding-%s-%s.pdf", ytelsetekst, siste12TegnFraUuid));
+            LOG.info("Returnerer pdf for inntektsmelding med id {}", inntektsmeldingUuid);
             return responseBuilder.build();
         }
     }
