@@ -123,7 +123,7 @@ public class ForespørselBehandlingTjeneste {
         validerOrganisasjon(foresporsel, organisasjonsnummerDto);
         validerStartdato(foresporsel, startdato);
 
-        var erFørstegangsinnsending = foresporsel.getStatus().equals(ForespørselStatus.UNDER_BEHANDLING);
+        var erFørstegangsinnsending = ForespørselStatus.UNDER_BEHANDLING.equals(foresporsel.getStatus());
 
         // Arbeidsgiverinitierte forespørsler har ingen oppgave
         foresporsel.getOppgaveId().ifPresent(oppgaveId -> minSideArbeidsgiverTjeneste.oppgaveUtført(oppgaveId, OffsetDateTime.now()));
