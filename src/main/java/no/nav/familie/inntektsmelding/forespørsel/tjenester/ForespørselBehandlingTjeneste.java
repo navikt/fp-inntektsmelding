@@ -56,7 +56,8 @@ public class ForespørselBehandlingTjeneste {
     public ForespørselBehandlingTjeneste(ForespørselTjeneste forespørselTjeneste,
                                          MinSideArbeidsgiverTjeneste minSideArbeidsgiverTjeneste,
                                          PersonTjeneste personTjeneste,
-                                         OrganisasjonTjeneste organisasjonTjeneste, DialogportenKlient dialogportenKlient) {
+                                         OrganisasjonTjeneste organisasjonTjeneste,
+                                         DialogportenKlient dialogportenKlient) {
         this.forespørselTjeneste = forespørselTjeneste;
         this.minSideArbeidsgiverTjeneste = minSideArbeidsgiverTjeneste;
         this.personTjeneste = personTjeneste;
@@ -118,10 +119,11 @@ public class ForespørselBehandlingTjeneste {
                                                      Optional<UUID> inntektsmeldingUuid) {
         var foresporsel = forespørselTjeneste.hentForespørsel(foresporselUuid)
             .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel for inntektsmelding, ugyldig tilstand"));
-
         validerAktør(foresporsel, aktorId);
         validerOrganisasjon(foresporsel, organisasjonsnummerDto);
         validerStartdato(foresporsel, startdato);
+
+        var erFørstegangsinnsending = ForespørselStatus.UNDER_BEHANDLING.equals(foresporsel.getStatus());
 
         // Arbeidsgiverinitierte forespørsler har ingen oppgave
         foresporsel.getOppgaveId().ifPresent(oppgaveId -> minSideArbeidsgiverTjeneste.oppgaveUtført(oppgaveId, OffsetDateTime.now()));
@@ -136,7 +138,7 @@ public class ForespørselBehandlingTjeneste {
         if (!Environment.current().isProd()) {
             inntektsmeldingUuid.ifPresent(imUuid -> {
                 var merkelapp = ForespørselTekster.finnMerkelapp(foresporsel.getYtelseType());
-                var beskjedTekst = ForespørselTekster.lagBeskjedOmKvitteringTekst();
+                var beskjedTekst = erFørstegangsinnsending ? ForespørselTekster.lagBeskjedOmKvitteringFørsteInnsendingTekst() : ForespørselTekster.lagBeskjedOmOppdatertInntektsmelding();
                 var kvitteringUrl = URI.create(inntektsmeldingSkjemaLenke + "/server/api/ekstern/kvittering/inntektsmelding/" +  imUuid);
                 minSideArbeidsgiverTjeneste.sendNyBeskjedMedKvittering(foresporselUuid.toString(), merkelapp, foresporselUuid.toString(), organisasjonsnummerDto.orgnr(), beskjedTekst, kvitteringUrl);
             });
