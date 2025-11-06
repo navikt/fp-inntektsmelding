@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import no.nav.familie.inntektsmelding.forespørsel.modell.ForespørselEntitet;
 import no.nav.familie.inntektsmelding.forvaltning.rest.InntektsmeldingForespørselDto;
+import no.nav.familie.inntektsmelding.integrasjoner.altinn.DialogportenKlient;
 import no.nav.familie.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon.MinSideArbeidsgiverTjeneste;
 import no.nav.familie.inntektsmelding.integrasjoner.organisasjon.OrganisasjonTjeneste;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonTjeneste;
@@ -56,7 +57,8 @@ public class ForespørselBehandlingTjeneste {
     public ForespørselBehandlingTjeneste(ForespørselTjeneste forespørselTjeneste,
                                          MinSideArbeidsgiverTjeneste minSideArbeidsgiverTjeneste,
                                          PersonTjeneste personTjeneste,
-                                         OrganisasjonTjeneste organisasjonTjeneste, DialogportenKlient dialogportenKlient) {
+                                         OrganisasjonTjeneste organisasjonTjeneste,
+                                         DialogportenKlient dialogportenKlient) {
         this.forespørselTjeneste = forespørselTjeneste;
         this.minSideArbeidsgiverTjeneste = minSideArbeidsgiverTjeneste;
         this.personTjeneste = personTjeneste;
@@ -118,10 +120,11 @@ public class ForespørselBehandlingTjeneste {
                                                      Optional<UUID> inntektsmeldingUuid) {
         var foresporsel = forespørselTjeneste.hentForespørsel(foresporselUuid)
             .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel for inntektsmelding, ugyldig tilstand"));
-
         validerAktør(foresporsel, aktorId);
         validerOrganisasjon(foresporsel, organisasjonsnummerDto);
         validerStartdato(foresporsel, startdato);
+
+        var erFørstegangsinnsending = foresporsel.getStatus().equals(ForespørselStatus.UNDER_BEHANDLING);
 
         // Arbeidsgiverinitierte forespørsler har ingen oppgave
         foresporsel.getOppgaveId().ifPresent(oppgaveId -> minSideArbeidsgiverTjeneste.oppgaveUtført(oppgaveId, OffsetDateTime.now()));
@@ -136,7 +139,7 @@ public class ForespørselBehandlingTjeneste {
         if (!Environment.current().isProd()) {
             inntektsmeldingUuid.ifPresent(imUuid -> {
                 var merkelapp = ForespørselTekster.finnMerkelapp(foresporsel.getYtelseType());
-                var beskjedTekst = ForespørselTekster.lagBeskjedOmKvitteringTekst();
+                var beskjedTekst = erFørstegangsinnsending ? ForespørselTekster.lagBeskjedOmKvitteringFørsteInnsendingTekst() : ForespørselTekster.lagBeskjedOmOppdatertInntektsmelding();
                 var kvitteringUrl = URI.create(inntektsmeldingSkjemaLenke + "/server/api/ekstern/kvittering/inntektsmelding/" +  imUuid);
                 minSideArbeidsgiverTjeneste.sendNyBeskjedMedKvittering(foresporselUuid.toString(), merkelapp, foresporselUuid.toString(), organisasjonsnummerDto.orgnr(), beskjedTekst, kvitteringUrl);
             });

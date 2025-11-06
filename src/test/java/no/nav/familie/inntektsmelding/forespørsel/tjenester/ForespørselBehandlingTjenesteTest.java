@@ -474,15 +474,6 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, SAK_ID);
         var uri = URI.create(String.format("https://arbeidsgiver.nav.no/fp-im-dialog/server/api/ekstern/kvittering/inntektsmelding/%s", imUuid));
 
-        var personInfo = new PersonInfo("Navn",
-            null,
-            "Navnesen",
-            new PersonIdent("01019100000"),
-            new AktørIdEntitet(AKTØR_ID),
-            LocalDate.of(1991, 1, 1).minusYears(30),
-            null,
-            null);
-
         when(minSideArbeidsgiverTjeneste.sendNyBeskjedMedKvittering(forespørselUuid.toString(),
             Merkelapp.INNTEKTSMELDING_FP,
             forespørselUuid.toString(),
@@ -507,6 +498,44 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             uri);
     }
 
+    @Test
+    void skal_opprette_ny_beskjed_med_kvitteringslenke_ved_oppdatert_inntektsmelding() {
+        String beskjedtekst = "Oppdatert inntektsmelding";
+        var forespørselUuid = forespørselRepository.lagreForespørsel(SKJÆRINGSTIDSPUNKT,
+            Ytelsetype.FORELDREPENGER,
+            AKTØR_ID,
+            BRREG_ORGNUMMER,
+            SAKSNUMMMER,
+            SKJÆRINGSTIDSPUNKT, ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var imUuid = UUID.randomUUID();
+        forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, SAK_ID);
+        forespørselRepository.ferdigstillForespørsel(SAK_ID);
+
+        var uri = URI.create(String.format("https://arbeidsgiver.nav.no/fp-im-dialog/server/api/ekstern/kvittering/inntektsmelding/%s", imUuid));
+
+        when(minSideArbeidsgiverTjeneste.sendNyBeskjedMedKvittering(forespørselUuid.toString(),
+            Merkelapp.INNTEKTSMELDING_FP,
+            forespørselUuid.toString(),
+            BRREG_ORGNUMMER,
+            beskjedtekst,
+            uri)).thenReturn("beskjedId");
+
+        var res = forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørselUuid,
+            new AktørIdEntitet(AKTØR_ID),
+            new OrganisasjonsnummerDto(BRREG_ORGNUMMER),
+            SKJÆRINGSTIDSPUNKT,
+            LukkeÅrsak.EKSTERN_INNSENDING, Optional.of(imUuid));
+
+        clearHibernateCache();
+
+        assertThat(res).isNotNull();
+        verify(minSideArbeidsgiverTjeneste, Mockito.times(1)).sendNyBeskjedMedKvittering(forespørselUuid.toString(),
+            Merkelapp.INNTEKTSMELDING_FP,
+            forespørselUuid.toString(),
+            BRREG_ORGNUMMER,
+            beskjedtekst,
+            uri);
+    }
     @Test
     void skal_gi_riktig_resultat_om_det_ikke_finnes_en_åpen_forespørsel() {
         var forespørselUuid = forespørselRepository.lagreForespørsel(SKJÆRINGSTIDSPUNKT,

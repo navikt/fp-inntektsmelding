@@ -23,6 +23,7 @@ class ForespørselTekster {
     private static final String VARSEL_TEKST = "%s - orgnr %s: En av dine ansatte har søkt om %s og vi trenger inntektsmelding for å behandle søknaden. Logg inn på Min side – arbeidsgiver hos Nav. Hvis dere sender inn via lønnssystem kan dere fortsette med dette.";
     private static final String BESKJED_FRA_SAKSBEHANDLER_TEKST = "Vi har ennå ikke mottatt inntektsmelding for %s. For at vi skal kunne behandle søknaden om %s, må inntektsmeldingen sendes inn så raskt som mulig.";
     private static final String BESKJED_OM_KVITTERING_TEKST = "Innsendt inntektsmelding";
+    private static final String BESKJED_OM_OPPDATERT_KVITTERING_TEKST = "Oppdatert inntektsmelding";
     private static final String VARSEL_FRA_SAKSBEHANDLER_TEKST = "%s - orgnr %s: Vi har ennå ikke mottatt inntektsmelding. For at vi skal kunne behandle søknaden om %s, må inntektsmeldingen sendes inn så raskt som mulig.";
 
     private ForespørselTekster() {
@@ -79,8 +80,12 @@ class ForespørselTekster {
         return String.format(BESKJED_FRA_SAKSBEHANDLER_TEKST, søkerNavn, mapYtelsestypeNavn(ytelseType));
     }
 
-    public static String lagBeskjedOmKvitteringTekst() {
+    public static String lagBeskjedOmKvitteringFørsteInnsendingTekst() {
         return BESKJED_OM_KVITTERING_TEKST;
+    }
+
+    public static String lagBeskjedOmOppdatertInntektsmelding() {
+        return BESKJED_OM_OPPDATERT_KVITTERING_TEKST;
     }
 
     public static String lagVarselFraSaksbehandlerTekst(Ytelsetype ytelsetype, Organisasjon org) {
