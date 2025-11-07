@@ -184,6 +184,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
         assertThat(fpEntitet.getStatus()).isEqualTo(ForespørselStatus.FERDIG);
 
+        mockInfoForOpprettelse(AKTØR_ID, YTELSETYPE, BRREG_ORGNUMMER, SAK_ID_2, OPPGAVE_ID);
         var resultat2 = forespørselBehandlingTjeneste.håndterInnkommendeForespørsel(SKJÆRINGSTIDSPUNKT,
             YTELSETYPE,
             new AktørIdEntitet(AKTØR_ID),
@@ -219,6 +220,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
         assertThat(fpEntitet.getStatus()).isEqualTo(ForespørselStatus.FERDIG);
 
+        mockInfoForOpprettelse(AKTØR_ID, YTELSETYPE, BRREG_ORGNUMMER, SAK_ID_2, OPPGAVE_ID);
         var resultat2 = forespørselBehandlingTjeneste.håndterInnkommendeForespørsel(SKJÆRINGSTIDSPUNKT.plusMonths(2),
             YTELSETYPE,
             new AktørIdEntitet(AKTØR_ID),
