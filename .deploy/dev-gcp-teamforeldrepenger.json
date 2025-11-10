@@ -28,7 +28,8 @@
     "dbTier": "db-f1-micro",
     "dbDiskAutoresize": "false",
     "dbHighAvailability": "false",
-    "dbPointInTimeRecovery": "false"
+    "dbPointInTimeRecovery": "false",
+    "dbRetainedBackups": "1"
   },
   "devOnly": "true"
 }

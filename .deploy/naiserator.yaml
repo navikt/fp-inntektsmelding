@@ -62,6 +62,11 @@ spec:
         highAvailability: {{db.dbHighAvailability}}
         pointInTimeRecovery: {{db.dbPointInTimeRecovery}}
         collation: nb_NO.UTF8
+        retainedBackups: {{db.dbRetainedBackups}}
+        autoBackupHour: 2
+        maintenance:
+          day: 1
+          hour: 4
   secureLogs:
     enabled: true
   maskinporten:
