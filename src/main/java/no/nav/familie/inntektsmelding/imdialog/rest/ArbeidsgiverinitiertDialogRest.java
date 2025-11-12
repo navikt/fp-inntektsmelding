@@ -74,7 +74,7 @@ public class ArbeidsgiverinitiertDialogRest {
             var finnesYtelseIFpsak = FpsakKlient.StatusSakInntektsmelding.ÅPEN_FOR_BEHANDLING.equals(infoOmSakRespons.statusInntektsmelding());
 
             if (!finnesYtelseIFpsak) {
-                var tekst = String.format("Du kan ikke sende inn inntektsmelding på %s for denne personen med aktør id %s",
+                var tekst = "Du kan ikke sende inn inntektsmelding på %s for denne personen med aktør id %s".formatted(
                     request.ytelseType(),
                     personInfo.aktørId());
                 throw new FunksjonellException("INGEN_SAK_FUNNET", tekst, null, null);

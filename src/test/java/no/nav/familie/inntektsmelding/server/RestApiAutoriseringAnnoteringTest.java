@@ -26,7 +26,7 @@ class RestApiAutoriseringAnnoteringTest {
     @MethodSource("finnAlleRestMetoder")
     void test_at_alle_restmetoder_er_annotert_med_gyldig_annotering(Method restMethod) {
         assertThat(finnGyldigAnnotering(restMethod))
-                .withFailMessage(String.format(FEILMELDING, restMethod, Tilgangskontrollert.class.getSimpleName()))
+                .withFailMessage(FEILMELDING.formatted(restMethod, Tilgangskontrollert.class.getSimpleName()))
                 .isNotNull();
     }
 

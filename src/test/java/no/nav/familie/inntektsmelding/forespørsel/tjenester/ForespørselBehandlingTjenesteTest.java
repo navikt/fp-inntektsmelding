@@ -425,7 +425,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             SAKSNUMMMER,
             SKJÆRINGSTIDSPUNKT, ForespørselType.BESTILT_AV_FAGSYSTEM);
         forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, SAK_ID);
-        var uri = URI.create(String.format("https://arbeidsgiver.nav.no/fp-im-dialog/%s", forespørselUuid.toString()));
+        var uri = URI.create("https://arbeidsgiver.nav.no/fp-im-dialog/%s".formatted(forespørselUuid.toString()));
 
         var personInfo = new PersonInfo("Navn",
             null,
@@ -472,7 +472,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             SKJÆRINGSTIDSPUNKT, ForespørselType.BESTILT_AV_FAGSYSTEM);
         var imUuid = UUID.randomUUID();
         forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, SAK_ID);
-        var uri = URI.create(String.format("https://arbeidsgiver.nav.no/fp-im-dialog/server/api/ekstern/kvittering/inntektsmelding/%s", imUuid));
+        var uri = URI.create("https://arbeidsgiver.nav.no/fp-im-dialog/server/api/ekstern/kvittering/inntektsmelding/%s".formatted(imUuid));
 
         when(minSideArbeidsgiverTjeneste.sendNyBeskjedMedKvittering(forespørselUuid.toString(),
             Merkelapp.INNTEKTSMELDING_FP,
@@ -511,7 +511,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, SAK_ID);
         forespørselRepository.ferdigstillForespørsel(SAK_ID);
 
-        var uri = URI.create(String.format("https://arbeidsgiver.nav.no/fp-im-dialog/server/api/ekstern/kvittering/inntektsmelding/%s", imUuid));
+        var uri = URI.create("https://arbeidsgiver.nav.no/fp-im-dialog/server/api/ekstern/kvittering/inntektsmelding/%s".formatted(imUuid));
 
         when(minSideArbeidsgiverTjeneste.sendNyBeskjedMedKvittering(forespørselUuid.toString(),
             Merkelapp.INNTEKTSMELDING_FP,

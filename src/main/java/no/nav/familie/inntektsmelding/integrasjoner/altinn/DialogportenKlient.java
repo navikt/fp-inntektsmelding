@@ -98,7 +98,7 @@ public class DialogportenKlient {
         if (response.statusCode() >= 200 && response.statusCode() < 300) {
             return response.body();
         } else {
-            String msg = String.format("Kall til Altinn dialogporten feilet med statuskode %s. Full feilmelding var: %s",
+            String msg = "Kall til Altinn dialogporten feilet med statuskode %s. Full feilmelding var: %s".formatted(
                 response.statusCode(),
                 response.body());
             throw new IntegrasjonException("FPINNTEKTSMELDING-542684", msg);

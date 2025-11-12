@@ -187,7 +187,7 @@ public class ForespørselBehandlingTjeneste {
         eksisterendeForespørsel.getDialogportenUuid().ifPresent(dialogUuid ->
             dialogportenKlient.settDialogTilUtgått(dialogUuid, lagSaksTittelForDialogporten(eksisterendeForespørsel.getAktørId(), eksisterendeForespørsel.getYtelseType())));
 
-        var msg = String.format("Setter forespørsel til utgått, orgnr: %s, stp: %s, saksnr: %s, ytelse: %s",
+        var msg = "Setter forespørsel til utgått, orgnr: %s, stp: %s, saksnr: %s, ytelse: %s".formatted(
             eksisterendeForespørsel.getOrganisasjonsnummer(),
             eksisterendeForespørsel.getSkjæringstidspunkt().orElse(null),
             eksisterendeForespørsel.getFagsystemSaksnummer().orElse(null),
@@ -201,7 +201,7 @@ public class ForespørselBehandlingTjeneste {
                                    OrganisasjonsnummerDto organisasjonsnummer,
                                    LocalDate skjæringstidspunkt,
                                    LocalDate førsteUttaksdato) {
-        var msg = String.format("Oppretter forespørsel, orgnr: %s, stp: %s, saksnr: %s, ytelse: %s",
+        var msg = "Oppretter forespørsel, orgnr: %s, stp: %s, saksnr: %s, ytelse: %s".formatted(
             organisasjonsnummer,
             skjæringstidspunkt,
             fagsakSaksnummer.saksnr(),
@@ -286,7 +286,7 @@ public class ForespørselBehandlingTjeneste {
                                                             LocalDate førsteFraværsdato,
                                                             ArbeidsgiverinitiertÅrsak arbeidsgiverinitiertÅrsak,
                                                             LocalDate skjæringstidspunkt) {
-        var msg = String.format("Oppretter forespørsel for arbeidsgiverinitiert, orgnr: %s, ytelse: %s",
+        var msg = "Oppretter forespørsel for arbeidsgiverinitiert, orgnr: %s, ytelse: %s".formatted(
             organisasjonsnummer,
             ytelsetype);
         LOG.info(msg);
@@ -332,7 +332,7 @@ public class ForespørselBehandlingTjeneste {
             return NyBeskjedResultat.FORESPØRSEL_FINNES_IKKE;
         }
 
-        var msg = String.format("Oppretter ny beskjed med ekstern varsling, orgnr: %s, stp: %s, saksnr: %s, ytelse: %s",
+        var msg = "Oppretter ny beskjed med ekstern varsling, orgnr: %s, stp: %s, saksnr: %s, ytelse: %s".formatted(
             organisasjonsnummer,
             forespørsel.getSkjæringstidspunkt().orElse(null),
             fagsakSaksnummer.saksnr(),
@@ -395,7 +395,7 @@ public class ForespørselBehandlingTjeneste {
             .toList();
 
         if (sakerSomSkalSlettes.size() != 1) {
-            var msg = String.format("Fant ikke akkurat 1 sak som skulle slettes. Fant istedet %s saker ", sakerSomSkalSlettes.size());
+            var msg = "Fant ikke akkurat 1 sak som skulle slettes. Fant istedet %s saker ".formatted(sakerSomSkalSlettes.size());
             throw new IllegalStateException(msg);
         }
         var agPortalSakId = sakerSomSkalSlettes.getFirst().getArbeidsgiverNotifikasjonSakId();

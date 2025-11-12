@@ -5,7 +5,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -61,7 +61,7 @@ public class IndexClasses {
     private Index scanIndexFromFilesystem(URI location) {
         try {
             var indexer = new Indexer();
-            var source = Paths.get(location);
+            var source = Path.of(location);
             try (var paths = Files.walk(source)) {
                 paths.filter(Files::isRegularFile).forEach(f -> {
                     var fileName = f.getFileName();

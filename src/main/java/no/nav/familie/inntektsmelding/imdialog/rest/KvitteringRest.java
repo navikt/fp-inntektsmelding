@@ -86,7 +86,7 @@ public class KvitteringRest {
             var siste12TegnFraUuid = inntektsmeldingUuid.toString().substring(inntektsmeldingUuid.toString().length() - 12);
             var responseBuilder = Response.ok(pdf);
             responseBuilder.type("application/pdf");
-            responseBuilder.header("Content-Disposition", String.format("attachment; filename=inntektsmelding-%s-%s.pdf", ytelsetekst, siste12TegnFraUuid));
+            responseBuilder.header("Content-Disposition", "attachment; filename=inntektsmelding-%s-%s.pdf".formatted(ytelsetekst, siste12TegnFraUuid));
             LOG.info("Returnerer pdf for inntektsmelding med id {}", inntektsmeldingUuid);
             return responseBuilder.build();
         }

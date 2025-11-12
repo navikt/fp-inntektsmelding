@@ -18,7 +18,7 @@ class DialogportenRequestTest {
     @Test
     void serdes_test() throws JsonProcessingException {
         var orgnr = "987654321";
-        var party = String.format("urn:altinn:organization:identifier-no:%s", orgnr);
+        var party = "urn:altinn:organization:identifier-no:%s".formatted(orgnr);
         var serviceResource = "urn:altinn:resource:nav_foreldrepenger_inntektsmelding";
         var externalReference = "saksnummer-123456789";
 

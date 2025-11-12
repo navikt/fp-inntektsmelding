@@ -70,7 +70,7 @@ public class AutentiseringFilter implements ContainerRequestFilter, ContainerRes
         if (annotation != null) {
             assertValidAnnotation(annotation, req);
         } else {
-            throw new WebApplicationException(String.format("Mangler en gyldig annotering på %s.", method.getName()), Response.Status.FORBIDDEN);
+            throw new WebApplicationException("Mangler en gyldig annotering på %s.".formatted(method.getName()), Response.Status.FORBIDDEN);
         }
     }
 

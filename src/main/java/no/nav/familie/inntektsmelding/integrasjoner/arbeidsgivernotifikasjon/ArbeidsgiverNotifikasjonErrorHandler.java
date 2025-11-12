@@ -15,10 +15,10 @@ class ArbeidsgiverNotifikasjonErrorHandler {
     }
 
     public static <T> T handleError(List<GraphQLError> errors, URI uri, String kode) {
-        throw new TekniskException(kode, String.format("Feil %s mot %s", errors.stream().map(GraphQLError::getMessage).collect(joining(",")), uri));
+        throw new TekniskException(kode, "Feil %s mot %s".formatted(errors.stream().map(GraphQLError::getMessage).collect(joining(",")), uri));
     }
 
     public static void handleValidationError(String typename, String feilmelding, String aksjon) {
-        throw new TekniskException("F-FAGER", String.format("Funksjonel feil ved %s: %s:%s", aksjon, typename, feilmelding));
+        throw new TekniskException("F-FAGER", "Funksjonel feil ved %s: %s:%s".formatted(aksjon, typename, feilmelding));
     }
 }

@@ -70,8 +70,7 @@ class DialogportenRequestMapperTest {
             DialogportenPatchRequest.PATH_CONTENT,
             DialogportenPatchRequest.PATH_TRANSMISSIONS);
         assertThat(ferdigstillPatchRequest.getFirst().op()).isEqualTo(DialogportenPatchRequest.OP_REPLACE);
-        assertThat(ferdigstillPatchRequest.get(1).value().toString()).contains(String.format(
-            "Nav har mottatt inntektsmelding for søknad om foreldrepenger med startdato %s",
+        assertThat(ferdigstillPatchRequest.get(1).value().toString()).contains("Nav har mottatt inntektsmelding for søknad om foreldrepenger med startdato %s".formatted(
             FØRSTE_UTTAKSDATO.format(DateTimeFormatter.ofPattern("dd.MM.yy"))));
         assertThat(ferdigstillPatchRequest.get(2).op()).isEqualTo(DialogportenPatchRequest.OP_ADD);
         assertThat(ferdigstillPatchRequest.get(2).path()).isEqualTo(DialogportenPatchRequest.PATH_TRANSMISSIONS);
@@ -101,8 +100,7 @@ class DialogportenRequestMapperTest {
             DialogportenPatchRequest.PATH_CONTENT,
             DialogportenPatchRequest.PATH_TRANSMISSIONS);
         assertThat(ferdigstillPatchRequest.getFirst().op()).isEqualTo(DialogportenPatchRequest.OP_REPLACE);
-        assertThat(ferdigstillPatchRequest.get(1).value().toString()).contains(String.format(
-            "Nav har mottatt inntektsmelding for søknad om foreldrepenger med startdato %s",
+        assertThat(ferdigstillPatchRequest.get(1).value().toString()).contains("Nav har mottatt inntektsmelding for søknad om foreldrepenger med startdato %s".formatted(
             FØRSTE_UTTAKSDATO.format(DateTimeFormatter.ofPattern("dd.MM.yy"))));
         assertThat(ferdigstillPatchRequest.get(2).op()).isEqualTo(DialogportenPatchRequest.OP_ADD);
         assertThat(ferdigstillPatchRequest.get(2).path()).isEqualTo(DialogportenPatchRequest.PATH_TRANSMISSIONS);

@@ -71,7 +71,7 @@ public class InntektTjeneste {
         var antallMndMedRapportertInntekt = månedsinntekter.stream().filter(m -> m.beløp() != null).count();
         if (antallMndMedRapportertInntekt > 3) {
             throw new TekniskException("FPINNTEKTSMELDING_INNTEKTKSKOMPONENT_1",
-                String.format("Har mappet flere enn 3 måneder med inntekt, ugyldig tilstand. Mappede månedsinntekter var %s", månedsinntekter));
+                "Har mappet flere enn 3 måneder med inntekt, ugyldig tilstand. Mappede månedsinntekter var %s".formatted(månedsinntekter));
         }
         var totalLønn = månedsinntekter.stream()
             .map(Inntektsopplysninger.InntektMåned::beløp)

@@ -43,19 +43,19 @@ class ForespørselTekster {
     }
 
     public static String lagOppgaveTekst(Ytelsetype ytelseType) {
-        return String.format(OPPGAVE_TEKST_NY, mapYtelsestypeNavn(ytelseType));
+        return OPPGAVE_TEKST_NY.formatted(mapYtelsestypeNavn(ytelseType));
     }
 
     public static String lagSaksTittel(String navn, LocalDate fødselsdato) {
-        return String.format(SAKSTITTEL, capitalizeFully(navn), fødselsdato.format(DATE_TIME_FORMATTER));
+        return SAKSTITTEL.formatted(capitalizeFully(navn), fødselsdato.format(DATE_TIME_FORMATTER));
     }
 
     public static String lagVarselTekst(Ytelsetype ytelsetype, Organisasjon org) {
-        return String.format(VARSEL_TEKST, org.navn().toUpperCase(), org.orgnr(), mapYtelsestypeNavn(ytelsetype));
+        return VARSEL_TEKST.formatted(org.navn().toUpperCase(), org.orgnr(), mapYtelsestypeNavn(ytelsetype));
     }
 
     public static String lagPåminnelseTekst(Ytelsetype ytelsetype, Organisasjon org) {
-        return String.format(VARSEL_TEKST, org.navn().toUpperCase(), org.orgnr(), mapYtelsestypeNavn(ytelsetype));
+        return VARSEL_TEKST.formatted(org.navn().toUpperCase(), org.orgnr(), mapYtelsestypeNavn(ytelsetype));
     }
 
     static String capitalizeFully(String input) {
@@ -77,7 +77,7 @@ class ForespørselTekster {
     }
 
     public static String lagBeskjedFraSaksbehandlerTekst(Ytelsetype ytelseType, String søkerNavn) {
-        return String.format(BESKJED_FRA_SAKSBEHANDLER_TEKST, søkerNavn, mapYtelsestypeNavn(ytelseType));
+        return BESKJED_FRA_SAKSBEHANDLER_TEKST.formatted(søkerNavn, mapYtelsestypeNavn(ytelseType));
     }
 
     public static String lagBeskjedOmKvitteringFørsteInnsendingTekst() {
@@ -89,7 +89,7 @@ class ForespørselTekster {
     }
 
     public static String lagVarselFraSaksbehandlerTekst(Ytelsetype ytelsetype, Organisasjon org) {
-        return String.format(VARSEL_FRA_SAKSBEHANDLER_TEKST, org.navn().toUpperCase(), org.orgnr(), mapYtelsestypeNavn(ytelsetype));
+        return VARSEL_FRA_SAKSBEHANDLER_TEKST.formatted(org.navn().toUpperCase(), org.orgnr(), mapYtelsestypeNavn(ytelsetype));
     }
 
 }
