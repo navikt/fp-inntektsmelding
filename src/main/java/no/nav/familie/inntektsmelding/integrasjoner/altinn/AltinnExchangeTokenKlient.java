@@ -23,7 +23,6 @@ import no.nav.vedtak.util.LRUCache;
 public class AltinnExchangeTokenKlient {
 
     private static final Logger LOG = LoggerFactory.getLogger(AltinnExchangeTokenKlient.class);
-    private static final Logger SECURE_LOG = LoggerFactory.getLogger("secureLogger");
 
     private static final Environment ENV = Environment.current();
 
@@ -66,9 +65,7 @@ public class AltinnExchangeTokenKlient {
             .build();
 
         var token = AltinnExchangeTokenKlient.hentTokenRetryable(exchangeRequest, 3);
-        if (!ENV.isProd()) {
-            SECURE_LOG.warn("Altinn leverte dialogporten token: {}", token);
-        }
+
         putTokenToCache(cacheKey, token);
         LOG.debug("Altinn-token er hentet og lagret i cache med tilhørende nøkkel: {}", cacheKey);
         return token;
