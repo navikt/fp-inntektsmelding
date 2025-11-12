@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 @Dependent
 public class AltinnTilgangTjeneste {
     private static final Logger LOG = LoggerFactory.getLogger(AltinnTilgangTjeneste.class);
+    private static final Logger SECURE_LOG = LoggerFactory.getLogger("secureLogger");
     private static final Environment ENV = Environment.current();
 
     private final AltinnRettigheterProxyKlient altinnRettigheterProxyKlient;
@@ -34,11 +35,11 @@ public class AltinnTilgangTjeneste {
 
     public boolean harTilgangTilBedriften(String orgNr) {
         var proxyTilgang = altinnRettigheterProxyKlient.harTilgangTilBedriften(orgNr);
-        if (ENV.isDev()) {
+        if (!ENV.isLocal()) {
             try {
                 var arbeidsgiverHarTilgang = arbeidsgiverAltinnTilgangerKlient.harTilgangTilBedriften(orgNr, BRUK_ALTINN_TRE_RESSURS);
                 if (proxyTilgang != arbeidsgiverHarTilgang) {
-                    LOG.debug("ALTINN: Svar fra ny og gammel tilgangsklient er ulikt for orgNr: {}. Proxy: {}, ArbeidsgiverAltinnTilgangerKlient: {}",
+                    SECURE_LOG.info("ALTINN: Svar fra ny og gammel tilgangsklient er ulikt for orgNr: {}. Proxy: {}, ArbeidsgiverAltinnTilgangerKlient: {}",
                              orgNr, proxyTilgang, arbeidsgiverHarTilgang);
                 }
             } catch (Exception e) {
@@ -54,11 +55,11 @@ public class AltinnTilgangTjeneste {
 
     public List<String> hentBedrifterArbeidsgiverHarTilgangTil() {
         var harTilgangTil = altinnRettigheterProxyKlient.hentBedrifterArbeidsgiverHarTilgangTil();
-        if (ENV.isDev()) {
+        if (!ENV.isLocal()) {
             try {
                 var arbeidsgiverHarTilgang = arbeidsgiverAltinnTilgangerKlient.hentBedrifterArbeidsgiverHarTilgangTil(BRUK_ALTINN_TRE_RESSURS);
                 if (!harTilgangTil.equals(arbeidsgiverHarTilgang)) {
-                    LOG.debug("ALTINN: Svar fra ny og gammel tilgangsklient er ulikt. Proxy: {}, ArbeidsgiverAltinnTilgangerKlient: {}",
+                    SECURE_LOG.info("ALTINN: Svar fra ny og gammel tilgangsklient er ulikt. Proxy: {}, ArbeidsgiverAltinnTilgangerKlient: {}",
                         harTilgangTil, arbeidsgiverHarTilgang);
                 }
             } catch (Exception e) {
