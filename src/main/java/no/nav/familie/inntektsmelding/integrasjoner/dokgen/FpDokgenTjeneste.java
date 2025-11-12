@@ -59,7 +59,7 @@ public class FpDokgenTjeneste {
             imDokumentData.anonymiser();
             SECURE_LOG.warn("Klarte ikke å generere pdf av inntektsmelding: {}", DefaultJsonMapper.toJson(imDokumentData));
             throw new TekniskException("FPINNTEKTSMELDING_1",
-                String.format("Klarte ikke å generere pdf for inntektsmelding med id %s", inntektsmeldingId), e);
+                "Klarte ikke å generere pdf for inntektsmelding med id %s".formatted(inntektsmeldingId), e);
         }
     }
 

@@ -250,7 +250,7 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
 
         // Assert
         assertThat(etterLagring).hasSize(2);
-        assertThat(etterLagring.get(0).getKontaktperson().getNavn()).isEqualTo(im3.getKontaktperson().getNavn());
+        assertThat(etterLagring.getFirst().getKontaktperson().getNavn()).isEqualTo(im3.getKontaktperson().getNavn());
         assertThat(etterLagring.get(1).getKontaktperson().getNavn()).isEqualTo(im1.getKontaktperson().getNavn());
     }
 

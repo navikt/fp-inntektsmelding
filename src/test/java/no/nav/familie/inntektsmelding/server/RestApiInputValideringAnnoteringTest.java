@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 
 class RestApiInputValideringAnnoteringTest extends RestApiTester {
 
-    private Function<Method, String> printKlasseOgMetodeNavn = (method -> String.format("%s.%s", method.getDeclaringClass(), method.getName()));
+    private Function<Method, String> printKlasseOgMetodeNavn = (method -> "%s.%s".formatted(method.getDeclaringClass(), method.getName()));
 
     /**
      * IKKE ignorer eller fjern denne testen, den sørger for at inputvalidering er i orden for REST-grensesnittene

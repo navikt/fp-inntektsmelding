@@ -20,7 +20,7 @@ public class UregistrertValiderer {
             if (infoOmsak.statusInntektsmelding().equals(FpsakKlient.StatusSakInntektsmelding.SØKT_FOR_TIDLIG)) {
                 kastForTidligException(personInfo, ytelsetype);
             } else {
-                var tekst = String.format("Du kan ikke sende inn inntektsmelding på %s for denne personen med aktør id %s",
+                var tekst = "Du kan ikke sende inn inntektsmelding på %s for denne personen med aktør id %s".formatted(
                     ytelsetype,
                     personInfo.aktørId());
                 throw new FunksjonellException("INGEN_SAK_FUNNET", tekst, null, null);
@@ -35,7 +35,7 @@ public class UregistrertValiderer {
 
     private static void kastForTidligException(PersonInfo personInfo, Ytelsetype ytelsetype) {
         var ytelseTekst = ytelsetype.equals(Ytelsetype.FORELDREPENGER) ? "foreldrepenger" : "svangerskapspenger";
-        var tekst = String.format("Du kan ikke sende inn inntektsmelding før fire uker før personen med aktør id %s starter %s",
+        var tekst = "Du kan ikke sende inn inntektsmelding før fire uker før personen med aktør id %s starter %s".formatted(
             personInfo.aktørId(),
             ytelseTekst);
         throw new FunksjonellException("SENDT_FOR_TIDLIG", tekst, null, null);

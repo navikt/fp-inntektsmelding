@@ -30,7 +30,7 @@ class RestApiAutentiseringAnnoteringTest {
     @MethodSource("finnAlleRestMetoder")
     void test_at_alle_restmetoder_er_annotert_med_gyldig_annotering(Method restMethod) {
         assertThat(finnGyldigAnnotering(restMethod))
-            .withFailMessage(String.format("Mangler @%s eller @%s -annotering på %s",
+            .withFailMessage("Mangler @%s eller @%s -annotering på %s".formatted(
                 AutentisertMedAzure.class.getSimpleName(),
                 AutentisertMedTokenX.class.getSimpleName(),
                 restMethod))

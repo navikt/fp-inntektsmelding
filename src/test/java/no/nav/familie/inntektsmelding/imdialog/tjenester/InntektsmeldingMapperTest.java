@@ -165,8 +165,8 @@ class InntektsmeldingMapperTest {
         assertThat(entitet.getKontaktperson().getTelefonnummer()).isEqualTo(request.kontaktperson().telefonnummer());
 
         assertThat(entitet.getEndringsårsaker()).hasSize(1);
-        assertThat(entitet.getEndringsårsaker().get(0).getÅrsak()).isEqualTo(Endringsårsak.TARIFFENDRING);
-        assertThat(entitet.getEndringsårsaker().get(0).getBleKjentFom().orElse(null)).isEqualTo(LocalDate.now());
+        assertThat(entitet.getEndringsårsaker().getFirst().getÅrsak()).isEqualTo(Endringsårsak.TARIFFENDRING);
+        assertThat(entitet.getEndringsårsaker().getFirst().getBleKjentFom().orElse(null)).isEqualTo(LocalDate.now());
 
         assertThat(entitet.getBorfalteNaturalYtelser()).hasSize(1);
         assertThat(entitet.getBorfalteNaturalYtelser().getFirst().getMånedBeløp()).isEqualByComparingTo(
@@ -241,16 +241,16 @@ class InntektsmeldingMapperTest {
         assertThat(imDto.kontaktperson().navn()).isEqualTo(imEntitet.getKontaktperson().getNavn());
         assertThat(imDto.kontaktperson().telefonnummer()).isEqualTo(imEntitet.getKontaktperson().getTelefonnummer());
         assertThat(imDto.bortfaltNaturalytelsePerioder()).hasSize(2);
-        assertThat(imDto.bortfaltNaturalytelsePerioder().get(0).tom()).isNull();
-        assertThat(imDto.bortfaltNaturalytelsePerioder().get(0).fom()).isEqualTo(imEntitet.getBorfalteNaturalYtelser().get(0).getPeriode().getFom());
+        assertThat(imDto.bortfaltNaturalytelsePerioder().getFirst().tom()).isNull();
+        assertThat(imDto.bortfaltNaturalytelsePerioder().getFirst().fom()).isEqualTo(imEntitet.getBorfalteNaturalYtelser().getFirst().getPeriode().getFom());
         assertThat(imDto.refusjon()).hasSize(2);
-        assertThat(imDto.refusjon().get(0).fom()).isEqualTo(imEntitet.getStartDato());
-        assertThat(imDto.refusjon().get(0).beløp()).isEqualByComparingTo(imEntitet.getMånedRefusjon());
+        assertThat(imDto.refusjon().getFirst().fom()).isEqualTo(imEntitet.getStartDato());
+        assertThat(imDto.refusjon().getFirst().beløp()).isEqualByComparingTo(imEntitet.getMånedRefusjon());
         assertThat(imDto.refusjon().get(1).fom()).isEqualTo(LocalDate.now().plusDays(6));
         assertThat(imDto.refusjon().get(1).beløp()).isEqualByComparingTo(BigDecimal.ZERO);
         assertThat(imDto.opprettetTidspunkt()).isEqualTo(imEntitet.getOpprettetTidspunkt());
         assertThat(imDto.endringAvInntektÅrsaker()).hasSize(2);
-        assertThat(imDto.endringAvInntektÅrsaker().get(0).årsak()).isEqualTo(EndringsårsakDto.FERIE);
+        assertThat(imDto.endringAvInntektÅrsaker().getFirst().årsak()).isEqualTo(EndringsårsakDto.FERIE);
         assertThat(imDto.endringAvInntektÅrsaker().get(1).årsak()).isEqualTo(EndringsårsakDto.TARIFFENDRING);
         assertThat(imDto.arbeidsgiverinitiertÅrsak()).isNull();
 
@@ -317,18 +317,18 @@ class InntektsmeldingMapperTest {
         assertThat(imDto.kontaktperson().navn()).isEqualTo(imEntitet.getKontaktperson().getNavn());
         assertThat(imDto.kontaktperson().telefonnummer()).isEqualTo(imEntitet.getKontaktperson().getTelefonnummer());
         assertThat(imDto.bortfaltNaturalytelsePerioder()).hasSize(2);
-        assertThat(imDto.bortfaltNaturalytelsePerioder().get(0).tom()).isNull();
-        assertThat(imDto.bortfaltNaturalytelsePerioder().get(0).fom()).isEqualTo(imEntitet.getBorfalteNaturalYtelser().get(0).getPeriode().getFom());
+        assertThat(imDto.bortfaltNaturalytelsePerioder().getFirst().tom()).isNull();
+        assertThat(imDto.bortfaltNaturalytelsePerioder().getFirst().fom()).isEqualTo(imEntitet.getBorfalteNaturalYtelser().getFirst().getPeriode().getFom());
         assertThat(imDto.refusjon()).hasSize(3);
-        assertThat(imDto.refusjon().get(0).fom()).isEqualTo(imEntitet.getStartDato());
-        assertThat(imDto.refusjon().get(0).beløp()).isEqualByComparingTo(imEntitet.getMånedRefusjon());
+        assertThat(imDto.refusjon().getFirst().fom()).isEqualTo(imEntitet.getStartDato());
+        assertThat(imDto.refusjon().getFirst().beløp()).isEqualByComparingTo(imEntitet.getMånedRefusjon());
         assertThat(imDto.refusjon().get(1).fom()).isEqualTo(LocalDate.now().plusDays(5));
         assertThat(imDto.refusjon().get(1).beløp()).isEqualByComparingTo(BigDecimal.valueOf(4000));
         assertThat(imDto.refusjon().get(2).fom()).isEqualTo(LocalDate.now().plusDays(11));
         assertThat(imDto.refusjon().get(2).beløp()).isEqualByComparingTo(BigDecimal.ZERO);
         assertThat(imDto.opprettetTidspunkt()).isEqualTo(imEntitet.getOpprettetTidspunkt());
         assertThat(imDto.endringAvInntektÅrsaker()).hasSize(2);
-        assertThat(imDto.endringAvInntektÅrsaker().get(0).årsak()).isEqualTo(EndringsårsakDto.FERIE);
+        assertThat(imDto.endringAvInntektÅrsaker().getFirst().årsak()).isEqualTo(EndringsårsakDto.FERIE);
         assertThat(imDto.endringAvInntektÅrsaker().get(1).årsak()).isEqualTo(EndringsårsakDto.TARIFFENDRING);
         assertThat(imDto.arbeidsgiverinitiertÅrsak()).isNull();
 
@@ -394,14 +394,14 @@ class InntektsmeldingMapperTest {
         assertThat(imDto.kontaktperson().navn()).isEqualTo(imEntitet.getKontaktperson().getNavn());
         assertThat(imDto.kontaktperson().telefonnummer()).isEqualTo(imEntitet.getKontaktperson().getTelefonnummer());
         assertThat(imDto.bortfaltNaturalytelsePerioder()).hasSize(2);
-        assertThat(imDto.bortfaltNaturalytelsePerioder().get(0).tom()).isNull();
-        assertThat(imDto.bortfaltNaturalytelsePerioder().get(0).fom()).isEqualTo(imEntitet.getBorfalteNaturalYtelser().get(0).getPeriode().getFom());
+        assertThat(imDto.bortfaltNaturalytelsePerioder().getFirst().tom()).isNull();
+        assertThat(imDto.bortfaltNaturalytelsePerioder().getFirst().fom()).isEqualTo(imEntitet.getBorfalteNaturalYtelser().getFirst().getPeriode().getFom());
         assertThat(imDto.refusjon()).hasSize(1);
-        assertThat(imDto.refusjon().get(0).fom()).isEqualTo(imEntitet.getStartDato());
-        assertThat(imDto.refusjon().get(0).beløp()).isEqualByComparingTo(imEntitet.getMånedRefusjon());
+        assertThat(imDto.refusjon().getFirst().fom()).isEqualTo(imEntitet.getStartDato());
+        assertThat(imDto.refusjon().getFirst().beløp()).isEqualByComparingTo(imEntitet.getMånedRefusjon());
         assertThat(imDto.opprettetTidspunkt()).isEqualTo(imEntitet.getOpprettetTidspunkt());
         assertThat(imDto.endringAvInntektÅrsaker()).hasSize(2);
-        assertThat(imDto.endringAvInntektÅrsaker().get(0).årsak()).isEqualTo(EndringsårsakDto.FERIE);
+        assertThat(imDto.endringAvInntektÅrsaker().getFirst().årsak()).isEqualTo(EndringsårsakDto.FERIE);
         assertThat(imDto.endringAvInntektÅrsaker().get(1).årsak()).isEqualTo(EndringsårsakDto.TARIFFENDRING);
         assertThat(imDto.arbeidsgiverinitiertÅrsak()).isNull();
     }
@@ -442,8 +442,8 @@ class InntektsmeldingMapperTest {
         assertThat(imDto.kontaktperson().navn()).isEqualTo(imEntitet.getKontaktperson().getNavn());
         assertThat(imDto.kontaktperson().telefonnummer()).isEqualTo(imEntitet.getKontaktperson().getTelefonnummer());
         assertThat(imDto.refusjon()).hasSize(1);
-        assertThat(imDto.refusjon().get(0).fom()).isEqualTo(imEntitet.getStartDato());
-        assertThat(imDto.refusjon().get(0).beløp()).isEqualByComparingTo(imEntitet.getMånedRefusjon());
+        assertThat(imDto.refusjon().getFirst().fom()).isEqualTo(imEntitet.getStartDato());
+        assertThat(imDto.refusjon().getFirst().beløp()).isEqualByComparingTo(imEntitet.getMånedRefusjon());
         assertThat(imDto.opprettetTidspunkt()).isEqualTo(imEntitet.getOpprettetTidspunkt());
         assertThat(imDto.arbeidsgiverinitiertÅrsak()).isEqualTo(ArbeidsgiverinitiertÅrsakDto.NYANSATT);
     }

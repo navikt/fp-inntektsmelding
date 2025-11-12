@@ -142,7 +142,7 @@ public class TilgangTjeneste implements Tilgang {
 
     private static void ikkeTilgang(String begrunnelse) {
         LOG.info("Fikk ikke tilgang pga: {}", begrunnelse);
-        throw new ManglerTilgangException("IM-00403", String.format("Mangler tilgang til tjenesten. %s", begrunnelse));
+        throw new ManglerTilgangException("IM-00403", "Mangler tilgang til tjenesten. %s".formatted(begrunnelse));
     }
 
 }

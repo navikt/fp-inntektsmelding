@@ -306,7 +306,7 @@ public class InntektsmeldingEntitet {
         private void validerNaturalytelser() {
             if (kladd.getBorfalteNaturalYtelser().stream().anyMatch(bn -> bn.getPeriode().getFom().isBefore(kladd.getStartDato()))) {
                 throw new TekniskException("FPINNTEKTSMELDING_NATURALYTELSE_1",
-                    String.format("Det er oppgitt naturalytelser som bortfaller før startdato for inntektsmeldingen, ugyldig tilstand. Oppgitte naturalytelser var %s og oppgitt startdato var %s",
+                    "Det er oppgitt naturalytelser som bortfaller før startdato for inntektsmeldingen, ugyldig tilstand. Oppgitte naturalytelser var %s og oppgitt startdato var %s".formatted(
                         kladd.getBorfalteNaturalYtelser(), kladd.getStartDato()));
             }
         }
@@ -319,13 +319,12 @@ public class InntektsmeldingEntitet {
             }
             if (!kladd.getRefusjonsendringer().isEmpty() && kladd.getMånedRefusjon() == null) {
                 throw new TekniskException("FPINNTEKTSMELDING_REFUSJON_1",
-                    String.format("Kan ikke ha refusjonsendringer når det ikke er oppgitt refusjon. Endringer var %s",
+                    "Kan ikke ha refusjonsendringer når det ikke er oppgitt refusjon. Endringer var %s".formatted(
                         kladd.getRefusjonsendringer()));
             }
             if (kladd.getRefusjonsendringer().stream().anyMatch(r -> !r.getFom().isAfter(kladd.getStartDato()))) {
                 throw new TekniskException("FPINNTEKTSMELDING_REFUSJON_2",
-                    String.format(
-                        "Kan ikke ha refusjonsendring som gjelder fra startdato eller før, ugyldig tilstand. Endringer var %s og startdato var %s",
+                    "Kan ikke ha refusjonsendring som gjelder fra startdato eller før, ugyldig tilstand. Endringer var %s og startdato var %s".formatted(
                         kladd.getRefusjonsendringer(),
                         kladd.getStartDato()));
             }
@@ -333,7 +332,7 @@ public class InntektsmeldingEntitet {
                 .stream()
                 .anyMatch(r -> r.getFom().isAfter(kladd.getOpphørsdatoRefusjon()))) {
                 throw new TekniskException("FPINNTEKTSMELDING_REFUSJON_3",
-                    String.format("Kan ikke ha refusjonsendring etter opphørsdato, ugyldig tilstand. Endringer var %s og opphøsdato var %s",
+                    "Kan ikke ha refusjonsendring etter opphørsdato, ugyldig tilstand. Endringer var %s og opphøsdato var %s".formatted(
                         kladd.getRefusjonsendringer(),
                         kladd.getOpphørsdatoRefusjon()));
             }

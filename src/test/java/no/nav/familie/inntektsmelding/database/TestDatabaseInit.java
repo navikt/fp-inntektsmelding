@@ -33,7 +33,7 @@ public final class TestDatabaseInit {
                 .load();
             try {
                 flyway.migrate();
-            } catch (FlywayException fwe) {
+            } catch (FlywayException _) {
                 try {
                     // prøver igjen
                     flyway.clean();
