@@ -95,16 +95,15 @@ public class DialogportenRequestMapper {
         var apiActions = inntektsmeldingUuid.map(imUuid -> {
             var contentAttachement = List.of(new DialogportenRequest.ContentValueItem("Kvittering for inntektsmelding", DialogportenRequest.NB));
             var url = inntektsmeldingSkjemaLenke + "/server/api/ekstern/kvittering/inntektsmelding/" + imUuid;
-            var urlApi = List.of(new DialogportenRequest.Url(url, DialogportenRequest.TEXT_PLAIN, DialogportenRequest.AttachmentUrlConsumerType.Api));
-            var urlGui = List.of(new DialogportenRequest.Url(url, DialogportenRequest.TEXT_PLAIN, DialogportenRequest.AttachmentUrlConsumerType.Gui));
-            var kvitteringApi = new DialogportenRequest.Attachment(contentAttachement, urlApi);
-            var kvitteringGui = new DialogportenRequest.Attachment(contentAttachement, urlGui);
-            return List.of(kvitteringApi, kvitteringGui);
+            var urlApi = new DialogportenRequest.Url(url, DialogportenRequest.TEXT_PLAIN, DialogportenRequest.AttachmentUrlConsumerType.Api);
+            var urlGui = new DialogportenRequest.Url(url, DialogportenRequest.TEXT_PLAIN, DialogportenRequest.AttachmentUrlConsumerType.Gui);
+            var attachment = new DialogportenRequest.Attachment(contentAttachement, List.of(urlApi, urlGui));
+            return List.of(attachment);
         }).orElse(List.of());
 
         var transmission = new DialogportenRequest.Transmission(DialogportenRequest.TransmissionType.Acceptance,
             DialogportenRequest.ExtendedType.INNTEKTSMELDING,
-            new DialogportenRequest.Sender("ServiceOwner"),
+            new DialogportenRequest.Sender("PartyRepresentative"),
             transmissionContent,
             apiActions);
 
