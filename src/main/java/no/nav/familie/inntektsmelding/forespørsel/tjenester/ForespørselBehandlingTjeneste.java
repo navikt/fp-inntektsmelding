@@ -150,6 +150,7 @@ public class ForespørselBehandlingTjeneste {
         // Oppdaterer status i altinn dialogporten
         foresporsel.getDialogportenUuid().ifPresent(dialogUuid ->
             dialogportenKlient.ferdigstillDialog(dialogUuid,
+                organisasjonsnummerDto,
                 lagSaksTittelForDialogporten(aktorId, foresporsel.getYtelseType()),
                 foresporsel.getYtelseType(),
                 foresporsel.getFørsteUttaksdato(),

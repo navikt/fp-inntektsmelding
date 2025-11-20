@@ -43,7 +43,7 @@ public class DialogportenRequestMapper {
                 DialogportenRequest.AttachmentUrlConsumerType.Gui)));
         var transmission = new DialogportenRequest.Transmission(DialogportenRequest.TransmissionType.Request,
             DialogportenRequest.ExtendedType.INNTEKTSMELDING,
-            new DialogportenRequest.Sender("ServiceOwner"),
+            new DialogportenRequest.Sender("ServiceOwner", null),
             contentTransmission,
             List.of(attachementTransmission));
 
@@ -64,6 +64,7 @@ public class DialogportenRequestMapper {
     }
 
     public static List<DialogportenPatchRequest> opprettFerdigstillPatchRequest(String sakstittel,
+                                                                                OrganisasjonsnummerDto organisasjonsnummer,
                                                                                 Ytelsetype ytelsetype,
                                                                                 LocalDate førsteUttaksdato,
                                                                                 Optional<UUID> inntektsmeldingUuid,
@@ -100,10 +101,11 @@ public class DialogportenRequestMapper {
             var attachment = new DialogportenRequest.Attachment(contentAttachement, List.of(urlApi, urlGui));
             return List.of(attachment);
         }).orElse(List.of());
+        var actorId = String.format("urn:altinn:organization:identifier-no:%s", organisasjonsnummer.orgnr());
 
         var transmission = new DialogportenRequest.Transmission(DialogportenRequest.TransmissionType.Acceptance,
             DialogportenRequest.ExtendedType.INNTEKTSMELDING,
-            new DialogportenRequest.Sender("PartyRepresentative"),
+            new DialogportenRequest.Sender("PartyRepresentative", actorId),
             transmissionContent,
             apiActions);
 
@@ -139,7 +141,7 @@ public class DialogportenRequestMapper {
         var transmissionContent = new DialogportenRequest.Content(lagContentValue("Inntektsmeldingen er ikke lenger påkrevd"), null, null);
         var transmission = new DialogportenRequest.Transmission(DialogportenRequest.TransmissionType.Correction,
             DialogportenRequest.ExtendedType.INNTEKTSMELDING,
-            new DialogportenRequest.Sender("ServiceOwner"),
+            new DialogportenRequest.Sender("ServiceOwner", null),
             transmissionContent,
             List.of());
         var patchTransmission = new DialogportenPatchRequest(DialogportenPatchRequest.OP_ADD,

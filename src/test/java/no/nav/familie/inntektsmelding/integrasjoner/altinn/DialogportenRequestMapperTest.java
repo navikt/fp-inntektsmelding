@@ -54,6 +54,7 @@ class DialogportenRequestMapperTest {
     @Test
     void opprettFerdigstillPatchRequest() {
         var ferdigstillPatchRequest = DialogportenRequestMapper.opprettFerdigstillPatchRequest("Sakstittel",
+            new OrganisasjonsnummerDto("999999999"),
             Ytelsetype.FORELDREPENGER,
             FØRSTE_UTTAKSDATO,
             Optional.of(FORESPØRSEL_UUID),
@@ -79,12 +80,14 @@ class DialogportenRequestMapperTest {
         assertThat(patchValue.toString()).contains("Completed");
         assertThat(patchValue.toString()).contains("Inntektsmelding er mottatt");
         assertThat(patchValue.toString()).contains("Kvittering for inntektsmelding");
+        assertThat(patchValue.toString()).contains("urn:altinn:organization:identifier-no:999999999");
         assertThat(patchValue.toString()).contains("url=https://arbeidsgiver.nav.no/fp-im-dialog/server/api/ekstern/kvittering/inntektsmelding/");
     }
 
     @Test
     void opprettFerdigstillPatchRequestLukketEksternt() {
         var ferdigstillPatchRequest = DialogportenRequestMapper.opprettFerdigstillPatchRequest("Sakstittel",
+            new OrganisasjonsnummerDto("999999999"),
             Ytelsetype.FORELDREPENGER,
             FØRSTE_UTTAKSDATO,
             Optional.of(FORESPØRSEL_UUID),
@@ -108,6 +111,7 @@ class DialogportenRequestMapperTest {
         assertThat(ferdigstillPatchRequest.get(2).path()).isEqualTo(DialogportenPatchRequest.PATH_TRANSMISSIONS);
         assertThat(patchValue).hasSize(3);
         assertThat(patchValue.toString()).contains("Completed");
+        assertThat(patchValue.toString()).contains("urn:altinn:organization:identifier-no:999999999");
         assertThat(patchValue.toString()).contains("Utført i Altinn eller i bedriftens lønns- og personalsystem. Ingen kvittering");
     }
 
