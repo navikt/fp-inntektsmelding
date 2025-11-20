@@ -14,6 +14,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import no.nav.familie.inntektsmelding.integrasjoner.altinn.DialogportenKlient;
+import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.server.auth.api.AutentisertMedAzure;
 import no.nav.familie.inntektsmelding.server.auth.api.Tilgangskontrollert;
@@ -60,10 +61,15 @@ public class DialogportenForvaltningRestTjeneste {
             throw new IllegalStateException("Kan ikke opprette dialog i produksjon. Bruk testmiljø for dette.");
         }
         sjekkAtKallerHarRollenDrift();
-        LOG.info("Oppretter en dialog for forespørselUuid {} og organisasjonsnummer {}", opprettNyDialogDto.forespørselUuid(), opprettNyDialogDto.organisasjonsnummer().orgnr());
-        return Response.accepted(dialogportenKlient.opprettDialog(opprettNyDialogDto.forespørselUuid(), opprettNyDialogDto.organisasjonsnummer(), "Forespørsel om inntektsmelding",
+        LOG.info("Oppretter en dialog for forespørselUuid {} og organisasjonsnummer {}",
+            opprettNyDialogDto.forespørselUuid(),
+            opprettNyDialogDto.organisasjonsnummer().orgnr());
+        return Response.accepted(dialogportenKlient.opprettDialog(opprettNyDialogDto.forespørselUuid(),
+            opprettNyDialogDto.organisasjonsnummer(),
+            "Forespørsel om inntektsmelding",
             LocalDate.now(),
-            Ytelsetype.FORELDREPENGER)).build();
+            Ytelsetype.FORELDREPENGER,
+            new PersonIdent("01019100000"))).build();
     }
 
     @POST
@@ -77,7 +83,13 @@ public class DialogportenForvaltningRestTjeneste {
         }
         sjekkAtKallerHarRollenDrift();
         LOG.info("Oppdatere en dialog med dialogUuid {}", dialogUuid);
-        dialogportenKlient.ferdigstillDialog(UUID.fromString(dialogUuid), null, "Sakstittel", Ytelsetype.FORELDREPENGER, LocalDate.now(), Optional.empty(),null);
+        dialogportenKlient.ferdigstillDialog(UUID.fromString(dialogUuid),
+            null,
+            "Sakstittel",
+            Ytelsetype.FORELDREPENGER,
+            LocalDate.now(),
+            Optional.empty(),
+            null);
         return Response.ok().build();
     }
 

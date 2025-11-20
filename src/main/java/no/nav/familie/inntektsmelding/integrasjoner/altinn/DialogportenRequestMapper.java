@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import no.nav.familie.inntektsmelding.forespørsel.tjenester.LukkeÅrsak;
+import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.foreldrepenger.konfig.Environment;
@@ -23,7 +24,8 @@ public class DialogportenRequestMapper {
                                                            String sakstittel,
                                                            LocalDate førsteUttaksdato,
                                                            Ytelsetype ytelsetype,
-                                                           String inntektsmeldingSkjemaLenke) {
+                                                           String inntektsmeldingSkjemaLenke,
+                                                           PersonIdent fødselsnummer) {
         var party = String.format("urn:altinn:organization:identifier-no:%s", organisasjonsnummer.orgnr());
         var foreldrepengerRessurs = Environment.current().getProperty("altinn.tre.inntektsmelding.ressurs");
         var altinnressursFP = ALTINN_RESSURS_PREFIX + foreldrepengerRessurs;
@@ -56,7 +58,7 @@ public class DialogportenRequestMapper {
 
         return new DialogportenRequest(altinnressursFP,
             party,
-            forespørselUuid.toString(),
+            fødselsnummer.getIdent(),
             DialogportenRequest.DialogStatus.RequiresAttention,
             contentDialog,
             List.of(transmission),

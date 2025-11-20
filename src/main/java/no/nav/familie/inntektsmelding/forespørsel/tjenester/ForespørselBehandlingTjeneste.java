@@ -12,6 +12,8 @@ import jakarta.inject.Inject;
 
 import no.nav.familie.inntektsmelding.integrasjoner.altinn.DialogportenKlient;
 
+import no.nav.familie.inntektsmelding.integrasjoner.person.PersonInfo;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -266,10 +268,11 @@ public class ForespørselBehandlingTjeneste {
                                                 AktørIdEntitet aktørIdEntitet,
                                                 Ytelsetype ytelsetype,
                                                 LocalDate førsteUttaksdato) {
-        var saksTittelDialog = lagSaksTittelForDialogporten(aktørIdEntitet, ytelsetype);
+        var person = personTjeneste.hentPersonInfoFraAktørId(aktørIdEntitet, ytelsetype);
+        var saksTittelDialog = lagSaksTittelForDialogporten(person);
 
         var dialogPortenUuid = dialogportenKlient.opprettDialog(forespørselUuid,
-            orgnummer, saksTittelDialog, førsteUttaksdato, ytelsetype);
+            orgnummer, saksTittelDialog, førsteUttaksdato, ytelsetype, person.fødselsnummer());
 
         var vasketDialogUuid = dialogPortenUuid.replace("\"", "");
         LOG.info("Mottok UUID {} fra dialogporten", vasketDialogUuid);
@@ -278,6 +281,10 @@ public class ForespørselBehandlingTjeneste {
 
     private String lagSaksTittelForDialogporten(AktørIdEntitet aktørIdEntitet, Ytelsetype ytelsetype) {
         var person = personTjeneste.hentPersonInfoFraAktørId(aktørIdEntitet, ytelsetype);
+        return ForespørselTekster.lagSaksTittel(person.mapFulltNavn(), person.fødselsdato());
+    }
+
+    private String lagSaksTittelForDialogporten(PersonInfo person) {
         return ForespørselTekster.lagSaksTittel(person.mapFulltNavn(), person.fødselsdato());
     }
 
