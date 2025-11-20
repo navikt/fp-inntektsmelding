@@ -72,7 +72,8 @@ public record DialogportenRequest(@NotNull String serviceResource,
         INNTEKTSMELDING,
     }
 
-    protected record Sender(@NotNull String actorType) {
+    // actorType er enten "ServiceOwner" eller "PartyRepresentative". Hvis "PartyRepresentative" må actorId være satt
+    protected record Sender(@NotNull String actorType, String actorId) {
     }
 
     protected record Content(@NotNull @Valid ContentValue title, @Valid ContentValue summary, @Valid ContentValue extendedStatus) {

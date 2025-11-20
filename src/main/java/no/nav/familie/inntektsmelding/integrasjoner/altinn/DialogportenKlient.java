@@ -62,12 +62,14 @@ public class DialogportenKlient {
     }
 
     public void ferdigstillDialog(UUID dialogUuid,
+                                  OrganisasjonsnummerDto orgnr,
                                   String sakstittel,
                                   Ytelsetype ytelsetype,
                                   LocalDate førsteUttaksdato,
                                   Optional<UUID> inntektsmeldingUuid,
                                   LukkeÅrsak lukkeÅrsak) {
         var patchRequestFerdig = DialogportenRequestMapper.opprettFerdigstillPatchRequest(sakstittel,
+            orgnr,
             ytelsetype,
             førsteUttaksdato,
             inntektsmeldingUuid,
