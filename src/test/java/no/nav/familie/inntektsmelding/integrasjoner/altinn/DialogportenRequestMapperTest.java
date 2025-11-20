@@ -47,12 +47,13 @@ class DialogportenRequestMapperTest {
         assertThat(opprettRequest.status()).isEqualTo(DialogportenRequest.DialogStatus.RequiresAttention);
         assertThat(opprettRequest.transmissions()).hasSize(1);
         assertThat(opprettRequest.apiActions()).hasSize(1);
-        assertThat(opprettRequest.externalRefererence()).isEqualTo(fødselsnummer.getIdent());
+        assertThat(opprettRequest.externalReference()).isEqualTo(fødselsnummer.getIdent());
         assertThat(opprettRequest.content().title().value().getFirst().value()).isEqualTo("Sakstittel");
         assertThat(attachmentName).isEqualTo("Innsending av inntektsmelding på min side - arbeidsgiver hos Nav");
         assertThat(attachmentUrl).isEqualTo(INNTEKTSMELDING_SKJEMA_LENKE + "/" + FORESPØRSEL_UUID);
         assertThat(apiActionEndpointUrl).isEqualTo(INNTEKTSMELDING_SKJEMA_LENKE + "/" + FORESPØRSEL_UUID);
         assertThat(transmissionContent).isEqualTo("Send inn inntektsmelding");
+        assertThat(opprettRequest.toString()).contains("externalReference=***");
     }
 
     @Test
