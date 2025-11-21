@@ -8,7 +8,7 @@ import jakarta.validation.constraints.NotNull;
 
 public record DialogportenRequest(@NotNull String serviceResource,
                                   @NotNull String party,
-                                  String externalRefererence,
+                                  String externalReference,
                                   DialogStatus status,
                                   Content content,
                                   List<Transmission> transmissions,
@@ -94,4 +94,16 @@ public record DialogportenRequest(@NotNull String serviceResource,
         Gui,
         Api,
     }
+    @Override
+    public String toString() {
+            return "DialogportenRequest[" +
+                "serviceResource=" + serviceResource +
+                ", party=" + party +
+                ", externalReference=***" +
+                ", status=" + status +
+                ", content=" + content +
+                ", transmissions=" + transmissions +
+                ", apiActions=" + apiActions +
+                "]";
+        }
 }

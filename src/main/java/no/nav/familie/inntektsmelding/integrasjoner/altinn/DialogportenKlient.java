@@ -11,6 +11,7 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import no.nav.familie.inntektsmelding.forespørsel.tjenester.LukkeÅrsak;
+import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.foreldrepenger.konfig.Environment;
@@ -46,14 +47,16 @@ public class DialogportenKlient {
                                 OrganisasjonsnummerDto orgnr,
                                 String sakstittel,
                                 LocalDate førsteUttaksdato,
-                                Ytelsetype ytelsetype) {
+                                Ytelsetype ytelsetype,
+                                PersonIdent fødselsnummer) {
         var target = URI.create(restConfig.endpoint().toString() + "/dialogporten/api/v1/serviceowner/dialogs");
         var opprettRequest = DialogportenRequestMapper.opprettDialogRequest(orgnr,
             forespørselUuid,
             sakstittel,
             førsteUttaksdato,
             ytelsetype,
-            inntektsmeldingSkjemaLenke);
+            inntektsmeldingSkjemaLenke,
+            fødselsnummer);
         var request = RestRequest.newPOSTJson(opprettRequest, target, restConfig)
             .otherAuthorizationSupplier(() -> tokenKlient.hentAltinnToken(this.restConfig.scopes()));
 
