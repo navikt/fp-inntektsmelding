@@ -8,6 +8,6 @@ import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 
 import java.util.List;
 
-public record OpprettForespørselResponsNy(@NotNull @Valid List<OrganisasjonsnummerMedStatus> organisasjonsnumreMedStatus) {
+public record OpprettForespørselResponsNy(@NotNull List<@Valid OrganisasjonsnummerMedStatus> organisasjonsnumreMedStatus) {
     public record OrganisasjonsnummerMedStatus(@NotNull @Valid OrganisasjonsnummerDto organisasjonsnummerDto, ForespørselResultat status) {}
 }

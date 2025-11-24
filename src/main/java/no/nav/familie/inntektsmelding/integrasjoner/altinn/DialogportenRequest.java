@@ -79,13 +79,13 @@ public record DialogportenRequest(@NotNull String serviceResource,
     protected record Content(@NotNull @Valid ContentValue title, @Valid ContentValue summary, @Valid ContentValue extendedStatus) {
     }
 
-    protected record ContentValue(@NotNull @NotEmpty @Valid List<ContentValueItem> value, @NotNull String mediaType) {
+    protected record ContentValue(@NotNull @NotEmpty List<@Valid ContentValueItem> value, @NotNull String mediaType) {
     }
 
     protected record ContentValueItem(@NotNull String value, @NotNull String languageCode) {
     }
 
-    protected record Attachment(@Valid List<ContentValueItem> displayName, @Valid List<Url> urls) {
+    protected record Attachment(List<@Valid ContentValueItem> displayName, @Valid List<Url> urls) {
     }
 
     protected record Url(String url, String mediaType, AttachmentUrlConsumerType consumerType) {

@@ -23,7 +23,7 @@ public record InntektsmeldingDialogDto(@Valid @NotNull PersonInfoResponseDto per
                                        @Valid @NotNull ForespørselStatusDto forespørselStatus,
                                        @Valid @NotNull LocalDate førsteUttaksdato,
                                        @JsonInclude(JsonInclude.Include.NON_NULL)
-                                       @Valid @NotNull List<AnsettelsePeriodeDto> ansettelsePerioder) {
+                                       @NotNull List<@Valid AnsettelsePeriodeDto> ansettelsePerioder) {
     public record PersonInfoResponseDto(@NotNull String fornavn, @NotNull String mellomnavn, @NotNull String etternavn, @NotNull String fødselsnummer,
                                         @NotNull String aktørId) {
     }
@@ -34,7 +34,7 @@ public record InntektsmeldingDialogDto(@Valid @NotNull PersonInfoResponseDto per
     public record InnsenderDto(@NotNull String fornavn, String mellomnavn, @NotNull String etternavn, String telefon) {
     }
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public record InntektsopplysningerDto(@Valid BigDecimal gjennomsnittLønn, @Valid @NotNull List<MånedsinntektDto> månedsinntekter) {
+    public record InntektsopplysningerDto(@Valid BigDecimal gjennomsnittLønn, @NotNull List<@Valid MånedsinntektDto> månedsinntekter) {
         public record MånedsinntektDto(@NotNull LocalDate fom, @NotNull LocalDate tom, BigDecimal beløp, @Valid @NotNull MånedslønnStatus status) {
         }
     }

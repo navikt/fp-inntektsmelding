@@ -10,7 +10,7 @@ import no.nav.familie.inntektsmelding.typer.dto.SaksnummerDto;
 import no.nav.familie.inntektsmelding.typer.dto.YtelseTypeDto;
 
 public record OppdaterForespørslerRequest(@NotNull @Valid AktørIdDto aktørId,
-                                          @NotNull List<OppdaterForespørselDto> forespørsler,
+                                          @NotNull List<@Valid OppdaterForespørselDto> forespørsler,
                                           @NotNull YtelseTypeDto ytelsetype,
                                           @NotNull @Valid SaksnummerDto fagsakSaksnummer) {
 }
