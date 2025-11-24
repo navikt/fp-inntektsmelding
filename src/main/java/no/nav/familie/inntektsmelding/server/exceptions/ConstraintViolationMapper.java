@@ -15,7 +15,6 @@ import jakarta.ws.rs.ext.ExceptionMapper;
 
 import no.nav.vedtak.log.mdc.MDCOperations;
 
-import org.hibernate.validator.internal.engine.path.PathImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,6 +72,6 @@ public class ConstraintViolationMapper implements ExceptionMapper<ConstraintViol
     }
 
     private static String getFeltNavn(Path propertyPath) {
-        return propertyPath instanceof PathImpl path ? path.getLeafNode().toString() : null;
+        return propertyPath instanceof org.hibernate.validator.path.Path path ? path.getLeafNode().toString() : null;
     }
 }
