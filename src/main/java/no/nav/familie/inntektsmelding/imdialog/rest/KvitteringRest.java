@@ -48,7 +48,7 @@ public class KvitteringRest {
     }
 
     @GET
-    @Path("/kvittering/{uuid}")
+    @Path("/innsendt/{uuid}")
     @Produces("application/pdf")
     @Tilgangskontrollert
     public Response hentKvitteringForespørsel(@NotNull @Valid @PathParam("uuid") UUID forespørselUuid) {
@@ -71,7 +71,7 @@ public class KvitteringRest {
     }
 
     @GET
-    @Path("/kvittering/inntektsmelding/{uuid}")
+    @Path("/innsendt/inntektsmelding/{uuid}")
     @Produces("application/pdf")
     @Tilgangskontrollert
     public Response hentKvitteringInntektsmelding(@NotNull @Valid @PathParam("uuid") UUID inntektsmeldingUuid) {

@@ -86,7 +86,7 @@ class DialogportenRequestMapperTest {
         assertThat(patchValue.toString()).contains("Inntektsmelding er mottatt");
         assertThat(patchValue.toString()).contains("Innsendt inntektsmelding");
         assertThat(patchValue.toString()).contains("urn:altinn:organization:identifier-no:999999999");
-        assertThat(patchValue.toString()).contains("url=https://arbeidsgiver.nav.no/fp-im-dialog/server/api/ekstern/kvittering/inntektsmelding/");
+        assertThat(patchValue.toString()).contains("url=https://arbeidsgiver.nav.no/fp-im-dialog/server/api/ekstern/innsendt/inntektsmelding/");
     }
 
     @Test
