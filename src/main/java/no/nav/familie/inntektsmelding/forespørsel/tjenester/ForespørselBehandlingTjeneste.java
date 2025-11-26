@@ -161,6 +161,27 @@ public class ForespørselBehandlingTjeneste {
         return foresporsel;
     }
 
+    public void oppdaterPortalerMedInnsendtInntektsmelding (ForespørselEntitet forespørsel,
+                                                            Optional<UUID> inntektsmeldingUuid,
+                                                            OrganisasjonsnummerDto organisasjonsnummerDto,
+                                                            LukkeÅrsak årsak) {
+        // Oppdater status i arbeidsgiverportalen
+        if (!Environment.current().isProd()) {
+            inntektsmeldingUuid.ifPresent(imUuid -> {
+                var merkelapp = ForespørselTekster.finnMerkelapp(forespørsel.getYtelseType());
+                var beskjedTekst = ForespørselTekster.lagBeskjedOmOppdatertInntektsmelding();
+                var kvitteringUrl = URI.create(inntektsmeldingSkjemaLenke + "/server/api/ekstern/kvittering/inntektsmelding/" +  imUuid);
+                minSideArbeidsgiverTjeneste.sendNyBeskjedMedKvittering(forespørsel.toString(), merkelapp, forespørsel.toString(), organisasjonsnummerDto.orgnr(), beskjedTekst, kvitteringUrl);
+            });
+        }
+
+        // Oppdater status i altinn dialogporten
+        forespørsel.getDialogportenUuid().ifPresent(dialogUuid ->
+            dialogportenKlient.oppdaterMedInnsendtInntektsmelding(dialogUuid,
+                organisasjonsnummerDto,
+                inntektsmeldingUuid));
+    }
+
     public Optional<ForespørselEntitet> hentForespørsel(UUID forespørselUUID) {
         return forespørselTjeneste.hentForespørsel(forespørselUUID);
     }
@@ -321,6 +342,10 @@ public class ForespørselBehandlingTjeneste {
 
         forespørselTjeneste.setArbeidsgiverNotifikasjonSakId(uuid, fagerSakId);
 
+        if (ENV.isDev()) {
+            opprettForespørselDialogporten(uuid, organisasjonsnummer, aktørId, ytelsetype, førsteFraværsdato);
+        }
+
         return uuid;
     }
 
@@ -441,7 +466,7 @@ public class ForespørselBehandlingTjeneste {
         }
     }
 
-    public ForespørselEntitet setFørsteUttaksdato(ForespørselEntitet forespørselEnitet, LocalDate startdato) {
+    public ForespørselEntitet oppdaterFørsteUttaksdato(ForespørselEntitet forespørselEnitet, LocalDate startdato) {
         return forespørselTjeneste.setFørsteUttaksdato(forespørselEnitet, startdato);
     }
 }

@@ -571,7 +571,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         var forespørsel = forespørselRepository.hentForespørsel(forespørselUuid).orElseThrow();
         var nyFørsteUttaksdato = FØRSTE_UTTAKSDATO.plusWeeks(1);
 
-        var resultat = forespørselBehandlingTjeneste.setFørsteUttaksdato(forespørsel, nyFørsteUttaksdato);
+        var resultat = forespørselBehandlingTjeneste.oppdaterFørsteUttaksdato(forespørsel, nyFørsteUttaksdato);
 
         clearHibernateCache();
 
