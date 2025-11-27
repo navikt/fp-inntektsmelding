@@ -84,7 +84,7 @@ class DialogportenRequestMapperTest {
         assertThat(patchValue).hasSize(3);
         assertThat(patchValue.toString()).contains("Completed");
         assertThat(patchValue.toString()).contains("Inntektsmelding er mottatt");
-        assertThat(patchValue.toString()).contains("Kvittering for inntektsmelding");
+        assertThat(patchValue.toString()).contains("Innsendt inntektsmelding");
         assertThat(patchValue.toString()).contains("urn:altinn:organization:identifier-no:999999999");
         assertThat(patchValue.toString()).contains("url=https://arbeidsgiver.nav.no/fp-im-dialog/server/api/ekstern/kvittering/inntektsmelding/");
     }
@@ -138,5 +138,19 @@ class DialogportenRequestMapperTest {
         assertThat(patchValue.toString()).contains("NotApplicable");
         assertThat(patchValue.toString()).contains("Utgått");
         assertThat(patchValue.toString()).contains("Nav trenger ikke lenger denne inntektsmeldingen");
+    }
+
+    @Test
+    void opprettInnsendtInntektsmeldingRequest() {
+        var innsendtInntektsmeldingRequest = DialogportenRequestMapper.opprettInnsendtInntektsmeldingPatchRequest(new OrganisasjonsnummerDto("999999999"),
+            Optional.of(FORESPØRSEL_UUID),
+            INNTEKTSMELDING_SKJEMA_LENKE);
+
+        var patchValue = innsendtInntektsmeldingRequest.stream().map(DialogportenPatchRequest::value).toList();
+
+        assertThat(innsendtInntektsmeldingRequest).hasSize(1);
+        assertThat(patchValue).hasSize(1);
+        assertThat(patchValue.toString()).contains("Oppdatert inntektsmelding er mottatt");
+        assertThat(patchValue.toString()).contains(INNTEKTSMELDING_SKJEMA_LENKE);
     }
 }

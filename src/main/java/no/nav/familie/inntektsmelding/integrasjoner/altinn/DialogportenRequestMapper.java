@@ -87,16 +87,40 @@ public class DialogportenRequestMapper {
             DialogportenPatchRequest.PATH_CONTENT,
             contentRequest);
 
+        var patchTransmission = inntektsmeldingMottattTransmission(organisasjonsnummer, inntektsmeldingUuid, årsak, inntektsmeldingSkjemaLenke, true);
+
+        return List.of(patchStatus, patchContent, patchTransmission);
+    }
+
+    public static List<DialogportenPatchRequest> opprettInnsendtInntektsmeldingPatchRequest(OrganisasjonsnummerDto organisasjonsnummer,
+                                                                                            Optional<UUID> inntektsmeldingUuid,
+                                                                                            String inntektsmeldingSkjemaLenke) {
+        var patchTransmission = inntektsmeldingMottattTransmission(organisasjonsnummer,
+            inntektsmeldingUuid,
+            LukkeÅrsak.ORDINÆR_INNSENDING,
+            inntektsmeldingSkjemaLenke,
+            false);
+
+        return List.of(patchTransmission);
+    }
+
+    private static DialogportenPatchRequest inntektsmeldingMottattTransmission(OrganisasjonsnummerDto organisasjonsnummer,
+                                                                        Optional<UUID> inntektsmeldingUuid,
+                                                                        LukkeÅrsak årsak,
+                                                                        String inntektsmeldingSkjemaLenke,
+                                                                               boolean førsteInnsending) {
         //Ny transmission som sier at inntektsmelding er mottatt, og med en lenke til kvittering. Ekstern innsending har ingen kvittering.
+        var mottattTekst = førsteInnsending ? "Inntektsmelding er mottatt" : "Oppdatert inntektsmelding er mottatt";
         var contentTransmission = årsak == LukkeÅrsak.EKSTERN_INNSENDING
                                   ? lagContentValue("Utført i Altinn eller i bedriftens lønns- og personalsystem. Ingen kvittering")
-                                  : lagContentValue("Inntektsmelding er mottatt ");
+                                  : lagContentValue(mottattTekst);
 
         var transmissionContent = new DialogportenRequest.Content(contentTransmission, null, null);
 
         //attachement med kvittering
         var apiActions = inntektsmeldingUuid.map(imUuid -> {
-            var contentAttachement = List.of(new DialogportenRequest.ContentValueItem("Kvittering for inntektsmelding", DialogportenRequest.NB));
+            var innsendingTekst = førsteInnsending ? "Innsendt inntektsmelding" : "Oppdatert inntektsmelding";
+            var contentAttachement = List.of(new DialogportenRequest.ContentValueItem(innsendingTekst, DialogportenRequest.NB));
             var url = inntektsmeldingSkjemaLenke + "/server/api/ekstern/kvittering/inntektsmelding/" + imUuid;
             var urlApi = new DialogportenRequest.Url(url, DialogportenRequest.TEXT_PLAIN, DialogportenRequest.AttachmentUrlConsumerType.Api);
             var urlGui = new DialogportenRequest.Url(url, DialogportenRequest.TEXT_PLAIN, DialogportenRequest.AttachmentUrlConsumerType.Gui);
@@ -112,11 +136,9 @@ public class DialogportenRequestMapper {
             apiActions);
 
         //patch
-        var patchTransmission = new DialogportenPatchRequest(DialogportenPatchRequest.OP_ADD,
+        return new DialogportenPatchRequest(DialogportenPatchRequest.OP_ADD,
             DialogportenPatchRequest.PATH_TRANSMISSIONS,
             List.of(transmission));
-
-        return List.of(patchStatus, patchContent, patchTransmission);
     }
 
     public static List<DialogportenPatchRequest> opprettUtgåttPatchRequest(String sakstittel) {
