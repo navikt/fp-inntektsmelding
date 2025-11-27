@@ -119,51 +119,51 @@ public class ForespørselBehandlingTjeneste {
                                                      LukkeÅrsak årsak,
                                                      // inntektsmeldingUuid er optional fordi vi ikke har inntektsmeldingen lagret hvis den er innsendt via Altinn / LPS'er
                                                      Optional<UUID> inntektsmeldingUuid) {
-        var foresporsel = forespørselTjeneste.hentForespørsel(foresporselUuid)
+        var forespørsel = forespørselTjeneste.hentForespørsel(foresporselUuid)
             .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel for inntektsmelding, ugyldig tilstand"));
-        validerAktør(foresporsel, aktorId);
-        validerOrganisasjon(foresporsel, organisasjonsnummerDto);
-        validerStartdato(foresporsel, startdato);
+        validerAktør(forespørsel, aktorId);
+        validerOrganisasjon(forespørsel, organisasjonsnummerDto);
+        validerStartdato(forespørsel, startdato);
 
-        var erFørstegangsinnsending = ForespørselStatus.UNDER_BEHANDLING.equals(foresporsel.getStatus());
+        var erFørstegangsinnsending = ForespørselStatus.UNDER_BEHANDLING.equals(forespørsel.getStatus());
 
         // Arbeidsgiverinitierte forespørsler har ingen oppgave
-        foresporsel.getOppgaveId().ifPresent(oppgaveId -> minSideArbeidsgiverTjeneste.oppgaveUtført(oppgaveId, OffsetDateTime.now()));
+        forespørsel.getOppgaveId().ifPresent(oppgaveId -> minSideArbeidsgiverTjeneste.oppgaveUtført(oppgaveId, OffsetDateTime.now()));
 
-        var erArbeidsgiverInitiertInntektsmelding = foresporsel.getOppgaveId().isEmpty();
-        minSideArbeidsgiverTjeneste.ferdigstillSak(foresporsel.getArbeidsgiverNotifikasjonSakId(), erArbeidsgiverInitiertInntektsmelding);
+        var erArbeidsgiverInitiertInntektsmelding = forespørsel.getOppgaveId().isEmpty();
+        minSideArbeidsgiverTjeneste.ferdigstillSak(forespørsel.getArbeidsgiverNotifikasjonSakId(), erArbeidsgiverInitiertInntektsmelding);
 
         // Oppdaterer status i arbeidsgiver-notifikasjon
-        minSideArbeidsgiverTjeneste.oppdaterSakTilleggsinformasjon(foresporsel.getArbeidsgiverNotifikasjonSakId(),
-            ForespørselTekster.lagTilleggsInformasjon(årsak, foresporsel.getFørsteUttaksdato()));
+        minSideArbeidsgiverTjeneste.oppdaterSakTilleggsinformasjon(forespørsel.getArbeidsgiverNotifikasjonSakId(),
+            ForespørselTekster.lagTilleggsInformasjon(årsak, forespørsel.getFørsteUttaksdato()));
+
+        // Oppdaterer status i forespørsel
+        forespørselTjeneste.ferdigstillForespørsel(forespørsel.getArbeidsgiverNotifikasjonSakId());
 
         if (!Environment.current().isProd()) {
             inntektsmeldingUuid.ifPresent(imUuid -> {
-                var merkelapp = ForespørselTekster.finnMerkelapp(foresporsel.getYtelseType());
+                var merkelapp = ForespørselTekster.finnMerkelapp(forespørsel.getYtelseType());
                 var beskjedTekst = erFørstegangsinnsending ? ForespørselTekster.lagBeskjedOmKvitteringFørsteInnsendingTekst() : ForespørselTekster.lagBeskjedOmOppdatertInntektsmelding();
                 var kvitteringUrl = URI.create(inntektsmeldingSkjemaLenke + "/server/api/ekstern/innsendt/inntektsmelding/" +  imUuid);
                 minSideArbeidsgiverTjeneste.sendNyBeskjedMedKvittering(foresporselUuid.toString(), merkelapp, foresporselUuid.toString(), organisasjonsnummerDto.orgnr(), beskjedTekst, kvitteringUrl);
             });
         }
-
-        // Oppdaterer status i forespørsel
-        forespørselTjeneste.ferdigstillForespørsel(foresporsel.getArbeidsgiverNotifikasjonSakId());
-
         // Oppdaterer status i altinn dialogporten
-        foresporsel.getDialogportenUuid().ifPresent(dialogUuid ->
+        forespørsel.getDialogportenUuid().ifPresent(dialogUuid ->
             dialogportenKlient.ferdigstillDialog(dialogUuid,
                 organisasjonsnummerDto,
-                lagSaksTittelForDialogporten(aktorId, foresporsel.getYtelseType()),
-                foresporsel.getYtelseType(),
-                foresporsel.getFørsteUttaksdato(),
+                lagSaksTittelForDialogporten(aktorId, forespørsel.getYtelseType()),
+                forespørsel.getYtelseType(),
+                forespørsel.getFørsteUttaksdato(),
                 inntektsmeldingUuid,
                 årsak));
-        return foresporsel;
+
+        return forespørsel;
     }
 
-    public void oppdaterPortalerMedInnsendtInntektsmelding (ForespørselEntitet forespørsel,
-                                                            Optional<UUID> inntektsmeldingUuid,
-                                                            OrganisasjonsnummerDto organisasjonsnummerDto) {
+    public void oppdaterPortalerMedEndretInntektsmelding(ForespørselEntitet forespørsel,
+                                                         Optional<UUID> inntektsmeldingUuid,
+                                                         OrganisasjonsnummerDto organisasjonsnummerDto) {
         // Oppdater status i arbeidsgiverportalen
         if (!Environment.current().isProd()) {
             inntektsmeldingUuid.ifPresent(imUuid -> {
@@ -176,7 +176,7 @@ public class ForespørselBehandlingTjeneste {
 
         // Oppdater status i altinn dialogporten
         forespørsel.getDialogportenUuid().ifPresent(dialogUuid ->
-            dialogportenKlient.oppdaterMedInnsendtInntektsmelding(dialogUuid,
+            dialogportenKlient.oppdaterDialogMedEndretInntektsmelding(dialogUuid,
                 organisasjonsnummerDto,
                 inntektsmeldingUuid));
     }
