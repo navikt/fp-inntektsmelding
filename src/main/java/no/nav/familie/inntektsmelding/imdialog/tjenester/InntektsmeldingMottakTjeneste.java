@@ -102,8 +102,8 @@ public class InntektsmeldingMottakTjeneste {
             //oppdaterer dialogportaler med innsendt inntektsmelding
             forespørselBehandlingTjeneste.oppdaterPortalerMedInnsendtInntektsmelding(forespørselEnitet,
                 lagretInntektsmelding.getUuid(),
-                organisasjonsnummer,
-                LukkeÅrsak.ORDINÆR_INNSENDING);
+                organisasjonsnummer
+            );
 
         } else {
             forespørselEnitet = oppretterArbeidsgiverinitiertForespørsel(ytelseType,

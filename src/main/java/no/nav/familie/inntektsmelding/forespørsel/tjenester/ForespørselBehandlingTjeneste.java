@@ -163,8 +163,7 @@ public class ForespørselBehandlingTjeneste {
 
     public void oppdaterPortalerMedInnsendtInntektsmelding (ForespørselEntitet forespørsel,
                                                             Optional<UUID> inntektsmeldingUuid,
-                                                            OrganisasjonsnummerDto organisasjonsnummerDto,
-                                                            LukkeÅrsak årsak) {
+                                                            OrganisasjonsnummerDto organisasjonsnummerDto) {
         // Oppdater status i arbeidsgiverportalen
         if (!Environment.current().isProd()) {
             inntektsmeldingUuid.ifPresent(imUuid -> {
