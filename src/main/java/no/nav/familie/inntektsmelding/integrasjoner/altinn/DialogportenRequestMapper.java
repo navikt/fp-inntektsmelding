@@ -121,7 +121,7 @@ public class DialogportenRequestMapper {
         var apiActions = inntektsmeldingUuid.map(imUuid -> {
             var innsendingTekst = førsteInnsending ? "Innsendt inntektsmelding" : "Oppdatert inntektsmelding";
             var contentAttachement = List.of(new DialogportenRequest.ContentValueItem(innsendingTekst, DialogportenRequest.NB));
-            var url = inntektsmeldingSkjemaLenke + "/server/api/ekstern/kvittering/inntektsmelding/" + imUuid;
+            var url = inntektsmeldingSkjemaLenke + "/server/api/ekstern/innsendt/inntektsmelding/" + imUuid;
             var urlApi = new DialogportenRequest.Url(url, DialogportenRequest.TEXT_PLAIN, DialogportenRequest.AttachmentUrlConsumerType.Api);
             var urlGui = new DialogportenRequest.Url(url, DialogportenRequest.TEXT_PLAIN, DialogportenRequest.AttachmentUrlConsumerType.Gui);
             var attachment = new DialogportenRequest.Attachment(contentAttachement, List.of(urlApi, urlGui));
