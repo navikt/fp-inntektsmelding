@@ -62,12 +62,11 @@ public class InntektsmeldingMottakTjeneste {
         var entitet = InntektsmeldingMapper.mapTilEntitet(mottattInntektsmeldingDto);
         var imId = lagreOgLagJournalførTask(entitet, forespørselEntitet);
         var lagretIm = inntektsmeldingRepository.hentInntektsmelding(imId);
-        ForespørselEntitet ferdigstiltForespørsel = null;
         var orgnummer = new OrganisasjonsnummerDto(mottattInntektsmeldingDto.arbeidsgiverIdent().ident());
         //Ferdigstiller forespørsel hvis den ikke er ferdig fra før
         if (!forespørselEntitet.getStatus().equals(ForespørselStatus.FERDIG)) {
             var aktørId = new AktørIdEntitet(mottattInntektsmeldingDto.aktorId().id());
-            ferdigstiltForespørsel = forespørselBehandlingTjeneste.ferdigstillForespørsel(mottattInntektsmeldingDto.foresporselUuid(), aktørId, orgnummer,
+            var ferdigstiltForespørsel = forespørselBehandlingTjeneste.ferdigstillForespørsel(mottattInntektsmeldingDto.foresporselUuid(), aktørId, orgnummer,
                 mottattInntektsmeldingDto.startdato(), LukkeÅrsak.ORDINÆR_INNSENDING, lagretIm.getUuid());
             MetrikkerTjeneste.loggForespørselLukkIntern(ferdigstiltForespørsel);
         } else {
