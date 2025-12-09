@@ -16,13 +16,12 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import no.nav.familie.inntektsmelding.koder.Ytelsetype;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.nav.familie.inntektsmelding.imdialog.modell.InntektsmeldingEntitet;
 import no.nav.familie.inntektsmelding.imdialog.tjenester.InntektsmeldingTjeneste;
+import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.server.auth.api.AutentisertMedTokenX;
 import no.nav.familie.inntektsmelding.server.auth.api.Tilgangskontrollert;
 import no.nav.familie.inntektsmelding.server.tilgangsstyring.Tilgang;
@@ -47,6 +46,12 @@ public class KvitteringRest {
         this.inntektsmeldingTjeneste = inntektsmeldingTjeneste;
     }
 
+    /**
+     * Deprekert. Bruk heller /innsendt/{uuid} endepunkt
+     * @param forespørselUuid
+     * @return
+     */
+    @Deprecated
     @GET
     @Path("/kvittering/{uuid}")
     @Produces("application/pdf")
@@ -70,11 +75,62 @@ public class KvitteringRest {
         return responseBuilder.build();
     }
 
+    /**
+     * Deprekert. Bruk heller /innsendt/inntektsmelding/{uuid} endepunkt
+     * @param inntektsmeldingUuid
+     * @return
+     */
+    @Deprecated
     @GET
     @Path("/kvittering/inntektsmelding/{uuid}")
     @Produces("application/pdf")
     @Tilgangskontrollert
     public Response hentKvitteringInntektsmelding(@NotNull @Valid @PathParam("uuid") UUID inntektsmeldingUuid) {
+        tilgang.sjekkAtArbeidsgiverHarTilgangTilInntektsmelding(inntektsmeldingUuid);
+        var im = inntektsmeldingTjeneste.hentInntektsmelding(inntektsmeldingUuid).orElse(null);
+        if (im == null) {
+            LOG.info("Finner ikke inntektsmelding med uuid {}", inntektsmeldingUuid);
+            return Response.status(Response.Status.NO_CONTENT).build();
+        } else {
+            var pdf = inntektsmeldingTjeneste.hentPDF(im.getId());
+            var ytelsetekst = im.getYtelsetype().equals(Ytelsetype.FORELDREPENGER) ? "foreldrepenger" : "svangerskapspenger";
+            var siste12TegnFraUuid = inntektsmeldingUuid.toString().substring(inntektsmeldingUuid.toString().length() - 12);
+            var responseBuilder = Response.ok(pdf);
+            responseBuilder.type("application/pdf");
+            responseBuilder.header("Content-Disposition", String.format("attachment; filename=inntektsmelding-%s-%s.pdf", ytelsetekst, siste12TegnFraUuid));
+            LOG.info("Returnerer pdf for inntektsmelding med id {}", inntektsmeldingUuid);
+            return responseBuilder.build();
+        }
+    }
+
+    @GET
+    @Path("/innsendt/{uuid}")
+    @Produces("application/pdf")
+    @Tilgangskontrollert
+    public Response hentForInnsendtInntektsmeldingPåForespørsel(@NotNull @Valid @PathParam("uuid") UUID forespørselUuid) {
+        tilgang.sjekkAtArbeidsgiverHarTilgangTilBedrift(forespørselUuid);
+
+        LOG.info("Henter inntektsmelding for forespørsel uuid {}", forespørselUuid);
+        var inntektsmelding = inntektsmeldingTjeneste.hentInntektsmeldinger(forespørselUuid).stream()
+            .max(Comparator.comparing(InntektsmeldingEntitet::getOpprettetTidspunkt))
+            .orElse(null);
+
+        if (inntektsmelding == null) {
+            return Response.status(Response.Status.NO_CONTENT).build();
+        }
+        var pdf = inntektsmeldingTjeneste.hentPDF(inntektsmelding.getId());
+
+        var responseBuilder = Response.ok(pdf);
+        responseBuilder.type("application/pdf");
+        responseBuilder.header("Content-Disposition", "attachment; filename=inntektsmelding.pdf");
+        return responseBuilder.build();
+    }
+
+    @GET
+    @Path("/innsendt/inntektsmelding/{uuid}")
+    @Produces("application/pdf")
+    @Tilgangskontrollert
+    public Response hentInnsendtInntektsmelding(@NotNull @Valid @PathParam("uuid") UUID inntektsmeldingUuid) {
         tilgang.sjekkAtArbeidsgiverHarTilgangTilInntektsmelding(inntektsmeldingUuid);
         var im = inntektsmeldingTjeneste.hentInntektsmelding(inntektsmeldingUuid).orElse(null);
         if (im == null) {

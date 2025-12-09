@@ -141,7 +141,7 @@ public class ForespørselBehandlingTjeneste {
             inntektsmeldingUuid.ifPresent(imUuid -> {
                 var merkelapp = ForespørselTekster.finnMerkelapp(foresporsel.getYtelseType());
                 var beskjedTekst = erFørstegangsinnsending ? ForespørselTekster.lagBeskjedOmKvitteringFørsteInnsendingTekst() : ForespørselTekster.lagBeskjedOmOppdatertInntektsmelding();
-                var kvitteringUrl = URI.create(inntektsmeldingSkjemaLenke + "/server/api/ekstern/kvittering/inntektsmelding/" +  imUuid);
+                var kvitteringUrl = URI.create(inntektsmeldingSkjemaLenke + "/server/api/ekstern/innsendt/inntektsmelding/" +  imUuid);
                 minSideArbeidsgiverTjeneste.sendNyBeskjedMedKvittering(foresporselUuid.toString(), merkelapp, foresporselUuid.toString(), organisasjonsnummerDto.orgnr(), beskjedTekst, kvitteringUrl);
             });
         }
