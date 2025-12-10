@@ -61,17 +61,22 @@ public class InntektsmeldingMottakTjeneste {
 
         var entitet = InntektsmeldingMapper.mapTilEntitet(mottattInntektsmeldingDto);
         var imId = lagreOgLagJournalførTask(entitet, forespørselEntitet);
-        var imEntitet = inntektsmeldingRepository.hentInntektsmelding(imId);
+        var lagretIm = inntektsmeldingRepository.hentInntektsmelding(imId);
         var orgnummer = new OrganisasjonsnummerDto(mottattInntektsmeldingDto.arbeidsgiverIdent().ident());
-        var aktorId = new AktørIdEntitet(mottattInntektsmeldingDto.aktorId().id());
-        var ferdigstiltForespørsel = forespørselBehandlingTjeneste.ferdigstillForespørsel(mottattInntektsmeldingDto.foresporselUuid(), aktorId, orgnummer,
-            mottattInntektsmeldingDto.startdato(), LukkeÅrsak.ORDINÆR_INNSENDING, imEntitet.getUuid());
+        //Ferdigstiller forespørsel hvis den ikke er ferdig fra før
+        if (!forespørselEntitet.getStatus().equals(ForespørselStatus.FERDIG)) {
+            var aktørId = new AktørIdEntitet(mottattInntektsmeldingDto.aktorId().id());
+            var ferdigstiltForespørsel = forespørselBehandlingTjeneste.ferdigstillForespørsel(mottattInntektsmeldingDto.foresporselUuid(), aktørId, orgnummer,
+                mottattInntektsmeldingDto.startdato(), LukkeÅrsak.ORDINÆR_INNSENDING, lagretIm.getUuid());
+            MetrikkerTjeneste.loggForespørselLukkIntern(ferdigstiltForespørsel);
+        } else {
+            //legger inn oppdatert inntektsmelding i portaler
+            forespørselBehandlingTjeneste.oppdaterPortalerMedEndretInntektsmelding(forespørselEntitet, lagretIm.getUuid(), orgnummer);
+        }
 
-        // Metrikker i prometheus
-        MetrikkerTjeneste.loggForespørselLukkIntern(ferdigstiltForespørsel);
-        MetrikkerTjeneste.loggInnsendtInntektsmelding(imEntitet);
+        MetrikkerTjeneste.loggInnsendtInntektsmelding(lagretIm);
 
-        return InntektsmeldingMapper.mapFraEntitet(imEntitet, forespørselEntitet);
+        return InntektsmeldingMapper.mapFraEntitet(lagretIm, forespørselEntitet);
     }
 
     public InntektsmeldingResponseDto mottaArbeidsgiverinitiertInntektsmelding(
@@ -99,8 +104,8 @@ public class InntektsmeldingMottakTjeneste {
             }
 
             lagretInntektsmelding = lagreOgJournalførInntektsmelding(nyInntektsmelding, forespørselEnitet);
-            //oppdaterer dialogportaler med innsendt inntektsmelding
-            forespørselBehandlingTjeneste.oppdaterPortalerMedInnsendtInntektsmelding(forespørselEnitet,
+            //legger inn oppdatert inntektsmelding i portaler
+            forespørselBehandlingTjeneste.oppdaterPortalerMedEndretInntektsmelding(forespørselEnitet,
                 lagretInntektsmelding.getUuid(),
                 organisasjonsnummer
             );

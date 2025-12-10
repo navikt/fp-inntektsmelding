@@ -81,9 +81,9 @@ public class DialogportenKlient {
         sendPatchRequest(dialogUuid, patchRequestFerdig);
     }
 
-    public void oppdaterMedInnsendtInntektsmelding(UUID dialogUuid,
-                                              OrganisasjonsnummerDto orgnr,
-                                              Optional<UUID> inntektsmeldingUuid) {
+    public void oppdaterDialogMedEndretInntektsmelding(UUID dialogUuid,
+                                                       OrganisasjonsnummerDto orgnr,
+                                                       Optional<UUID> inntektsmeldingUuid) {
         var patchRequestInnsendt = DialogportenRequestMapper.opprettInnsendtInntektsmeldingPatchRequest(
             orgnr,
             inntektsmeldingUuid,
