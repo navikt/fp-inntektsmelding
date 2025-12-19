@@ -47,7 +47,7 @@ class InntektTjenesteTest {
         var response = List.of(inntekt1, inntekt2, inntekt3);
         when(klient.finnInntekt(forventetRequest)).thenReturn(response);
 
-        var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR);
+        var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR, true);
 
         var forventetListe = List.of(new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(25_000), YearMonth.of(2024, 7), MånedslønnStatus.BRUKT_I_GJENNOMSNITT)
             , new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(25_000), YearMonth.of(2024, 8), MånedslønnStatus.BRUKT_I_GJENNOMSNITT)
@@ -65,7 +65,7 @@ class InntektTjenesteTest {
         List<InntektskomponentKlient.Inntektsinformasjon> response = List.of();
         when(klient.finnInntekt(forventetRequest)).thenReturn(response);
 
-        var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR);
+        var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR, true);
 
         var forventetListe = List.of(new Inntektsopplysninger.InntektMåned(null, YearMonth.of(2024, 7), MånedslønnStatus.IKKE_RAPPORTERT_MEN_BRUKT_I_GJENNOMSNITT)
             , new Inntektsopplysninger.InntektMåned(null, YearMonth.of(2024, 8), MånedslønnStatus.IKKE_RAPPORTERT_MEN_BRUKT_I_GJENNOMSNITT)
@@ -86,7 +86,7 @@ class InntektTjenesteTest {
         var response = List.of(inntekt1, inntekt2, inntekt3);
         when(klient.finnInntekt(forventetRequest)).thenReturn(response);
 
-        var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR);
+        var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR, true);
 
         var forventetListe = List.of(new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(25_000), YearMonth.of(2024, 6), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
             new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(25_000), YearMonth.of(2024, 7), MånedslønnStatus.BRUKT_I_GJENNOMSNITT)
@@ -111,7 +111,7 @@ class InntektTjenesteTest {
         when(klient.finnInntekt(forventetRequest)).thenReturn(response);
 
 
-        var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR);
+        var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR, true);
 
         var forventetListe = List.of(new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(25_000), YearMonth.of(2024, 7), MånedslønnStatus.BRUKT_I_GJENNOMSNITT)
             , new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(25_000), YearMonth.of(2024, 8), MånedslønnStatus.BRUKT_I_GJENNOMSNITT)
@@ -132,7 +132,7 @@ class InntektTjenesteTest {
         var response = List.of(inntekt1, inntekt2, inntekt3);
         when(klient.finnInntekt(forventetRequest)).thenReturn(response);
 
-        var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR);
+        var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR, true);
 
         var forventetListe = List.of(new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(25_000), YearMonth.of(2024, 7), MånedslønnStatus.BRUKT_I_GJENNOMSNITT)
             , new Inntektsopplysninger.InntektMåned(null, YearMonth.of(2024, 8), MånedslønnStatus.IKKE_RAPPORTERT_MEN_BRUKT_I_GJENNOMSNITT)
@@ -154,7 +154,7 @@ class InntektTjenesteTest {
         var response = List.of(inntekt1, inntekt2, inntekt3, inntekt4);
         when(klient.finnInntekt(forventetRequest)).thenReturn(response);
 
-        var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR);
+        var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR, true);
 
         var forventetListe = List.of(new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(25_000), YearMonth.of(2024, 6), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
             new Inntektsopplysninger.InntektMåned(null, YearMonth.of(2024, 7), MånedslønnStatus.IKKE_RAPPORTERT_MEN_BRUKT_I_GJENNOMSNITT)
@@ -172,7 +172,7 @@ class InntektTjenesteTest {
 
         when(klient.finnInntekt(forventetRequest)).thenReturn(List.of());
 
-        var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR);
+        var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR, true);
 
         var forventetListe = List.of(new Inntektsopplysninger.InntektMåned(null, YearMonth.of(2024, 7), MånedslønnStatus.IKKE_RAPPORTERT_MEN_BRUKT_I_GJENNOMSNITT)
             , new Inntektsopplysninger.InntektMåned(null, YearMonth.of(2024, 8), MånedslønnStatus.IKKE_RAPPORTERT_MEN_BRUKT_I_GJENNOMSNITT)
@@ -193,7 +193,7 @@ class InntektTjenesteTest {
         var response = List.of(inntekt1, inntekt2, inntekt3);
         when(klient.finnInntekt(forventetRequest)).thenReturn(response);
 
-        var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR);
+        var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR, true);
 
         var forventetListe = List.of(new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(20_000), YearMonth.of(2024, 7), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
             new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(25_000), YearMonth.of(2024, 8), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
@@ -217,7 +217,7 @@ class InntektTjenesteTest {
         var response = List.of(inntekt1, inntekt2, inntekt3, inntekt4);
         when(klient.finnInntekt(forventetRequest)).thenReturn(response);
 
-        var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR);
+        var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR, true);
 
         var forventetListe = List.of(new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(25_000), YearMonth.of(2024, 8), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
             new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(30_000), YearMonth.of(2024, 9), MånedslønnStatus.BRUKT_I_GJENNOMSNITT)
@@ -239,7 +239,7 @@ class InntektTjenesteTest {
         var response = List.of(inntekt1, inntekt2, inntekt3);
         when(klient.finnInntekt(forventetRequest)).thenReturn(response);
 
-        var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR);
+        var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR, true);
 
         var forventetListe = List.of(new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(35_000), YearMonth.of(2024, 7), MånedslønnStatus.BRUKT_I_GJENNOMSNITT)
             , new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(30_000), YearMonth.of(2024, 8), MånedslønnStatus.BRUKT_I_GJENNOMSNITT)
@@ -260,7 +260,7 @@ class InntektTjenesteTest {
         var response = List.of(inntekt1, inntekt2, inntekt3);
         when(klient.finnInntekt(forventetRequest)).thenReturn(response);
 
-        var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR);
+        var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR, true);
 
         var forventetListe = List.of(new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(35_000), YearMonth.of(2024, 7), MånedslønnStatus.BRUKT_I_GJENNOMSNITT)
             , new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(30_000), YearMonth.of(2024, 8), MånedslønnStatus.BRUKT_I_GJENNOMSNITT)
@@ -282,7 +282,7 @@ class InntektTjenesteTest {
         var response = List.of(inntekt0, inntekt1, inntekt2, inntekt3);
         when(klient.finnInntekt(forventetRequest)).thenReturn(response);
 
-        var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR);
+        var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR, true);
 
         var forventetListe = List.of(new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(25_000), YearMonth.of(2024, 9), MånedslønnStatus.BRUKT_I_GJENNOMSNITT)
             , new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(25_000), YearMonth.of(2024, 10), MånedslønnStatus.BRUKT_I_GJENNOMSNITT)
@@ -299,7 +299,7 @@ class InntektTjenesteTest {
 
         when(klient.finnInntekt(forventetRequest)).thenThrow(new IntegrasjonException("TESTMELDING", "Noe feil"));
 
-        var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR);
+        var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR, true);
 
         var forventetListe = List.of(new Inntektsopplysninger.InntektMåned(null, YearMonth.of(2024, 9), MånedslønnStatus.NEDETID_AINNTEKT)
             , new Inntektsopplysninger.InntektMåned(null, YearMonth.of(2024, 10), MånedslønnStatus.NEDETID_AINNTEKT)
@@ -320,7 +320,7 @@ class InntektTjenesteTest {
         var response = List.of(inntekt1, inntekt2, inntekt3);
         when(klient.finnInntekt(forventetRequest)).thenReturn(response);
 
-        var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR);
+        var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR, true);
 
         var forventetListe = List.of(new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(3000), YearMonth.of(2024, 7), MånedslønnStatus.BRUKT_I_GJENNOMSNITT)
             , new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(-6000), YearMonth.of(2024, 8), MånedslønnStatus.BRUKT_I_GJENNOMSNITT)

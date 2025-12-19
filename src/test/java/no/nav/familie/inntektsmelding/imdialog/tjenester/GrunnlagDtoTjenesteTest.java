@@ -112,7 +112,7 @@ class GrunnlagDtoTjenesteTest {
         var inntekt2 = new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(52000), YearMonth.of(2024, 4), MånedslønnStatus.BRUKT_I_GJENNOMSNITT);
         var inntekt3 = new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(52000), YearMonth.of(2024, 5), MånedslønnStatus.BRUKT_I_GJENNOMSNITT);
         when(inntektTjeneste.hentInntekt(forespørsel.getAktørId(), LocalDate.now(), LocalDate.now(),
-            forespørsel.getOrganisasjonsnummer())).thenReturn(new Inntektsopplysninger(BigDecimal.valueOf(52000),
+            forespørsel.getOrganisasjonsnummer(), true)).thenReturn(new Inntektsopplysninger(BigDecimal.valueOf(52000),
             forespørsel.getOrganisasjonsnummer(),
             List.of(inntekt1, inntekt2, inntekt3)));
 
@@ -178,7 +178,7 @@ class GrunnlagDtoTjenesteTest {
         when(personTjeneste.hentPersonFraIdent(PersonIdent.fra(INNMELDER_UID), forespørsel.getYtelseType())).thenReturn(
             new PersonInfo(innsenderNavn, null, innsenderEtternavn, new PersonIdent(INNMELDER_UID), null, LocalDate.now(), innsenderTelefonnummer, null));
         when(inntektTjeneste.hentInntekt(forespørsel.getAktørId(), LocalDate.now(), LocalDate.now(),
-            forespørsel.getOrganisasjonsnummer())).thenReturn(new Inntektsopplysninger(BigDecimal.valueOf(52000),
+            forespørsel.getOrganisasjonsnummer(), true)).thenReturn(new Inntektsopplysninger(BigDecimal.valueOf(52000),
             forespørsel.getOrganisasjonsnummer(),
             List.of()));
 
@@ -369,7 +369,7 @@ class GrunnlagDtoTjenesteTest {
         when(inntektTjeneste.hentInntekt(aktørId,
             eksFpFørsteUttaksdato,
             LocalDate.now(),// Act
-            organisasjonsnummer)).thenReturn(new Inntektsopplysninger(BigDecimal.valueOf(52000), organisasjonsnummer, List.of()));
+            organisasjonsnummer, true)).thenReturn(new Inntektsopplysninger(BigDecimal.valueOf(52000), organisasjonsnummer, List.of()));
 
         var imDialogDto = grunnlagDtoTjeneste.lagArbeidsgiverinitiertNyansattDialogDto(fødselsnummer, ytelsetype, førsteFraværsdag, organisasjonsnummer);
 
@@ -412,7 +412,7 @@ class GrunnlagDtoTjenesteTest {
         when(inntektTjeneste.hentInntekt(aktørId,
             eksFpFørsteUttaksdato,
             LocalDate.now(),
-            organisasjonsnummer)).thenReturn(new Inntektsopplysninger(null, null, List.of()));
+            organisasjonsnummer, true)).thenReturn(new Inntektsopplysninger(null, null, List.of()));
         // Act
         var imDialogDto = grunnlagDtoTjeneste.lagArbeidsgiverinitiertNyansattDialogDto(fødselsnummer, ytelsetype, førsteFraværsdag, organisasjonsnummer);
 
@@ -454,7 +454,7 @@ class GrunnlagDtoTjenesteTest {
         var sumInntekt = inntekt1.beløp().add(inntekt2.beløp().add(inntekt3.beløp()));
         var gjennomsnittInntekt = sumInntekt.divide(BigDecimal.valueOf(3),2, RoundingMode.HALF_UP);
         when(inntektTjeneste.hentInntekt(aktørId, skjæringstidspunkt, LocalDate.now(),
-            organisasjonsnummer)).thenReturn(new Inntektsopplysninger(BigDecimal.valueOf(35000),
+            organisasjonsnummer, true)).thenReturn(new Inntektsopplysninger(BigDecimal.valueOf(35000),
             organisasjonsnummer,
             List.of(inntekt1, inntekt2, inntekt3)));
         when(personTjeneste.hentPersonFraIdent(fødselsnummer, ytelsetype)).thenReturn(personInfo);
@@ -508,7 +508,7 @@ class GrunnlagDtoTjenesteTest {
         when(inntektTjeneste.hentInntekt(aktørId,
             førsteUttaksdato,
             LocalDate.now(),// Act
-            organisasjonsnummer)).thenReturn(new Inntektsopplysninger(BigDecimal.valueOf(52000), organisasjonsnummer, List.of()));
+            organisasjonsnummer, true)).thenReturn(new Inntektsopplysninger(BigDecimal.valueOf(52000), organisasjonsnummer, List.of()));
 
         var imDialogDto = grunnlagDtoTjeneste.lagArbeidsgiverinitiertUregistrertDialogDto(fødselsnummer, ytelsetype, førsteUttaksdato, organisasjonsnummer, førsteUttaksdato);
 
