@@ -70,7 +70,7 @@ public class InntektTjeneste {
 
     private Inntektsopplysninger beregnSnittOgLeggPåStatus(List<Månedsinntekt> inntekter, LocalDate dagensDato, String organisasjonsnummer,
                                                            boolean harJobbetHeleBeregningsperioden) {
-        var månedsinntekter = inntekter.stream().map(i -> mapInntektMedStatus(i, dagensDato)).toList();
+        var månedsinntekter = inntekter.stream().map(i -> mapInntektMedStatus(i, dagensDato, harJobbetHeleBeregningsperioden)).toList();
         var antallMndMedRapportertInntekt = månedsinntekter.stream().filter(m -> m.beløp() != null).count();
         if (antallMndMedRapportertInntekt > 3) {
             throw new TekniskException("FPINNTEKTSMELDING_INNTEKTKSKOMPONENT_1",
@@ -92,12 +92,15 @@ public class InntektTjeneste {
         return new Inntektsopplysninger(snittlønn, organisasjonsnummer, månedsinntekter);
     }
 
-    private Inntektsopplysninger.InntektMåned mapInntektMedStatus(Månedsinntekt i, LocalDate dagensDato) {
-        var skalInntektVæreRapportert = rapporteringsfristErPassert(i.måned.atDay(1), dagensDato);
+    private Inntektsopplysninger.InntektMåned mapInntektMedStatus(Månedsinntekt i, LocalDate dagensDato, boolean harJobbetHeleBeregningsperioden) {
         var erInntektRapportert = i.beløp != null;
         if (erInntektRapportert) {
             return new Inntektsopplysninger.InntektMåned(i.beløp, i.måned, MånedslønnStatus.BRUKT_I_GJENNOMSNITT);
         }
+        if (!harJobbetHeleBeregningsperioden) {
+            return new Inntektsopplysninger.InntektMåned(i.beløp, i.måned, MånedslønnStatus.IKKE_RAPPORTERT_NYANSATT);
+        }
+        var skalInntektVæreRapportert = rapporteringsfristErPassert(i.måned.atDay(1), dagensDato);
         return skalInntektVæreRapportert
                ? new Inntektsopplysninger.InntektMåned(i.beløp, i.måned, MånedslønnStatus.IKKE_RAPPORTERT_MEN_BRUKT_I_GJENNOMSNITT)
                : new Inntektsopplysninger.InntektMåned(i.beløp, i.måned, MånedslønnStatus.IKKE_RAPPORTERT_RAPPORTERINGSFRIST_IKKE_PASSERT);
