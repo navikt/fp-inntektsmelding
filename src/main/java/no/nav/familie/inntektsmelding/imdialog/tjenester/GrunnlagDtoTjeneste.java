@@ -72,12 +72,13 @@ public class GrunnlagDtoTjeneste {
                 "Prøver å hente data for en forespørsel som ikke finnes, forespørselUUID: " + forespørselUuid));
 
         var organisasjonsnummer = forespørsel.getOrganisasjonsnummer();
-        var personDto = lagPersonDto(forespørsel.getAktørId(), forespørsel.getYtelseType());
+        var personInfo = personTjeneste.hentPersonInfoFraAktørId(forespørsel.getAktørId(), forespørsel.getYtelseType());
+        var personDto = lagPersonDto(personInfo);
         var organisasjonDto = lagOrganisasjonDto(organisasjonsnummer);
         var innmelderDto = lagInnmelderDto(forespørsel.getYtelseType());
         var datoForInntekter = forespørsel.erArbeidsgiverInitiertNyansatt() ? forespørsel.getFørsteUttaksdato() : forespørsel.getSkjæringstidspunkt().orElse(forespørsel.getFørsteUttaksdato());
         var inntektDtoer = lagInntekterDto(forespørsel.getUuid(),
-            forespørsel.getAktørId(),
+            personInfo,
             datoForInntekter,
             forespørsel.getOrganisasjonsnummer());
 
@@ -164,7 +165,7 @@ public class GrunnlagDtoTjeneste {
         var innmelderDto = lagInnmelderDto(ytelsetype);
 
         var inntektDtoer = lagInntekterDto(null,
-            personInfo.aktørId(),
+            personInfo,
             skjæringstidspunkt.isEqual(Tid.TIDENES_ENDE) ? førsteUttaksdato : skjæringstidspunkt,
             organisasjonsnummer);
 
@@ -222,13 +223,14 @@ public class GrunnlagDtoTjeneste {
     }
 
     private InntektsmeldingDialogDto.InntektsopplysningerDto lagInntekterDto(UUID uuid,
-                                                                             AktørIdEntitet aktørId,
+                                                                             PersonInfo personinfo,
                                                                              LocalDate skjæringstidspunkt,
                                                                              String organisasjonsnummer) {
-        var inntektsopplysninger = inntektTjeneste.hentInntekt(aktørId, skjæringstidspunkt, LocalDate.now(),
-            organisasjonsnummer);
+        var harJobbetHeleBeregningsperioden = harJobbetHeleBeregningsperioden(personinfo, skjæringstidspunkt, organisasjonsnummer);
+        var inntektsopplysninger = inntektTjeneste.hentInntekt(personinfo.aktørId(), skjæringstidspunkt, LocalDate.now(),
+            organisasjonsnummer, harJobbetHeleBeregningsperioden);
         if (uuid == null) {
-            LOG.info("Inntektsopplysninger for aktørId {} var {}", aktørId, inntektsopplysninger);
+            LOG.info("Inntektsopplysninger for aktørId {} var {}", personinfo.aktørId(), inntektsopplysninger);
         } else {
             LOG.info("Inntektsopplysninger for forespørsel {} var {}", uuid, inntektsopplysninger);
         }
@@ -242,13 +244,19 @@ public class GrunnlagDtoTjeneste {
         return new InntektsmeldingDialogDto.InntektsopplysningerDto(inntektsopplysninger.gjennomsnitt(), inntekter);
     }
 
+    private boolean harJobbetHeleBeregningsperioden(PersonInfo personinfo, LocalDate skjæringstidspunkt, String organisasjonsnummer) {
+        var førsteDagIBeregningsperiode = skjæringstidspunkt.minusMonths(3).withDayOfMonth(1);
+        return arbeidsforholdTjeneste.hentArbeidsforhold(personinfo.fødselsnummer(), skjæringstidspunkt).stream()
+            .filter(af -> af.organisasjonsnummer().equals(organisasjonsnummer))
+            .anyMatch(af -> af.ansettelsesperiode().fom().isBefore(førsteDagIBeregningsperiode));
+    }
+
     private InntektsmeldingDialogDto.OrganisasjonInfoResponseDto lagOrganisasjonDto(String organisasjonsnummer) {
         var orgdata = organisasjonTjeneste.finnOrganisasjon(organisasjonsnummer);
         return new InntektsmeldingDialogDto.OrganisasjonInfoResponseDto(orgdata.navn(), orgdata.orgnr());
     }
 
-    private InntektsmeldingDialogDto.PersonInfoResponseDto lagPersonDto(AktørIdEntitet aktørId, Ytelsetype ytelseType) {
-        var personInfo = personTjeneste.hentPersonInfoFraAktørId(aktørId, ytelseType);
+    private InntektsmeldingDialogDto.PersonInfoResponseDto lagPersonDto(PersonInfo personInfo) {
         return new InntektsmeldingDialogDto.PersonInfoResponseDto(personInfo.fornavn(), personInfo.mellomnavn(), personInfo.etternavn(),
             personInfo.fødselsnummer().getIdent(), personInfo.aktørId().getAktørId());
     }
