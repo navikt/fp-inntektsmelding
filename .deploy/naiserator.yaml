@@ -67,8 +67,6 @@ spec:
         maintenance:
           day: 1
           hour: 4
-  secureLogs:
-    enabled: true
   maskinporten:
     enabled: true
     scopes:
