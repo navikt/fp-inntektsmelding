@@ -40,8 +40,10 @@ public class InntektTjeneste {
     }
 
     // Tar inn dagens dato som parameter for å gjøre det enklere å skrive tester
-    public Inntektsopplysninger hentInntekt(AktørIdEntitet aktørId, LocalDate skjæringstidspunkt, LocalDate dagensDato, String organisasjonsnummer) {
-        var antallMånederViBerOm = finnAntallMånederViMåBeOm(skjæringstidspunkt, dagensDato);
+    public Inntektsopplysninger hentInntekt(AktørIdEntitet aktørId, LocalDate skjæringstidspunkt, LocalDate dagensDato, String organisasjonsnummer,
+                                            boolean harJobbetHeleBeregningsperioden) {
+        // Hvis søker ikke har jobbet hele beregningsperioden, bryr vi oss ikke med å justere innhenting etter rapporteringsfrist
+        var antallMånederViBerOm = harJobbetHeleBeregningsperioden ? finnAntallMånederViMåBeOm(skjæringstidspunkt, dagensDato) : 3;
         var fomDato = skjæringstidspunkt.minusMonths(antallMånederViBerOm);
         var tomDato = skjæringstidspunkt.minusMonths(1);
         var request = lagRequest(aktørId, fomDato, tomDato);
@@ -52,7 +54,7 @@ public class InntektTjeneste {
                               ? inntekter
                               : fyllInnManglendeMåneder(fomDato, antallMånederViBerOm, inntekter);
             var kuttetNedTilTreMndInntekt = fjernOverflødigeMånederOmNødvendig(alleMåneder);
-            return beregnSnittOgLeggPåStatus(kuttetNedTilTreMndInntekt, dagensDato, organisasjonsnummer);
+            return beregnSnittOgLeggPåStatus(kuttetNedTilTreMndInntekt, dagensDato, organisasjonsnummer, harJobbetHeleBeregningsperioden);
         } catch (IntegrasjonException e) {
             LOG.warn("Nedetid i inntektskomponenten, returnerer tomme måneder uten snittlønn til frontend. Fikk feil {}", e.getMessage());
             return lagTomRespons(skjæringstidspunkt, organisasjonsnummer);
@@ -66,8 +68,9 @@ public class InntektTjeneste {
         return new Inntektsopplysninger(null, organisasjonsnummer, tommeMåneder);
     }
 
-    private Inntektsopplysninger beregnSnittOgLeggPåStatus(List<Månedsinntekt> inntekter, LocalDate dagensDato, String organisasjonsnummer) {
-        var månedsinntekter = inntekter.stream().map(i -> mapInntektMedStatus(i, dagensDato)).toList();
+    private Inntektsopplysninger beregnSnittOgLeggPåStatus(List<Månedsinntekt> inntekter, LocalDate dagensDato, String organisasjonsnummer,
+                                                           boolean harJobbetHeleBeregningsperioden) {
+        var månedsinntekter = inntekter.stream().map(i -> mapInntektMedStatus(i, dagensDato, harJobbetHeleBeregningsperioden)).toList();
         var antallMndMedRapportertInntekt = månedsinntekter.stream().filter(m -> m.beløp() != null).count();
         if (antallMndMedRapportertInntekt > 3) {
             throw new TekniskException("FPINNTEKTSMELDING_INNTEKTKSKOMPONENT_1",
@@ -79,16 +82,25 @@ public class InntektTjeneste {
             .reduce(BigDecimal::add)
             .orElse(BigDecimal.ZERO)
             .max(BigDecimal.ZERO); // hvis inntekt blir < 0 setter vi den til 0 for å unngå negative tall i inntektsmeldingen
-        var snittlønn = totalLønn.divide(BigDecimal.valueOf(3), 2, RoundingMode.HALF_EVEN);
+
+        // Hvis søker ikke har jobbet hele beregningsperioden regner vi kun snitt utifra de månedene med inntekt vi faktisk finner
+        var antallMndViSkalRegneSnittFra = harJobbetHeleBeregningsperioden ? 3 : månedsinntekter.stream().filter(b -> b.beløp() != null).count();
+
+        var snittlønn = antallMndViSkalRegneSnittFra == 0
+                        ? BigDecimal.ZERO // Nyansatt uten noe rapportert lønn
+                        : totalLønn.divide(BigDecimal.valueOf(antallMndViSkalRegneSnittFra), 2, RoundingMode.HALF_EVEN);
         return new Inntektsopplysninger(snittlønn, organisasjonsnummer, månedsinntekter);
     }
 
-    private Inntektsopplysninger.InntektMåned mapInntektMedStatus(Månedsinntekt i, LocalDate dagensDato) {
-        var skalInntektVæreRapportert = rapporteringsfristErPassert(i.måned.atDay(1), dagensDato);
+    private Inntektsopplysninger.InntektMåned mapInntektMedStatus(Månedsinntekt i, LocalDate dagensDato, boolean harJobbetHeleBeregningsperioden) {
         var erInntektRapportert = i.beløp != null;
         if (erInntektRapportert) {
             return new Inntektsopplysninger.InntektMåned(i.beløp, i.måned, MånedslønnStatus.BRUKT_I_GJENNOMSNITT);
         }
+        if (!harJobbetHeleBeregningsperioden) {
+            return new Inntektsopplysninger.InntektMåned(i.beløp, i.måned, MånedslønnStatus.IKKE_RAPPORTERT_NYANSATT);
+        }
+        var skalInntektVæreRapportert = rapporteringsfristErPassert(i.måned.atDay(1), dagensDato);
         return skalInntektVæreRapportert
                ? new Inntektsopplysninger.InntektMåned(i.beløp, i.måned, MånedslønnStatus.IKKE_RAPPORTERT_MEN_BRUKT_I_GJENNOMSNITT)
                : new Inntektsopplysninger.InntektMåned(i.beløp, i.måned, MånedslønnStatus.IKKE_RAPPORTERT_RAPPORTERINGSFRIST_IKKE_PASSERT);
@@ -112,13 +124,13 @@ public class InntektTjeneste {
     private static List<Månedsinntekt> fjernOverflødigeMånederOmNødvendig(List<Månedsinntekt> alleMåneder) {
         // Er alle de tre siste månedene rapportert?
         alleMåneder.sort(Comparator.comparing(Månedsinntekt::måned));
-        var treSisteMåneder = alleMåneder.subList(alleMåneder.size()-3, alleMåneder.size());
+        var treSisteMåneder = alleMåneder.subList(alleMåneder.size() - 3, alleMåneder.size());
         if (treSisteMåneder.stream().noneMatch(i -> i.beløp() == null)) {
             return treSisteMåneder;
         }
 
         var antallMndMedSattInntekt = alleMåneder.stream().filter(m -> m.beløp != null).toList().size();
-        int overflødigeMåneder = antallMndMedSattInntekt > 3 ? antallMndMedSattInntekt-3 : 0;
+        int overflødigeMåneder = antallMndMedSattInntekt > 3 ? antallMndMedSattInntekt - 3 : 0;
         // Vi fant inntekt på flere måneder enn vi trenger, fjerner de eldste som er overflødige
         if (overflødigeMåneder > 0) {
             return alleMåneder.subList(overflødigeMåneder, alleMåneder.size());
@@ -159,7 +171,8 @@ public class InntektTjeneste {
         return new ArrayList<>(resultat);
     }
 
-    private record Månedsinntekt(YearMonth måned, BigDecimal beløp) {}
+    private record Månedsinntekt(YearMonth måned, BigDecimal beløp) {
+    }
 
     private FinnInntektRequest lagRequest(AktørIdEntitet aktørId, LocalDate fomDato, LocalDate tomDato) {
         var fomÅrMåned = YearMonth.from(fomDato);
