@@ -10,8 +10,6 @@ import java.util.stream.Collectors;
 
 import jakarta.ws.rs.ApplicationPath;
 
-import no.nav.familie.inntektsmelding.forvaltning.DialogportenForvaltningRestTjeneste;
-
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.slf4j.Logger;
@@ -23,6 +21,7 @@ import io.swagger.v3.oas.integration.SwaggerConfiguration;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.servers.Server;
+import no.nav.familie.inntektsmelding.forvaltning.DialogportenForvaltningRestTjeneste;
 import no.nav.familie.inntektsmelding.forvaltning.FpDokgenRestTjeneste;
 import no.nav.familie.inntektsmelding.forvaltning.OppgaverForvaltningRestTjeneste;
 import no.nav.familie.inntektsmelding.forvaltning.ProsessTaskRestTjeneste;
@@ -48,6 +47,7 @@ public class ForvaltningApiConfig extends ResourceConfig {
         LOG.info("Initialiserer: {}", API_URI);
         // Sikkerhet
         register(AutentiseringFilter.class);
+        register(ForvaltningAuthorizationFilter.class);
         registerOpenApi();
 
         // REST
