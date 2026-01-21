@@ -24,6 +24,7 @@ import no.nav.vedtak.felles.integrasjon.rest.TokenFlow;
 public class ArbeidsgiverAltinnTilgangerKlient {
 
     private static final Logger SECURE_LOG = LoggerFactory.getLogger("secureLogger");
+    private static final Logger LOG = LoggerFactory.getLogger(ArbeidsgiverAltinnTilgangerKlient.class);
 
     private static final Environment ENV = Environment.current();
 
@@ -60,14 +61,13 @@ public class ArbeidsgiverAltinnTilgangerKlient {
             SECURE_LOG.info("ALTINN: Bruker har ikke tilgang til orgnr: {}", orgnr);
             return false;
         }
-        if (!brukAltinnTreRessurs) {
-            if (orgNrTilTilganger.get(orgnr).contains(ALTINN_TRE_RESSURS)) {
-                SECURE_LOG.info("ALTINN: Bruker har gyldig tilgang til ressurs: {} i orgnr: {}", ALTINN_TRE_RESSURS, orgnr);
-            } else {
-                SECURE_LOG.info("ALTINN: Bruker har ikke tilgang til ressurs: {} i orgnr: {}", ALTINN_TRE_RESSURS, orgnr);
-            }
+        var tilgangsressurs = finnRiktigAltinnRessurs(brukAltinnTreRessurs);
+        var tilgangsbeslutning = orgNrTilTilganger.get(orgnr).contains(tilgangsressurs);
+
+        if (tilgangsbeslutning != orgNrTilTilganger.get(orgnr).contains(finnRiktigAltinnRessurs(!brukAltinnTreRessurs))) { // hvis tilgang er ulikt mellom Altinn 2 og Altinn 3, logg for avstemming.
+            LOG.info("ALTINN: Tilgangsbeslutninger er ulike! Altinn 2: {}, Altinn 3: {}.", tilgangsbeslutning, !tilgangsbeslutning);
         }
-        return orgNrTilTilganger.get(orgnr).contains(finnRiktigAltinnRessurs(brukAltinnTreRessurs));
+        return tilgangsbeslutning;
     }
 
     public List<String> hentBedrifterArbeidsgiverHarTilgangTil(boolean brukAltinnTreRessurs) {
@@ -78,7 +78,7 @@ public class ArbeidsgiverAltinnTilgangerKlient {
         } else {
             loggTilganger(tilgangTilOrgNr, ALTINN_TO_TJENESTE);
         }
-        
+
         return tilgangTilOrgNr.getOrDefault(finnRiktigAltinnRessurs(brukAltinnTreRessurs), List.of())
             .stream()
             .sorted()
