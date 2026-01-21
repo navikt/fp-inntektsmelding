@@ -46,7 +46,7 @@ class ArbeidsgiverAltinnTilgangerKlientTest {
         var altinnAutoriseringKlient = new ArbeidsgiverAltinnTilgangerKlient(klient);
 
         when(klient.send(any(RestRequest.class), any())).thenReturn(lagOrgNrTilTilgangResponse(TEST_ORGNR, NAV_TEST_RESSURS, ALTINN_TO_TJENESTE));
-        assertThat(altinnAutoriseringKlient.harTilgangTilBedriften(TEST_ORGNR, false)).isTrue();
+        assertThat(altinnAutoriseringKlient.harTilgangTilBedriften(TEST_ORGNR)).isTrue();
         verify(klient).send(any(RestRequest.class), any());
     }
 
@@ -55,16 +55,7 @@ class ArbeidsgiverAltinnTilgangerKlientTest {
         var altinnAutoriseringKlient = new ArbeidsgiverAltinnTilgangerKlient(klient);
 
         when(klient.send(any(RestRequest.class), any())).thenReturn(lagOrgNrTilTilgangResponse(TEST_ORGNR, NAV_TEST_RESSURS, ALTINN_TO_TJENESTE));
-        assertThat(altinnAutoriseringKlient.harTilgangTilBedriften("000000000", false)).isFalse();
-        verify(klient).send(any(RestRequest.class), any());
-    }
-
-    @Test
-    void sjekkTilgang__har_tilgang_til_en_bedrift_altinn_tre_ressurs_ok() {
-        var altinnAutoriseringKlient = new ArbeidsgiverAltinnTilgangerKlient(klient);
-
-        when(klient.send(any(RestRequest.class), any())).thenReturn(lagOrgNrTilTilgangResponse(TEST_ORGNR, NAV_TEST_RESSURS, ALTINN_TO_TJENESTE));
-        assertThat(altinnAutoriseringKlient.harTilgangTilBedriften(TEST_ORGNR, true)).isTrue();
+        assertThat(altinnAutoriseringKlient.harTilgangTilBedriften("000000000")).isFalse();
         verify(klient).send(any(RestRequest.class), any());
     }
 
@@ -73,31 +64,7 @@ class ArbeidsgiverAltinnTilgangerKlientTest {
         var altinnAutoriseringKlient = new ArbeidsgiverAltinnTilgangerKlient(klient);
 
         when(klient.send(any(RestRequest.class), any())).thenReturn(lagOrgNrTilTilgangResponse(TEST_ORGNR, NAV_TEST_RESSURS, ALTINN_TO_TJENESTE));
-        assertThat(altinnAutoriseringKlient.harTilgangTilBedriften("000000000", true)).isFalse();
-        verify(klient).send(any(RestRequest.class), any());
-    }
-
-    @Test
-    void sjekkTilgang__hent_liste_med_bedrifter_med_tilgang_til_altinn_3_ressurs_ok() {
-        var altinnAutoriseringKlient = new ArbeidsgiverAltinnTilgangerKlient(klient);
-        when(klient.send(any(RestRequest.class), any())).thenReturn(lagTilgangTilOrgNrResponse(NAV_TEST_RESSURS, TEST_ORGNR));
-        assertThat(altinnAutoriseringKlient.hentBedrifterArbeidsgiverHarTilgangTil(true)).isNotEmpty().contains(TEST_ORGNR);
-        verify(klient).send(any(RestRequest.class), any());
-    }
-
-    @Test
-    void sjekkTilgang__hent_liste_med_bedrifter_med_tilgang_til_altinn_3_ressurs_nok() {
-        var altinnAutoriseringKlient = new ArbeidsgiverAltinnTilgangerKlient(klient);
-        when(klient.send(any(RestRequest.class), any())).thenReturn(lagTilgangTilOrgNrResponse(ALTINN_TO_TJENESTE, TEST_ORGNR));
-        assertThat(altinnAutoriseringKlient.hentBedrifterArbeidsgiverHarTilgangTil(true)).isEmpty();
-        verify(klient).send(any(RestRequest.class), any());
-    }
-
-    @Test
-    void sjekkTilgang__hent_liste_med_bedrifter_med_tilgang_til_altinn_3_ressurs_ikke_tilgang_til_bedrift_nok() {
-        var altinnAutoriseringKlient = new ArbeidsgiverAltinnTilgangerKlient(klient);
-        when(klient.send(any(RestRequest.class), any())).thenReturn(lagTilgangTilOrgNrResponse(ALTINN_TO_TJENESTE, "000000000"));
-        assertThat(altinnAutoriseringKlient.hentBedrifterArbeidsgiverHarTilgangTil(true)).isEmpty();
+        assertThat(altinnAutoriseringKlient.harTilgangTilBedriften("000000000")).isFalse();
         verify(klient).send(any(RestRequest.class), any());
     }
 
@@ -105,7 +72,7 @@ class ArbeidsgiverAltinnTilgangerKlientTest {
     void sjekkTilgang__hent_liste_med_bedrifter_med_tilgang_til_altinn_2_tjeneste_ok() {
         var altinnAutoriseringKlient = new ArbeidsgiverAltinnTilgangerKlient(klient);
         when(klient.send(any(RestRequest.class), any())).thenReturn(lagTilgangTilOrgNrResponse(ALTINN_TO_TJENESTE, TEST_ORGNR));
-        assertThat(altinnAutoriseringKlient.hentBedrifterArbeidsgiverHarTilgangTil(false)).isNotEmpty().contains(TEST_ORGNR);
+        assertThat(altinnAutoriseringKlient.hentBedrifterArbeidsgiverHarTilgangTil()).isNotEmpty().contains(TEST_ORGNR);
         verify(klient).send(any(RestRequest.class), any());
     }
 
@@ -113,7 +80,7 @@ class ArbeidsgiverAltinnTilgangerKlientTest {
     void sjekkTilgang__hent_liste_med_bedrifter_med_tilgang_til_altinn_2_tjeneste_nok() {
         var altinnAutoriseringKlient = new ArbeidsgiverAltinnTilgangerKlient(klient);
         when(klient.send(any(RestRequest.class), any())).thenReturn(lagTilgangTilOrgNrResponse(NAV_TEST_RESSURS, TEST_ORGNR));
-        assertThat(altinnAutoriseringKlient.hentBedrifterArbeidsgiverHarTilgangTil(false)).isEmpty();
+        assertThat(altinnAutoriseringKlient.hentBedrifterArbeidsgiverHarTilgangTil()).isEmpty();
         verify(klient).send(any(RestRequest.class), any());
     }
 
@@ -121,7 +88,7 @@ class ArbeidsgiverAltinnTilgangerKlientTest {
     void sjekkTilgang__hent_liste_med_bedrifter_med_tilgang_til_altinn_2_tjeneste_ikke_tilgang_til_bedrift_nok() {
         var altinnAutoriseringKlient = new ArbeidsgiverAltinnTilgangerKlient(klient);
         when(klient.send(any(RestRequest.class), any())).thenReturn(lagTilgangTilOrgNrResponse(NAV_TEST_RESSURS, "000000000"));
-        assertThat(altinnAutoriseringKlient.hentBedrifterArbeidsgiverHarTilgangTil(false)).isEmpty();
+        assertThat(altinnAutoriseringKlient.hentBedrifterArbeidsgiverHarTilgangTil()).isEmpty();
         verify(klient).send(any(RestRequest.class), any());
     }
 

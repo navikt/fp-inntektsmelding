@@ -2,7 +2,6 @@ package no.nav.familie.inntektsmelding.pip;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -18,7 +17,6 @@ import no.nav.familie.inntektsmelding.integrasjoner.altinn.ArbeidsgiverAltinnTil
 @ExtendWith(MockitoExtension.class)
 class AltinnTilgangTjenesteTest {
 
-    protected static final boolean BRUK_ALTINN_TRE_RESSURS = false;
     protected static final String ORG_NR = "123456789";
 
     @Mock
@@ -33,41 +31,41 @@ class AltinnTilgangTjenesteTest {
 
     @Test
     void harTilgangTilBedriften_skal_returnere_true_når_tilgang_finnes() {
-        when(arbeidsgiverAltinnTilgangerKlient.harTilgangTilBedriften(eq(ORG_NR), anyBoolean())).thenReturn(true);
+        when(arbeidsgiverAltinnTilgangerKlient.harTilgangTilBedriften(eq(ORG_NR))).thenReturn(true);
 
         boolean harTilgang = altinnTilgangTjeneste.harTilgangTilBedriften(ORG_NR);
 
         assertTrue(harTilgang);
-        verify(arbeidsgiverAltinnTilgangerKlient).harTilgangTilBedriften(ORG_NR, BRUK_ALTINN_TRE_RESSURS);
+        verify(arbeidsgiverAltinnTilgangerKlient).harTilgangTilBedriften(ORG_NR);
     }
 
     @Test
     void harTilgangTilBedriften_skal_returnere_false_når_tilgang_ikke_finnes() {
-        when(arbeidsgiverAltinnTilgangerKlient.harTilgangTilBedriften(eq(ORG_NR), anyBoolean())).thenReturn(false);
+        when(arbeidsgiverAltinnTilgangerKlient.harTilgangTilBedriften(eq(ORG_NR))).thenReturn(false);
 
         boolean harTilgang = altinnTilgangTjeneste.harTilgangTilBedriften(ORG_NR);
 
         assertFalse(harTilgang);
-        verify(arbeidsgiverAltinnTilgangerKlient).harTilgangTilBedriften(ORG_NR, BRUK_ALTINN_TRE_RESSURS);
+        verify(arbeidsgiverAltinnTilgangerKlient).harTilgangTilBedriften(ORG_NR);
     }
 
     @Test
     void manglerTilgangTilBedriften_skal_returnere_true_når_tilgang_ikke_finnes() {
-        when(arbeidsgiverAltinnTilgangerKlient.harTilgangTilBedriften(eq(ORG_NR), anyBoolean())).thenReturn(false);
+        when(arbeidsgiverAltinnTilgangerKlient.harTilgangTilBedriften(eq(ORG_NR))).thenReturn(false);
 
         boolean manglerTilgang = altinnTilgangTjeneste.manglerTilgangTilBedriften(ORG_NR);
 
         assertTrue(manglerTilgang);
-        verify(arbeidsgiverAltinnTilgangerKlient).harTilgangTilBedriften(ORG_NR, BRUK_ALTINN_TRE_RESSURS);
+        verify(arbeidsgiverAltinnTilgangerKlient).harTilgangTilBedriften(ORG_NR);
     }
 
     @Test
     void manglerTilgangTilBedriften_skal_returnere_false_når_tilgang_finnes() {
-        when(arbeidsgiverAltinnTilgangerKlient.harTilgangTilBedriften(eq(ORG_NR), anyBoolean())).thenReturn(true);
+        when(arbeidsgiverAltinnTilgangerKlient.harTilgangTilBedriften(eq(ORG_NR))).thenReturn(true);
 
         boolean manglerTilgang = altinnTilgangTjeneste.manglerTilgangTilBedriften(ORG_NR);
 
         assertFalse(manglerTilgang);
-        verify(arbeidsgiverAltinnTilgangerKlient).harTilgangTilBedriften(ORG_NR, BRUK_ALTINN_TRE_RESSURS);
+        verify(arbeidsgiverAltinnTilgangerKlient).harTilgangTilBedriften(ORG_NR);
     }
 }
