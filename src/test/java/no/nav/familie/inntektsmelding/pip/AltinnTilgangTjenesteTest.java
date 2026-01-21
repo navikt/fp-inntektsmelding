@@ -2,7 +2,6 @@ package no.nav.familie.inntektsmelding.pip;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -31,7 +30,7 @@ class AltinnTilgangTjenesteTest {
 
     @Test
     void harTilgangTilBedriften_skal_returnere_true_når_tilgang_finnes() {
-        when(arbeidsgiverAltinnTilgangerKlient.harTilgangTilBedriften(eq(ORG_NR))).thenReturn(true);
+        when(arbeidsgiverAltinnTilgangerKlient.harTilgangTilBedriften(ORG_NR)).thenReturn(true);
 
         boolean harTilgang = altinnTilgangTjeneste.harTilgangTilBedriften(ORG_NR);
 
@@ -41,7 +40,7 @@ class AltinnTilgangTjenesteTest {
 
     @Test
     void harTilgangTilBedriften_skal_returnere_false_når_tilgang_ikke_finnes() {
-        when(arbeidsgiverAltinnTilgangerKlient.harTilgangTilBedriften(eq(ORG_NR))).thenReturn(false);
+        when(arbeidsgiverAltinnTilgangerKlient.harTilgangTilBedriften(ORG_NR)).thenReturn(false);
 
         boolean harTilgang = altinnTilgangTjeneste.harTilgangTilBedriften(ORG_NR);
 
@@ -51,7 +50,7 @@ class AltinnTilgangTjenesteTest {
 
     @Test
     void manglerTilgangTilBedriften_skal_returnere_true_når_tilgang_ikke_finnes() {
-        when(arbeidsgiverAltinnTilgangerKlient.harTilgangTilBedriften(eq(ORG_NR))).thenReturn(false);
+        when(arbeidsgiverAltinnTilgangerKlient.harTilgangTilBedriften(ORG_NR)).thenReturn(false);
 
         boolean manglerTilgang = altinnTilgangTjeneste.manglerTilgangTilBedriften(ORG_NR);
 
@@ -61,7 +60,7 @@ class AltinnTilgangTjenesteTest {
 
     @Test
     void manglerTilgangTilBedriften_skal_returnere_false_når_tilgang_finnes() {
-        when(arbeidsgiverAltinnTilgangerKlient.harTilgangTilBedriften(eq(ORG_NR))).thenReturn(true);
+        when(arbeidsgiverAltinnTilgangerKlient.harTilgangTilBedriften(ORG_NR)).thenReturn(true);
 
         boolean manglerTilgang = altinnTilgangTjeneste.manglerTilgangTilBedriften(ORG_NR);
 

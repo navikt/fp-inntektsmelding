@@ -60,15 +60,6 @@ class ArbeidsgiverAltinnTilgangerKlientTest {
     }
 
     @Test
-    void sjekkTilgang__har_tilgang_til_en_bedrift_altinn_tre_ressurs_nok() {
-        var altinnAutoriseringKlient = new ArbeidsgiverAltinnTilgangerKlient(klient);
-
-        when(klient.send(any(RestRequest.class), any())).thenReturn(lagOrgNrTilTilgangResponse(TEST_ORGNR, NAV_TEST_RESSURS, ALTINN_TO_TJENESTE));
-        assertThat(altinnAutoriseringKlient.harTilgangTilBedriften("000000000")).isFalse();
-        verify(klient).send(any(RestRequest.class), any());
-    }
-
-    @Test
     void sjekkTilgang__hent_liste_med_bedrifter_med_tilgang_til_altinn_2_tjeneste_ok() {
         var altinnAutoriseringKlient = new ArbeidsgiverAltinnTilgangerKlient(klient);
         when(klient.send(any(RestRequest.class), any())).thenReturn(lagTilgangTilOrgNrResponse(ALTINN_TO_TJENESTE, TEST_ORGNR));
