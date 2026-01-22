@@ -67,7 +67,7 @@ public class AaregRestKlient {
                 return Collections.emptyList();
             }
             throw e;
-        } catch (UriBuilderException | IllegalArgumentException e) {
+        } catch (UriBuilderException | IllegalArgumentException _) {
             throw new IllegalArgumentException("Utviklerfeil syntax-exception for finnArbeidsforholdForArbeidstaker");
         }
     }

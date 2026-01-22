@@ -24,11 +24,13 @@ import no.nav.vedtak.felles.integrasjon.rest.TokenFlow;
 public class ArbeidsgiverAltinnTilgangerKlient {
 
     private static final Logger SECURE_LOG = LoggerFactory.getLogger("secureLogger");
+    private static final Logger LOG = LoggerFactory.getLogger(ArbeidsgiverAltinnTilgangerKlient.class);
 
     private static final Environment ENV = Environment.current();
 
     public static final String ALTINN_TO_TJENESTE = "4936:1";
     public static final String ALTINN_TRE_RESSURS = ENV.getRequiredProperty("altinn.tre.inntektsmelding.ressurs");
+
     private static final String ALTINN_TILGANGER_PATH = "/altinn-tilganger";
 
     private static ArbeidsgiverAltinnTilgangerKlient instance = new ArbeidsgiverAltinnTilgangerKlient();
@@ -54,44 +56,43 @@ public class ArbeidsgiverAltinnTilgangerKlient {
         return inst;
     }
 
-    public boolean harTilgangTilBedriften(String orgnr, boolean brukAltinnTreRessurs) {
-        var orgNrTilTilganger = hentTilganger().orgNrTilTilganger();
-        if (orgNrTilTilganger == null || orgNrTilTilganger.isEmpty() || !orgNrTilTilganger.containsKey(orgnr)) {
+    public boolean harTilgangTilBedriften(String orgnr) {
+        var altinnRessurserBrukerHarTilgangTilPerOrgnr = hentTilganger().orgNrTilTilganger();
+
+        if (altinnRessurserBrukerHarTilgangTilPerOrgnr == null || altinnRessurserBrukerHarTilgangTilPerOrgnr.isEmpty()
+            || !altinnRessurserBrukerHarTilgangTilPerOrgnr.containsKey(orgnr)) {
             SECURE_LOG.info("ALTINN: Bruker har ikke tilgang til orgnr: {}", orgnr);
             return false;
         }
-        if (!brukAltinnTreRessurs) {
-            if (orgNrTilTilganger.get(orgnr).contains(ALTINN_TRE_RESSURS)) {
-                SECURE_LOG.info("ALTINN: Bruker har gyldig tilgang til ressurs: {} i orgnr: {}", ALTINN_TRE_RESSURS, orgnr);
-            } else {
-                SECURE_LOG.info("ALTINN: Bruker har ikke tilgang til ressurs: {} i orgnr: {}", ALTINN_TRE_RESSURS, orgnr);
-            }
+
+        var brukersTilgangerForOrgnr = altinnRessurserBrukerHarTilgangTilPerOrgnr.get(orgnr);
+
+        //TODO: Må byttes til ALTINN_TRE_RESSURS når Altinn 3 ressurs skal brukes i produksjon og rydde avstemming.
+        var tilgangsbeslutning = brukersTilgangerForOrgnr.contains(ALTINN_TO_TJENESTE);
+
+        if (tilgangsbeslutning != brukersTilgangerForOrgnr.contains(ALTINN_TRE_RESSURS)) { // hvis tilgang er ulikt mellom Altinn 2 og Altinn 3, logg for avstemming.
+            LOG.info("ALTINN: Tilgangsbeslutninger er ulike for bruker! Altinn 2: {}, Altinn 3: {}.", tilgangsbeslutning, !tilgangsbeslutning);
+            SECURE_LOG.info("ALTINN: Brukers tilganger for orgnr {}: {}", orgnr, brukersTilgangerForOrgnr);
         }
-        return orgNrTilTilganger.get(orgnr).contains(finnRiktigAltinnRessurs(brukAltinnTreRessurs));
+        return tilgangsbeslutning;
     }
 
-    public List<String> hentBedrifterArbeidsgiverHarTilgangTil(boolean brukAltinnTreRessurs) {
-        var tilgangTilOrgNr = hentTilganger().tilgangTilOrgNr();
+    public List<String> hentBedrifterArbeidsgiverHarTilgangTil() {
+        var orgNrBrukerHarTilgangTilPerRessurs = hentTilganger().tilgangTilOrgNr();
 
-        if (!brukAltinnTreRessurs) {
-            loggTilganger(tilgangTilOrgNr, ALTINN_TRE_RESSURS);
-        } else {
-            loggTilganger(tilgangTilOrgNr, ALTINN_TO_TJENESTE);
+        //TODO: Må byttes til ALTINN_TRE_RESSURS når Altinn 3 ressurs skal brukes i produksjon og rydde avstemming.
+        var orgNrMedGittTilgangIAltinn2 = hentSortertListeMedOrgNrMedGittTilgang(orgNrBrukerHarTilgangTilPerRessurs, ALTINN_TO_TJENESTE);
+        var orgNrMedGittTilgangIAltinn3 = hentSortertListeMedOrgNrMedGittTilgang(orgNrBrukerHarTilgangTilPerRessurs, ALTINN_TRE_RESSURS);
+
+        if (!orgNrMedGittTilgangIAltinn2.equals(orgNrMedGittTilgangIAltinn3)) { // listene må være sortert for å kunne sammenlignes direkte.
+            LOG.info("ALTINN: Uoverensstemmelse i lister over bedrifter bruker har tilgang til mellom Altinn 2 og Altinn 3.");
+            SECURE_LOG.info("ALTINN: Bruker har tilgang til følgende bedrifter: Altinn2: {}, Altinn3: {}", orgNrMedGittTilgangIAltinn2, orgNrMedGittTilgangIAltinn3);
         }
-        
-        return tilgangTilOrgNr.getOrDefault(finnRiktigAltinnRessurs(brukAltinnTreRessurs), List.of())
-            .stream()
-            .sorted()
-            .toList();
+        return orgNrMedGittTilgangIAltinn2;
     }
 
-    private static String finnRiktigAltinnRessurs(boolean brukAltinnTreRessurs) {
-        return brukAltinnTreRessurs ? ALTINN_TRE_RESSURS : ALTINN_TO_TJENESTE;
-    }
-
-    private static void loggTilganger(Map<String, List<String>> tilgangTilOrgNr, String altinnRessurs) {
-        SECURE_LOG.info("ALTINN: Bruker har tilgang til følgende bedrifter: {} gjennom: {}", tilgangTilOrgNr.getOrDefault(altinnRessurs, List.of()),
-            altinnRessurs);
+    private static List<String> hentSortertListeMedOrgNrMedGittTilgang(Map<String, List<String>> orgNrBrukerHarTilgangTilPerRessurs, String ressurs) {
+        return orgNrBrukerHarTilgangTilPerRessurs.getOrDefault(ressurs, List.of()).stream().sorted().toList();
     }
 
     private ArbeidsgiverAltinnTilgangerResponse hentTilganger() {
