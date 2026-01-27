@@ -11,9 +11,6 @@ import java.util.stream.Collectors;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import no.nav.familie.inntektsmelding.forespørsel.modell.ForespørselEntitet;
 import no.nav.familie.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 import no.nav.familie.inntektsmelding.imdialog.rest.InntektsmeldingDialogDto;
@@ -39,7 +36,6 @@ import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
 
 @ApplicationScoped
 public class GrunnlagDtoTjeneste {
-    private static final Logger LOG = LoggerFactory.getLogger(GrunnlagDtoTjeneste.class);
     private ForespørselBehandlingTjeneste forespørselBehandlingTjeneste;
     private PersonTjeneste personTjeneste;
     private OrganisasjonTjeneste organisasjonTjeneste;
@@ -77,8 +73,7 @@ public class GrunnlagDtoTjeneste {
         var organisasjonDto = lagOrganisasjonDto(organisasjonsnummer);
         var innmelderDto = lagInnmelderDto(forespørsel.getYtelseType());
         var datoForInntekter = forespørsel.erArbeidsgiverInitiertNyansatt() ? forespørsel.getFørsteUttaksdato() : forespørsel.getSkjæringstidspunkt().orElse(forespørsel.getFørsteUttaksdato());
-        var inntektDtoer = lagInntekterDto(forespørsel.getUuid(),
-            personInfo,
+        var inntektDtoer = lagInntekterDto(personInfo,
             datoForInntekter,
             forespørsel.getOrganisasjonsnummer());
 
@@ -164,8 +159,7 @@ public class GrunnlagDtoTjeneste {
         var organisasjonDto = lagOrganisasjonDto(organisasjonsnummer);
         var innmelderDto = lagInnmelderDto(ytelsetype);
 
-        var inntektDtoer = lagInntekterDto(null,
-            personInfo,
+        var inntektDtoer = lagInntekterDto(personInfo,
             skjæringstidspunkt.isEqual(Tid.TIDENES_ENDE) ? førsteUttaksdato : skjæringstidspunkt,
             organisasjonsnummer);
 
@@ -222,18 +216,12 @@ public class GrunnlagDtoTjeneste {
             personInfo.telefonnummer());
     }
 
-    private InntektsmeldingDialogDto.InntektsopplysningerDto lagInntekterDto(UUID uuid,
-                                                                             PersonInfo personinfo,
+    private InntektsmeldingDialogDto.InntektsopplysningerDto lagInntekterDto(PersonInfo personinfo,
                                                                              LocalDate skjæringstidspunkt,
                                                                              String organisasjonsnummer) {
         var harJobbetHeleBeregningsperioden = harJobbetHeleBeregningsperioden(personinfo, skjæringstidspunkt, organisasjonsnummer);
         var inntektsopplysninger = inntektTjeneste.hentInntekt(personinfo.aktørId(), skjæringstidspunkt, LocalDate.now(),
             organisasjonsnummer, harJobbetHeleBeregningsperioden);
-        if (uuid == null) {
-            LOG.info("Inntektsopplysninger for aktørId {} var {}", personinfo.aktørId(), inntektsopplysninger);
-        } else {
-            LOG.info("Inntektsopplysninger for forespørsel {} var {}", uuid, inntektsopplysninger);
-        }
         var inntekter = inntektsopplysninger.måneder()
             .stream()
             .map(i -> new InntektsmeldingDialogDto.InntektsopplysningerDto.MånedsinntektDto(i.månedÅr().atDay(1),

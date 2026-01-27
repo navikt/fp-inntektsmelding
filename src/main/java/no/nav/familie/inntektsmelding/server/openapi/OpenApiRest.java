@@ -1,21 +1,19 @@
 package no.nav.familie.inntektsmelding.server.openapi;
 
-import io.swagger.v3.jaxrs2.integration.resources.OpenApiResource;
-import io.swagger.v3.oas.annotations.Operation;
-import jakarta.servlet.ServletConfig;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.*;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
+
+import io.swagger.v3.jaxrs2.integration.resources.OpenApiResource;
+import io.swagger.v3.oas.annotations.Operation;
 import no.nav.familie.inntektsmelding.server.auth.api.AutentisertMedAzure;
 
 public class OpenApiRest extends OpenApiResource {
-    @Context
-    ServletConfig config;
-
-    @Context
-    Application app;
-
     @GET
     @Produces({MediaType.APPLICATION_JSON, "application/yaml"})
     @Operation(hidden = true)
