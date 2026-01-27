@@ -7,13 +7,13 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 
 import no.nav.vedtak.mapper.json.DefaultJsonMapper;
 
 class DialogportenRequestTest {
 
-    private ObjectMapper OBJECT_MAPPER = DefaultJsonMapper.getObjectMapper();
+    private static final JsonMapper JSON_MAPPER = DefaultJsonMapper.getJsonMapper();
 
     @Test
     void serdes_test() throws JsonProcessingException {
@@ -32,9 +32,9 @@ class DialogportenRequestTest {
             null,
             null);
 
-        var serialized = OBJECT_MAPPER.writeValueAsString(request);
+        var serialized = JSON_MAPPER.writeValueAsString(request);
 
-        var deserialized = OBJECT_MAPPER.readValue(serialized, DialogportenRequest.class);
+        var deserialized = JSON_MAPPER.readValue(serialized, DialogportenRequest.class);
 
         assertThat(deserialized).isEqualTo(request);
     }
