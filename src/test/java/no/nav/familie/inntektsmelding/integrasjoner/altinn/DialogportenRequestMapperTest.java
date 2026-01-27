@@ -24,10 +24,6 @@ class DialogportenRequestMapperTest {
     private final String INNTEKTSMELDING_SKJEMA_LENKE = "https://arbeidsgiver.nav.no/fp-im-dialog";
     private final LocalDate FØRSTE_UTTAKSDATO = LocalDate.now().plusWeeks(4);
 
-    @BeforeEach
-    void setUp() {
-    }
-
     @Test
     void opprettDialogRequest() {
         var party = "urn:altinn:organization:identifier-no:999999999";

@@ -1,6 +1,6 @@
 package no.nav.familie.inntektsmelding.database;
 
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
 import no.nav.foreldrepenger.konfig.Environment;
@@ -11,7 +11,7 @@ public class JpaExtension extends EntityManagerAwareExtension {
     private static final PostgreSQLContainer TEST_DATABASE;
 
     static {
-        TEST_DATABASE = new PostgreSQLContainer<>(DockerImageName.parse(TEST_DB_CONTAINER))
+        TEST_DATABASE = new PostgreSQLContainer(DockerImageName.parse(TEST_DB_CONTAINER))
             .withReuse(true);
         TEST_DATABASE.start();
         TestDatabaseInit.settOppDatasourceOgMigrer(TEST_DATABASE.getJdbcUrl(), TEST_DATABASE.getUsername(), TEST_DATABASE.getPassword());
