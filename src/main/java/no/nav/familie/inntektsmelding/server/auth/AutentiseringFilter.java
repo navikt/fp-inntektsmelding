@@ -91,12 +91,12 @@ public class AutentiseringFilter implements ContainerRequestFilter, ContainerRes
 
     private void assertValidAnnotation(Annotation annotering, ContainerRequestContext req) {
         switch (annotering) {
-            case UtenAutentisering ignored -> {
+            case UtenAutentisering _ -> {
                 LOG.warn("Åpen endepunkt '{}' uten autentisering.", req.getMethod());
                 validerIkkeAutentisertKontekst();
             }
-            case AutentisertMedAzure ignored -> validerInternKontekst();
-            case AutentisertMedTokenX ignored -> validerBorgerKontekst();
+            case AutentisertMedAzure _ -> validerInternKontekst();
+            case AutentisertMedTokenX _ -> validerBorgerKontekst();
             case null, default -> throw new WebApplicationException("Mangler en gyldig annotering", Response.Status.UNAUTHORIZED);
         }
     }
