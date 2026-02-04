@@ -24,7 +24,7 @@
     }
   ],
   "db": {
-    "dbVersion": "POSTGRES_17",
+    "dbVersion": "POSTGRES_18",
     "dbTier": "db-custom-1-3840",
     "dbDiskAutoresize": "true",
     "dbHighAvailability": "true",
