@@ -24,7 +24,7 @@
     }
   ],
   "db": {
-    "dbVersion": "POSTGRES_17",
+    "dbVersion": "POSTGRES_18",
     "dbTier": "db-f1-micro",
     "dbDiskAutoresize": "false",
     "dbHighAvailability": "false",
