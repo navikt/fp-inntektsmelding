@@ -23,8 +23,13 @@ import no.nav.vedtak.felles.integrasjon.rest.RestRequest;
 import no.nav.vedtak.sikkerhet.kontekst.BasisKontekst;
 import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @ExtendWith(MockitoExtension.class)
 class Altinn2ArbeidsgiverAltinnTilgangerKlientTest {
+
+    private static final Logger LOG = LoggerFactory.getLogger(Altinn2ArbeidsgiverAltinnTilgangerKlientTest.class);
 
     protected static final String NAV_TEST_RESSURS = "nav_test_ressurs";
     protected static final String TEST_ORGNR = "999999999";
@@ -73,6 +78,7 @@ class Altinn2ArbeidsgiverAltinnTilgangerKlientTest {
 
     @Test
     void sjekkTilgang__hent_liste_med_bedrifter_med_tilgang_til_altinn_2_tjeneste_ok() {
+        LOG.warn("Togglen: {} er satt til {}, og skal ikke brukes i denne testen", BRUK_ALTINN_TRE_FOR_TILGANGSKONTROLL_TOGGLE, System.getProperty(BRUK_ALTINN_TRE_FOR_TILGANGSKONTROLL_TOGGLE));
         var altinnAutoriseringKlient = new ArbeidsgiverAltinnTilgangerKlient(klient);
         when(klient.send(any(RestRequest.class), any())).thenReturn(lagTilgangTilOrgNrResponse(ALTINN_TO_TJENESTE, TEST_ORGNR));
         assertThat(altinnAutoriseringKlient.hentBedrifterArbeidsgiverHarTilgangTil()).isNotEmpty().contains(TEST_ORGNR);
@@ -81,6 +87,7 @@ class Altinn2ArbeidsgiverAltinnTilgangerKlientTest {
 
     @Test
     void sjekkTilgang__hent_liste_med_bedrifter_med_tilgang_til_altinn_2_tjeneste_nok() {
+        LOG.warn("Togglen: {} er satt til {}, og skal ikke brukes i denne testen", BRUK_ALTINN_TRE_FOR_TILGANGSKONTROLL_TOGGLE, System.getProperty(BRUK_ALTINN_TRE_FOR_TILGANGSKONTROLL_TOGGLE));
         var altinnAutoriseringKlient = new ArbeidsgiverAltinnTilgangerKlient(klient);
         when(klient.send(any(RestRequest.class), any())).thenReturn(lagTilgangTilOrgNrResponse(NAV_TEST_RESSURS, TEST_ORGNR));
         assertThat(altinnAutoriseringKlient.hentBedrifterArbeidsgiverHarTilgangTil()).isEmpty();
@@ -89,6 +96,7 @@ class Altinn2ArbeidsgiverAltinnTilgangerKlientTest {
 
     @Test
     void sjekkTilgang__hent_liste_med_bedrifter_med_tilgang_til_altinn_2_tjeneste_ikke_tilgang_til_bedrift_nok() {
+        LOG.warn("Togglen: {} er satt til {}, og skal ikke brukes i denne testen", BRUK_ALTINN_TRE_FOR_TILGANGSKONTROLL_TOGGLE, System.getProperty(BRUK_ALTINN_TRE_FOR_TILGANGSKONTROLL_TOGGLE));
         var altinnAutoriseringKlient = new ArbeidsgiverAltinnTilgangerKlient(klient);
         when(klient.send(any(RestRequest.class), any())).thenReturn(lagTilgangTilOrgNrResponse(NAV_TEST_RESSURS, "000000000"));
         assertThat(altinnAutoriseringKlient.hentBedrifterArbeidsgiverHarTilgangTil()).isEmpty();

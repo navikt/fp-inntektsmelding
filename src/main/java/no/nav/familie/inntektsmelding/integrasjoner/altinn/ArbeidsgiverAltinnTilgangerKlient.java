@@ -31,7 +31,7 @@ public class ArbeidsgiverAltinnTilgangerKlient {
     public static final String ALTINN_TO_TJENESTE = "4936:1";
     public static final String ALTINN_TRE_RESSURS = ENV.getRequiredProperty("altinn.tre.inntektsmelding.ressurs");
 
-    public static final boolean BRUK_ALTINN_TRE_FOR_TILGANGSKONTROLL = ENV.getProperty("bruk.altinn.tre.for.tilgangskontroll.toggle", boolean.class, true);
+    public static final boolean BRUK_ALTINN_TRE_FOR_TILGANGSKONTROLL = ENV.getProperty("bruk.altinn.tre.for.tilgangskontroll.toggle", boolean.class, false);
 
     private static final String ALTINN_TILGANGER_PATH = "/altinn-tilganger";
 
@@ -77,6 +77,8 @@ public class ArbeidsgiverAltinnTilgangerKlient {
             LOG.info("ALTINN: Tilgangsbeslutninger er ulike for bruker! Altinn 2: {}, Altinn 3: {}.", tilgangsbeslutningAltinn2, tilgangsbeslutningAltinn3);
             SECURE_LOG.info("ALTINN: Brukers tilganger for orgnr {}: {}", orgnr, brukersTilgangerForOrgnr);
         }
+
+        LOG.warn("Togglen: er satt til {}.", BRUK_ALTINN_TRE_FOR_TILGANGSKONTROLL);
         return BRUK_ALTINN_TRE_FOR_TILGANGSKONTROLL ? tilgangsbeslutningAltinn3 : tilgangsbeslutningAltinn2;
     }
 
@@ -91,6 +93,7 @@ public class ArbeidsgiverAltinnTilgangerKlient {
             LOG.info("ALTINN: Uoverensstemmelse i lister over bedrifter bruker har tilgang til mellom Altinn 2 og Altinn 3.");
             SECURE_LOG.info("ALTINN: Bruker har tilgang til følgende bedrifter: Altinn2: {}, Altinn3: {}", orgNrMedGittTilgangIAltinn2, orgNrMedGittTilgangIAltinn3);
         }
+        LOG.warn("Togglen: er satt til {}.", BRUK_ALTINN_TRE_FOR_TILGANGSKONTROLL);
         return BRUK_ALTINN_TRE_FOR_TILGANGSKONTROLL ? orgNrMedGittTilgangIAltinn3 : orgNrMedGittTilgangIAltinn2;
     }
 
