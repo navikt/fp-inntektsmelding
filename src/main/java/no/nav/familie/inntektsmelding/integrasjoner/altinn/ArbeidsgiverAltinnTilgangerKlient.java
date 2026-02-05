@@ -31,7 +31,7 @@ public class ArbeidsgiverAltinnTilgangerKlient {
     public static final String ALTINN_TO_TJENESTE = "4936:1";
     public static final String ALTINN_TRE_RESSURS = ENV.getRequiredProperty("altinn.tre.inntektsmelding.ressurs");
 
-    public static final boolean BRUK_ALTINN_TRE_FOR_TILGANGSKONTROLL = ENV.getProperty("bruk.altinn.tre.for.tilgangskontroll.toggle", boolean.class, false);
+    public static final boolean BRUK_ALTINN_TRE_FOR_TILGANGSKONTROLL = ENV.getProperty("bruk.altinn.tre.for.tilgangskontroll.toggle", boolean.class, true);
 
     private static final String ALTINN_TILGANGER_PATH = "/altinn-tilganger";
 

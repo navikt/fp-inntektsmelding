@@ -9,7 +9,9 @@ import static org.mockito.Mockito.when;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,12 +24,24 @@ import no.nav.vedtak.sikkerhet.kontekst.BasisKontekst;
 import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
 
 @ExtendWith(MockitoExtension.class)
-class ArbeidsgiverAltinnTilgangerKlientTest {
+class Altinn2ArbeidsgiverAltinnTilgangerKlientTest {
 
     protected static final String NAV_TEST_RESSURS = "nav_test_ressurs";
     protected static final String TEST_ORGNR = "999999999";
+    protected static final String BRUK_ALTINN_TRE_FOR_TILGANGSKONTROLL_TOGGLE = "bruk.altinn.tre.for.tilgangskontroll.toggle";
+
     @Mock
     RestClient klient;
+
+    @BeforeAll
+    static void beforeAll() {
+        System.setProperty(BRUK_ALTINN_TRE_FOR_TILGANGSKONTROLL_TOGGLE, "false");
+    }
+
+    @AfterAll
+    static void afterAll() {
+        System.clearProperty(BRUK_ALTINN_TRE_FOR_TILGANGSKONTROLL_TOGGLE);
+    }
 
     @BeforeEach
     void setUp() {
@@ -44,7 +58,6 @@ class ArbeidsgiverAltinnTilgangerKlientTest {
     @Test
     void sjekkTilgang__har_tilgang_til_en_bedrift_altinn_to_tjeneste_ok() {
         var altinnAutoriseringKlient = new ArbeidsgiverAltinnTilgangerKlient(klient);
-
         when(klient.send(any(RestRequest.class), any())).thenReturn(lagOrgNrTilTilgangResponse(TEST_ORGNR, NAV_TEST_RESSURS, ALTINN_TO_TJENESTE));
         assertThat(altinnAutoriseringKlient.harTilgangTilBedriften(TEST_ORGNR)).isTrue();
         verify(klient).send(any(RestRequest.class), any());
@@ -53,7 +66,6 @@ class ArbeidsgiverAltinnTilgangerKlientTest {
     @Test
     void sjekkTilgang__har_tilgang_til_en_bedrift_altinn_to_tjeneste_nok() {
         var altinnAutoriseringKlient = new ArbeidsgiverAltinnTilgangerKlient(klient);
-
         when(klient.send(any(RestRequest.class), any())).thenReturn(lagOrgNrTilTilgangResponse(TEST_ORGNR, NAV_TEST_RESSURS, ALTINN_TO_TJENESTE));
         assertThat(altinnAutoriseringKlient.harTilgangTilBedriften("000000000")).isFalse();
         verify(klient).send(any(RestRequest.class), any());
