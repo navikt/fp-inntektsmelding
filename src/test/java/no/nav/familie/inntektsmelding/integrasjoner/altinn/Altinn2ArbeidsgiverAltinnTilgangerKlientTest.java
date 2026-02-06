@@ -77,6 +77,22 @@ class Altinn2ArbeidsgiverAltinnTilgangerKlientTest {
     }
 
     @Test
+    void sjekkTilgang__har_tilgang_til_en_bedrift_altinn_to_tjeneste_men_ikke_alltin3_nok() {
+        var altinnAutoriseringKlient = new ArbeidsgiverAltinnTilgangerKlient(klient);
+        when(klient.send(any(RestRequest.class), any())).thenReturn(lagOrgNrTilTilgangResponse(TEST_ORGNR, ALTINN_TO_TJENESTE));
+        assertThat(altinnAutoriseringKlient.harTilgangTilBedriften(TEST_ORGNR)).isTrue();
+        verify(klient).send(any(RestRequest.class), any());
+    }
+
+    @Test
+    void sjekkTilgang__har_tilgang_til_en_bedrift_altinn_tre_ressurs_men_ikke_alltin2_nok() {
+        var altinnAutoriseringKlient = new ArbeidsgiverAltinnTilgangerKlient(klient);
+        when(klient.send(any(RestRequest.class), any())).thenReturn(lagOrgNrTilTilgangResponse(TEST_ORGNR, NAV_TEST_RESSURS));
+        assertThat(altinnAutoriseringKlient.harTilgangTilBedriften(TEST_ORGNR)).isFalse();
+        verify(klient).send(any(RestRequest.class), any());
+    }
+
+    @Test
     void sjekkTilgang__hent_liste_med_bedrifter_med_tilgang_til_altinn_2_tjeneste_ok() {
         LOG.warn("Togglen: {} er satt til {}, og skal ikke brukes i denne testen", BRUK_ALTINN_TRE_FOR_TILGANGSKONTROLL_TOGGLE, System.getProperty(BRUK_ALTINN_TRE_FOR_TILGANGSKONTROLL_TOGGLE));
         var altinnAutoriseringKlient = new ArbeidsgiverAltinnTilgangerKlient(klient);
