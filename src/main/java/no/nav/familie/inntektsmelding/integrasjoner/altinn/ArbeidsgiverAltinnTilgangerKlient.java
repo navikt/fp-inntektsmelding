@@ -78,7 +78,6 @@ public class ArbeidsgiverAltinnTilgangerKlient {
             SECURE_LOG.info("ALTINN: Brukers tilganger for orgnr {}: {}", orgnr, brukersTilgangerForOrgnr);
         }
 
-        LOG.warn("Togglen: er satt til {}.", BRUK_ALTINN_TRE_FOR_TILGANGSKONTROLL);
         return BRUK_ALTINN_TRE_FOR_TILGANGSKONTROLL ? tilgangsbeslutningAltinn3 : tilgangsbeslutningAltinn2;
     }
 
@@ -93,7 +92,7 @@ public class ArbeidsgiverAltinnTilgangerKlient {
             LOG.info("ALTINN: Uoverensstemmelse i lister over bedrifter bruker har tilgang til mellom Altinn 2 og Altinn 3.");
             SECURE_LOG.info("ALTINN: Bruker har tilgang til følgende bedrifter: Altinn2: {}, Altinn3: {}", orgNrMedGittTilgangIAltinn2, orgNrMedGittTilgangIAltinn3);
         }
-        LOG.warn("Togglen: er satt til {}.", BRUK_ALTINN_TRE_FOR_TILGANGSKONTROLL);
+
         return BRUK_ALTINN_TRE_FOR_TILGANGSKONTROLL ? orgNrMedGittTilgangIAltinn3 : orgNrMedGittTilgangIAltinn2;
     }
 
