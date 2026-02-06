@@ -178,12 +178,13 @@ class MinSideArbeidsgiverTjenesteImpl implements MinSideArbeidsgiverTjeneste {
 
     private static EksterntVarselInput lagEksternVarselAltinn(String varselTekst, Integer minutterForsinkelse) {
         var builder = EksterntVarselInput.builder();
+        var tittel = "Nav trenger inntektsmelding";
         // TODO: Rydd opp etter Altinn 3 er i bruk i prod
         if (BRUK_ALTINN_TRE_RESSURS_TOGGLE) {
             builder.setAltinnressurs(EksterntVarselAltinnressursInput.builder()
-                .setEpostTittel("Påminnelse: Nav trenger inntektsmelding")
+                .setEpostTittel(tittel)
                 .setEpostHtmlBody(varselTekst)
-                //.setSmsTekst("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nav trenger inntektsmelding.") // TODO: Sms tekst ved varsel må på plass
+                .setSmsTekst("%s. %s".formatted(tittel, varselTekst))
                 .setMottaker(lagAltinnRessursMottakerInput())
                 .setSendetidspunkt(SendetidspunktInput.builder()
                     .setTidspunkt(LocalDateTime.now().plusMinutes(minutterForsinkelse).toString())
@@ -191,7 +192,7 @@ class MinSideArbeidsgiverTjenesteImpl implements MinSideArbeidsgiverTjeneste {
                 .build());
         } else {
             builder.setAltinntjeneste(EksterntVarselAltinntjenesteInput.builder()
-                .setTittel("Nav trenger inntektsmelding")
+                .setTittel(tittel)
                 .setInnhold(varselTekst)
                 .setMottaker(lagAltinnTjenesteMottakerInput())
                 .setSendetidspunkt(SendetidspunktInput.builder()
@@ -205,18 +206,19 @@ class MinSideArbeidsgiverTjenesteImpl implements MinSideArbeidsgiverTjeneste {
 
     private static PaaminnelseEksterntVarselInput lagPåminnelseVarselAltinn(String påminnelseTekst) {
         var builder = PaaminnelseEksterntVarselInput.builder();
+        var tittel = "Påminnelse: Nav trenger inntektsmelding";
         // TODO: Rydd opp etter Altinn 3 er i bruk i prod
         if (BRUK_ALTINN_TRE_RESSURS_TOGGLE) {
             builder.setAltinnressurs(PaaminnelseEksterntVarselAltinnressursInput.builder()
-                .setEpostTittel("Påminnelse: Nav trenger inntektsmelding")
+                .setEpostTittel(tittel)
                 .setEpostHtmlBody(påminnelseTekst)
-                //.setSmsTekst("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nav trenger inntektsmelding.") // TODO: Sms titel ved påminnelse må på plass
+                .setSmsTekst("%s. %s".formatted(tittel, påminnelseTekst))
                 .setMottaker(lagAltinnRessursMottakerInput())
                 .setSendevindu(VARSEL_SENDEVINDU)
                 .build());
         } else {
             builder.setAltinntjeneste(PaaminnelseEksterntVarselAltinntjenesteInput.builder()
-                .setTittel("Påminnelse: Nav trenger inntektsmelding")
+                .setTittel(tittel)
                 .setInnhold(påminnelseTekst)
                 .setMottaker(lagAltinnTjenesteMottakerInput())
                 .setSendevindu(VARSEL_SENDEVINDU)
