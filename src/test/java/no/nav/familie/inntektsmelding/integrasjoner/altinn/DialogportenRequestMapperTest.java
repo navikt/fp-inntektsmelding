@@ -7,13 +7,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import java.util.UUID;
 
-import no.nav.familie.inntektsmelding.forespørsel.tjenester.LukkeÅrsak;
-
-import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
-
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import no.nav.familie.inntektsmelding.forespørsel.tjenester.LukkeÅrsak;
+import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 
@@ -30,7 +27,7 @@ class DialogportenRequestMapperTest {
         var fødselsnummer = new PersonIdent("01019100000");
 
         var opprettRequest = DialogportenRequestMapper.opprettDialogRequest(ORGANISASJONSNUMMER,
-            FORESPØRSEL_UUID, "Sakstittel", FØRSTE_UTTAKSDATO, Ytelsetype.FORELDREPENGER, INNTEKTSMELDING_SKJEMA_LENKE, fødselsnummer );
+            FORESPØRSEL_UUID, "Sakstittel", FØRSTE_UTTAKSDATO, Ytelsetype.FORELDREPENGER, INNTEKTSMELDING_SKJEMA_LENKE, fødselsnummer);
 
         var transmissionContent = opprettRequest.transmissions().getFirst().content().title().value().getFirst().value();
         var attachment = opprettRequest.transmissions().getFirst().attachments().getFirst();
@@ -138,7 +135,8 @@ class DialogportenRequestMapperTest {
 
     @Test
     void opprettInnsendtInntektsmeldingRequest() {
-        var innsendtInntektsmeldingRequest = DialogportenRequestMapper.opprettInnsendtInntektsmeldingPatchRequest(new OrganisasjonsnummerDto("999999999"),
+        var innsendtInntektsmeldingRequest = DialogportenRequestMapper.opprettInnsendtInntektsmeldingPatchRequest(new OrganisasjonsnummerDto(
+                "999999999"),
             Optional.of(FORESPØRSEL_UUID),
             INNTEKTSMELDING_SKJEMA_LENKE);
 

@@ -31,6 +31,8 @@ public class ArbeidsgiverAltinnTilgangerKlient {
     public static final String ALTINN_TO_TJENESTE = "4936:1";
     public static final String ALTINN_TRE_RESSURS = ENV.getRequiredProperty("altinn.tre.inntektsmelding.ressurs");
 
+    public static final boolean BRUK_ALTINN_TRE_FOR_TILGANGSKONTROLL = ENV.getProperty("bruk.altinn.tre.for.tilgangskontroll.toggle", boolean.class, false);
+
     private static final String ALTINN_TILGANGER_PATH = "/altinn-tilganger";
 
     private static ArbeidsgiverAltinnTilgangerKlient instance = new ArbeidsgiverAltinnTilgangerKlient();
@@ -56,6 +58,7 @@ public class ArbeidsgiverAltinnTilgangerKlient {
         return inst;
     }
 
+    // TODO: Må ryddes opp etter Altinn 3 ressurs overgang i prod.
     public boolean harTilgangTilBedriften(String orgnr) {
         var altinnRessurserBrukerHarTilgangTilPerOrgnr = hentTilganger().orgNrTilTilganger();
 
@@ -67,20 +70,22 @@ public class ArbeidsgiverAltinnTilgangerKlient {
 
         var brukersTilgangerForOrgnr = altinnRessurserBrukerHarTilgangTilPerOrgnr.get(orgnr);
 
-        //TODO: Må byttes til ALTINN_TRE_RESSURS når Altinn 3 ressurs skal brukes i produksjon og rydde avstemming.
-        var tilgangsbeslutning = brukersTilgangerForOrgnr.contains(ALTINN_TO_TJENESTE);
+        var tilgangsbeslutningAltinn2 = brukersTilgangerForOrgnr.contains(ALTINN_TO_TJENESTE);
+        var tilgangsbeslutningAltinn3 = brukersTilgangerForOrgnr.contains(ALTINN_TRE_RESSURS);
 
-        if (tilgangsbeslutning != brukersTilgangerForOrgnr.contains(ALTINN_TRE_RESSURS)) { // hvis tilgang er ulikt mellom Altinn 2 og Altinn 3, logg for avstemming.
-            LOG.info("ALTINN: Tilgangsbeslutninger er ulike for bruker! Altinn 2: {}, Altinn 3: {}.", tilgangsbeslutning, !tilgangsbeslutning);
+        if (tilgangsbeslutningAltinn2 != tilgangsbeslutningAltinn3) { // hvis tilgang er ulikt mellom Altinn 2 og Altinn 3, logg for avstemming.
+            LOG.info("ALTINN: Tilgangsbeslutninger er ulike for bruker! Altinn 2: {}, Altinn 3: {}.", tilgangsbeslutningAltinn2, tilgangsbeslutningAltinn3);
             SECURE_LOG.info("ALTINN: Brukers tilganger for orgnr {}: {}", orgnr, brukersTilgangerForOrgnr);
         }
-        return tilgangsbeslutning;
+
+        LOG.warn("Togglen: er satt til {}.", BRUK_ALTINN_TRE_FOR_TILGANGSKONTROLL);
+        return BRUK_ALTINN_TRE_FOR_TILGANGSKONTROLL ? tilgangsbeslutningAltinn3 : tilgangsbeslutningAltinn2;
     }
 
+    // TODO: Må ryddes opp etter Altinn 3 ressurs overgang i prod.
     public List<String> hentBedrifterArbeidsgiverHarTilgangTil() {
         var orgNrBrukerHarTilgangTilPerRessurs = hentTilganger().tilgangTilOrgNr();
 
-        //TODO: Må byttes til ALTINN_TRE_RESSURS når Altinn 3 ressurs skal brukes i produksjon og rydde avstemming.
         var orgNrMedGittTilgangIAltinn2 = hentSortertListeMedOrgNrMedGittTilgang(orgNrBrukerHarTilgangTilPerRessurs, ALTINN_TO_TJENESTE);
         var orgNrMedGittTilgangIAltinn3 = hentSortertListeMedOrgNrMedGittTilgang(orgNrBrukerHarTilgangTilPerRessurs, ALTINN_TRE_RESSURS);
 
@@ -88,7 +93,8 @@ public class ArbeidsgiverAltinnTilgangerKlient {
             LOG.info("ALTINN: Uoverensstemmelse i lister over bedrifter bruker har tilgang til mellom Altinn 2 og Altinn 3.");
             SECURE_LOG.info("ALTINN: Bruker har tilgang til følgende bedrifter: Altinn2: {}, Altinn3: {}", orgNrMedGittTilgangIAltinn2, orgNrMedGittTilgangIAltinn3);
         }
-        return orgNrMedGittTilgangIAltinn2;
+        LOG.warn("Togglen: er satt til {}.", BRUK_ALTINN_TRE_FOR_TILGANGSKONTROLL);
+        return BRUK_ALTINN_TRE_FOR_TILGANGSKONTROLL ? orgNrMedGittTilgangIAltinn3 : orgNrMedGittTilgangIAltinn2;
     }
 
     private static List<String> hentSortertListeMedOrgNrMedGittTilgang(Map<String, List<String>> orgNrBrukerHarTilgangTilPerRessurs, String ressurs) {
