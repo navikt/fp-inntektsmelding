@@ -34,13 +34,13 @@ class ForespørselRestTest {
     private static final String ORGNUMMER_TEST = "450674427";
 
     private ForespørselRest forespørselRest;
+    @Mock
     private ForespørselBehandlingTjeneste forespørselBehandlingTjeneste;
     @Mock
     private Tilgang tilgang;
 
     @BeforeEach
     void setUp() {
-        this.forespørselBehandlingTjeneste = Mockito.mock(ForespørselBehandlingTjeneste.class);
         this.forespørselRest = new ForespørselRest(forespørselBehandlingTjeneste, tilgang);
     }
 
