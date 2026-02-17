@@ -11,6 +11,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -69,23 +70,24 @@ public class OppgaverForvaltningRestTjeneste {
         sjekkAtKallerHarRollenDrift();
         LOG.info("Sletter oppgave med saksnummer {}", inputDto.saksnummer());
         forespørselBehandlingTjeneste.slettForespørsel(inputDto.saksnummer(), inputDto.orgnr(), inputDto.stp());
-        return Response.ok().build();
+        return Response.status(Response.Status.ACCEPTED).build();
     }
 
     @POST
-    @Path("/settTilUtgått")
+    @Path("/settTilUtgått/{forespørselUuid}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Operation(description = "Setter angitt forespørsel og tilhørende sak i arbeidsgiverportalen til utgått", responses = {
-        @ApiResponse(responseCode = "202", description = "Foresprørsel og oppgave er satt til utgått", content = @Content(mediaType = "application/json")),
+        @ApiResponse(responseCode = "202", description = "Forespørsel og oppgave er satt til utgått", content = @Content(mediaType = "application/json")),
         @ApiResponse(responseCode = "500", description = "Feilet pga ukjent feil eller tekniske/funksjonelle feil")
     })
     @Tilgangskontrollert
     public Response settForespørselOgSakTilUtgått(
-        @Parameter @Valid UUID forespørselUuid) {
+        @Parameter(description = "UUID for forespørsel som skal settes til utgått") @Valid @NotNull @PathParam("forespørselUuid")
+        UUID forespørselUuid) {
         sjekkAtKallerHarRollenDrift();
-        LOG.info("Setter forespørsel og tilhørende sak i arbeidsgiverportalen med forspørselUuid {} til utgått", forespørselUuid);
+        LOG.info("Setter forespørsel og tilhørende sak i arbeidsgiverportalen med forespørselUuid {} til utgått", forespørselUuid);
         forespørselBehandlingTjeneste.settForespørselTilUtgått(forespørselUuid);
-        return Response.ok().build();
+        return Response.status(Response.Status.ACCEPTED).build();
     }
 
     @POST
