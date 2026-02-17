@@ -14,7 +14,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import no.nav.familie.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
@@ -34,13 +33,13 @@ class ForespørselRestTest {
     private static final String ORGNUMMER_TEST = "450674427";
 
     private ForespørselRest forespørselRest;
+    @Mock
     private ForespørselBehandlingTjeneste forespørselBehandlingTjeneste;
     @Mock
     private Tilgang tilgang;
 
     @BeforeEach
     void setUp() {
-        this.forespørselBehandlingTjeneste = Mockito.mock(ForespørselBehandlingTjeneste.class);
         this.forespørselRest = new ForespørselRest(forespørselBehandlingTjeneste, tilgang);
     }
 

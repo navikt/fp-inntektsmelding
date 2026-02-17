@@ -100,6 +100,7 @@ spec:
         - application: azure-token-generator
           namespace: nais
           cluster: dev-gcp
+        - application: fpinntektsmelding-api
         - application: tokenx-token-generator
           namespace: nais
           cluster: dev-gcp
