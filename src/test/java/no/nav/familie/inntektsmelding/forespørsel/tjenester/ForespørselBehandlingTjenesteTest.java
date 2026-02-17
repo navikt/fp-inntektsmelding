@@ -197,7 +197,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
     }
 
     @Test
-    void skal_opprette_ny_forespørsel_med_nytt_stp_og_sette_mottatte_forespørsel_med_tidligere_stp_til_utgått() {
+    void skal_sette_forrige_forespørsel_med_status_ferdig_til_utgått_når_ny_forespørsel_opprettes() {
         mockInfoForOpprettelse(SAK_ID);
         when(organisasjonTjeneste.finnOrganisasjon(BRREG_ORGNUMMER)).thenReturn(new Organisasjon("test org", BRREG_ORGNUMMER));
         var saksnummerDto = new SaksnummerDto(SAKSNUMMMER);
@@ -225,7 +225,41 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             YTELSETYPE,
             new AktørIdEntitet(AKTØR_ID),
             new OrganisasjonsnummerDto(BRREG_ORGNUMMER),
-            new SaksnummerDto(SAKSNUMMMER),
+            saksnummerDto,
+            FØRSTE_UTTAKSDATO
+        );
+
+        var forrigeForespørsel = forespørselRepository.hentForespørsel(lagret.getUuid());
+
+        clearHibernateCache();
+        assertThat(forrigeForespørsel.map(ForespørselEntitet::getStatus)).isEqualTo(Optional.of(ForespørselStatus.UTGÅTT));
+        assertThat(resultat2).isEqualTo(ForespørselResultat.FORESPØRSEL_OPPRETTET);
+    }
+
+    @Test
+    void skal_sette_forrige_forespørsel_med_status_under_behandling_til_utgått_når_ny_forespørsel_opprettes() {
+        mockInfoForOpprettelse(SAK_ID);
+        when(organisasjonTjeneste.finnOrganisasjon(BRREG_ORGNUMMER)).thenReturn(new Organisasjon("test org", BRREG_ORGNUMMER));
+        var saksnummerDto = new SaksnummerDto(SAKSNUMMMER);
+
+        forespørselBehandlingTjeneste.håndterInnkommendeForespørsel(SKJÆRINGSTIDSPUNKT,
+            YTELSETYPE,
+            new AktørIdEntitet(AKTØR_ID),
+            new OrganisasjonsnummerDto(BRREG_ORGNUMMER),
+            saksnummerDto,
+            FØRSTE_UTTAKSDATO
+        );
+
+        var lagret = forespørselRepository.hentForespørsler(saksnummerDto).getFirst();
+
+        assertThat(lagret.getStatus()).isEqualTo(ForespørselStatus.UNDER_BEHANDLING);
+
+        mockInfoForOpprettelse(SAK_ID_2);
+        var resultat2 = forespørselBehandlingTjeneste.håndterInnkommendeForespørsel(SKJÆRINGSTIDSPUNKT.plusMonths(2),
+            YTELSETYPE,
+            new AktørIdEntitet(AKTØR_ID),
+            new OrganisasjonsnummerDto(BRREG_ORGNUMMER),
+            saksnummerDto,
             FØRSTE_UTTAKSDATO
         );
 
@@ -414,6 +448,23 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         var lagret = forespørselRepository.hentForespørsel(forespørselUuid);
         assertThat(lagret.map(ForespørselEntitet::getStatus)).isEqualTo(Optional.of(ForespørselStatus.UTGÅTT));
         verify(minSideArbeidsgiverTjeneste, Mockito.times(1)).slettSak(SAK_ID);
+    }
+
+    @Test
+    void skal_sette_forespørsel_og_oppgave_til_gitt_forespørselUuid_til_utgått() {
+        var forespørselUuid = forespørselRepository.lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, BRREG_ORGNUMMER, SAKSNUMMMER,
+            SKJÆRINGSTIDSPUNKT, ForespørselType.BESTILT_AV_FAGSYSTEM);
+        forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, SAK_ID);
+
+        forespørselBehandlingTjeneste.settForespørselTilUtgått(forespørselUuid);
+
+        clearHibernateCache();
+
+        var lagret = forespørselRepository.hentForespørsel(forespørselUuid).orElseThrow();
+        assertThat(lagret.getStatus()).isEqualTo(ForespørselStatus.UTGÅTT);
+        verify(minSideArbeidsgiverTjeneste, Mockito.times(0)).ferdigstillSak(SAK_ID, false);
+        verify(minSideArbeidsgiverTjeneste, Mockito.times(1)).oppdaterSakTilleggsinformasjon(SAK_ID,
+            ForespørselTekster.lagTilleggsInformasjon(LukkeÅrsak.UTGÅTT, lagret.getFørsteUttaksdato()));
     }
 
     @Test
