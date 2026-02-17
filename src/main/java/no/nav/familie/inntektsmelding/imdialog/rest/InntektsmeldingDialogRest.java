@@ -21,6 +21,7 @@ import no.nav.familie.inntektsmelding.imdialog.tjenester.GrunnlagDtoTjeneste;
 import no.nav.familie.inntektsmelding.imdialog.tjenester.InntektsmeldingMapper;
 import no.nav.familie.inntektsmelding.imdialog.tjenester.InntektsmeldingMottakTjeneste;
 import no.nav.familie.inntektsmelding.koder.ArbeidsgiverinitiertÅrsak;
+import no.nav.familie.inntektsmelding.koder.Kildesystem;
 import no.nav.familie.inntektsmelding.typer.dto.ArbeidsgiverinitiertÅrsakDto;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 
@@ -93,6 +94,7 @@ public class InntektsmeldingDialogRest {
         var forespørselEntitet = forespørselTjeneste.hentForespørsel(forespørselUuid).orElseThrow(() -> new IllegalStateException("Finner ingen forespørsel for id: " + forespørselUuid));
         LOG.info("Henter inntektsmeldinger for forespørsel {}", forespørselUuid);
         var dto = inntektsmeldingTjeneste.hentInntektsmeldinger(forespørselUuid).stream()
+            .filter(im -> Kildesystem.ARBEIDSGIVERPORTAL.equals(im.getKildesystem())) // Vi skal ikke vise inntektsmeldinger som er overstyrt av driftstilganger / saksbehandlere
             .map(im -> InntektsmeldingMapper.mapFraEntitet(im, forespørselEntitet))
             .toList();
         return Response.ok(dto).build();
