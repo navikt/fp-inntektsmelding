@@ -421,7 +421,7 @@ public class ForespørselBehandlingTjeneste {
 
     public void settForespørselTilUtgått(UUID forespørselUuid) {
         var forespørsel = hentForespørsel(forespørselUuid)
-            .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel med forespørselUuid: " + forespørselUuid));;
+            .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel med forespørselUuid: " + forespørselUuid));
 
         settForespørselTilUtgått(forespørsel, false);
     }
