@@ -1,5 +1,8 @@
 package no.nav.familie.inntektsmelding.forvaltning;
 
+import java.time.LocalDate;
+import java.util.UUID;
+
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -8,14 +11,10 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-
-import no.nav.familie.inntektsmelding.forespørsel.rest.NyBeskjedRequest;
-
-import no.nav.familie.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
-import no.nav.foreldrepenger.konfig.Environment;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,16 +25,17 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import no.nav.familie.inntektsmelding.forespørsel.rest.NyBeskjedRequest;
+import no.nav.familie.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 import no.nav.familie.inntektsmelding.server.auth.api.AutentisertMedAzure;
 import no.nav.familie.inntektsmelding.server.auth.api.Tilgangskontrollert;
 import no.nav.familie.inntektsmelding.server.tilgangsstyring.Tilgang;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.familie.inntektsmelding.typer.dto.SaksnummerDto;
-
-import java.time.LocalDate;
+import no.nav.foreldrepenger.konfig.Environment;
 
 @AutentisertMedAzure
-@OpenAPIDefinition(tags = @Tag(name = "oppgaver", description = "Hånstering av feilopprettede saker / oppgaver i arbeidsgiverportalen"))
+@OpenAPIDefinition(tags = @Tag(name = "oppgaver", description = "Håndtering av feilopprettede saker / oppgaver i arbeidsgiverportalen"))
 @RequestScoped
 @Transactional
 @Produces(MediaType.APPLICATION_JSON)
@@ -70,7 +70,24 @@ public class OppgaverForvaltningRestTjeneste {
         sjekkAtKallerHarRollenDrift();
         LOG.info("Sletter oppgave med saksnummer {}", inputDto.saksnummer());
         forespørselBehandlingTjeneste.slettForespørsel(inputDto.saksnummer(), inputDto.orgnr(), inputDto.stp());
-        return Response.ok().build();
+        return Response.status(Response.Status.ACCEPTED).build();
+    }
+
+    @POST
+    @Path("/settTilUtgått/{forespørselUuid}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Operation(description = "Setter angitt forespørsel og tilhørende sak i arbeidsgiverportalen til utgått", responses = {
+        @ApiResponse(responseCode = "202", description = "Forespørsel og oppgave er satt til utgått", content = @Content(mediaType = "application/json")),
+        @ApiResponse(responseCode = "500", description = "Feilet pga ukjent feil eller tekniske/funksjonelle feil")
+    })
+    @Tilgangskontrollert
+    public Response settForespørselOgSakTilUtgått(
+        @Parameter(description = "UUID for forespørsel som skal settes til utgått") @Valid @NotNull @PathParam("forespørselUuid")
+        UUID forespørselUuid) {
+        sjekkAtKallerHarRollenDrift();
+        LOG.info("Setter forespørsel og tilhørende sak i arbeidsgiverportalen med forespørselUuid {} til utgått", forespørselUuid);
+        forespørselBehandlingTjeneste.settForespørselTilUtgått(forespørselUuid);
+        return Response.status(Response.Status.ACCEPTED).build();
     }
 
     @POST

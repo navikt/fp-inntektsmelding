@@ -90,25 +90,25 @@ public class ForespørselBehandlingTjeneste {
             return ForespørselResultat.IKKE_OPPRETTET_FINNES_ALLEREDE;
         }
 
-        settFerdigeForespørslerForTidligereStpTilUtgått(skjæringstidspunkt, fagsakSaksnummer, organisasjonsnummer);
+        settTidligereForespørslerForSaksnummerTilUtgått(fagsakSaksnummer, organisasjonsnummer, aktørId);
         opprettForespørsel(ytelsetype, aktørId, fagsakSaksnummer, organisasjonsnummer, skjæringstidspunkt, førsteUttaksdato);
 
         return ForespørselResultat.FORESPØRSEL_OPPRETTET;
     }
 
-    private void settFerdigeForespørslerForTidligereStpTilUtgått(LocalDate skjæringstidspunktFraRequest,
-                                                                 SaksnummerDto fagsakSaksnummer,
-                                                                 OrganisasjonsnummerDto organisasjonsnummerFraRequest) {
-        LOG.info("ForespørselBehandlingTjenesteImpl: settFerdigeForespørslerForTidligereStpTilUtgått for saksnummer: {}, orgnummer: {} med stp: {}",
+    // Vi skal aldri ha mer enn en forespørsel til under_behandling eller ferdig for samme sak med samme orgnummer og aktørid
+    private void settTidligereForespørslerForSaksnummerTilUtgått(SaksnummerDto fagsakSaksnummer,
+                                                                 OrganisasjonsnummerDto organisasjonsnummerFraRequest,
+                                                                 AktørIdEntitet aktørId) {
+        LOG.info("ForespørselBehandlingTjenesteImpl: settTidligereForespørslerForSaksnummerTilUtgått for saksnummer: {}, orgnummer: {}, aktørId: {}  ",
             fagsakSaksnummer,
             organisasjonsnummerFraRequest,
-            skjæringstidspunktFraRequest);
+            aktørId);
 
-        // Vi sjekker kun mot FERDIGE forespørsler da fpsak allerede har lukket forespørsler som er UNDER_BEHANDLING
         forespørselTjeneste.finnForespørslerForFagsak(fagsakSaksnummer).stream()
+            .filter(forespørselEntitet -> forespørselEntitet.getAktørId().equals(aktørId))
             .filter(forespørselEntitet -> organisasjonsnummerFraRequest.orgnr().equals(forespørselEntitet.getOrganisasjonsnummer()))
-            .filter(forespørselEntitet -> !skjæringstidspunktFraRequest.equals(forespørselEntitet.getSkjæringstidspunkt().orElse(null)))
-            .filter(forespørselEntitet -> ForespørselStatus.FERDIG.equals(forespørselEntitet.getStatus()))
+            .filter(forespørselEntitet -> !ForespørselStatus.UTGÅTT.equals(forespørselEntitet.getStatus()))
             .forEach(forespørselEntitet -> settForespørselTilUtgått(forespørselEntitet, false));
     }
 
@@ -417,6 +417,13 @@ public class ForespørselBehandlingTjeneste {
             .filter(f -> orgnummerDto == null || orgnummerDto.orgnr().equals(f.getOrganisasjonsnummer()))
             .filter(f -> skjæringstidspunkt == null || skjæringstidspunkt.equals(f.getSkjæringstidspunkt().orElse(null)))
             .toList();
+    }
+
+    public void settForespørselTilUtgått(UUID forespørselUuid) {
+        var forespørsel = hentForespørsel(forespørselUuid)
+            .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel med forespørselUuid: " + forespørselUuid));
+
+        settForespørselTilUtgått(forespørsel, false);
     }
 
     public void slettForespørsel(SaksnummerDto fagsakSaksnummer, OrganisasjonsnummerDto orgnummerDto, LocalDate skjæringstidspunkt) {
