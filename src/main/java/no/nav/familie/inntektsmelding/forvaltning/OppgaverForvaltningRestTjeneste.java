@@ -13,6 +13,7 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
@@ -83,10 +84,11 @@ public class OppgaverForvaltningRestTjeneste {
     @Tilgangskontrollert
     public Response settForespørselOgSakTilUtgått(
         @Parameter(description = "UUID for forespørsel som skal settes til utgått") @Valid @NotNull @PathParam("forespørselUuid")
-        UUID forespørselUuid) {
+        String forespørselUuid) {
+        var gyldigForespørselUuid = UUID.fromString(forespørselUuid);
         sjekkAtKallerHarRollenDrift();
         LOG.info("Setter forespørsel og tilhørende sak i arbeidsgiverportalen med forespørselUuid {} til utgått", forespørselUuid);
-        forespørselBehandlingTjeneste.settForespørselTilUtgått(forespørselUuid);
+        forespørselBehandlingTjeneste.settForespørselTilUtgått(gyldigForespørselUuid);
         return Response.status(Response.Status.ACCEPTED).build();
     }
 
