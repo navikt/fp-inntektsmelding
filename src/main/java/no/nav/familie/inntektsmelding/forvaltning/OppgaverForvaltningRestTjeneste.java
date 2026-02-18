@@ -78,14 +78,15 @@ public class OppgaverForvaltningRestTjeneste {
     @POST
     @Path("/settTilUtgått/{forespørselUuid}")
     @Consumes(MediaType.APPLICATION_JSON)
-    @Operation(description = "Setter angitt forespørsel og tilhørende sak i arbeidsgiverportalen til utgått", responses = {
+    @Operation(description = "Setter angitt forespørsel og tilhørende sak i arbeidsgiverportalen til utgått", tags = "oppgaver", responses = {
         @ApiResponse(responseCode = "202", description = "Forespørsel og oppgave er satt til utgått", content = @Content(mediaType = "application/json")),
         @ApiResponse(responseCode = "500", description = "Feilet pga ukjent feil eller tekniske/funksjonelle feil")
     })
     @Tilgangskontrollert
     public Response settForespørselOgSakTilUtgått(
         @Parameter(description = "UUID for forespørsel som skal settes til utgått") @Valid @NotNull @PathParam("forespørselUuid")
-        @Pattern(regexp = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$", message = "Ugyldig UUID-format") String forespørselUuid) {
+        @Pattern(regexp = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$", message = "Ugyldig UUID-format")
+        String forespørselUuid) {
         var gyldigForespørselUuid = UUID.fromString(forespørselUuid);
         sjekkAtKallerHarRollenDrift();
         LOG.info("Setter forespørsel og tilhørende sak i arbeidsgiverportalen med forespørselUuid {} til utgått", forespørselUuid);
