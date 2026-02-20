@@ -108,6 +108,7 @@ spec:
     outbound:
       rules:
         - application: fpdokgen
+        - application: fp-dokgen
         - application: logging
           namespace: nais-system
         - application: notifikasjon-produsent-api
