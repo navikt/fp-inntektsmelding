@@ -1,6 +1,6 @@
 package no.nav.familie.inntektsmelding.integrasjoner.dokgen.v1;
 
-import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.UriBuilder;
 
@@ -14,8 +14,8 @@ import no.nav.vedtak.felles.integrasjon.rest.RestRequest;
 import no.nav.vedtak.felles.integrasjon.rest.TokenFlow;
 import no.nav.vedtak.mapper.json.DefaultJsonMapper;
 
-@Dependent
-@RestClientConfig(tokenConfig = TokenFlow.AZUREAD_CC, endpointProperty = "ny.fpdokgen.url", endpointDefault = "http://fpdokgen",
+@ApplicationScoped
+@RestClientConfig(tokenConfig = TokenFlow.AZUREAD_CC, endpointProperty = "ny.fpdokgen.url", endpointDefault = "http://fp-dokgen",
     scopesProperty = "ny.fpdokgen.scopes", scopesDefault = "api://prod-gcp.teamforeldrepenger.fp-dokgen/.default")
 public class NyFpDokgenRestKlient {
 
