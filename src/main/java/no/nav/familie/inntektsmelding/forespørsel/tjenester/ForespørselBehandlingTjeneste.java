@@ -149,15 +149,22 @@ public class ForespørselBehandlingTjeneste {
             });
         }
         // Oppdaterer status i altinn dialogporten
-        forespørsel.getDialogportenUuid().ifPresent(dialogUuid ->
-            dialogportenKlient.ferdigstillDialog(dialogUuid,
-                organisasjonsnummerDto,
-                lagSaksTittelForDialogporten(aktorId, forespørsel.getYtelseType()),
-                forespørsel.getYtelseType(),
-                forespørsel.getFørsteUttaksdato(),
-                inntektsmeldingUuid,
-                årsak));
-
+        forespørsel.getDialogportenUuid().ifPresent(dialogUuid -> {
+            if (ENV.isDev()) {
+                try {
+                    dialogportenKlient.ferdigstillDialog(dialogUuid,
+                        organisasjonsnummerDto,
+                        lagSaksTittelForDialogporten(aktorId, forespørsel.getYtelseType()),
+                        forespørsel.getYtelseType(),
+                        forespørsel.getFørsteUttaksdato(),
+                        inntektsmeldingUuid,
+                        årsak);
+                } catch (Exception e) {
+                    // Ikke alle organisasjoner som brukes av Dolly finnes i Tenor, som Altinn bruker for å slå opp bedrifter i test. Må derfor tåle å feile for enkelte kall i dev
+                    LOG.warn("Feil ved kall til dialogporten: ", e);
+                }
+            }
+        });
         return forespørsel;
     }
 
@@ -242,7 +249,12 @@ public class ForespørselBehandlingTjeneste {
         opprettForespørselMinSideArbeidsgiver(forespørselUuid, organisasjonsnummer, aktørId, ytelsetype, førsteUttaksdato);
 
         if (ENV.isDev()) {
-            opprettForespørselDialogporten(forespørselUuid, organisasjonsnummer, aktørId, ytelsetype, førsteUttaksdato);
+            try {
+                opprettForespørselDialogporten(forespørselUuid, organisasjonsnummer, aktørId, ytelsetype, førsteUttaksdato);
+            } catch (Exception e) {
+                // Ikke alle organisasjoner som brukes av Dolly finnes i Tenor, som Altinn bruker for å slå opp bedrifter i test. Må derfor tåle å feile for enkelte kall i dev
+                LOG.warn("Feil ved kall til dialogporten: ", e);
+            }
         }
     }
 
@@ -342,7 +354,12 @@ public class ForespørselBehandlingTjeneste {
         forespørselTjeneste.setArbeidsgiverNotifikasjonSakId(uuid, fagerSakId);
 
         if (ENV.isDev()) {
-            opprettForespørselDialogporten(uuid, organisasjonsnummer, aktørId, ytelsetype, førsteFraværsdato);
+            try {
+                opprettForespørselDialogporten(uuid, organisasjonsnummer, aktørId, ytelsetype, førsteFraværsdato);
+            } catch (Exception e) {
+                // Ikke alle organisasjoner som brukes av Dolly finnes i Tenor, som Altinn bruker for å slå opp bedrifter i test. Må derfor tåle å feile for enkelte kall i dev
+                LOG.warn("Feil ved kall til dialogporten: ", e);
+            }
         }
 
         return uuid;
