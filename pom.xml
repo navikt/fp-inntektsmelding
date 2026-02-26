@@ -6,7 +6,7 @@
     <parent>
         <groupId>no.nav.foreldrepenger.felles</groupId>
         <artifactId>fp-parent-app</artifactId>
-        <version>5.2.3</version>
+        <version>5.2.4</version>
     </parent>
 
     <groupId>no.nav.familie.inntektsmelding</groupId>
@@ -18,8 +18,8 @@
         <sonar.projectName>fp-inntektsmelding</sonar.projectName>
         <sonar.projectKey>navikt_fp-inntektsmelding</sonar.projectKey>
 
-        <felles.version>7.6.15</felles.version>
-        <prosesstask.version>5.2.3</prosesstask.version>
+        <felles.version>7.6.16</felles.version>
+        <prosesstask.version>5.2.4</prosesstask.version>
         <fp-kontrakter.version>9.4.28</fp-kontrakter.version>
     </properties>
 
