@@ -12,6 +12,8 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
+import no.nav.vedtak.mapper.json.DefaultJsonMapper;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -117,7 +119,8 @@ public class AltinnExchangeTokenKlient {
             if (response == null || response.body() == null || !responskode2xx(response)) {
                 throw new TekniskException("F-157385", "Kunne ikke hente token");
             }
-            return response.body();
+            // Altinn returns the token as a JSON string literal, so we deserialize it with Jackson
+            return DefaultJsonMapper.fromJson(response.body(), String.class);
         } catch (IOException e) {
             throw new TekniskException("F-432937", "IOException ved kommunikasjon med server", e);
         } catch (InterruptedException e) {
