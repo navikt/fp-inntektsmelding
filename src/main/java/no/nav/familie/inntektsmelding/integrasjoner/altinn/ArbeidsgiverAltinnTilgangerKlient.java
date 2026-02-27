@@ -3,6 +3,10 @@ package no.nav.familie.inntektsmelding.integrasjoner.altinn;
 import java.util.List;
 import java.util.Map;
 
+import io.micrometer.core.instrument.Metrics;
+
+import io.micrometer.core.instrument.Tag;
+
 import jakarta.ws.rs.core.UriBuilder;
 
 import org.slf4j.Logger;
@@ -34,6 +38,12 @@ public class ArbeidsgiverAltinnTilgangerKlient {
     public static final boolean BRUK_ALTINN_TRE_FOR_TILGANGSKONTROLL = ENV.getProperty("bruk.altinn.tre.for.tilgangskontroll.toggle", boolean.class, false);
 
     private static final String ALTINN_TILGANGER_PATH = "/altinn-tilganger";
+
+    private static final String APP_NAME = Environment.current().getNaisAppName().replace("-", "_");
+    private static final String COUNTER_TILGANG_BEDRIFT = APP_NAME + "tilgang_til_org";
+    private static final String COUNTER_HENT_BEDRIFTER = APP_NAME + "hent_org_liste";
+    private static final String TAG_TILGANG_OK = "tilgang_ok";
+    private static final String TAG_LIK = "lik_svar";
 
     private static ArbeidsgiverAltinnTilgangerKlient instance = new ArbeidsgiverAltinnTilgangerKlient();
 
@@ -73,9 +83,13 @@ public class ArbeidsgiverAltinnTilgangerKlient {
         var tilgangsbeslutningAltinn2 = brukersTilgangerForOrgnr.contains(ALTINN_TO_TJENESTE);
         var tilgangsbeslutningAltinn3 = brukersTilgangerForOrgnr.contains(ALTINN_TRE_RESSURS);
 
+
         if (tilgangsbeslutningAltinn2 != tilgangsbeslutningAltinn3) { // hvis tilgang er ulikt mellom Altinn 2 og Altinn 3, logg for avstemming.
             LOG.info("ALTINN: Tilgangsbeslutninger er ulike for bruker! Altinn 2: {}, Altinn 3: {}.", tilgangsbeslutningAltinn2, tilgangsbeslutningAltinn3);
             SECURE_LOG.info("ALTINN: Brukers tilganger for orgnr {}: {}", orgnr, brukersTilgangerForOrgnr);
+            Metrics.counter(COUNTER_TILGANG_BEDRIFT, List.of(Tag.of(TAG_TILGANG_OK, "Nei"))).increment();
+        } else {
+            Metrics.counter(COUNTER_TILGANG_BEDRIFT, List.of(Tag.of(TAG_TILGANG_OK, "Ja"))).increment();
         }
 
         return BRUK_ALTINN_TRE_FOR_TILGANGSKONTROLL ? tilgangsbeslutningAltinn3 : tilgangsbeslutningAltinn2;
@@ -91,6 +105,9 @@ public class ArbeidsgiverAltinnTilgangerKlient {
         if (!orgNrMedGittTilgangIAltinn2.equals(orgNrMedGittTilgangIAltinn3)) { // listene må være sortert for å kunne sammenlignes direkte.
             LOG.info("ALTINN: Uoverensstemmelse i lister over bedrifter bruker har tilgang til mellom Altinn 2 og Altinn 3.");
             SECURE_LOG.info("ALTINN: Bruker har tilgang til følgende bedrifter: Altinn2: {}, Altinn3: {}", orgNrMedGittTilgangIAltinn2, orgNrMedGittTilgangIAltinn3);
+            Metrics.counter(COUNTER_HENT_BEDRIFTER, List.of(Tag.of(TAG_LIK, "Nei"))).increment();
+        } else {
+            Metrics.counter(COUNTER_HENT_BEDRIFTER, List.of(Tag.of(TAG_LIK, "Ja"))).increment();
         }
 
         return BRUK_ALTINN_TRE_FOR_TILGANGSKONTROLL ? orgNrMedGittTilgangIAltinn3 : orgNrMedGittTilgangIAltinn2;
