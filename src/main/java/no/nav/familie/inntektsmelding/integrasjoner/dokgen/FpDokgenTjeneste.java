@@ -15,14 +15,11 @@ import no.nav.familie.inntektsmelding.integrasjoner.person.PersonTjeneste;
 import no.nav.familie.inntektsmelding.koder.ForespørselType;
 import no.nav.familie.inntektsmelding.typer.OrganisasjonsnummerValidator;
 import no.nav.foreldrepenger.konfig.Environment;
-import no.nav.vedtak.exception.TekniskException;
-import no.nav.vedtak.mapper.json.DefaultJsonMapper;
 
 @ApplicationScoped
 public class FpDokgenTjeneste {
     protected static final Environment ENV = Environment.current();
     private static final Logger LOG = LoggerFactory.getLogger(FpDokgenTjeneste.class);
-    private static final Logger SECURE_LOG = LoggerFactory.getLogger("secureLogger");
     private NyFpDokgenRestKlient nyDokgenKlient;
     private FpDokgenKlient gammelDokgenKlient;
     private PersonTjeneste personTjeneste;
@@ -60,35 +57,20 @@ public class FpDokgenTjeneste {
     }
 
     private byte[] genererPdf(InntektsmeldingPdfData imDokumentData, int inntektsmeldingId, ForespørselType forespørselType) {
+        byte[] pdf;
         try {
-            byte[] pdf;
-            if (Boolean.TRUE.equals(ENV.getRequiredProperty("TOGGLE_BRUK_NY_DOKGEN", Boolean.class))) {
-                try {
-                    LOG.info("Genererer pdf ved bruk av ny dokgen.");
-                    pdf = nyDokgenKlient.genererPdf(imDokumentData, forespørselType);
-                    var oldpdf = gammelDokgenKlient.genererPdf(imDokumentData, forespørselType);
-                    if ((pdf.length != oldpdf.length && Math.abs(pdf.length - oldpdf.length) > 10) || pdf.length == 0) {
-                        LOG.warn("PDF-lengde fra ny og gammel dokgen er ulik. Ny dokgen lengde: {}, Gammel dokgen lengde: {}",
-                            pdf.length,
-                            oldpdf.length);
-                        return oldpdf;
-                    }
-                } catch (Exception e) {
-                    LOG.warn("Kall til ny dokgen feilet, prøver å generere pdf med gammel dokgen. Feilmelding: {}", e.getMessage());
-                    pdf = gammelDokgenKlient.genererPdf(imDokumentData, forespørselType);
-                }
-            } else {
-                LOG.info("Genererer pdf ved bruk av gammel dokgen.");
+            LOG.info("Genererer PDF ved bruk av ny dokgen.");
+            pdf = nyDokgenKlient.genererPdf(imDokumentData, forespørselType);
+        } catch (Exception exception) {
+            if (ENV.isDev() || ENV.isProd()) {
+                LOG.warn("Kall til ny dokgen feilet, prøver å generere PDF med gammel dokgen. Feilmelding: {}", exception.getMessage());
                 pdf = gammelDokgenKlient.genererPdf(imDokumentData, forespørselType);
+            } else {
+                throw exception;
             }
-            LOG.info("Pdf av inntektsmelding med id {} ble generert.", inntektsmeldingId);
-            return pdf;
-        } catch (Exception e) {
-            imDokumentData.anonymiser();
-            SECURE_LOG.warn("Klarte ikke å generere pdf av inntektsmelding: {}", DefaultJsonMapper.toJson(imDokumentData));
-            throw new TekniskException("FPINNTEKTSMELDING_1",
-                String.format("Klarte ikke å generere pdf for inntektsmelding med id %s", inntektsmeldingId), e);
         }
+        LOG.info("Pdf av inntektsmelding med id {} ble generert.", inntektsmeldingId);
+        return pdf;
     }
 
     private String finnArbeidsgiverNavn(InntektsmeldingEntitet inntektsmelding, String arbeidsgvierIdent) {
