@@ -66,13 +66,6 @@ public class FpDokgenTjeneste {
                 try {
                     LOG.info("Genererer pdf ved bruk av ny dokgen.");
                     pdf = nyDokgenKlient.genererPdf(imDokumentData, forespørselType);
-                    var oldpdf = gammelDokgenKlient.genererPdf(imDokumentData, forespørselType);
-                    if ((pdf.length != oldpdf.length && Math.abs(pdf.length - oldpdf.length) > 10) || pdf.length == 0) {
-                        LOG.warn("PDF-lengde fra ny og gammel dokgen er ulik. Ny dokgen lengde: {}, Gammel dokgen lengde: {}",
-                            pdf.length,
-                            oldpdf.length);
-                        return oldpdf;
-                    }
                 } catch (Exception e) {
                     LOG.warn("Kall til ny dokgen feilet, prøver å generere pdf med gammel dokgen. Feilmelding: {}", e.getMessage());
                     pdf = gammelDokgenKlient.genererPdf(imDokumentData, forespørselType);
