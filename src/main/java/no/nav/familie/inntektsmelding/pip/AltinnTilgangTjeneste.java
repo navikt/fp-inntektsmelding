@@ -29,10 +29,10 @@ public class AltinnTilgangTjeneste {
 
     //TODO Etter migrering: Metrikker - kan vurderes fjerning etter migrering.
     private static final String APP_NAME = ENV.getNaisAppName().replace("-", "_");
-    private static final String COUNTER_TILGANG_BEDRIFT = APP_NAME + ".tilgang.til.org";
-    private static final String COUNTER_HENT_BEDRIFTER = APP_NAME + ".hent.liste.med.bedrifter";
-    private static final String TAG_TILGANG_LIK = "altinn_2_og_3_tilgang_lik";
-    private static final String TAG_SVAR_LIK = "altinn_2_og_3_svar_lik";
+    private static final String COUNTER_TILGANG_BEDRIFT = APP_NAME + "_tilgang_til_org";
+    private static final String COUNTER_HENT_BEDRIFTER = APP_NAME + "_hent_liste_med_bedrifter";
+    private static final String TAG_TILGANG_LIK = "tilgang_lik";
+    private static final String TAG_SVAR_LIK = "svar_lik";
 
     // Kun for testing
     AltinnTilgangTjeneste(ArbeidsgiverAltinnTilgangerKlient arbeidsgiverAltinnTilgangerKlient) {
