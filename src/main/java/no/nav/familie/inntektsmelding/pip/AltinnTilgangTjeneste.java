@@ -1,40 +1,40 @@
 package no.nav.familie.inntektsmelding.pip;
 
+import static no.nav.familie.inntektsmelding.integrasjoner.altinn.AltinnRessurser.ALTINN_TO_TJENESTE;
+import static no.nav.familie.inntektsmelding.integrasjoner.altinn.AltinnRessurser.ALTINN_TRE_INNTEKTSMELDING_RESSURS;
+
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-import io.micrometer.core.instrument.Metrics;
-import io.micrometer.core.instrument.Tag;
-
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.Dependent;
-
-import no.nav.familie.inntektsmelding.integrasjoner.altinn.AltinnRessurser;
-import no.nav.familie.inntektsmelding.integrasjoner.altinn.ArbeidsgiverAltinnTilgangerKlient;
-
-import no.nav.foreldrepenger.konfig.Environment;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static no.nav.familie.inntektsmelding.integrasjoner.altinn.AltinnRessurser.ALTINN_TO_TJENESTE;
-import static no.nav.familie.inntektsmelding.integrasjoner.altinn.AltinnRessurser.ALTINN_TRE_INNTEKTSMELDING_RESSURS;
+import io.micrometer.core.instrument.Metrics;
+import io.micrometer.core.instrument.Tag;
+import no.nav.familie.inntektsmelding.integrasjoner.altinn.ArbeidsgiverAltinnTilgangerKlient;
+import no.nav.foreldrepenger.konfig.Environment;
 
-@Dependent
+@ApplicationScoped
 public class AltinnTilgangTjeneste {
 
     private static final Logger SECURE_LOG = LoggerFactory.getLogger("secureLogger");
     private static final Logger LOG = LoggerFactory.getLogger(AltinnTilgangTjeneste.class);
     private static final Environment ENV = Environment.current();
 
+    private final ArbeidsgiverAltinnTilgangerKlient arbeidsgiverAltinnTilgangerKlient;
+
+    //TODO Etter migrering: Metrikker - kan vurderes fjerning etter migrering.
     private static final String APP_NAME = ENV.getNaisAppName().replace("-", "_");
-    private static final String COUNTER_TILGANG_BEDRIFT = APP_NAME + ".tilgang_til_org";
-    private static final String COUNTER_HENT_BEDRIFTER = APP_NAME + ".hent_org_liste";
-    private static final String TAG_TILGANG_OK = "tilgang_ok";
-    private static final String TAG_LIK = "lik_svar";
-
-    public static final boolean BRUK_ALTINN_TRE_FOR_TILGANGSKONTROLL = ENV.getProperty("bruk.altinn.tre.for.tilgangskontroll.toggle", boolean.class, false);
-
-    private ArbeidsgiverAltinnTilgangerKlient arbeidsgiverAltinnTilgangerKlient;
+    private static final String COUNTER_TILGANG_BEDRIFT = APP_NAME + ".tilgang.til.org";
+    private static final String COUNTER_HENT_BEDRIFTER = APP_NAME + ".hent.liste.med.bedrifter";
+    private static final String TAG_TILGANG_LIK = "altinn_2_og_3_tilgang_lik";
+    private static final String TAG_SVAR_LIK = "altinn_2_og_3_svar_lik";
 
     // Kun for testing
     AltinnTilgangTjeneste(ArbeidsgiverAltinnTilgangerKlient arbeidsgiverAltinnTilgangerKlient) {
@@ -49,7 +49,6 @@ public class AltinnTilgangTjeneste {
         return !harTilgangTilBedriften(orgNr);
     }
 
-    // TODO: Må ryddes opp etter Altinn 3 ressurs overgang i prod.
     public boolean harTilgangTilBedriften(String orgnr) {
         var altinnRessurserBrukerHarTilgangTilPerOrgnr = arbeidsgiverAltinnTilgangerKlient.hentTilganger().orgNrTilTilganger();
 
@@ -61,40 +60,47 @@ public class AltinnTilgangTjeneste {
 
         var brukersTilgangerForOrgnr = altinnRessurserBrukerHarTilgangTilPerOrgnr.get(orgnr);
 
-        var tilgangsbeslutningAltinn2 = brukersTilgangerForOrgnr.contains(ALTINN_TO_TJENESTE);
-        var tilgangsbeslutningAltinn3 = brukersTilgangerForOrgnr.contains(ALTINN_TRE_INNTEKTSMELDING_RESSURS);
+        var harTilgangGjennomAltinn3 = brukersTilgangerForOrgnr.contains(ALTINN_TRE_INNTEKTSMELDING_RESSURS);
+        //TODO Etter migrering: Her kan mye kode ryddes og forenkles.
+        var harTilgangGjennomAltinn2 = brukersTilgangerForOrgnr.contains(ALTINN_TO_TJENESTE);
 
-        if (tilgangsbeslutningAltinn2 != tilgangsbeslutningAltinn3) { // hvis tilgang er ulikt mellom Altinn 2 og Altinn 3, logg for avstemming.
-            LOG.info("ALTINN: Tilgangsbeslutninger er ulike for bruker! Altinn 2: {}, Altinn 3: {}.", tilgangsbeslutningAltinn2, tilgangsbeslutningAltinn3);
+        if (harTilgangGjennomAltinn2 != harTilgangGjennomAltinn3) {
+            LOG.info("ALTINN: Tilgangsbeslutninger er ulike for bruker! Altinn 2: {}, Altinn 3: {}.", harTilgangGjennomAltinn2, harTilgangGjennomAltinn3);
             SECURE_LOG.info("ALTINN: Brukers tilganger for orgnr {}: {}", orgnr, brukersTilgangerForOrgnr);
-            Metrics.counter(COUNTER_TILGANG_BEDRIFT, List.of(Tag.of(TAG_TILGANG_OK, "Nei"))).increment();
+            Metrics.counter(COUNTER_TILGANG_BEDRIFT, List.of(Tag.of(TAG_TILGANG_LIK, "Nei"))).increment();
         } else {
-            Metrics.counter(COUNTER_TILGANG_BEDRIFT, List.of(Tag.of(TAG_TILGANG_OK, "Ja"))).increment();
+            Metrics.counter(COUNTER_TILGANG_BEDRIFT, List.of(Tag.of(TAG_TILGANG_LIK, "Ja"))).increment();
         }
 
-        return BRUK_ALTINN_TRE_FOR_TILGANGSKONTROLL ? tilgangsbeslutningAltinn3 : tilgangsbeslutningAltinn2;
+        if (harTilgangGjennomAltinn3) {
+            return true;
+        }
+        return harTilgangGjennomAltinn2;
     }
 
-    // TODO: Må ryddes opp etter Altinn 3 ressurs overgang i prod.
      public List<String> hentBedrifterArbeidsgiverHarTilgangTil() {
         var orgNrBrukerHarTilgangTilPerRessurs = arbeidsgiverAltinnTilgangerKlient.hentTilganger().tilgangTilOrgNr();
 
-        var orgNrMedGittTilgangIAltinn2 = hentSortertListeMedOrgNrMedGittTilgang(orgNrBrukerHarTilgangTilPerRessurs, ALTINN_TO_TJENESTE);
-        var orgNrMedGittTilgangIAltinn3 = hentSortertListeMedOrgNrMedGittTilgang(orgNrBrukerHarTilgangTilPerRessurs,
+         //TODO Etter migrering: Her kan mye kode ryddes og forenkles.
+        var orgNrMedGittTilgangIAltinn2 = hentOrgNrMedGittTilgang(orgNrBrukerHarTilgangTilPerRessurs, ALTINN_TO_TJENESTE);
+        var orgNrMedGittTilgangIAltinn3 = hentOrgNrMedGittTilgang(orgNrBrukerHarTilgangTilPerRessurs,
             ALTINN_TRE_INNTEKTSMELDING_RESSURS);
 
-        if (!orgNrMedGittTilgangIAltinn2.equals(orgNrMedGittTilgangIAltinn3)) { // listene må være sortert for å kunne sammenlignes direkte.
+        if (!orgNrMedGittTilgangIAltinn2.equals(orgNrMedGittTilgangIAltinn3)) {
             LOG.info("ALTINN: Uoverensstemmelse i lister over bedrifter bruker har tilgang til mellom Altinn 2 og Altinn 3.");
             SECURE_LOG.info("ALTINN: Bruker har tilgang til følgende bedrifter: Altinn2: {}, Altinn3: {}", orgNrMedGittTilgangIAltinn2, orgNrMedGittTilgangIAltinn3);
-            Metrics.counter(COUNTER_HENT_BEDRIFTER, List.of(Tag.of(TAG_LIK, "Nei"))).increment();
+            Metrics.counter(COUNTER_HENT_BEDRIFTER, List.of(Tag.of(TAG_SVAR_LIK, "Nei"))).increment();
         } else {
-            Metrics.counter(COUNTER_HENT_BEDRIFTER, List.of(Tag.of(TAG_LIK, "Ja"))).increment();
+            Metrics.counter(COUNTER_HENT_BEDRIFTER, List.of(Tag.of(TAG_SVAR_LIK, "Ja"))).increment();
         }
 
-        return BRUK_ALTINN_TRE_FOR_TILGANGSKONTROLL ? orgNrMedGittTilgangIAltinn3 : orgNrMedGittTilgangIAltinn2;
+        if (!orgNrMedGittTilgangIAltinn3.containsAll(orgNrMedGittTilgangIAltinn2)) {
+            orgNrMedGittTilgangIAltinn3.addAll(orgNrMedGittTilgangIAltinn2); // vi legger på det som mangler fra Altinn 2.
+        }
+        return orgNrMedGittTilgangIAltinn3.stream().toList();
     }
 
-    private static List<String> hentSortertListeMedOrgNrMedGittTilgang(Map<String, List<String>> orgNrBrukerHarTilgangTilPerRessurs, String ressurs) {
-        return orgNrBrukerHarTilgangTilPerRessurs.getOrDefault(ressurs, List.of()).stream().sorted().toList();
+    private static Set<String> hentOrgNrMedGittTilgang(Map<String, List<String>> orgNrBrukerHarTilgangTilPerRessurs, String ressurs) {
+        return new HashSet<>(orgNrBrukerHarTilgangTilPerRessurs.getOrDefault(ressurs, List.of()));
     }
 }
