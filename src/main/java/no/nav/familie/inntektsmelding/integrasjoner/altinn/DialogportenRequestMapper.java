@@ -27,7 +27,7 @@ public class DialogportenRequestMapper {
                                                            String inntektsmeldingSkjemaLenke,
                                                            PersonIdent fødselsnummer) {
         var party = String.format("urn:altinn:organization:identifier-no:%s", organisasjonsnummer.orgnr());
-        var foreldrepengerRessurs = Environment.current().getProperty("altinn.tre.inntektsmelding.ressurs");
+        var foreldrepengerRessurs = AltinnRessurser.ALTINN_TRE_INNTEKTSMELDING_RESSURS;
         var altinnressursFP = ALTINN_RESSURS_PREFIX + foreldrepengerRessurs;
 
         //Oppretter dialog
