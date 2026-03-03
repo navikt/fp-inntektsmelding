@@ -10,7 +10,6 @@ import no.nav.familie.inntektsmelding.forespørsel.tjenester.LukkeÅrsak;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
-import no.nav.foreldrepenger.konfig.Environment;
 
 public class DialogportenRequestMapper {
     private static final String ALTINN_RESSURS_PREFIX = "urn:altinn:resource:";
