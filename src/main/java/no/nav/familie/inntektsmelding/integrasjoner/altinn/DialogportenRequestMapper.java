@@ -10,7 +10,6 @@ import no.nav.familie.inntektsmelding.forespørsel.tjenester.LukkeÅrsak;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
-import no.nav.foreldrepenger.konfig.Environment;
 
 public class DialogportenRequestMapper {
     private static final String ALTINN_RESSURS_PREFIX = "urn:altinn:resource:";
@@ -27,7 +26,7 @@ public class DialogportenRequestMapper {
                                                            String inntektsmeldingSkjemaLenke,
                                                            PersonIdent fødselsnummer) {
         var party = String.format("urn:altinn:organization:identifier-no:%s", organisasjonsnummer.orgnr());
-        var foreldrepengerRessurs = Environment.current().getProperty("altinn.tre.inntektsmelding.ressurs");
+        var foreldrepengerRessurs = AltinnRessurser.ALTINN_TRE_INNTEKTSMELDING_RESSURS;
         var altinnressursFP = ALTINN_RESSURS_PREFIX + foreldrepengerRessurs;
 
         //Oppretter dialog

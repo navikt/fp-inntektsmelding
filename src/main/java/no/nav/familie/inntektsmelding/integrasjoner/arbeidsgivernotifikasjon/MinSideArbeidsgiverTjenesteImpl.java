@@ -12,6 +12,7 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import no.nav.familie.inntektsmelding.integrasjoner.altinn.AltinnRessurser;
 import no.nav.foreldrepenger.konfig.Environment;
 
 @ApplicationScoped
@@ -28,7 +29,7 @@ class MinSideArbeidsgiverTjenesteImpl implements MinSideArbeidsgiverTjeneste {
 
     static {
         var ENV = Environment.current();
-        ALTINN_INNTEKTSMELDING_RESSURS = ENV.getRequiredProperty("altinn.tre.inntektsmelding.ressurs");
+        ALTINN_INNTEKTSMELDING_RESSURS = AltinnRessurser.ALTINN_TRE_INNTEKTSMELDING_RESSURS;
         BRUK_ALTINN_TRE_RESSURS_TOGGLE = ENV.getProperty("bruk.altinn.tre.ressurs.i.fager.toggle", boolean.class, false);
         PÅMINNELSE_ETTER_DAGER = ENV.getProperty("paaminnelse.etter.dager", int.class, 14);
     }
