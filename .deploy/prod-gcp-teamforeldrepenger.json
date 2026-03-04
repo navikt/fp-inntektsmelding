@@ -3,12 +3,11 @@
   "minReplicas": "2",
   "maxReplicas": "6",
   "limits": {
-    "cpu": "2",
-    "mem": "2048Mi"
+    "mem": "608Mi"
   },
   "requests": {
-    "cpu": "500m",
-    "mem": "1024Mi"
+    "cpu": "215m",
+    "mem": "576Mi"
   },
   "ingresses": [
     "https://fpinntektsmelding.intern.nav.no"
