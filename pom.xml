@@ -20,7 +20,7 @@
 
         <felles.version>7.6.16</felles.version>
         <prosesstask.version>5.2.4</prosesstask.version>
-        <fp-kontrakter.version>9.4.28</fp-kontrakter.version>
+        <fp-kontrakter.version>9.4.29</fp-kontrakter.version>
     </properties>
 
     <dependencyManagement>
@@ -46,13 +46,6 @@
                 <groupId>no.nav.foreldrepenger.felles.integrasjon</groupId>
                 <artifactId>dokarkiv-klient</artifactId>
                 <version>${felles.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>no.nav.foreldrepenger.kontrakter</groupId>
-                <artifactId>fp-kontrakter-root</artifactId>
-                <version>${fp-kontrakter.version}</version>
-                <scope>import</scope>
-                <type>pom</type>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -95,6 +88,7 @@
         <dependency>
             <groupId>no.nav.foreldrepenger.kontrakter</groupId>
             <artifactId>inntektsmelding-v1</artifactId>
+            <version>${fp-kontrakter.version}</version>
         </dependency>
 
 
