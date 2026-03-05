@@ -10,6 +10,7 @@ import jakarta.inject.Inject;
 
 import no.nav.familie.inntektsmelding.forespørsel.modell.ForespørselEntitet;
 import no.nav.familie.inntektsmelding.forespørsel.modell.ForespørselRepository;
+import no.nav.familie.inntektsmelding.koder.ForespørselStatus;
 import no.nav.familie.inntektsmelding.koder.ForespørselType;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
@@ -94,7 +95,7 @@ public class ForespørselTjeneste {
     }
 
     public List<ForespørselEntitet> finnForespørslerForFagsak(SaksnummerDto fagsakSaksnummer) {
-        return forespørselRepository.hentForespørsler(fagsakSaksnummer);
+        return forespørselRepository.hentForespørslerPåSak(fagsakSaksnummer);
     }
 
     public List<ForespørselEntitet> finnForespørsler(AktørIdEntitet aktørId, Ytelsetype ytelsetype, String orgnr) {
@@ -104,5 +105,11 @@ public class ForespørselTjeneste {
     public void setDialogportenUuid(UUID forespørselUuid, UUID dialogportenUuid) {
         forespørselRepository.oppdaterDialogportenUuid(forespørselUuid, dialogportenUuid);
 
+    }
+
+    public List<ForespørselEntitet> hentForespørsler(OrganisasjonsnummerDto orgnr, AktørIdEntitet aktørId, ForespørselStatus status,
+                                                     Ytelsetype ytelseType,
+                                                     LocalDate fom, LocalDate tom) {
+        return forespørselRepository.hentForespørslerFraFilter(orgnr, aktørId, status, ytelseType, fom, tom);
     }
 }

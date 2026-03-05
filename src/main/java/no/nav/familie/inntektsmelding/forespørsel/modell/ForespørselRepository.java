@@ -108,7 +108,7 @@ public class ForespørselRepository {
     }
 
 
-    public List<ForespørselEntitet> hentForespørsler(SaksnummerDto fagsakSaksnummer) {
+    public List<ForespørselEntitet> hentForespørslerPåSak(SaksnummerDto fagsakSaksnummer) {
         var query = entityManager.createQuery("FROM ForespørselEntitet f where fagsystemSaksnummer = :saksnr", ForespørselEntitet.class)
             .setParameter("saksnr", fagsakSaksnummer.saksnr());
         return query.getResultList();
@@ -216,5 +216,57 @@ public class ForespørselRepository {
         } else {
             LOG.info("Finner ikke forespørsel med id {}", forespørselUuid);
         }
+    }
+
+    public List<ForespørselEntitet> hentForespørslerFraFilter(OrganisasjonsnummerDto orgnr,
+                                          AktørIdEntitet aktørId,
+                                          ForespørselStatus status,
+                                          Ytelsetype ytelseType,
+                                          LocalDate fom,
+                                          LocalDate tom) {
+        StringBuilder queryBuilder = new StringBuilder("SELECT * FROM FORESPOERSEL WHERE ORGNR =:orgnr");
+        // Setter query
+        if (aktørId != null) {
+            queryBuilder.append(" AND bruker_aktoer_id =:aktørId");
+        }
+        if (status != null) {
+            queryBuilder.append(" AND status =:status");
+        }
+        if (ytelseType != null) {
+            queryBuilder.append(" AND ytelse_type =:ytelseType");
+        }
+        if (fom != null) {
+            queryBuilder.append(" AND opprettet_tid >=:fom");
+        }
+        if (tom != null) {
+            queryBuilder.append(" AND opprettet_tid <=:tom");
+        }
+
+        var query = entityManager.createNativeQuery(queryBuilder.toString(),
+            ForespørselEntitet.class);
+
+        // Setter params
+        query.setParameter("orgnr", orgnr.orgnr());
+        if (aktørId != null) {
+            query.setParameter("aktørId", aktørId.getAktørId());
+        }
+        if (status != null) {
+            query.setParameter("status", status.name());
+        }
+        if (ytelseType != null) {
+            query.setParameter("ytelseType", ytelseType.name());
+        }
+        if (fom != null) {
+            query.setParameter("fom", fom);
+        }
+        if (tom != null) {
+            query.setParameter("tom", tom);
+        }
+        query.setMaxResults(100);
+        var result = query.getResultList();
+        if (result.size() == 100) {
+            LOG.warn("Hentet 100 forespørsler for orgnr {}, det kan finnes flere forespørsler som ikke er hentet ut", orgnr);
+        }
+        return result;
     }
 }
