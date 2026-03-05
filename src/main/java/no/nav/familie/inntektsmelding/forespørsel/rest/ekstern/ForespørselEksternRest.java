@@ -2,12 +2,15 @@ package no.nav.familie.inntektsmelding.forespørsel.rest.ekstern;
 
 import static no.nav.familie.inntektsmelding.forespørsel.rest.ekstern.ForespørselEksternRest.BASE_PATH;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -19,13 +22,16 @@ import jakarta.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import no.nav.familie.inntektsmelding.forespørsel.modell.ForespørselEntitet;
 import no.nav.familie.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 import no.nav.familie.inntektsmelding.server.auth.api.AutentisertMedAzure;
 import no.nav.familie.inntektsmelding.server.auth.api.Tilgangskontrollert;
 import no.nav.familie.inntektsmelding.server.tilgangsstyring.Tilgang;
 import no.nav.familie.inntektsmelding.typer.dto.AktørIdDto;
+import no.nav.familie.inntektsmelding.typer.dto.ForespørselStatusDto;
 import no.nav.familie.inntektsmelding.typer.dto.KodeverkMapper;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
+import no.nav.familie.inntektsmelding.typer.dto.YtelseTypeDto;
 
 @AutentisertMedAzure
 @ApplicationScoped
@@ -62,7 +68,28 @@ public class ForespørselEksternRest {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
 
-        var forespørselDto = forespørselEntitet.map(fp -> new ForespørselDto(fp.getUuid(),
+        var forespørselDto = forespørselEntitet.map(ForespørselEksternRest::mapTilDto);
+
+        return forespørselDto.map(Response::ok).orElse(Response.status(Response.Status.NO_CONTENT)).build();
+    }
+
+    @GET
+    @Path("/hent/foresporsler")
+    @Tilgangskontrollert
+    public Response hentForespørsler(@Valid @NotNull ForespørselFilterRequest filterRequest) {
+        sjekkErSystemkall();
+        var resultat = forespørselBehandlingTjeneste.hentForespørsler(filterRequest.orgnr(),
+            filterRequest.fnr(),
+            filterRequest.status(),
+            filterRequest.ytelseType(),
+            filterRequest.fom(),
+            filterRequest.tom());
+        var dtoer = resultat.stream().map(ForespørselEksternRest::mapTilDto).toList();
+        return Response.ok(dtoer).build();
+    }
+
+    private static ForespørselDto mapTilDto(ForespørselEntitet fp) {
+        return new ForespørselDto(fp.getUuid(),
             new OrganisasjonsnummerDto(fp.getOrganisasjonsnummer()),
             null,
             fp.getFørsteUttaksdato(),
@@ -70,10 +97,15 @@ public class ForespørselEksternRest {
             fp.getSkjæringstidspunkt().orElse(null),
             KodeverkMapper.mapForespørselStatus(fp.getStatus()),
             KodeverkMapper.mapYtelsetype(fp.getYtelseType()),
-            fp.getOpprettetTidspunkt()));
+            fp.getOpprettetTidspunkt());
 
 
-        return forespørselDto.map(Response::ok).orElse(Response.status(Response.Status.NO_CONTENT)).build();
+    protected record ForespørselFilterRequest(@NotNull @Valid OrganisasjonsnummerDto orgnr,
+                                              @Pattern(regexp = "^\\d{11}$") String fnr,
+                                              @Valid ForespørselStatusDto status,
+                                              @Valid YtelseTypeDto ytelseType,
+                                              LocalDate fom,
+                                              LocalDate tom) {
     }
 
     private void sjekkErSystemkall() {
