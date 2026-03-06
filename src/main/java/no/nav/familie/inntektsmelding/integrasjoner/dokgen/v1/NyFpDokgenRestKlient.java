@@ -47,7 +47,7 @@ public class NyFpDokgenRestKlient {
         var pdf = restClient.sendReturnByteArray(request);
 
         if (pdf == null || pdf.length == 0) {
-            throw new TekniskException("FPIM", "Fikk tomt svar ved kall til dokgen for generering av pdf for inntektsmelding");
+            throw new TekniskException("FPIM", "Fikk tomt svar ved kall til dokgen for generering av PDF for inntektsmelding");
         }
         return pdf;
     }

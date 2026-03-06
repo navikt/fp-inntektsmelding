@@ -62,14 +62,14 @@ public class FpDokgenTjeneste {
             LOG.info("Genererer PDF ved bruk av ny dokgen.");
             pdf = nyDokgenKlient.genererPdf(imDokumentData, forespørselType);
         } catch (Exception exception) {
-            if (ENV.isDev() || ENV.isProd()) {
+            if (ENV.isProd()) {
                 LOG.warn("Kall til ny dokgen feilet, prøver å generere PDF med gammel dokgen. Feilmelding: {}", exception.getMessage());
                 pdf = gammelDokgenKlient.genererPdf(imDokumentData, forespørselType);
             } else {
                 throw exception;
             }
         }
-        LOG.info("Pdf av inntektsmelding med id {} ble generert.", inntektsmeldingId);
+        LOG.info("PDF av inntektsmelding med id {} ble generert.", inntektsmeldingId);
         return pdf;
     }
 
