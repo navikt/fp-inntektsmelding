@@ -94,6 +94,14 @@ public class KodeverkMapper {
         };
     }
 
+    public static ForespørselStatus mapForespørselStatus(ForespørselStatusDto forespørselStatus) {
+        return switch (forespørselStatus) {
+            case UNDER_BEHANDLING -> ForespørselStatus.UNDER_BEHANDLING;
+            case FERDIG -> ForespørselStatus.FERDIG;
+            case UTGÅTT -> ForespørselStatus.UTGÅTT;
+        };
+    }
+
     public static ArbeidsgiverinitiertÅrsak mapArbeidsgiverinitiertÅrsak(ArbeidsgiverinitiertÅrsakDto arbeidsgiverinitiertÅrsakDto) {
         switch (arbeidsgiverinitiertÅrsakDto) {
             case NYANSATT -> {

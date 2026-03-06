@@ -12,7 +12,13 @@ import jakarta.inject.Inject;
 
 import no.nav.familie.inntektsmelding.integrasjoner.altinn.DialogportenKlient;
 
+import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonInfo;
+
+import no.nav.familie.inntektsmelding.typer.dto.ForespørselStatusDto;
+
+import no.nav.familie.inntektsmelding.typer.dto.KodeverkMapper;
+import no.nav.familie.inntektsmelding.typer.dto.YtelseTypeDto;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -491,5 +497,16 @@ public class ForespørselBehandlingTjeneste {
 
     public ForespørselEntitet oppdaterFørsteUttaksdato(ForespørselEntitet forespørselEnitet, LocalDate startdato) {
         return forespørselTjeneste.setFørsteUttaksdato(forespørselEnitet, startdato);
+    }
+
+    public List<ForespørselEntitet> hentForespørsler(OrganisasjonsnummerDto orgnr,
+                                                     String fnr,
+                                                     ForespørselStatusDto status,
+                                                     YtelseTypeDto ytelseType,
+                                                     LocalDate fom,
+                                                     LocalDate tom) {
+        // TODO skal vi feile hvis fnr ikke finnes? Eller bare returnere som om null ble sendt inn?
+        var aktørId = Optional.ofNullable(fnr).flatMap(ident -> personTjeneste.hentAktørIdFraIdent(new PersonIdent(ident))).orElseThrow(() -> new IllegalStateException("Finner ikke aktørId"));
+        return forespørselTjeneste.hentForespørsler(orgnr, aktørId, KodeverkMapper.mapForespørselStatus(status), KodeverkMapper.mapYtelsetype(ytelseType), fom, tom);
     }
 }
