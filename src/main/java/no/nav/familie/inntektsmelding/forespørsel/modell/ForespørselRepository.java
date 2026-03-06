@@ -1,6 +1,7 @@
 package no.nav.familie.inntektsmelding.forespørsel.modell;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -9,6 +10,7 @@ import java.util.UUID;
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.criteria.Predicate;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -224,48 +226,40 @@ public class ForespørselRepository {
                                           Ytelsetype ytelseType,
                                           LocalDate fom,
                                           LocalDate tom) {
-        StringBuilder queryBuilder = new StringBuilder("SELECT * FROM FORESPOERSEL WHERE ORGNR =:orgnr");
-        // Setter query
+        var cb = entityManager.getCriteriaBuilder();
+        var cq = cb.createQuery(ForespørselEntitet.class);
+        var root = cq.from(ForespørselEntitet.class);
+
+        var predicates = new ArrayList<Predicate>();
+
+        predicates.add(cb.equal(root.get("organisasjonsnummer"), orgnr.orgnr()));
         if (aktørId != null) {
-            queryBuilder.append(" AND bruker_aktoer_id =:aktørId");
+            predicates.add(cb.equal(root.get("aktørId"), aktørId));
         }
         if (status != null) {
-            queryBuilder.append(" AND status =:status");
+            predicates.add(cb.equal(root.get("status"), status));
         }
         if (ytelseType != null) {
-            queryBuilder.append(" AND ytelse_type =:ytelseType");
+            predicates.add(cb.equal(root.get("ytelseType"), ytelseType));
         }
         if (fom != null) {
-            queryBuilder.append(" AND opprettet_tid >=:fom");
+            predicates.add(cb.greaterThanOrEqualTo(root.get("opprettetTidspunkt"), fom.atStartOfDay()));
         }
         if (tom != null) {
-            queryBuilder.append(" AND opprettet_tid <=:tom");
+            predicates.add(cb.lessThan(root.get("opprettetTidspunkt"), tom.plusDays(1).atStartOfDay()));
         }
+        cq.where(predicates.toArray(new Predicate[0]));
 
-        var query = entityManager.createNativeQuery(queryBuilder.toString(),
-            ForespørselEntitet.class);
-
-        // Setter params
-        query.setParameter("orgnr", orgnr.orgnr());
-        if (aktørId != null) {
-            query.setParameter("aktørId", aktørId.getAktørId());
-        }
-        if (status != null) {
-            query.setParameter("status", status.name());
-        }
-        if (ytelseType != null) {
-            query.setParameter("ytelseType", ytelseType.name());
-        }
-        if (fom != null) {
-            query.setParameter("fom", fom);
-        }
-        if (tom != null) {
-            query.setParameter("tom", tom);
-        }
-        query.setMaxResults(100);
+        cq.orderBy(cb.asc(root.get("opprettetTidspunkt")));
+        var query = entityManager.createQuery(cq);
+        query.setMaxResults(1001);
         var result = query.getResultList();
-        if (result.size() == 100) {
-            LOG.warn("Hentet 100 forespørsler for orgnr {}, det kan finnes flere forespørsler som ikke er hentet ut", orgnr);
+        if (result.size() == 1001) {
+            LOG.warn("Hentet 1000 forespørsler for orgnr {}, men det finnes flere forespørsler som ikke er hentet ut", orgnr);
+            // Wrapper i ny liste for å omgå Immutable list
+            var redusertListe = new ArrayList<>(result);
+            redusertListe.removeLast();
+            return redusertListe;
         }
         return result;
     }

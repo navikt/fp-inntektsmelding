@@ -506,7 +506,7 @@ public class ForespørselBehandlingTjeneste {
                                                      LocalDate fom,
                                                      LocalDate tom) {
         // TODO skal vi feile hvis fnr ikke finnes? Eller bare returnere som om null ble sendt inn?
-        var aktørId = Optional.ofNullable(fnr).flatMap(ident -> personTjeneste.hentAktørIdFraIdent(new PersonIdent(ident))).orElse(null);
+        var aktørId = Optional.ofNullable(fnr).flatMap(ident -> personTjeneste.hentAktørIdFraIdent(new PersonIdent(ident))).orElseThrow(() -> new IllegalStateException("Finner ikke aktørId"));
         return forespørselTjeneste.hentForespørsler(orgnr, aktørId, KodeverkMapper.mapForespørselStatus(status), KodeverkMapper.mapYtelsetype(ytelseType), fom, tom);
     }
 }
