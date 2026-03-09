@@ -19,7 +19,6 @@ import no.nav.familie.inntektsmelding.forespørsel.tjenester.ForespørselBehandl
 import no.nav.familie.inntektsmelding.koder.ForespørselType;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.server.tilgangsstyring.Tilgang;
-import no.nav.familie.inntektsmelding.typer.dto.AktørIdDto;
 import no.nav.familie.inntektsmelding.typer.dto.ForespørselStatusDto;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.familie.inntektsmelding.typer.dto.YtelseTypeDto;
@@ -43,8 +42,7 @@ class ForespørselEksternRestTest {
     @Test
     void skal_hente_forespørsel() {
         var orgnummer = new OrganisasjonsnummerDto(BRREG_ORGNUMMER);
-        var aktørIdDto = new AktørIdDto("1234567890134");
-        var aktørIdEntitet = new AktørIdEntitet(aktørIdDto.id());
+        var aktørIdEntitet = new AktørIdEntitet("1234567890134");
         var fagsakSaksnummer = ("1234567989");
         var førsteUttaksdato = LocalDate.now();
         var skjæringstidspunkt = LocalDate.now();
@@ -61,11 +59,12 @@ class ForespørselEksternRestTest {
         when(forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid)).thenReturn(Optional.of(forespørselEntitet));
         var forventetForespørselDto = new ForespørselDto(forespørselUuid,
             orgnummer,
-            aktørIdDto,
+            null,
             førsteUttaksdato,
             skjæringstidspunkt,
             ForespørselStatusDto.UNDER_BEHANDLING,
-            YtelseTypeDto.FORELDREPENGER);
+            YtelseTypeDto.FORELDREPENGER,
+            forespørselEntitet.getOpprettetTidspunkt());
 
         var response = forespørselEksternRest.hentForespørsel(forespørselUuid);
 

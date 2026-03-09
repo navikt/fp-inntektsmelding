@@ -64,12 +64,14 @@ public class ForespørselEksternRest {
 
         var forespørselDto = forespørselEntitet.map(fp -> new ForespørselDto(fp.getUuid(),
             new OrganisasjonsnummerDto(fp.getOrganisasjonsnummer()),
-            new AktørIdDto(fp.getAktørId().getAktørId()),
+            null,
             fp.getFørsteUttaksdato(),
             //todo skal det være mulig å sende inn arbeidsgiverinitert fp gjennom api. Det er kun da denne kan være null
             fp.getSkjæringstidspunkt().orElse(null),
             KodeverkMapper.mapForespørselStatus(fp.getStatus()),
-            KodeverkMapper.mapYtelsetype(fp.getYtelseType())));
+            KodeverkMapper.mapYtelsetype(fp.getYtelseType()),
+            fp.getOpprettetTidspunkt()));
+
 
         return forespørselDto.map(Response::ok).orElse(Response.status(Response.Status.NO_CONTENT)).build();
     }
