@@ -99,10 +99,10 @@ spec:
         - application: azure-token-generator
           namespace: nais
           cluster: dev-gcp
-        - application: fpinntektsmelding-api
         - application: tokenx-token-generator
           namespace: nais
           cluster: dev-gcp
+        - application: fpinntektsmelding-api
       {{/if}}
     outbound:
       rules:
@@ -121,9 +121,9 @@ spec:
         - host: ereg-services.{{environment}}-fss-pub.nais.io
         - host: aareg-services.{{environment}}-fss-pub.nais.io
       {{#if devOnly}}
-        - host: dokarkiv-q2.{{environment}}-fss-pub.nais.io
+        - host: dokarkiv-q2.dev-fss-pub.nais.io
         - host: platform.tt02.altinn.no
       {{else}}
-        - host: dokarkiv.{{environment}}-fss-pub.nais.io
+        - host: dokarkiv.prod-fss-pub.nais.io
         - host: platform.altinn.no
       {{/if}}
