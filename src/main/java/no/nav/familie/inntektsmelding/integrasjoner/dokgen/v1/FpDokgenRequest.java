@@ -2,7 +2,7 @@ package no.nav.familie.inntektsmelding.integrasjoner.dokgen.v1;
 
 import jakarta.validation.constraints.NotNull;
 
-public record NyDokgenRequest(
+public record FpDokgenRequest(
     @NotNull String malNavn,
     Språk språk,
     @NotNull CssStyling cssStyling,

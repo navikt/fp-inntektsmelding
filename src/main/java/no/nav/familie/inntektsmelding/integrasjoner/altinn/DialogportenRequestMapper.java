@@ -26,8 +26,7 @@ public class DialogportenRequestMapper {
                                                            String inntektsmeldingSkjemaLenke,
                                                            PersonIdent fødselsnummer) {
         var party = String.format("urn:altinn:organization:identifier-no:%s", organisasjonsnummer.orgnr());
-        var foreldrepengerRessurs = AltinnRessurser.ALTINN_TRE_INNTEKTSMELDING_RESSURS;
-        var altinnressursFP = ALTINN_RESSURS_PREFIX + foreldrepengerRessurs;
+        var altinnressursFP = ALTINN_RESSURS_PREFIX + AltinnRessurser.ALTINN_TRE_INNTEKTSMELDING_RESSURS;
 
         //Oppretter dialog
         var summaryDialog = String.format("Nav trenger inntektsmelding for å behandle søknad om %s med startdato %s.",

@@ -17,7 +17,7 @@ import no.nav.vedtak.mapper.json.DefaultJsonMapper;
 @ApplicationScoped
 @RestClientConfig(tokenConfig = TokenFlow.AZUREAD_CC, endpointProperty = "fpdokgen.base.url", endpointDefault = "http://fp-dokgen",
     scopesProperty = "fpdokgen.scopes", scopesDefault = "api://prod-gcp.teamforeldrepenger.fp-dokgen/.default")
-public class NyFpDokgenRestKlient {
+public class FpDokgenRestKlient {
 
     protected static final String API_PATH = "/api";
     private static final String V1_GENERER_PATH = "/v1/dokument/generer";
@@ -25,20 +25,20 @@ public class NyFpDokgenRestKlient {
     private final RestClient restClient;
     private final RestConfig restConfig;
 
-    public NyFpDokgenRestKlient() {
+    public FpDokgenRestKlient() {
         this(RestClient.client());
     }
 
-    public NyFpDokgenRestKlient(RestClient restClient) {
+    public FpDokgenRestKlient(RestClient restClient) {
         this.restClient = restClient;
-        this.restConfig = RestConfig.forClient(NyFpDokgenRestKlient.class);
+        this.restConfig = RestConfig.forClient(FpDokgenRestKlient.class);
     }
 
     public byte[] genererPdf(InntektsmeldingPdfData metadata, ForespørselType forespørselType) {
         var template = utledMal(forespørselType);
 
         var endpoint = UriBuilder.fromUri(restConfig.endpoint()).path(API_PATH).path(V1_GENERER_PATH).path("/pdf").build();
-        var requestDto = new NyDokgenRequest(template, null, NyDokgenRequest.CssStyling.INNTEKTSMELDING_PDF,
+        var requestDto = new FpDokgenRequest(template, null, FpDokgenRequest.CssStyling.INNTEKTSMELDING_PDF,
             DefaultJsonMapper.toJson(metadata));
 
         var request = RestRequest.newPOSTJson(requestDto, endpoint, restConfig)
