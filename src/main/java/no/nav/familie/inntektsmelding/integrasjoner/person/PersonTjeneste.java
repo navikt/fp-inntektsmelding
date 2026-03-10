@@ -109,7 +109,7 @@ public class PersonTjeneste {
         };
     }
 
-    private Optional<AktørIdEntitet> finnAktørIdForIdent(PersonIdent personIdent) {
+    public Optional<AktørIdEntitet> finnAktørIdForIdent(PersonIdent personIdent) {
         return pdlKlient.hentAktørIdForPersonIdent(personIdent.getIdent(), true).map(AktørIdEntitet::new);
     }
 

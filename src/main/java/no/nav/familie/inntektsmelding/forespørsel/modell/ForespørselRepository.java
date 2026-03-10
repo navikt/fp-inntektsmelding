@@ -1,7 +1,9 @@
 package no.nav.familie.inntektsmelding.forespørsel.modell;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -9,6 +11,7 @@ import java.util.UUID;
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.criteria.Predicate;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -108,7 +111,7 @@ public class ForespørselRepository {
     }
 
 
-    public List<ForespørselEntitet> hentForespørsler(SaksnummerDto fagsakSaksnummer) {
+    public List<ForespørselEntitet> hentForespørslerPåSak(SaksnummerDto fagsakSaksnummer) {
         var query = entityManager.createQuery("FROM ForespørselEntitet f where fagsystemSaksnummer = :saksnr", ForespørselEntitet.class)
             .setParameter("saksnr", fagsakSaksnummer.saksnr());
         return query.getResultList();
@@ -216,5 +219,49 @@ public class ForespørselRepository {
         } else {
             LOG.info("Finner ikke forespørsel med id {}", forespørselUuid);
         }
+    }
+
+    public List<ForespørselEntitet> hentForespørslerFraFilter(OrganisasjonsnummerDto orgnr,
+                                          AktørIdEntitet aktørId,
+                                          ForespørselStatus status,
+                                          Ytelsetype ytelseType,
+                                          LocalDate fom,
+                                          LocalDate tom) {
+        var cb = entityManager.getCriteriaBuilder();
+        var cq = cb.createQuery(ForespørselEntitet.class);
+        var root = cq.from(ForespørselEntitet.class);
+
+        var predicates = new ArrayList<Predicate>();
+
+        predicates.add(cb.equal(root.get("organisasjonsnummer"), Objects.requireNonNull(orgnr.orgnr())));
+        if (aktørId != null) {
+            predicates.add(cb.equal(root.get("aktørId"), aktørId));
+        }
+        if (status != null) {
+            predicates.add(cb.equal(root.get("status"), status));
+        }
+        if (ytelseType != null) {
+            predicates.add(cb.equal(root.get("ytelseType"), ytelseType));
+        }
+        if (fom != null) {
+            predicates.add(cb.greaterThanOrEqualTo(root.get("opprettetTidspunkt"), fom.atStartOfDay()));
+        }
+        if (tom != null) {
+            predicates.add(cb.lessThan(root.get("opprettetTidspunkt"), tom.plusDays(1).atStartOfDay()));
+        }
+        cq.where(predicates.toArray(new Predicate[0]));
+
+        cq.orderBy(cb.asc(root.get("opprettetTidspunkt")));
+        var query = entityManager.createQuery(cq);
+        query.setMaxResults(1001);
+        var result = query.getResultList();
+        if (result.size() == 1001) {
+            LOG.warn("Hentet 1000 forespørsler for orgnr {}, men det finnes flere forespørsler som ikke er hentet ut", orgnr);
+            // Wrapper i ny liste for å omgå Immutable list
+            var redusertListe = new ArrayList<>(result);
+            redusertListe.removeLast();
+            return redusertListe;
+        }
+        return result;
     }
 }

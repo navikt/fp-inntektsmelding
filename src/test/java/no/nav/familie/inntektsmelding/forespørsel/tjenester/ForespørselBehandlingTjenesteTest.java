@@ -94,7 +94,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
         clearHibernateCache();
 
-        var lagret = forespørselRepository.hentForespørsler(new SaksnummerDto(SAKSNUMMMER));
+        var lagret = forespørselRepository.hentForespørslerPåSak(new SaksnummerDto(SAKSNUMMMER));
 
         assertThat(resultat).isEqualTo(ForespørselResultat.FORESPØRSEL_OPPRETTET);
         assertThat(lagret).hasSize(1);
@@ -119,7 +119,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
         clearHibernateCache();
 
-        var lagret = forespørselRepository.hentForespørsler(new SaksnummerDto(SAKSNUMMMER));
+        var lagret = forespørselRepository.hentForespørslerPåSak(new SaksnummerDto(SAKSNUMMMER));
         assertThat(resultat).isEqualTo(ForespørselResultat.IKKE_OPPRETTET_FINNES_ALLEREDE);
         assertThat(lagret).hasSize(1);
     }
@@ -139,7 +139,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
         clearHibernateCache();
 
-        var lagret = forespørselRepository.hentForespørsler(new SaksnummerDto(SAKSNUMMMER)).getFirst();
+        var lagret = forespørselRepository.hentForespørslerPåSak(new SaksnummerDto(SAKSNUMMMER)).getFirst();
         var fpEntitet = forespørselBehandlingTjeneste.ferdigstillForespørsel(lagret.getUuid(),
             lagret.getAktørId(),
             new OrganisasjonsnummerDto(lagret.getOrganisasjonsnummer()),
@@ -174,7 +174,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
         clearHibernateCache();
 
-        var lagret = forespørselRepository.hentForespørsler(new SaksnummerDto(SAKSNUMMMER)).getFirst();
+        var lagret = forespørselRepository.hentForespørslerPåSak(new SaksnummerDto(SAKSNUMMMER)).getFirst();
 
         var fpEntitet = forespørselBehandlingTjeneste.ferdigstillForespørsel(lagret.getUuid(),
             lagret.getAktørId(),
@@ -210,7 +210,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             FØRSTE_UTTAKSDATO
         );
 
-        var lagret = forespørselRepository.hentForespørsler(saksnummerDto).getFirst();
+        var lagret = forespørselRepository.hentForespørslerPåSak(saksnummerDto).getFirst();
 
         var fpEntitet = forespørselBehandlingTjeneste.ferdigstillForespørsel(lagret.getUuid(),
             lagret.getAktørId(),
@@ -250,7 +250,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             FØRSTE_UTTAKSDATO
         );
 
-        var lagret = forespørselRepository.hentForespørsler(saksnummerDto).getFirst();
+        var lagret = forespørselRepository.hentForespørslerPåSak(saksnummerDto).getFirst();
 
         assertThat(lagret.getStatus()).isEqualTo(ForespørselStatus.UNDER_BEHANDLING);
 
