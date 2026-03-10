@@ -13,6 +13,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
@@ -72,7 +73,7 @@ public class ForespørselEksternRest {
         return forespørselDto.map(Response::ok).orElse(Response.status(Response.Status.NO_CONTENT)).build();
     }
 
-    @GET
+    @POST
     @Path("/hent/foresporsler")
     @Tilgangskontrollert
     public Response hentForespørsler(@Valid @NotNull ForespørselFilterRequest filterRequest) {
