@@ -3,6 +3,7 @@ package no.nav.familie.inntektsmelding.forespørsel.modell;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -232,7 +233,7 @@ public class ForespørselRepository {
 
         var predicates = new ArrayList<Predicate>();
 
-        predicates.add(cb.equal(root.get("organisasjonsnummer"), orgnr.orgnr()));
+        predicates.add(cb.equal(root.get("organisasjonsnummer"), Objects.requireNonNull(orgnr.orgnr())));
         if (aktørId != null) {
             predicates.add(cb.equal(root.get("aktørId"), aktørId));
         }
