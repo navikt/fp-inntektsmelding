@@ -27,7 +27,6 @@ import no.nav.familie.inntektsmelding.forespørsel.tjenester.ForespørselBehandl
 import no.nav.familie.inntektsmelding.server.auth.api.AutentisertMedAzure;
 import no.nav.familie.inntektsmelding.server.auth.api.Tilgangskontrollert;
 import no.nav.familie.inntektsmelding.server.tilgangsstyring.Tilgang;
-import no.nav.familie.inntektsmelding.typer.dto.AktørIdDto;
 import no.nav.familie.inntektsmelding.typer.dto.ForespørselStatusDto;
 import no.nav.familie.inntektsmelding.typer.dto.KodeverkMapper;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
@@ -98,6 +97,7 @@ public class ForespørselEksternRest {
             KodeverkMapper.mapForespørselStatus(fp.getStatus()),
             KodeverkMapper.mapYtelsetype(fp.getYtelseType()),
             fp.getOpprettetTidspunkt());
+    }
 
 
     protected record ForespørselFilterRequest(@NotNull @Valid OrganisasjonsnummerDto orgnr,
@@ -105,8 +105,7 @@ public class ForespørselEksternRest {
                                               @Valid ForespørselStatusDto status,
                                               @Valid YtelseTypeDto ytelseType,
                                               LocalDate fom,
-                                              LocalDate tom) {
-    }
+                                              LocalDate tom) {}
 
     private void sjekkErSystemkall() {
         tilgang.sjekkErSystembruker();
