@@ -505,7 +505,13 @@ public class ForespørselBehandlingTjeneste {
                                                      YtelseTypeDto ytelseType,
                                                      LocalDate fom,
                                                      LocalDate tom) {
-        var aktørId = Optional.ofNullable(fnr).flatMap(ident -> personTjeneste.finnAktørIdForIdent(new PersonIdent(ident))).orElseThrow(() -> new IllegalStateException("Finner ikke aktørId"));
-        return forespørselTjeneste.hentForespørsler(orgnr, aktørId, KodeverkMapper.mapForespørselStatus(status), KodeverkMapper.mapYtelsetype(ytelseType), fom, tom);
+        var aktørId = fnr == null ? null : personTjeneste.finnAktørIdForIdent(new PersonIdent(fnr))
+            .orElseThrow(() -> new IllegalStateException("Finner ikke aktørId"));
+        return forespørselTjeneste.hentForespørsler(orgnr,
+            aktørId,
+            status == null ? null : KodeverkMapper.mapForespørselStatus(status),
+            ytelseType == null ? null : KodeverkMapper.mapYtelsetype(ytelseType),
+            fom,
+            tom);
     }
 }

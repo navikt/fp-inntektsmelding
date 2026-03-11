@@ -702,6 +702,38 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
     }
 
+    @Test
+    void skal_ikke_få_resultat_hvis_aktørid_ikke_matcher() {
+        forespørselRepository.lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, BRREG_ORGNUMMER, SAKSNUMMMER, SKJÆRINGSTIDSPUNKT,
+            ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var fnr = "123";
+        var feilAktørId = new AktørIdEntitet("1111111111111");
+        when(personTjeneste.finnAktørIdForIdent(new PersonIdent(fnr))).thenReturn(Optional.of(feilAktørId));
+
+        getEntityManager().clear();
+
+        clearHibernateCache();
+
+        var resultat = forespørselBehandlingTjeneste.hentForespørsler(new OrganisasjonsnummerDto(BRREG_ORGNUMMER), fnr, null, null, null, null);
+
+        assertThat(resultat).isEmpty();
+    }
+
+    @Test
+    void skal_søke_etter_forespørsler_hvis_fnr_er_null() {
+        forespørselRepository.lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, BRREG_ORGNUMMER, SAKSNUMMMER, SKJÆRINGSTIDSPUNKT,
+            ForespørselType.BESTILT_AV_FAGSYSTEM);
+
+        getEntityManager().clear();
+
+        clearHibernateCache();
+
+        var resultat = forespørselBehandlingTjeneste.hentForespørsler(new OrganisasjonsnummerDto(BRREG_ORGNUMMER), null, null, null, null, null);
+
+        assertThat(resultat).hasSize(1);
+        assertThat(resultat.getFirst().getOrganisasjonsnummer()).isEqualTo(BRREG_ORGNUMMER);
+    }
+
     private void clearHibernateCache() {
         // Fjerne hibernate cachen før assertions skal evalueres - hibernate ignorerer alle updates som er markert med updatable = false ved skriving mot databasen
         // men objektene i cachen blir oppdatert helt greit likevel.
