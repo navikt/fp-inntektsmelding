@@ -145,7 +145,7 @@ public class PersonTjeneste {
         request.setHistorikk(Boolean.FALSE);
         var projection = new IdentlisteResponseProjection().identer(new IdentInformasjonResponseProjection().ident());
         try {
-            LOG.info("Henter ident for person");
+            LOG.info("Henter orgnr for person");
             var identliste = pdlKlient.hentIdenter(request, projection);
             return identliste.getIdenter().stream().findFirst().map(IdentInformasjon::getIdent).map(PersonIdent::new);
         } catch (VLException v) {

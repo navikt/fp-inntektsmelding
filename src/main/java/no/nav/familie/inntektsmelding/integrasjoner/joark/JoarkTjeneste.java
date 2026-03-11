@@ -83,7 +83,7 @@ public class JoarkTjeneste {
             .medTema("FOR")
             .medEksternReferanseId(inntektsmeldingEntitet.getUuid().map(UUID::toString).orElse(UUID.randomUUID().toString()))
             .medJournalfoerendeEnhet(JOURNALFØRENDE_ENHET)
-            .medKanal(KANAL)
+            .medKanal(KANAL) //TODO: Bør settes til HR_SYSTEM_API ved maskinell innsending, vurder INNSENDT_NAV_ANSATT ved overstyring også.
             .medDokumenter(lagDokumenter(xmlAvInntektsmelding, pdf));
 
         if (fagsystemSaksnummer != null) {

@@ -4,7 +4,7 @@ import java.util.Objects;
 import java.util.regex.Pattern;
 
 /**
- * Denne mapper p.t Norsk person ident (fødselsnummer, inkl F-nr, D-nr eller FDAT)
+ * Denne mapper p.t Norsk person orgnr (fødselsnummer, inkl F-nr, D-nr eller FDAT)
  * <ul>
  * <li>F-nr: http://lovdata.no/forskrift/2007-11-09-1268/%C2%A72-2 (F-nr)</li>
  *
@@ -28,7 +28,7 @@ public class PersonIdent {
     private final String ident;
 
     public PersonIdent(String ident) {
-        Objects.requireNonNull(ident, "ident kan ikke være null");
+        Objects.requireNonNull(ident, "orgnr kan ikke være null");
         this.ident = ident;
     }
 
@@ -94,7 +94,7 @@ public class PersonIdent {
 
     @Override
     public String toString() {
-        return PersonIdent.class.getSimpleName() + "<ident=" + maskerIdent() + ">";
+        return PersonIdent.class.getSimpleName() + "<orgnr=" + maskerIdent() + ">";
     }
 
     private String maskerIdent() {

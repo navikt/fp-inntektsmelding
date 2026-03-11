@@ -32,10 +32,10 @@ public class ArbeidsforholdTjeneste {
     public List<Arbeidsforhold> hentArbeidsforhold(PersonIdent ident, LocalDate førsteFraværsdag) {
         var aaregInfo = aaregRestKlient.finnArbeidsforholdForArbeidstaker(ident.getIdent(), førsteFraværsdag);
         if (aaregInfo == null) {
-            LOG.info("Fant ingen arbeidsforhold for ident {}. Returnerer tom liste", ident);
+            LOG.info("Fant ingen arbeidsforhold for orgnr {}. Returnerer tom liste", ident);
             return Collections.emptyList();
         }
-        LOG.info("Fant {} arbeidsforhold for ident {}.", aaregInfo.size(), ident);
+        LOG.info("Fant {} arbeidsforhold for orgnr {}.", aaregInfo.size(), ident);
 
         return aaregInfo.stream()
             .filter(arb -> OpplysningspliktigArbeidsgiverDto.Type.ORGANISASJON.equals(arb.arbeidsgiver().type()))

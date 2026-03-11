@@ -36,18 +36,10 @@ public class GeneralRestExceptionMapper implements ExceptionMapper<Throwable> {
                 if (exceptionMelding.contains("INGEN_SAK_FUNNET")) {
                     LOG.info("Ingen sak funnet feil: {}", exceptionMelding);
                     return ingenSakFunnet();
-                }
-            }
-            if (feil instanceof FunksjonellException) {
-                var exceptionMelding = getExceptionMelding(feil);
-                if (exceptionMelding.contains("SENDT_FOR_TIDLIG")) {
+                } else if (exceptionMelding.contains("SENDT_FOR_TIDLIG")) {
                     LOG.info("Inntektsmelding sendt for tidlig feil: {}", exceptionMelding);
                     return sendtInnForTidlig();
-                }
-            }
-            if (feil instanceof FunksjonellException) {
-                var exceptionMelding = getExceptionMelding(feil);
-                if (exceptionMelding.contains("FINNES_I_AAREG")) {
+                } else if (exceptionMelding.contains("FINNES_I_AAREG")) {
                     LOG.info("Organisasjonsnummer har rapportering i aa-reg feil: {}", exceptionMelding);
                     return finnesIAareg();
                 }
