@@ -23,13 +23,10 @@ import jakarta.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import no.nav.familie.inntektsmelding.forespørsel.modell.ForespørselEntitet;
-import no.nav.familie.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 import no.nav.familie.inntektsmelding.server.auth.api.AutentisertMedAzure;
 import no.nav.familie.inntektsmelding.server.auth.api.Tilgangskontrollert;
 import no.nav.familie.inntektsmelding.server.tilgangsstyring.Tilgang;
 import no.nav.familie.inntektsmelding.typer.dto.ForespørselStatusDto;
-import no.nav.familie.inntektsmelding.typer.dto.KodeverkMapper;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.familie.inntektsmelding.typer.dto.YtelseTypeDto;
 
@@ -42,7 +39,7 @@ import no.nav.familie.inntektsmelding.typer.dto.YtelseTypeDto;
 public class ForespørselEksternRest {
     public static final String BASE_PATH = "/foresporsel-ekstern";
     private static final Logger LOG = LoggerFactory.getLogger(ForespørselEksternRest.class);
-    private ForespørselBehandlingTjeneste forespørselBehandlingTjeneste;
+    private ForespørselEksternTjeneste forespørselEksternTjeneste;
     private Tilgang tilgang;
 
     ForespørselEksternRest() {
@@ -50,8 +47,9 @@ public class ForespørselEksternRest {
     }
 
     @Inject
-    public ForespørselEksternRest(ForespørselBehandlingTjeneste forespørselBehandlingTjeneste, Tilgang tilgang) {
-        this.forespørselBehandlingTjeneste = forespørselBehandlingTjeneste;
+    public ForespørselEksternRest(ForespørselEksternTjeneste forespørselEksternTjeneste,
+                                  Tilgang tilgang) {
+        this.forespørselEksternTjeneste = forespørselEksternTjeneste;
         this.tilgang = tilgang;
     }
 
@@ -61,16 +59,14 @@ public class ForespørselEksternRest {
     public Response hentForespørsel(@Valid @PathParam("forespørselUuid") UUID forespørselUuId) {
         sjekkErSystemkall();
 
-        var forespørselEntitet = forespørselBehandlingTjeneste.hentForespørsel(forespørselUuId);
+        var forespørselDto = forespørselEksternTjeneste.hentForesørselDto(forespørselUuId);
 
-        if (forespørselEntitet.isEmpty()) {
+        if (forespørselDto.isEmpty()) {
             LOG.warn("Forespørsel med uuid {} finnes ikke", forespørselUuId);
             return Response.status(Response.Status.NOT_FOUND).build();
         }
 
-        var forespørselDto = forespørselEntitet.map(ForespørselEksternRest::mapTilDto);
-
-        return forespørselDto.map(Response::ok).orElse(Response.status(Response.Status.NO_CONTENT)).build();
+        return forespørselDto.map(Response::ok).orElse(Response.status(Response.Status.NOT_FOUND)).build();
     }
 
     @POST
@@ -78,28 +74,14 @@ public class ForespørselEksternRest {
     @Tilgangskontrollert
     public Response hentForespørsler(@Valid @NotNull ForespørselFilterRequest filterRequest) {
         sjekkErSystemkall();
-        var resultat = forespørselBehandlingTjeneste.hentForespørsler(filterRequest.orgnr(),
+        var dtoer = forespørselEksternTjeneste.hentForespørslerDto(filterRequest.orgnr(),
             filterRequest.fnr(),
             filterRequest.status(),
             filterRequest.ytelseType(),
             filterRequest.fom(),
             filterRequest.tom());
-        var dtoer = resultat.stream().map(ForespørselEksternRest::mapTilDto).toList();
         return Response.ok(dtoer).build();
     }
-
-    private static ForespørselDto mapTilDto(ForespørselEntitet fp) {
-        return new ForespørselDto(fp.getUuid(),
-            new OrganisasjonsnummerDto(fp.getOrganisasjonsnummer()),
-            null,
-            fp.getFørsteUttaksdato(),
-            //todo skal det være mulig å sende inn arbeidsgiverinitert fp gjennom api. Det er kun da denne kan være null
-            fp.getSkjæringstidspunkt().orElse(null),
-            KodeverkMapper.mapForespørselStatus(fp.getStatus()),
-            KodeverkMapper.mapYtelsetype(fp.getYtelseType()),
-            fp.getOpprettetTidspunkt());
-    }
-
 
     protected record ForespørselFilterRequest(@NotNull @Valid OrganisasjonsnummerDto orgnr,
                                               @Pattern(regexp = "^\\d{11}$") String fnr,

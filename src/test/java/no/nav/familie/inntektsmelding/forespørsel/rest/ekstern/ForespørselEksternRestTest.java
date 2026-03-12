@@ -5,7 +5,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,15 +16,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import no.nav.familie.inntektsmelding.forespørsel.modell.ForespørselEntitet;
-import no.nav.familie.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
-import no.nav.familie.inntektsmelding.koder.ForespørselType;
-import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.server.tilgangsstyring.Tilgang;
 import no.nav.familie.inntektsmelding.typer.dto.ForespørselStatusDto;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.familie.inntektsmelding.typer.dto.YtelseTypeDto;
-import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
 
 @ExtendWith(MockitoExtension.class)
 class ForespørselEksternRestTest {
@@ -30,46 +27,36 @@ class ForespørselEksternRestTest {
 
     private ForespørselEksternRest forespørselEksternRest;
     @Mock
-    private ForespørselBehandlingTjeneste forespørselBehandlingTjeneste;
-    @Mock
     private Tilgang tilgang;
+    @Mock
+    private ForespørselEksternTjeneste forespørselEksternTjeneste;
 
     @BeforeEach
     void setUp() {
-        this.forespørselEksternRest = new ForespørselEksternRest(forespørselBehandlingTjeneste, tilgang);
+        this.forespørselEksternRest = new ForespørselEksternRest(forespørselEksternTjeneste, tilgang);
     }
 
     @Test
     void skal_hente_forespørsel() {
         var orgnummer = new OrganisasjonsnummerDto(BRREG_ORGNUMMER);
-        var aktørIdEntitet = new AktørIdEntitet("1234567890134");
-        var fagsakSaksnummer = ("1234567989");
         var førsteUttaksdato = LocalDate.now();
         var skjæringstidspunkt = LocalDate.now();
-        var forespørselEntitet = new ForespørselEntitet(orgnummer.orgnr(),
-            skjæringstidspunkt,
-            aktørIdEntitet,
-            Ytelsetype.FORELDREPENGER,
-            fagsakSaksnummer,
-            førsteUttaksdato,
-            ForespørselType.BESTILT_AV_FAGSYSTEM);
-
-        var forespørselUuid = forespørselEntitet.getUuid();
-
-        when(forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid)).thenReturn(Optional.of(forespørselEntitet));
+        var forespørselUuid = UUID.randomUUID();
         var forventetForespørselDto = new ForespørselDto(forespørselUuid,
             orgnummer,
-            null,
+            "11111111111",
             førsteUttaksdato,
             skjæringstidspunkt,
             ForespørselStatusDto.UNDER_BEHANDLING,
             YtelseTypeDto.FORELDREPENGER,
-            forespørselEntitet.getOpprettetTidspunkt());
+            LocalDateTime.now());
+
+        when(forespørselEksternTjeneste.hentForesørselDto(forespørselUuid)).thenReturn(Optional.of(forventetForespørselDto));
 
         var response = forespørselEksternRest.hentForespørsel(forespørselUuid);
 
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK_200);
         assertThat(response.getEntity()).isEqualTo(forventetForespørselDto);
-        verify(forespørselBehandlingTjeneste).hentForespørsel(forespørselUuid);
+        verify(forespørselEksternTjeneste).hentForesørselDto(forespørselUuid);
     }
 }
