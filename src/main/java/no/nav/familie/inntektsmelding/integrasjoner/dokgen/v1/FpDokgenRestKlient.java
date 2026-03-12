@@ -7,6 +7,7 @@ import jakarta.ws.rs.core.UriBuilder;
 import no.nav.familie.inntektsmelding.integrasjoner.dokgen.InntektsmeldingPdfData;
 import no.nav.familie.inntektsmelding.koder.ForespørselType;
 import no.nav.vedtak.exception.TekniskException;
+import no.nav.vedtak.felles.integrasjon.rest.FpApplication;
 import no.nav.vedtak.felles.integrasjon.rest.RestClient;
 import no.nav.vedtak.felles.integrasjon.rest.RestClientConfig;
 import no.nav.vedtak.felles.integrasjon.rest.RestConfig;
@@ -15,8 +16,7 @@ import no.nav.vedtak.felles.integrasjon.rest.TokenFlow;
 import no.nav.vedtak.mapper.json.DefaultJsonMapper;
 
 @ApplicationScoped
-@RestClientConfig(tokenConfig = TokenFlow.AZUREAD_CC, endpointProperty = "fpdokgen.base.url", endpointDefault = "http://fp-dokgen",
-    scopesProperty = "fpdokgen.scopes", scopesDefault = "api://prod-gcp.teamforeldrepenger.fp-dokgen/.default")
+@RestClientConfig(tokenConfig = TokenFlow.AZUREAD_CC, application = FpApplication.FPDOKGEN)
 public class FpDokgenRestKlient {
 
     protected static final String API_PATH = "/api";
@@ -37,7 +37,7 @@ public class FpDokgenRestKlient {
     public byte[] genererPdf(InntektsmeldingPdfData metadata, ForespørselType forespørselType) {
         var template = utledMal(forespørselType);
 
-        var endpoint = UriBuilder.fromUri(restConfig.endpoint()).path(API_PATH).path(V1_GENERER_PATH).path("/pdf").build();
+        var endpoint = UriBuilder.fromUri(restConfig.fpContextPath()).path(API_PATH).path(V1_GENERER_PATH).path("/pdf").build();
         var requestDto = new FpDokgenRequest(template, null, FpDokgenRequest.CssStyling.INNTEKTSMELDING_PDF,
             DefaultJsonMapper.toJson(metadata));
 
