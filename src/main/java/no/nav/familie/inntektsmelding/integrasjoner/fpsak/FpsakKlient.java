@@ -28,7 +28,6 @@ public class FpsakKlient {
 
     private static final String FPSAK_STATUS_API = "/api/fordel/infoOmSakInntektsmelding";
 
-
     private final RestClient restClient;
     private final RestConfig restConfig;
 

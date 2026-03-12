@@ -86,8 +86,6 @@ public class JettyServer {
     private static DataSource dataSource() {
         var config = new HikariConfig();
         config.setJdbcUrl(ENV.getRequiredProperty("DB_JDBC_URL"));
-        config.setUsername(ENV.getRequiredProperty("DB_USERNAME"));
-        config.setPassword(ENV.getRequiredProperty("DB_PASSWORD"));
         config.setConnectionTimeout(TimeUnit.SECONDS.toMillis(2));
         config.setMinimumIdle(1);
         config.setMaximumPoolSize(16);

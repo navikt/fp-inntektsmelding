@@ -106,7 +106,6 @@ spec:
       {{/if}}
     outbound:
       rules:
-        - application: fp-dokgen
         - application: fpdokgen
         - application: logging
           namespace: nais-system
