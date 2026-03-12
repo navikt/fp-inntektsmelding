@@ -21,7 +21,7 @@ public class ForespørselEksternTjeneste {
     private PersonTjeneste personTjeneste;
     private ForespørselBehandlingTjeneste forespørselBehandlingTjeneste;
 
-    private ForespørselEksternTjeneste() {
+    ForespørselEksternTjeneste() {
         // CDI
     }
 
