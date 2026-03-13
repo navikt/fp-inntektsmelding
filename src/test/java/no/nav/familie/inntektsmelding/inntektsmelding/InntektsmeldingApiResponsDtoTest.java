@@ -13,11 +13,11 @@ import org.junit.jupiter.api.Test;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 
-import no.nav.familie.inntektsmelding.inntektsmelding.kontrakt.ArbeidsgiverInformasjonDto;
-import no.nav.familie.inntektsmelding.inntektsmelding.kontrakt.Endringsårsak;
-import no.nav.familie.inntektsmelding.inntektsmelding.kontrakt.InntektsmeldingApiResponsDto;
-import no.nav.familie.inntektsmelding.inntektsmelding.kontrakt.Naturalytelsetype;
-import no.nav.familie.inntektsmelding.inntektsmelding.kontrakt.Ytelse;
+import no.nav.familie.inntektsmelding.inntektsmelding.rest.kontrakt.ArbeidsgiverInformasjonDto;
+import no.nav.familie.inntektsmelding.inntektsmelding.rest.kontrakt.Endringsårsak;
+import no.nav.familie.inntektsmelding.inntektsmelding.rest.kontrakt.InntektsmeldingApiResponsDto;
+import no.nav.familie.inntektsmelding.inntektsmelding.rest.kontrakt.Naturalytelsetype;
+import no.nav.familie.inntektsmelding.inntektsmelding.rest.kontrakt.Ytelse;
 import no.nav.vedtak.mapper.json.DefaultJsonMapper;
 
 class InntektsmeldingApiResponsDtoTest {

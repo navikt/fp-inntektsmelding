@@ -1,4 +1,4 @@
-package no.nav.familie.inntektsmelding.inntektsmelding;
+package no.nav.familie.inntektsmelding.inntektsmelding.rest;
 
 import java.util.UUID;
 
@@ -14,6 +14,7 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import no.nav.familie.inntektsmelding.inntektsmelding.InntektsmeldingApiTjeneste;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

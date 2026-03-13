@@ -1,4 +1,4 @@
-package no.nav.familie.inntektsmelding.inntektsmelding.kontrakt;
+package no.nav.familie.inntektsmelding.inntektsmelding.rest.kontrakt;
 
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotNull;

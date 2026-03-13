@@ -1,4 +1,4 @@
-package no.nav.familie.inntektsmelding.inntektsmelding.kontrakt;
+package no.nav.familie.inntektsmelding.inntektsmelding.rest.kontrakt;
 
 public enum Endringsårsak {
     PERMITTERING,

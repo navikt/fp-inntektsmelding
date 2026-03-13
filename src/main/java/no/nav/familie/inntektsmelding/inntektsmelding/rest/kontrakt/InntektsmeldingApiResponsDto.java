@@ -1,4 +1,4 @@
-package no.nav.familie.inntektsmelding.inntektsmelding.kontrakt;
+package no.nav.familie.inntektsmelding.inntektsmelding.rest.kontrakt;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
