@@ -43,7 +43,7 @@ import no.nav.familie.inntektsmelding.typer.dto.ArbeidsgiverinitiertÅrsakDto;
 import no.nav.familie.inntektsmelding.typer.dto.EndringsårsakDto;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.familie.inntektsmelding.typer.dto.YtelseTypeDto;
-import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
+import no.nav.familie.inntektsmelding.typer.entitet.AktørId;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskTjeneste;
 import no.nav.vedtak.konfig.Tid;
 import no.nav.vedtak.sikkerhet.kontekst.IdentType;
@@ -91,7 +91,7 @@ class InntektsmeldingMottakTjenesteTest {
         var uuid = UUID.randomUUID();
         var forespørsel = new ForespørselEntitet("999999999",
             LocalDate.now(),
-            new AktørIdEntitet("9999999999999"),
+            new AktørId("9999999999999"),
             Ytelsetype.FORELDREPENGER,
             "123",
             LocalDate.now(),
@@ -122,7 +122,7 @@ class InntektsmeldingMottakTjenesteTest {
         // Arrange
         var uuid = UUID.randomUUID();
         var ytelse = Ytelsetype.FORELDREPENGER;
-        var aktørId = new AktørIdEntitet("9999999999999");
+        var aktørId = new AktørId("9999999999999");
         var orgnr = "999999999";
         var startdato = LocalDate.now();
         var forespørsel = new ForespørselEntitet(orgnr,
@@ -180,7 +180,7 @@ class InntektsmeldingMottakTjenesteTest {
         // Arrange
         var uuid = UUID.randomUUID();
         var ytelse = Ytelsetype.FORELDREPENGER;
-        var aktørId = new AktørIdEntitet("9999999999999");
+        var aktørId = new AktørId("9999999999999");
         var orgnr = "999999999";
         var startdato = LocalDate.now();
         var eksisterendeForespørsel = new ForespørselEntitet(orgnr,
@@ -246,7 +246,7 @@ class InntektsmeldingMottakTjenesteTest {
         // Arrange
         var uuid = UUID.randomUUID();
         var ytelse = Ytelsetype.FORELDREPENGER;
-        var aktørId = new AktørIdEntitet("9999999999999");
+        var aktørId = new AktørId("9999999999999");
         var orgnr = "999999999";
         var startdato = LocalDate.now();
         var forespørsel = new ForespørselEntitet(orgnr,
@@ -309,7 +309,7 @@ class InntektsmeldingMottakTjenesteTest {
         // Arrange
         var uuid = UUID.randomUUID();
         var ytelse = Ytelsetype.FORELDREPENGER;
-        var aktørId = new AktørIdEntitet("9999999999999");
+        var aktørId = new AktørId("9999999999999");
         var orgnr = "999999999";
         var startdato = LocalDate.now();
         var eksisterendeForespørsel = new ForespørselEntitet(orgnr,

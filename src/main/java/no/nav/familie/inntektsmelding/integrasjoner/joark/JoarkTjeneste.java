@@ -13,11 +13,10 @@ import org.slf4j.LoggerFactory;
 
 import no.nav.familie.inntektsmelding.imdialog.modell.InntektsmeldingEntitet;
 import no.nav.familie.inntektsmelding.integrasjoner.organisasjon.OrganisasjonTjeneste;
-import no.nav.familie.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonTjeneste;
 import no.nav.familie.inntektsmelding.koder.Behandlingtema;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
-import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
+import no.nav.familie.inntektsmelding.typer.entitet.AktørId;
 import no.nav.vedtak.felles.integrasjon.dokarkiv.DokArkiv;
 import no.nav.vedtak.felles.integrasjon.dokarkiv.dto.AvsenderMottaker;
 import no.nav.vedtak.felles.integrasjon.dokarkiv.dto.Bruker;
@@ -115,12 +114,12 @@ public class JoarkTjeneste {
         };
     }
 
-    private Bruker lagBruker(AktørIdEntitet aktørId) {
+    private Bruker lagBruker(AktørId aktørId) {
         return new Bruker(aktørId.getAktørId(), Bruker.BrukerIdType.AKTOERID);
     }
 
     private AvsenderMottaker lagAvsenderPrivatperson(InntektsmeldingEntitet inntektsmeldingEntitet) {
-        var personInfo = personTjeneste.hentPersonInfoFraAktørId(new AktørId(inntektsmeldingEntitet.getArbeidsgiverIdent()),
+        var personInfo = personTjeneste.hentPersonInfoFraAktørId(new no.nav.familie.inntektsmelding.integrasjoner.person.AktørId(inntektsmeldingEntitet.getArbeidsgiverIdent()),
             inntektsmeldingEntitet.getYtelsetype());
         return new AvsenderMottaker(personInfo.fødselsnummer().getIdent(), AvsenderMottaker.AvsenderMottakerIdType.FNR, personInfo.mapNavn());
     }

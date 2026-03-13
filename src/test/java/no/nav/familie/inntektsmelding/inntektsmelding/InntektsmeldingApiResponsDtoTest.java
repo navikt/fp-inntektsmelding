@@ -180,7 +180,7 @@ class InntektsmeldingApiResponsDtoTest {
 
         // Verifiser kontaktperson
         var kontaktpersonNode = jsonTree.get("kontaktperson");
-        assertThat(kontaktpersonNode.get("tlf").asText()).isEqualTo("12345678");
+        assertThat(kontaktpersonNode.get("telefonnummer").asText()).isEqualTo("12345678");
         assertThat(kontaktpersonNode.get("navn").asText()).isEqualTo("Ola Nordmann");
 
         // Verifiser bortfalt naturalytelse

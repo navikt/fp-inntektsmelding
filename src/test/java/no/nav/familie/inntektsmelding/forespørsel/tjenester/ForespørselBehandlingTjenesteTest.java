@@ -29,7 +29,6 @@ import no.nav.familie.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon.Mer
 import no.nav.familie.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon.MinSideArbeidsgiverTjeneste;
 import no.nav.familie.inntektsmelding.integrasjoner.organisasjon.Organisasjon;
 import no.nav.familie.inntektsmelding.integrasjoner.organisasjon.OrganisasjonTjeneste;
-import no.nav.familie.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonInfo;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonTjeneste;
@@ -41,7 +40,7 @@ import no.nav.familie.inntektsmelding.typer.dto.ForespørselResultat;
 import no.nav.familie.inntektsmelding.typer.dto.NyBeskjedResultat;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.familie.inntektsmelding.typer.dto.SaksnummerDto;
-import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
+import no.nav.familie.inntektsmelding.typer.entitet.AktørId;
 import no.nav.vedtak.felles.testutilities.db.EntityManagerAwareTest;
 
 @ExtendWith({JpaExtension.class, MockitoExtension.class})
@@ -86,7 +85,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
         var resultat = forespørselBehandlingTjeneste.håndterInnkommendeForespørsel(SKJÆRINGSTIDSPUNKT,
             YTELSETYPE,
-            new AktørIdEntitet(AKTØR_ID),
+            new AktørId(AKTØR_ID),
             new OrganisasjonsnummerDto(BRREG_ORGNUMMER),
             new SaksnummerDto(SAKSNUMMMER),
             SKJÆRINGSTIDSPUNKT
@@ -111,7 +110,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
         var resultat = forespørselBehandlingTjeneste.håndterInnkommendeForespørsel(SKJÆRINGSTIDSPUNKT,
             YTELSETYPE,
-            new AktørIdEntitet(AKTØR_ID),
+            new AktørId(AKTØR_ID),
             new OrganisasjonsnummerDto(BRREG_ORGNUMMER),
             new SaksnummerDto(SAKSNUMMMER),
             SKJÆRINGSTIDSPUNKT
@@ -131,7 +130,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
         forespørselBehandlingTjeneste.håndterInnkommendeForespørsel(SKJÆRINGSTIDSPUNKT,
             YTELSETYPE,
-            new AktørIdEntitet(AKTØR_ID),
+            new AktørId(AKTØR_ID),
             new OrganisasjonsnummerDto(BRREG_ORGNUMMER),
             new SaksnummerDto(SAKSNUMMMER),
             FØRSTE_UTTAKSDATO
@@ -150,7 +149,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
         var resultat2 = forespørselBehandlingTjeneste.håndterInnkommendeForespørsel(SKJÆRINGSTIDSPUNKT,
             YTELSETYPE,
-            new AktørIdEntitet(AKTØR_ID),
+            new AktørId(AKTØR_ID),
             new OrganisasjonsnummerDto(BRREG_ORGNUMMER),
             new SaksnummerDto(SAKSNUMMMER),
             FØRSTE_UTTAKSDATO
@@ -166,7 +165,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
         forespørselBehandlingTjeneste.håndterInnkommendeForespørsel(SKJÆRINGSTIDSPUNKT,
             YTELSETYPE,
-            new AktørIdEntitet(AKTØR_ID),
+            new AktørId(AKTØR_ID),
             new OrganisasjonsnummerDto(BRREG_ORGNUMMER),
             new SaksnummerDto(SAKSNUMMMER),
             FØRSTE_UTTAKSDATO
@@ -187,7 +186,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         mockInfoForOpprettelse(SAK_ID_2);
         var resultat2 = forespørselBehandlingTjeneste.håndterInnkommendeForespørsel(SKJÆRINGSTIDSPUNKT,
             YTELSETYPE,
-            new AktørIdEntitet(AKTØR_ID),
+            new AktørId(AKTØR_ID),
             new OrganisasjonsnummerDto(BRREG_ORGNUMMER),
             new SaksnummerDto(SAKSNUMMMER),
             FØRSTE_UTTAKSDATO.plusDays(1)
@@ -204,7 +203,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
         forespørselBehandlingTjeneste.håndterInnkommendeForespørsel(SKJÆRINGSTIDSPUNKT,
             YTELSETYPE,
-            new AktørIdEntitet(AKTØR_ID),
+            new AktørId(AKTØR_ID),
             new OrganisasjonsnummerDto(BRREG_ORGNUMMER),
             saksnummerDto,
             FØRSTE_UTTAKSDATO
@@ -223,7 +222,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         mockInfoForOpprettelse(SAK_ID_2);
         var resultat2 = forespørselBehandlingTjeneste.håndterInnkommendeForespørsel(SKJÆRINGSTIDSPUNKT.plusMonths(2),
             YTELSETYPE,
-            new AktørIdEntitet(AKTØR_ID),
+            new AktørId(AKTØR_ID),
             new OrganisasjonsnummerDto(BRREG_ORGNUMMER),
             saksnummerDto,
             FØRSTE_UTTAKSDATO
@@ -244,7 +243,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
         forespørselBehandlingTjeneste.håndterInnkommendeForespørsel(SKJÆRINGSTIDSPUNKT,
             YTELSETYPE,
-            new AktørIdEntitet(AKTØR_ID),
+            new AktørId(AKTØR_ID),
             new OrganisasjonsnummerDto(BRREG_ORGNUMMER),
             saksnummerDto,
             FØRSTE_UTTAKSDATO
@@ -257,7 +256,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         mockInfoForOpprettelse(SAK_ID_2);
         var resultat2 = forespørselBehandlingTjeneste.håndterInnkommendeForespørsel(SKJÆRINGSTIDSPUNKT.plusMonths(2),
             YTELSETYPE,
-            new AktørIdEntitet(AKTØR_ID),
+            new AktørId(AKTØR_ID),
             new OrganisasjonsnummerDto(BRREG_ORGNUMMER),
             saksnummerDto,
             FØRSTE_UTTAKSDATO
@@ -275,7 +274,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         mockInfoForOpprettelse(SAK_ID);
 
         var uuid = forespørselBehandlingTjeneste.opprettForespørselForArbeidsgiverInitiertIm(YTELSETYPE,
-            new AktørIdEntitet(AKTØR_ID),
+            new AktørId(AKTØR_ID),
             new OrganisasjonsnummerDto(BRREG_ORGNUMMER),
             FØRSTE_UTTAKSDATO, ArbeidsgiverinitiertÅrsak.NYANSATT,
             null);
@@ -293,7 +292,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         mockInfoForOpprettelse(SAK_ID);
         var forventetSkjæringstidspunkt = FØRSTE_UTTAKSDATO.minusDays(1);
         var uuid = forespørselBehandlingTjeneste.opprettForespørselForArbeidsgiverInitiertIm(YTELSETYPE,
-            new AktørIdEntitet(AKTØR_ID),
+            new AktørId(AKTØR_ID),
             new OrganisasjonsnummerDto(BRREG_ORGNUMMER),
             FØRSTE_UTTAKSDATO,
             ArbeidsgiverinitiertÅrsak.UREGISTRERT,
@@ -315,7 +314,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, SAK_ID);
 
         forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørselUuid,
-            new AktørIdEntitet(AKTØR_ID),
+            new AktørId(AKTØR_ID),
             new OrganisasjonsnummerDto(BRREG_ORGNUMMER),
             SKJÆRINGSTIDSPUNKT,
             LukkeÅrsak.EKSTERN_INNSENDING, Optional.empty());
@@ -333,7 +332,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, SAK_ID);
 
         forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørselUuid,
-            new AktørIdEntitet(AKTØR_ID),
+            new AktørId(AKTØR_ID),
             new OrganisasjonsnummerDto(BRREG_ORGNUMMER),
             FØRSTE_UTTAKSDATO,
             LukkeÅrsak.EKSTERN_INNSENDING, Optional.empty());
@@ -484,7 +483,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             null,
             "Navnesen",
             new PersonIdent("01019100000"),
-            new AktørId(AKTØR_ID),
+            new no.nav.familie.inntektsmelding.integrasjoner.person.AktørId(AKTØR_ID),
             LocalDate.of(1991, 1, 1).minusYears(30),
             null,
             null);
@@ -497,7 +496,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             beskjedtekst,
             varseltekst,
             uri)).thenReturn("beskjedId");
-        when(personTjeneste.hentPersonInfoFraAktørId(new AktørId(AKTØR_ID), Ytelsetype.FORELDREPENGER)).thenReturn(personInfo);
+        when(personTjeneste.hentPersonInfoFraAktørId(new no.nav.familie.inntektsmelding.integrasjoner.person.AktørId(AKTØR_ID), Ytelsetype.FORELDREPENGER)).thenReturn(personInfo);
 
         var resultat = forespørselBehandlingTjeneste.opprettNyBeskjedMedEksternVarsling(new SaksnummerDto(SAKSNUMMMER),
             new OrganisasjonsnummerDto(BRREG_ORGNUMMER));
@@ -535,7 +534,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             uri)).thenReturn("beskjedId");
 
         var res = forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørselUuid,
-            new AktørIdEntitet(AKTØR_ID),
+            new AktørId(AKTØR_ID),
             new OrganisasjonsnummerDto(BRREG_ORGNUMMER),
             SKJÆRINGSTIDSPUNKT,
             LukkeÅrsak.EKSTERN_INNSENDING, Optional.of(imUuid));
@@ -574,7 +573,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             uri)).thenReturn("beskjedId");
 
         var res = forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørselUuid,
-            new AktørIdEntitet(AKTØR_ID),
+            new AktørId(AKTØR_ID),
             new OrganisasjonsnummerDto(BRREG_ORGNUMMER),
             SKJÆRINGSTIDSPUNKT,
             LukkeÅrsak.EKSTERN_INNSENDING, Optional.of(imUuid));
@@ -646,25 +645,25 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
         var forespørsel1sak1 = new ForespørselEntitet(BRREG_ORGNUMMER,
             LocalDate.of(2025, 1, 1),
-            new AktørIdEntitet(AKTØR_ID),
+            new AktørId(AKTØR_ID),
             Ytelsetype.FORELDREPENGER,
             SAK_ID,
             LocalDate.of(2025, 1, 1), ForespørselType.BESTILT_AV_FAGSYSTEM);
         var forespørsel1sak2 = new ForespørselEntitet(BRREG_ORGNUMMER,
             LocalDate.of(2025, 2, 1),
-            new AktørIdEntitet(AKTØR_ID),
+            new AktørId(AKTØR_ID),
             Ytelsetype.FORELDREPENGER,
             SAK_ID_2,
             LocalDate.of(2025, 2, 1), ForespørselType.BESTILT_AV_FAGSYSTEM);
         var forespørsel2sak1 = new ForespørselEntitet(BRREG_ORGNUMMER,
             LocalDate.of(2025, 3, 1),
-            new AktørIdEntitet(AKTØR_ID),
+            new AktørId(AKTØR_ID),
             Ytelsetype.FORELDREPENGER,
             SAK_ID,
             LocalDate.of(2025, 3, 1), ForespørselType.BESTILT_AV_FAGSYSTEM);
         var forespørsel2sak2 = new ForespørselEntitet(BRREG_ORGNUMMER,
             LocalDate.of(2025, 4, 1),
-            new AktørIdEntitet(AKTØR_ID),
+            new AktørId(AKTØR_ID),
             Ytelsetype.FORELDREPENGER,
             SAK_ID_2,
             LocalDate.of(2025, 4, 1), ForespørselType.BESTILT_AV_FAGSYSTEM);
@@ -707,7 +706,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         forespørselRepository.lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, BRREG_ORGNUMMER, SAKSNUMMMER, SKJÆRINGSTIDSPUNKT,
             ForespørselType.BESTILT_AV_FAGSYSTEM);
         var fnr = "123";
-        var feilAktørId = new AktørId("1111111111111");
+        var feilAktørId = new no.nav.familie.inntektsmelding.integrasjoner.person.AktørId("1111111111111");
         when(personTjeneste.finnAktørIdForIdent(new PersonIdent(fnr))).thenReturn(Optional.of(feilAktørId));
 
         getEntityManager().clear();
@@ -746,13 +745,13 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             null,
             "Navnesen",
             new PersonIdent("01019100000"),
-            new AktørId(AKTØR_ID),
+            new no.nav.familie.inntektsmelding.integrasjoner.person.AktørId(AKTØR_ID),
             LocalDate.of(1991, 1, 1).minusYears(30),
             null,
             null);
         var sakTittel = ForespørselTekster.lagSaksTittel(personInfo.mapFulltNavn(), personInfo.fødselsdato());
 
-        lenient().when(personTjeneste.hentPersonInfoFraAktørId(new AktørId(AKTØR_ID), YTELSETYPE)).thenReturn(personInfo);
+        lenient().when(personTjeneste.hentPersonInfoFraAktørId(new no.nav.familie.inntektsmelding.integrasjoner.person.AktørId(AKTØR_ID), YTELSETYPE)).thenReturn(personInfo);
         lenient().when(minSideArbeidsgiverTjeneste.opprettOppgave(any(), any(), any(), eq(BRREG_ORGNUMMER), any(), any(), any(), any()))
             .thenReturn(OPPGAVE_ID);
         lenient().when(minSideArbeidsgiverTjeneste.opprettSak(any(), any(), eq(BRREG_ORGNUMMER), eq(sakTittel), any())).thenReturn(sakId);

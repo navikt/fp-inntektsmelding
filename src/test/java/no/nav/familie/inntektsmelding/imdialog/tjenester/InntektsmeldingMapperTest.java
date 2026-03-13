@@ -30,7 +30,7 @@ import no.nav.familie.inntektsmelding.typer.dto.KodeverkMapper;
 import no.nav.familie.inntektsmelding.typer.dto.NaturalytelsetypeDto;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.familie.inntektsmelding.typer.dto.YtelseTypeDto;
-import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
+import no.nav.familie.inntektsmelding.typer.entitet.AktørId;
 import no.nav.vedtak.konfig.Tid;
 
 class InntektsmeldingMapperTest {
@@ -182,7 +182,7 @@ class InntektsmeldingMapperTest {
     void skal_teste_mapping_tilbake_til_dto_refusjon_og_opphør() {
         // Arrange
         var imEntitet = InntektsmeldingEntitet.builder()
-            .medAktørId(new AktørIdEntitet("9999999999999"))
+            .medAktørId(new AktørId("9999999999999"))
             .medKontaktperson(new KontaktpersonEntitet("Første", "999999999"))
             .medYtelsetype(Ytelsetype.FORELDREPENGER)
             .medMånedInntekt(BigDecimal.valueOf(5000))
@@ -219,7 +219,7 @@ class InntektsmeldingMapperTest {
 
         var forespørselEntitet = new ForespørselEntitet("999999999",
             LocalDate.now(),
-            new AktørIdEntitet("9999999999999"),
+            new AktørId("9999999999999"),
             Ytelsetype.FORELDREPENGER,
             "123",
             LocalDate.now(),
@@ -257,7 +257,7 @@ class InntektsmeldingMapperTest {
     void skal_teste_mapping_tilbake_til_dto_refusjon_opphør_endring() {
         // Arrange
         var imEntitet = InntektsmeldingEntitet.builder()
-            .medAktørId(new AktørIdEntitet("9999999999999"))
+            .medAktørId(new AktørId("9999999999999"))
             .medKontaktperson(new KontaktpersonEntitet("Første", "999999999"))
             .medYtelsetype(Ytelsetype.FORELDREPENGER)
             .medMånedInntekt(BigDecimal.valueOf(5000))
@@ -295,7 +295,7 @@ class InntektsmeldingMapperTest {
 
         var forespørselEntitet = new ForespørselEntitet("999999999",
             LocalDate.now(),
-            new AktørIdEntitet("9999999999999"),
+            new AktørId("9999999999999"),
             Ytelsetype.FORELDREPENGER,
             "123",
             LocalDate.now(),
@@ -335,7 +335,7 @@ class InntektsmeldingMapperTest {
     void skal_teste_mapping_tilbake_til_dto_refusjon_ikke_opphør_eller_endring() {
         // Arrange
         var imEntitet = InntektsmeldingEntitet.builder()
-            .medAktørId(new AktørIdEntitet("9999999999999"))
+            .medAktørId(new AktørId("9999999999999"))
             .medKontaktperson(new KontaktpersonEntitet("Første", "999999999"))
             .medYtelsetype(Ytelsetype.FORELDREPENGER)
             .medMånedInntekt(BigDecimal.valueOf(5000))
@@ -372,7 +372,7 @@ class InntektsmeldingMapperTest {
 
         var forespørselEntitet = new ForespørselEntitet("999999999",
             LocalDate.now(),
-            new AktørIdEntitet("9999999999999"),
+            new AktørId("9999999999999"),
             Ytelsetype.FORELDREPENGER,
             "123",
             LocalDate.now(),
@@ -407,7 +407,7 @@ class InntektsmeldingMapperTest {
     void skal_teste_mapping_av_arbeidsgiverinitiert_inntektsmelding() {
         // Arrange
         var imEntitet = InntektsmeldingEntitet.builder()
-            .medAktørId(new AktørIdEntitet("9999999999999"))
+            .medAktørId(new AktørId("9999999999999"))
             .medKontaktperson(new KontaktpersonEntitet("Første", "999999999"))
             .medYtelsetype(Ytelsetype.FORELDREPENGER)
             .medMånedInntekt(BigDecimal.valueOf(5000))
@@ -420,7 +420,7 @@ class InntektsmeldingMapperTest {
 
         var forespørselEntitet = new ForespørselEntitet("999999999",
             LocalDate.now(),
-            new AktørIdEntitet("9999999999999"),
+            new AktørId("9999999999999"),
             Ytelsetype.FORELDREPENGER,
             "123",
             LocalDate.now(),

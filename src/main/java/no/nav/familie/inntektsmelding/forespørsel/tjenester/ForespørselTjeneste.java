@@ -15,7 +15,7 @@ import no.nav.familie.inntektsmelding.koder.ForespørselType;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.familie.inntektsmelding.typer.dto.SaksnummerDto;
-import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
+import no.nav.familie.inntektsmelding.typer.entitet.AktørId;
 
 @ApplicationScoped
 public class ForespørselTjeneste {
@@ -32,7 +32,7 @@ public class ForespørselTjeneste {
 
     public UUID opprettForespørsel(LocalDate skjæringstidspunkt,
                                    Ytelsetype ytelseType,
-                                   AktørIdEntitet brukerAktørId,
+                                   AktørId brukerAktørId,
                                    OrganisasjonsnummerDto orgnr,
                                    SaksnummerDto fagsakSaksnummer,
                                    LocalDate førsteUttaksdato) {
@@ -41,7 +41,7 @@ public class ForespørselTjeneste {
     }
 
     public UUID opprettForespørselArbeidsgiverinitiert(Ytelsetype ytelseType,
-                                                       AktørIdEntitet brukerAktørId,
+                                                       AktørId brukerAktørId,
                                                        OrganisasjonsnummerDto orgnr,
                                                        LocalDate førsteUttaksdato,
                                                        ForespørselType forespørselType,
@@ -72,7 +72,7 @@ public class ForespørselTjeneste {
 
     public Optional<ForespørselEntitet> finnGjeldendeForespørsel(LocalDate skjæringstidspunkt,
                                                                  Ytelsetype ytelseType,
-                                                                 AktørIdEntitet brukerAktørId,
+                                                                 AktørId brukerAktørId,
                                                                  OrganisasjonsnummerDto orgnr,
                                                                  SaksnummerDto fagsakSaksnummer, LocalDate førsteUttaksdato) {
         return forespørselRepository.finnGjeldendeForespørsel(brukerAktørId, ytelseType, orgnr, skjæringstidspunkt, fagsakSaksnummer, førsteUttaksdato);
@@ -90,7 +90,7 @@ public class ForespørselTjeneste {
         return forespørselRepository.hentForespørsel(forespørselUuid);
     }
 
-    public List<ForespørselEntitet> finnForespørslerForAktørid(AktørIdEntitet aktørId, Ytelsetype ytelsetype) {
+    public List<ForespørselEntitet> finnForespørslerForAktørid(AktørId aktørId, Ytelsetype ytelsetype) {
         return forespørselRepository.finnForespørslerForAktørId(aktørId, ytelsetype);
     }
 
@@ -98,7 +98,7 @@ public class ForespørselTjeneste {
         return forespørselRepository.hentForespørslerPåSak(fagsakSaksnummer);
     }
 
-    public List<ForespørselEntitet> finnForespørsler(AktørIdEntitet aktørId, Ytelsetype ytelsetype, String orgnr) {
+    public List<ForespørselEntitet> finnForespørsler(AktørId aktørId, Ytelsetype ytelsetype, String orgnr) {
         return forespørselRepository.finnForespørsler(aktørId, ytelsetype, orgnr);
     }
 
@@ -107,7 +107,7 @@ public class ForespørselTjeneste {
 
     }
 
-    public List<ForespørselEntitet> hentForespørsler(OrganisasjonsnummerDto orgnr, AktørIdEntitet aktørId, ForespørselStatus status,
+    public List<ForespørselEntitet> hentForespørsler(OrganisasjonsnummerDto orgnr, AktørId aktørId, ForespørselStatus status,
                                                      Ytelsetype ytelseType,
                                                      LocalDate fom, LocalDate tom) {
         return forespørselRepository.hentForespørslerFraFilter(orgnr, aktørId, status, ytelseType, fom, tom);

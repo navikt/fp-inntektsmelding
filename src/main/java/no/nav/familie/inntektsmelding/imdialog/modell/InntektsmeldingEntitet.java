@@ -26,7 +26,7 @@ import jakarta.persistence.Table;
 
 import no.nav.familie.inntektsmelding.koder.Kildesystem;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
-import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
+import no.nav.familie.inntektsmelding.typer.entitet.AktørId;
 import no.nav.vedtak.exception.TekniskException;
 
 @Entity(name = "InntektsmeldingEntitet")
@@ -39,7 +39,7 @@ public class InntektsmeldingEntitet {
 
     @Embedded
     @AttributeOverrides(@AttributeOverride(name = "aktørId", column = @Column(name = "bruker_aktoer_id", nullable = false, updatable = false)))
-    private AktørIdEntitet aktørId;
+    private AktørId aktørId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "ytelse_type")
@@ -93,7 +93,7 @@ public class InntektsmeldingEntitet {
         return id;
     }
 
-    public AktørIdEntitet getAktørId() {
+    public AktørId getAktørId() {
         return aktørId;
     }
 
@@ -222,7 +222,7 @@ public class InntektsmeldingEntitet {
     public static class Builder {
         private final InntektsmeldingEntitet kladd = new InntektsmeldingEntitet();
 
-        public Builder medAktørId(AktørIdEntitet aktørId) {
+        public Builder medAktørId(AktørId aktørId) {
             kladd.aktørId = aktørId;
             return this;
         }

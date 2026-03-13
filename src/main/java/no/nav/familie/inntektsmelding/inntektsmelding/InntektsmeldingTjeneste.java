@@ -1,51 +1,54 @@
 package no.nav.familie.inntektsmelding.inntektsmelding;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import no.nav.familie.inntektsmelding.imdialog.modell.BortaltNaturalytelseEntitet;
 import no.nav.familie.inntektsmelding.imdialog.modell.EndringsårsakEntitet;
 import no.nav.familie.inntektsmelding.imdialog.modell.InntektsmeldingEntitet;
 import no.nav.familie.inntektsmelding.imdialog.modell.InntektsmeldingRepository;
 import no.nav.familie.inntektsmelding.imdialog.modell.RefusjonsendringEntitet;
-import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
-import no.nav.familie.inntektsmelding.integrasjoner.person.PersonTjeneste;
 
 @Dependent
-public class InntektsmeldingApiTjeneste {
-    private static final Logger LOG = LoggerFactory.getLogger(InntektsmeldingApiTjeneste.class);
+public class InntektsmeldingTjeneste {
+
     private InntektsmeldingRepository inntektsmeldingRepository;
-    private PersonTjeneste personTjeneste;
-    InntektsmeldingApiTjeneste() {
+
+    InntektsmeldingTjeneste() {
         // CDI proxy
     }
+
     @Inject
-    public InntektsmeldingApiTjeneste(InntektsmeldingRepository inntektsmeldingRepository, PersonTjeneste personTjeneste) {
+    public InntektsmeldingTjeneste(InntektsmeldingRepository inntektsmeldingRepository) {
         this.inntektsmeldingRepository = inntektsmeldingRepository;
-        this.personTjeneste = personTjeneste;
-    }
-    public InntektsmeldingDto hentInntektsmelding(UUID inntektsmeldingUuid) {
-        return inntektsmeldingRepository.hentInntektsmelding(inntektsmeldingUuid).map(this::mapInntektsmelding).orElse(null);
     }
 
-    private InntektsmeldingDto mapInntektsmelding(InntektsmeldingEntitet entitet) {
+    public InntektsmeldingDto hentInntektsmelding(long inntektsmeldingId) {
+        return Optional.of(inntektsmeldingRepository.hentInntektsmelding(inntektsmeldingId)).map(this::mapFraEntitet).orElseThrow();
+    }
+
+    public InntektsmeldingDto hentInntektsmelding(UUID inntektsmeldingUuid) {
+        return inntektsmeldingRepository.hentInntektsmelding(inntektsmeldingUuid).map(this::mapFraEntitet).orElse(null);
+    }
+
+    private InntektsmeldingDto mapFraEntitet(InntektsmeldingEntitet entitet) {
         return InntektsmeldingDto.builder()
-            .medInntektsmeldingUuid(entitet.getUuid().orElse(null))
-            .medFnr(hentNorskIdent(entitet.getAktørId().getAktørId()))
+            .medInntektsmeldingUuid(entitet.getUuid().orElseThrow()) // siden vi søker med uuid, så skal denne alltid være satt
+            .medAktørId(entitet.getAktørId().getAktørId())
             .medYtelse(InntektsmeldingDto.Ytelse.valueOf(entitet.getYtelsetype().name()))
-            .medArbeidsgiver(new InntektsmeldingDto.ArbeidsgiverInformasjonDto(entitet.getArbeidsgiverIdent()))
+            .medArbeidsgiver(new InntektsmeldingDto.Arbeidsgiver(entitet.getArbeidsgiverIdent()))
             .medKontaktperson(mapKontaktperson(entitet))
             .medStartdato(entitet.getStartDato())
             .medInntekt(entitet.getMånedInntekt())
+            .medMånedRefusjon(entitet.getMånedRefusjon())
+            .medOpphørsdatoRefusjon(entitet.getOpphørsdatoRefusjon())
             .medInnsendtTidspunkt(entitet.getOpprettetTidspunkt())
-            .medSøkteRefusjonsperioder(entitet.getRefusjonsendringer().stream().map(InntektsmeldingApiTjeneste::mapRefusjonsendring).toList())
-            .medBortfaltNaturalytelsePerioder(entitet.getBorfalteNaturalYtelser().stream().map(InntektsmeldingApiTjeneste::mapBortfaltNaturalytelse).toList())
-            .medEndringAvInntektÅrsaker(entitet.getEndringsårsaker().stream().map(InntektsmeldingApiTjeneste::mapEndringsårsak).toList())
+            .medSøkteRefusjonsperioder(entitet.getRefusjonsendringer().stream().map(InntektsmeldingTjeneste::mapRefusjonsendring).toList())
+            .medBortfaltNaturalytelsePerioder(entitet.getBorfalteNaturalYtelser().stream().map(InntektsmeldingTjeneste::mapBortfaltNaturalytelse).toList())
+            .medEndringAvInntektÅrsaker(entitet.getEndringsårsaker().stream().map(InntektsmeldingTjeneste::mapEndringsårsak).toList())
             .build();
     }
 
@@ -79,6 +82,4 @@ public class InntektsmeldingApiTjeneste {
         );
     }
 
-    private String hentNorskIdent(String aktørId) {
-        return personTjeneste.finnPersonIdentForAktørId(new PersonIdent(aktørId)).map().orElse(null);
 }

@@ -9,22 +9,21 @@ import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
 
 import no.nav.familie.inntektsmelding.integrasjoner.fpsak.FpsakKlient;
-import no.nav.familie.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonInfo;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
-import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
+import no.nav.familie.inntektsmelding.typer.entitet.AktørId;
 import no.nav.vedtak.exception.FunksjonellException;
 import no.nav.vedtak.konfig.Tid;
 
 class UregistrertValidererTest {
     private static final LocalDate FØRSTE_UTTAKSDATO = LocalDate.now();
-    private static final AktørIdEntitet AKTØR_ID_ENTITET = new AktørIdEntitet("1234567891234");
+    private static final AktørId AKTØR_ID_ENTITET = new AktørId("1234567891234");
     private static final PersonInfo PERSON_INFO = new PersonInfo("Navn",
         null,
         "Navnesen",
         new PersonIdent("01019100000"),
-        new AktørId(AKTØR_ID_ENTITET.getAktørId()),
+        new no.nav.familie.inntektsmelding.integrasjoner.person.AktørId(AKTØR_ID_ENTITET.getAktørId()),
         LocalDate.of(1991, 1, 1).minusYears(30),
         null,
         null);

@@ -26,7 +26,7 @@ import no.nav.familie.inntektsmelding.server.tilgangsstyring.Tilgang;
 import no.nav.familie.inntektsmelding.typer.dto.ForespørselResultat;
 import no.nav.familie.inntektsmelding.typer.dto.KodeverkMapper;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
-import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
+import no.nav.familie.inntektsmelding.typer.entitet.AktørId;
 
 @AutentisertMedAzure
 @ApplicationScoped
@@ -75,7 +75,7 @@ public class ForespørselRest {
             request.organisasjonsnumre().forEach(organisasjonsnummer -> {
                 var bleForespørselOpprettet = forespørselBehandlingTjeneste.håndterInnkommendeForespørsel(skjæringstidspunkt,
                     KodeverkMapper.mapYtelsetype(request.ytelsetype()),
-                    new AktørIdEntitet(request.aktørId().id()),
+                    new AktørId(request.aktørId().id()),
                     new OrganisasjonsnummerDto(organisasjonsnummer.orgnr()),
                     fagsakSaksnummer,
                     førsteUttaksdato);

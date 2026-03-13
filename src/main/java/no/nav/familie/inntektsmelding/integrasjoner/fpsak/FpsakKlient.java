@@ -12,7 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
-import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
+import no.nav.familie.inntektsmelding.typer.entitet.AktørId;
 import no.nav.vedtak.exception.IntegrasjonException;
 import no.nav.vedtak.felles.integrasjon.rest.FpApplication;
 import no.nav.vedtak.felles.integrasjon.rest.RestClient;
@@ -41,11 +41,11 @@ public class FpsakKlient {
     }
 
 
-    public InfoOmSakInntektsmeldingResponse hentInfoOmSak(AktørIdEntitet aktørIdEntitet, Ytelsetype ytelsetype) {
+    public InfoOmSakInntektsmeldingResponse hentInfoOmSak(AktørId aktørId, Ytelsetype ytelsetype) {
         var uri = UriBuilder.fromUri(restConfig.endpoint()).path(FPSAK_STATUS_API).build();
-        LOG.info("Henter sakstatus for aktør {}", aktørIdEntitet);
+        LOG.info("Henter sakstatus for aktør {}", aktørId);
         var ytelseDto = ytelsetype.equals(Ytelsetype.FORELDREPENGER) ? InntektsmeldingSakRequest.Ytelse.FORELDREPENGER : InntektsmeldingSakRequest.Ytelse.SVANGERSKAPSPENGER;
-        var requestDto = new InntektsmeldingSakRequest(new InntektsmeldingSakRequest.AktørId(aktørIdEntitet.getAktørId()), ytelseDto);
+        var requestDto = new InntektsmeldingSakRequest(new InntektsmeldingSakRequest.AktørId(aktørId.getAktørId()), ytelseDto);
         var request = RestRequest.newPOSTJson(requestDto, uri, restConfig);
         try {
             return restClient.sendReturnOptional(request, InfoOmSakInntektsmeldingResponse.class)

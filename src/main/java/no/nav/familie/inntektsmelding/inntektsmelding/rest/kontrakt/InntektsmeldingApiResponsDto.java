@@ -51,7 +51,7 @@ public record InntektsmeldingApiResponsDto(
     }
 
     public record Kontaktperson(
-        String tlf,
+        String telefonnummer,
         String navn
     ) {
     }

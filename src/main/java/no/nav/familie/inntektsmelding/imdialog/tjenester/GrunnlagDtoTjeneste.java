@@ -20,7 +20,6 @@ import no.nav.familie.inntektsmelding.integrasjoner.aareg.ArbeidsforholdTjeneste
 import no.nav.familie.inntektsmelding.integrasjoner.aareg.ArbeidstakerTjeneste;
 import no.nav.familie.inntektsmelding.integrasjoner.inntektskomponent.InntektTjeneste;
 import no.nav.familie.inntektsmelding.integrasjoner.organisasjon.OrganisasjonTjeneste;
-import no.nav.familie.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonInfo;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonTjeneste;
@@ -29,7 +28,7 @@ import no.nav.familie.inntektsmelding.koder.ForespørselType;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.metrikker.MetrikkerTjeneste;
 import no.nav.familie.inntektsmelding.typer.dto.KodeverkMapper;
-import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
+import no.nav.familie.inntektsmelding.typer.entitet.AktørId;
 import no.nav.vedtak.exception.FunksjonellException;
 import no.nav.vedtak.konfig.Tid;
 import no.nav.vedtak.sikkerhet.kontekst.IdentType;
@@ -69,7 +68,7 @@ public class GrunnlagDtoTjeneste {
                 "Prøver å hente data for en forespørsel som ikke finnes, forespørselUUID: " + forespørselUuid));
 
         var organisasjonsnummer = forespørsel.getOrganisasjonsnummer();
-        var personInfo = personTjeneste.hentPersonInfoFraAktørId(new AktørId(forespørsel.getAktørId().getAktørId()), forespørsel.getYtelseType());
+        var personInfo = personTjeneste.hentPersonInfoFraAktørId(new no.nav.familie.inntektsmelding.integrasjoner.person.AktørId(forespørsel.getAktørId().getAktørId()), forespørsel.getYtelseType());
         var personDto = lagPersonDto(personInfo);
         var organisasjonDto = lagOrganisasjonDto(organisasjonsnummer);
         var innmelderDto = lagInnmelderDto(forespørsel.getYtelseType());
@@ -98,7 +97,7 @@ public class GrunnlagDtoTjeneste {
                                                                              String organisasjonsnummer) {
         var personInfo = finnPersoninfo(fødselsnummer, ytelsetype);
 
-        var harForespørselPåOrgnrSisteTreMnd = finnForespørslerSisteTreÅr(ytelsetype, førsteFraværsdag, new AktørIdEntitet(personInfo.aktørId().getAktørId())).stream()
+        var harForespørselPåOrgnrSisteTreMnd = finnForespørslerSisteTreÅr(ytelsetype, førsteFraværsdag, new AktørId(personInfo.aktørId().getAktørId())).stream()
             .filter(f -> f.getOrganisasjonsnummer().equals(organisasjonsnummer))
             .filter(f -> innenforIntervall(førsteFraværsdag, f.getFørsteUttaksdato()))
             .toList();
@@ -135,7 +134,7 @@ public class GrunnlagDtoTjeneste {
                                                                                 LocalDate skjæringstidspunkt) {
         var personInfo = finnPersoninfo(fødselsnummer, ytelsetype);
 
-        var eksisterendeForespørselPåUttaksdato = finnForespørslerSisteTreÅr(ytelsetype, førsteUttaksdato, new AktørIdEntitet(personInfo.aktørId().getAktørId())).stream()
+        var eksisterendeForespørselPåUttaksdato = finnForespørslerSisteTreÅr(ytelsetype, førsteUttaksdato, new AktørId(personInfo.aktørId().getAktørId())).stream()
             .filter(f -> f.getOrganisasjonsnummer().equals(organisasjonsnummer))
             .filter(f -> førsteUttaksdato.isEqual(f.getFørsteUttaksdato()) && f.getSkjæringstidspunkt().isPresent()
                 && skjæringstidspunkt.isEqual(f.getSkjæringstidspunkt().get()))
@@ -221,7 +220,7 @@ public class GrunnlagDtoTjeneste {
                                                                              LocalDate skjæringstidspunkt,
                                                                              String organisasjonsnummer) {
         var harJobbetHeleBeregningsperioden = harJobbetHeleBeregningsperioden(personinfo, skjæringstidspunkt, organisasjonsnummer);
-        var inntektsopplysninger = inntektTjeneste.hentInntekt(new AktørIdEntitet(personinfo.aktørId().getAktørId()), skjæringstidspunkt, LocalDate.now(),
+        var inntektsopplysninger = inntektTjeneste.hentInntekt(new AktørId(personinfo.aktørId().getAktørId()), skjæringstidspunkt, LocalDate.now(),
             organisasjonsnummer, harJobbetHeleBeregningsperioden);
         var inntekter = inntektsopplysninger.måneder()
             .stream()
@@ -289,7 +288,7 @@ public class GrunnlagDtoTjeneste {
         return personTjeneste.hentPersonFraIdent(fødselsnummer, ytelsetype);
     }
 
-    public List<ForespørselEntitet> finnForespørslerSisteTreÅr(Ytelsetype ytelsetype, LocalDate førsteFraværsdag, AktørIdEntitet aktørId) {
+    public List<ForespørselEntitet> finnForespørslerSisteTreÅr(Ytelsetype ytelsetype, LocalDate førsteFraværsdag, AktørId aktørId) {
         return forespørselBehandlingTjeneste.finnForespørslerForAktørId(aktørId, ytelsetype).stream()
             .filter(eksF -> innnenforIntervallÅr(eksF.getFørsteUttaksdato(), førsteFraværsdag))
             .toList();

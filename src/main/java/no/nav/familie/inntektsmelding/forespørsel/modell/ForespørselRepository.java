@@ -21,7 +21,7 @@ import no.nav.familie.inntektsmelding.koder.ForespørselType;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.familie.inntektsmelding.typer.dto.SaksnummerDto;
-import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
+import no.nav.familie.inntektsmelding.typer.entitet.AktørId;
 
 @Dependent
 public class ForespørselRepository {
@@ -41,7 +41,7 @@ public class ForespørselRepository {
                                  LocalDate førsteUttaksdato, ForespørselType forespørselType) {
         var forespørselEntitet = new ForespørselEntitet(orgnummer,
             skjæringstidspunkt,
-            new AktørIdEntitet(aktørId),
+            new AktørId(aktørId),
             ytelsetype,
             fagsakSaksnummer,
             førsteUttaksdato,
@@ -117,7 +117,7 @@ public class ForespørselRepository {
         return query.getResultList();
     }
 
-    public Optional<ForespørselEntitet> finnGjeldendeForespørsel(AktørIdEntitet aktørId,
+    public Optional<ForespørselEntitet> finnGjeldendeForespørsel(AktørId aktørId,
                                                                  Ytelsetype ytelsetype,
                                                                  OrganisasjonsnummerDto organisasjonsnummer,
                                                                  LocalDate stp,
@@ -181,7 +181,7 @@ public class ForespørselRepository {
         }
     }
 
-    public List<ForespørselEntitet> finnForespørslerForAktørId(AktørIdEntitet aktørId, Ytelsetype ytelsetype) {
+    public List<ForespørselEntitet> finnForespørslerForAktørId(AktørId aktørId, Ytelsetype ytelsetype) {
         var query = entityManager.createQuery("FROM ForespørselEntitet where aktørId=:aktørId "
                     + "and status !=:utgått and ytelseType=:ytelseType",
                 ForespørselEntitet.class)
@@ -191,7 +191,7 @@ public class ForespørselRepository {
         return query.getResultList();
     }
 
-    public List<ForespørselEntitet> finnForespørsler(AktørIdEntitet aktørId, Ytelsetype ytelsetype, String orgnr) {
+    public List<ForespørselEntitet> finnForespørsler(AktørId aktørId, Ytelsetype ytelsetype, String orgnr) {
         var query = entityManager.createQuery("FROM ForespørselEntitet where aktørId=:aktørId "
                     + "and ytelseType=:ytelseType and organisasjonsnummer=:orgnr",
                 ForespørselEntitet.class)
@@ -222,7 +222,7 @@ public class ForespørselRepository {
     }
 
     public List<ForespørselEntitet> hentForespørslerFraFilter(OrganisasjonsnummerDto orgnr,
-                                          AktørIdEntitet aktørId,
+                                          AktørId aktørId,
                                           ForespørselStatus status,
                                           Ytelsetype ytelseType,
                                           LocalDate fom,

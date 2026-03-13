@@ -1,15 +1,18 @@
 package no.nav.familie.inntektsmelding.imdialog.task;
 
 import java.io.StringWriter;
+import java.util.Map;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 
-import no.nav.familie.inntektsmelding.imdialog.modell.InntektsmeldingEntitet;
+import no.nav.familie.inntektsmelding.inntektsmelding.InntektsmeldingDto;
 import no.nav.familie.inntektsmelding.integrasjoner.person.AktørId;
+import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonTjeneste;
+import no.nav.familie.inntektsmelding.typer.OrganisasjonsnummerValidator;
 import no.seres.xsd.nav.inntektsmelding_m._20181211.InntektsmeldingM;
 import no.seres.xsd.nav.inntektsmelding_m._20181211.ObjectFactory;
 
@@ -26,9 +29,20 @@ public class InntektsmeldingXMLTjeneste {
         this.personTjeneste = personTjeneste;
     }
 
-    public String lagXMLAvInntektsmelding(InntektsmeldingEntitet inntektsmelding) {
-        var søkerIdent = personTjeneste.finnPersonIdentForAktørId(new AktørId(inntektsmelding.getAktørId().getAktørId()));
-        var inntektsmeldingXml = InntektsmeldingXMLMapper.map(inntektsmelding, søkerIdent);
+    public String lagXMLAvInntektsmelding(InntektsmeldingDto inntektsmelding) {
+        var aktørIdIdentMap = new HashMap<AktørId, PersonIdent>();
+
+        var søkerAktørId = new AktørId(inntektsmelding.getAktørId());
+        var søkerIdent = personTjeneste.finnPersonIdentForAktørId(søkerAktørId);
+        aktørIdIdentMap.put(søkerAktørId, søkerIdent);
+
+        var arbeidsgiver = inntektsmelding.getArbeidsgiver().ident();
+        if (!OrganisasjonsnummerValidator.erGyldig(arbeidsgiver) && arbeidsgiver.length() == 13) {
+            var arbeidsgiverAktørId = new AktørId(arbeidsgiver);
+            var arbeidsgiverIdent = personTjeneste.finnPersonIdentForAktørId(arbeidsgiverAktørId);
+            aktørIdIdentMap.put(arbeidsgiverAktørId, arbeidsgiverIdent);
+        }
+        var inntektsmeldingXml = InntektsmeldingXMLMapper.map(inntektsmelding, aktørIdIdentMap);
         try {
             return marshalXml(inntektsmeldingXml);
         } catch (JAXBException ex) {

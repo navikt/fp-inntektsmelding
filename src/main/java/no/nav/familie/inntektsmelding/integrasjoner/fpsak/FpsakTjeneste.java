@@ -4,7 +4,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
-import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
+import no.nav.familie.inntektsmelding.typer.entitet.AktørId;
 
 @ApplicationScoped
 public class FpsakTjeneste {
@@ -20,7 +20,7 @@ public class FpsakTjeneste {
         this.klient = klient;
     }
 
-    public FpsakKlient.InfoOmSakInntektsmeldingResponse henterInfoOmSakIFagsystem(AktørIdEntitet aktørIdEntitet, Ytelsetype ytelsetype) {
-        return klient.hentInfoOmSak(aktørIdEntitet, ytelsetype);
+    public FpsakKlient.InfoOmSakInntektsmeldingResponse henterInfoOmSakIFagsystem(AktørId aktørId, Ytelsetype ytelsetype) {
+        return klient.hentInfoOmSak(aktørId, ytelsetype);
     }
 }

@@ -16,13 +16,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import no.nav.familie.inntektsmelding.forespørsel.modell.ForespørselEntitet;
 import no.nav.familie.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
-import no.nav.familie.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonTjeneste;
 import no.nav.familie.inntektsmelding.koder.ForespørselType;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
-import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
+import no.nav.familie.inntektsmelding.typer.entitet.AktørId;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -41,7 +40,7 @@ class ForespørselEksternTjenesteTest {
 
     @Test
     void skal_returnere_forespørsel_med_fnr() {
-        var aktørId = new AktørIdEntitet("9999999999999");
+        var aktørId = new AktørId("9999999999999");
         var fnr = new PersonIdent("11111111111");
         var orgnr = "999999999";
         var forespørsel = new ForespørselEntitet(orgnr,
@@ -51,7 +50,7 @@ class ForespørselEksternTjenesteTest {
             "123",
             LocalDate.now(),
             ForespørselType.BESTILT_AV_FAGSYSTEM);
-        when(personTjeneste.finnPersonIdentForAktørId(new AktørId(aktørId.getAktørId()))).thenReturn(fnr);
+        when(personTjeneste.finnPersonIdentForAktørId(new no.nav.familie.inntektsmelding.integrasjoner.person.AktørId(aktørId.getAktørId()))).thenReturn(fnr);
         var forespørselUuid = UUID.randomUUID();
         when(forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid)).thenReturn(Optional.of(forespørsel));
 
@@ -64,7 +63,7 @@ class ForespørselEksternTjenesteTest {
 
     @Test
     void skal_filtrere_forespørsel_på_orgnr() {
-        var aktørId = new AktørIdEntitet("9999999999999");
+        var aktørId = new AktørId("9999999999999");
         var fnr = new PersonIdent("11111111111");
         var orgnr = "999999999";
         var forespørsel = new ForespørselEntitet(orgnr,
@@ -74,7 +73,7 @@ class ForespørselEksternTjenesteTest {
             "123",
             LocalDate.now(),
             ForespørselType.BESTILT_AV_FAGSYSTEM);
-        when(personTjeneste.finnPersonIdentForAktørId(new AktørId(aktørId.getAktørId()))).thenReturn(fnr);
+        when(personTjeneste.finnPersonIdentForAktørId(new no.nav.familie.inntektsmelding.integrasjoner.person.AktørId(aktørId.getAktørId()))).thenReturn(fnr);
         when(forespørselBehandlingTjeneste.hentForespørsler(new OrganisasjonsnummerDto(orgnr), null, null, null, null, null)).thenReturn(List.of(
             forespørsel));
 

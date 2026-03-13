@@ -4,11 +4,13 @@ import java.util.List;
 
 import jakarta.xml.bind.JAXBElement;
 
-import no.nav.familie.inntektsmelding.imdialog.modell.InntektsmeldingEntitet;
+import no.nav.familie.inntektsmelding.inntektsmelding.InntektsmeldingDto;
+import no.nav.familie.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
-import no.nav.familie.inntektsmelding.koder.Kildesystem;
 import no.nav.familie.inntektsmelding.koder.NaturalytelseType;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
+import no.nav.familie.inntektsmelding.typer.OrganisasjonsnummerValidator;
+import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
 import no.nav.familie.inntektsmelding.utils.mapper.NaturalYtelseMapper;
 import no.seres.xsd.nav.inntektsmelding_m._20181211.Arbeidsforhold;
 import no.seres.xsd.nav.inntektsmelding_m._20181211.Arbeidsgiver;
@@ -33,27 +35,36 @@ public class InntektsmeldingXMLMapper {
         // Hide constructor for static util class
     }
 
-    public static InntektsmeldingM map(InntektsmeldingEntitet inntektsmelding, PersonIdent søkerFnr) {
+    public static InntektsmeldingM map(InntektsmeldingDto inntektsmelding, Map<AktørId, PersonIdent> aktørIdFnrMap) {
 
         var skjemainnhold = new Skjemainnhold();
 
-        var arbeidsgiver = new Arbeidsgiver();
-        arbeidsgiver.setVirksomhetsnummer(inntektsmelding.getArbeidsgiverIdent());
-        arbeidsgiver.setKontaktinformasjon(lagKontaktperson(inntektsmelding));
-        var agOrg = of.createSkjemainnholdArbeidsgiver(arbeidsgiver);
-        skjemainnhold.setArbeidsgiver(agOrg);
-
+        var arbeidsgiverIdent = inntektsmelding.getArbeidsgiver().ident();
+        if (OrganisasjonsnummerValidator.erGyldig(arbeidsgiverIdent)) {
+            var arbeidsgiver = new Arbeidsgiver();
+            arbeidsgiver.setVirksomhetsnummer(arbeidsgiverIdent);
+            arbeidsgiver.setKontaktinformasjon(lagKontaktperson(inntektsmelding));
+            var agOrg = of.createSkjemainnholdArbeidsgiver(arbeidsgiver);
+            skjemainnhold.setArbeidsgiver(agOrg);
+        } else if (arbeidsgiverIdent.length() == 13) {
+            var arbeidsgiver = new ArbeidsgiverPrivat();
+            var identArbeidsgiver = aktørIdFnrMap.get(new AktørId(arbeidsgiverIdent));
+            arbeidsgiver.setArbeidsgiverFnr(identArbeidsgiver.getIdent());
+            arbeidsgiver.setKontaktinformasjon(lagKontaktperson(inntektsmelding));
+            var agPriv = of.createSkjemainnholdArbeidsgiverPrivat(arbeidsgiver);
+            skjemainnhold.setArbeidsgiverPrivat(agPriv);
+        }
         skjemainnhold.setArbeidsforhold(lagArbeidsforholdXml(inntektsmelding));
-        skjemainnhold.setArbeidstakerFnr(søkerFnr.getIdent());
+        skjemainnhold.setArbeidstakerFnr(aktørIdFnrMap.get(new AktørId(inntektsmelding.getAktørId())).getIdent());
 
         skjemainnhold.setAarsakTilInnsending("Ny");
         skjemainnhold.setAvsendersystem(lagAvsendersysem(inntektsmelding));
 
-        skjemainnhold.setYtelse(mapTilYtelsetype(inntektsmelding.getYtelsetype()));
+        skjemainnhold.setYtelse(mapTilYtelsetype(Ytelsetype.valueOf(inntektsmelding.getYtelse().name())));
         settStartdatoHvisFP(skjemainnhold, inntektsmelding);
         skjemainnhold.setRefusjon(lagRefusjonXml(inntektsmelding));
 
-        var naturalYtelser = NaturalYtelseMapper.mapNaturalYtelser(inntektsmelding.getBorfalteNaturalYtelser());
+        var naturalYtelser = NaturalYtelseMapper.mapNaturalYtelserFraDto(inntektsmelding.getBortfaltNaturalytelsePerioder());
         skjemainnhold.setOpphoerAvNaturalytelseListe(lagBortfaltNaturalytelse(naturalYtelser));
         skjemainnhold.setGjenopptakelseNaturalytelseListe(lagGjennopptattNaturalytelse(naturalYtelser));
 
@@ -62,26 +73,22 @@ public class InntektsmeldingXMLMapper {
         return imXml;
     }
 
-    private static void settStartdatoHvisFP(Skjemainnhold skjemainnhold, InntektsmeldingEntitet inntektsmelding) {
-        if (inntektsmelding.getYtelsetype().equals(Ytelsetype.FORELDREPENGER)) {
-            settFPStartdato(skjemainnhold, inntektsmelding);
+    private static void settStartdatoHvisFP(Skjemainnhold skjemainnhold, InntektsmeldingDto inntektsmelding) {
+        if (InntektsmeldingDto.Ytelse.FORELDREPENGER.equals(inntektsmelding.getYtelse())) {
+            skjemainnhold.setStartdatoForeldrepengeperiode(of.createSkjemainnholdStartdatoForeldrepengeperiode(inntektsmelding.getStartdato()));
         }
     }
 
-    private static void settFPStartdato(Skjemainnhold skjemainnhold, InntektsmeldingEntitet inntektsmelding) {
-        skjemainnhold.setStartdatoForeldrepengeperiode(of.createSkjemainnholdStartdatoForeldrepengeperiode(inntektsmelding.getStartDato()));
-    }
-
     // TODO Vi bør ta en diskusjon på hva denne skal være
-    private static Avsendersystem lagAvsendersysem(InntektsmeldingEntitet inntektsmelding) {
+    private static Avsendersystem lagAvsendersysem(InntektsmeldingDto inntektsmelding) {
         var as = new Avsendersystem();
-        if (Kildesystem.FPSAK.equals(inntektsmelding.getKildesystem())) {
+        if (InntektsmeldingDto.Kildesystem.SAKSBEHANDLER.equals(inntektsmelding.getKildesystem())) {
             as.setSystemnavn(Systemnavn.OVERSTYRING_FPSAK.name());
         } else {
             as.setSystemnavn(Systemnavn.NAV_NO.name());
         }
         as.setSystemversjon("1.0");
-        as.setInnsendingstidspunkt(of.createAvsendersystemInnsendingstidspunkt(inntektsmelding.getOpprettetTidspunkt()));
+        as.setInnsendingstidspunkt(of.createAvsendersystemInnsendingstidspunkt(inntektsmelding.getInnsendtTidspunkt()));
         return as;
     }
 
@@ -111,31 +118,31 @@ public class InntektsmeldingXMLMapper {
         return nd;
     }
 
-    private static JAXBElement<Refusjon> lagRefusjonXml(InntektsmeldingEntitet inntektsmeldingEntitet) {
+    private static JAXBElement<Refusjon> lagRefusjonXml(InntektsmeldingDto inntektsmelding) {
         var refusjon = new Refusjon();
-        if (inntektsmeldingEntitet.getMånedRefusjon() != null) {
-            refusjon.setRefusjonsbeloepPrMnd(of.createRefusjonRefusjonsbeloepPrMnd(inntektsmeldingEntitet.getMånedRefusjon()));
+        if (inntektsmelding.getMånedRefusjon() != null) {
+            refusjon.setRefusjonsbeloepPrMnd(of.createRefusjonRefusjonsbeloepPrMnd(inntektsmelding.getMånedRefusjon()));
         }
-        if (inntektsmeldingEntitet.getOpphørsdatoRefusjon() != null) {
-            refusjon.setRefusjonsopphoersdato(of.createRefusjonRefusjonsopphoersdato(inntektsmeldingEntitet.getOpphørsdatoRefusjon()));
+        if (inntektsmelding.getOpphørsdatoRefusjon() != null) {
+            refusjon.setRefusjonsopphoersdato(of.createRefusjonRefusjonsopphoersdato(inntektsmelding.getOpphørsdatoRefusjon()));
         }
         var endringListe = new EndringIRefusjonsListe();
         var liste = endringListe.getEndringIRefusjon();
-        inntektsmeldingEntitet.getRefusjonsendringer().stream().map(rp -> {
+        inntektsmelding.getSøkteRefusjonsperioder().stream().map(rp -> {
             var endring = new EndringIRefusjon();
-            endring.setEndringsdato(of.createEndringIRefusjonEndringsdato(rp.getFom()));
-            endring.setRefusjonsbeloepPrMnd(of.createEndringIRefusjonRefusjonsbeloepPrMnd(rp.getRefusjonPrMnd()));
+            endring.setEndringsdato(of.createEndringIRefusjonEndringsdato(rp.fom()));
+            endring.setRefusjonsbeloepPrMnd(of.createEndringIRefusjonRefusjonsbeloepPrMnd(rp.beløp()));
             return endring;
         }).forEach(liste::add);
         refusjon.setEndringIRefusjonListe(of.createRefusjonEndringIRefusjonListe(endringListe));
         return of.createSkjemainnholdRefusjon(refusjon);
     }
 
-    private static JAXBElement<Arbeidsforhold> lagArbeidsforholdXml(InntektsmeldingEntitet inntektsmeldingEntitet) {
+    private static JAXBElement<Arbeidsforhold> lagArbeidsforholdXml(InntektsmeldingDto inntektsmelding) {
         var arbeidsforhold = new Arbeidsforhold();
 
         // Inntekt
-        var inntektBeløp = of.createInntektBeloep(inntektsmeldingEntitet.getMånedInntekt());
+        var inntektBeløp = of.createInntektBeloep(inntektsmelding.getInntekt());
         var inntekt = new Inntekt();
         inntekt.setBeloep(inntektBeløp);
         // TODO Endringsarsak kan være enten "Tariffendring" eller "FeilInntekt", skal vi bruke disse?
@@ -143,20 +150,20 @@ public class InntektsmeldingXMLMapper {
         arbeidsforhold.setBeregnetInntekt(inntektSkjemaVerdi);
 
         // Startdato
-        arbeidsforhold.setFoersteFravaersdag(of.createArbeidsforholdFoersteFravaersdag(inntektsmeldingEntitet.getStartDato()));
+        arbeidsforhold.setFoersteFravaersdag(of.createArbeidsforholdFoersteFravaersdag(inntektsmelding.getStartdato()));
         return of.createSkjemainnholdArbeidsforhold(arbeidsforhold);
     }
 
-    private static Kontaktinformasjon lagKontaktperson(InntektsmeldingEntitet inntektsmelding) {
+    private static Kontaktinformasjon lagKontaktperson(InntektsmeldingDto inntektsmelding) {
         var ki = new Kontaktinformasjon();
         // Ved overstyring av inntektsmelding setter vi saksbehandlers informasjon her
-        if (Kildesystem.FPSAK.equals(inntektsmelding.getKildesystem())) {
+        if (InntektsmeldingDto.Kildesystem.SAKSBEHANDLER.equals(inntektsmelding.getKildesystem())) {
             ki.setTelefonnummer(inntektsmelding.getOpprettetAv());
             ki.setKontaktinformasjonNavn(inntektsmelding.getOpprettetAv());
         } else {
             var kontaktPerson = inntektsmelding.getKontaktperson();
-            ki.setTelefonnummer(kontaktPerson.getTelefonnummer());
-            ki.setKontaktinformasjonNavn(kontaktPerson.getNavn());
+            ki.setTelefonnummer(kontaktPerson.telefonnummer());
+            ki.setKontaktinformasjonNavn(kontaktPerson.navn());
         }
         return ki;
     }

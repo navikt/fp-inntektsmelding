@@ -7,6 +7,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,15 +15,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import no.nav.familie.inntektsmelding.imdialog.modell.BortaltNaturalytelseEntitet;
-import no.nav.familie.inntektsmelding.imdialog.modell.InntektsmeldingEntitet;
-import no.nav.familie.inntektsmelding.imdialog.modell.KontaktpersonEntitet;
-import no.nav.familie.inntektsmelding.integrasjoner.person.AktørId;
+import no.nav.familie.inntektsmelding.inntektsmelding.InntektsmeldingDto;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonTjeneste;
 import no.nav.familie.inntektsmelding.koder.NaturalytelseType;
-import no.nav.familie.inntektsmelding.koder.Ytelsetype;
-import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
+import no.nav.familie.inntektsmelding.typer.entitet.AktørId;
 import no.nav.vedtak.konfig.Tid;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,27 +39,29 @@ class InntektsmeldingXMLTjenesteTest {
     void skal_teste_xml_generering() {
         // Arrange
         var opprettetTidspunkt = LocalDateTime.of(2024, 6, 30, 12, 12, 30);
-        var naturalytelse = BortaltNaturalytelseEntitet.builder()
-            .medPeriode(LocalDate.of(2024, 6, 10), Tid.TIDENES_ENDE)
-            .medType(NaturalytelseType.AKSJER_GRUNNFONDSBEVIS_TIL_UNDERKURS)
-            .medMånedBeløp(BigDecimal.valueOf(2000))
-            .build();
-        var aktørIdSøker = new AktørIdEntitet("1234567891234");
+        var aktørIdSøker = new AktørId("1234567891234");
         var fnrSøker = new PersonIdent("11111111111");
-        var inntektsmelding = InntektsmeldingEntitet.builder()
-            .medArbeidsgiverIdent("999999999")
-            .medStartDato(LocalDate.of(2024, 6, 1))
-            .medYtelsetype(Ytelsetype.FORELDREPENGER)
-            .medMånedInntekt(BigDecimal.valueOf(35000))
-            .medAktørId(aktørIdSøker)
+
+        var inntektsmelding = InntektsmeldingDto.builder()
+            .medAktørId(aktørIdSøker.getAktørId())
+            .medArbeidsgiver(new InntektsmeldingDto.Arbeidsgiver("999999999"))
+            .medStartdato(LocalDate.of(2024, 6, 1))
+            .medYtelse(InntektsmeldingDto.Ytelse.FORELDREPENGER)
+            .medInntekt(BigDecimal.valueOf(35000))
             .medMånedRefusjon(BigDecimal.valueOf(35000))
-            .medRefusjonOpphørsdato(Tid.TIDENES_ENDE)
-            .medOpprettetTidspunkt(opprettetTidspunkt)
-            .medKontaktperson(new KontaktpersonEntitet("Test Testen", "111111111"))
-            .medBortfaltNaturalytelser(Collections.singletonList(naturalytelse))
+            .medOpphørsdatoRefusjon(Tid.TIDENES_ENDE)
+            .medInnsendtTidspunkt(opprettetTidspunkt)
+            .medKontaktperson(new InntektsmeldingDto.Kontaktperson("111111111", "Test Testen"))
+            .medKildesystem(InntektsmeldingDto.Kildesystem.ARBEIDSGIVERPORTAL)
+            .medSøkteRefusjonsperioder(List.of())
+            .medBortfaltNaturalytelsePerioder(Collections.singletonList(
+                new InntektsmeldingDto.BortfaltNaturalytelse(
+                    LocalDate.of(2024, 6, 10), Tid.TIDENES_ENDE,
+                    InntektsmeldingDto.Naturalytelsetype.valueOf(NaturalytelseType.AKSJER_GRUNNFONDSBEVIS_TIL_UNDERKURS.name()),
+                    BigDecimal.valueOf(2000))))
             .build();
 
-        when(personTjeneste.finnPersonIdentForAktørId(new AktørId(aktørIdSøker.getAktørId()))).thenReturn(fnrSøker);
+        when(personTjeneste.finnPersonIdentForAktørId(new no.nav.familie.inntektsmelding.integrasjoner.person.AktørId(aktørIdSøker.getAktørId()))).thenReturn(fnrSøker);
 
         // Act
         var xml = inntektsmeldingXMLTjeneste.lagXMLAvInntektsmelding(inntektsmelding);
@@ -76,27 +75,29 @@ class InntektsmeldingXMLTjenesteTest {
     void skal_teste_xml_generering_svp() {
         // Arrange
         var opprettetTidspunkt = LocalDateTime.of(2024, 6, 30, 12, 12, 30);
-        var naturalytelse = BortaltNaturalytelseEntitet.builder()
-            .medPeriode(LocalDate.of(2024, 6, 10), Tid.TIDENES_ENDE)
-            .medType(NaturalytelseType.AKSJER_GRUNNFONDSBEVIS_TIL_UNDERKURS)
-            .medMånedBeløp(BigDecimal.valueOf(2000))
-            .build();
-        var aktørIdSøker = new AktørIdEntitet("1234567891234");
+        var aktørIdSøker = new AktørId("1234567891234");
         var fnrSøker = new PersonIdent("11111111111");
-        var inntektsmelding = InntektsmeldingEntitet.builder()
-            .medArbeidsgiverIdent("999999999")
-            .medStartDato(LocalDate.of(2024, 6, 1))
-            .medYtelsetype(Ytelsetype.SVANGERSKAPSPENGER)
-            .medMånedInntekt(BigDecimal.valueOf(35000))
-            .medAktørId(aktørIdSøker)
+
+        var inntektsmelding = InntektsmeldingDto.builder()
+            .medAktørId(aktørIdSøker.getAktørId())
+            .medArbeidsgiver(new InntektsmeldingDto.Arbeidsgiver("999999999"))
+            .medStartdato(LocalDate.of(2024, 6, 1))
+            .medYtelse(InntektsmeldingDto.Ytelse.SVANGERSKAPSPENGER)
+            .medInntekt(BigDecimal.valueOf(35000))
             .medMånedRefusjon(BigDecimal.valueOf(35000))
-            .medRefusjonOpphørsdato(Tid.TIDENES_ENDE)
-            .medOpprettetTidspunkt(opprettetTidspunkt)
-            .medKontaktperson(new KontaktpersonEntitet("Test Testen", "111111111"))
-            .medBortfaltNaturalytelser(Collections.singletonList(naturalytelse))
+            .medOpphørsdatoRefusjon(Tid.TIDENES_ENDE)
+            .medInnsendtTidspunkt(opprettetTidspunkt)
+            .medKontaktperson(new InntektsmeldingDto.Kontaktperson("111111111", "Test Testen"))
+            .medKildesystem(InntektsmeldingDto.Kildesystem.ARBEIDSGIVERPORTAL)
+            .medSøkteRefusjonsperioder(List.of())
+            .medBortfaltNaturalytelsePerioder(Collections.singletonList(
+                new InntektsmeldingDto.BortfaltNaturalytelse(
+                    LocalDate.of(2024, 6, 10), Tid.TIDENES_ENDE,
+                    InntektsmeldingDto.Naturalytelsetype.valueOf(NaturalytelseType.AKSJER_GRUNNFONDSBEVIS_TIL_UNDERKURS.name()),
+                    BigDecimal.valueOf(2000))))
             .build();
 
-        when(personTjeneste.finnPersonIdentForAktørId(new AktørId(aktørIdSøker.getAktørId()))).thenReturn(fnrSøker);
+        when(personTjeneste.finnPersonIdentForAktørId(new no.nav.familie.inntektsmelding.integrasjoner.person.AktørId(aktørIdSøker.getAktørId()))).thenReturn(fnrSøker);
 
         // Act
         var xml = inntektsmeldingXMLTjeneste.lagXMLAvInntektsmelding(inntektsmelding);

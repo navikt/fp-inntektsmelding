@@ -18,9 +18,9 @@ import no.nav.familie.inntektsmelding.koder.Endringsårsak;
 import no.nav.familie.inntektsmelding.koder.Kildesystem;
 import no.nav.familie.inntektsmelding.koder.NaturalytelseType;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
-import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
+import no.nav.familie.inntektsmelding.typer.entitet.AktørId;
 
-class InntektsmeldingApiTjenesteMapperTest {
+class InntektsmeldingTjenesteMapperTest {
 
     private static final LocalDate START_DATO = LocalDate.of(2026, 3, 10);
     private static final BigDecimal MÅNED_INNTEKT = new BigDecimal("50000.00");
@@ -31,10 +31,10 @@ class InntektsmeldingApiTjenesteMapperTest {
     void skal_mappe_kontaktperson_fra_entitet() {
         var entitet = lagInntektsmeldingEntitetMedKontaktperson("Ola Nordmann", "12345678");
 
-        var resultat = InntektsmeldingApiTjeneste.mapKontaktperson(entitet);
+        var resultat = InntektsmeldingTjeneste.mapKontaktperson(entitet);
 
         assertThat(resultat).isNotNull();
-        assertThat(resultat.tlf()).isEqualTo("12345678");
+        assertThat(resultat.telefonnummer()).isEqualTo("12345678");
         assertThat(resultat.navn()).isEqualTo("Ola Nordmann");
     }
 
@@ -42,7 +42,7 @@ class InntektsmeldingApiTjenesteMapperTest {
     void skal_returnere_null_kontaktperson_når_entitet_mangler_kontaktperson() {
         var entitet = lagBasisInntektsmeldingEntitet().build();
 
-        var resultat = InntektsmeldingApiTjeneste.mapKontaktperson(entitet);
+        var resultat = InntektsmeldingTjeneste.mapKontaktperson(entitet);
 
         assertThat(resultat).isNull();
     }
@@ -51,7 +51,7 @@ class InntektsmeldingApiTjenesteMapperTest {
     void skal_mappe_refusjonsendring_fra_entitet() {
         var refusjonsendring = new RefusjonsendringEntitet(START_DATO.plusMonths(1), new BigDecimal("30000.00"));
 
-        var resultat = InntektsmeldingApiTjeneste.mapRefusjonsendring(refusjonsendring);
+        var resultat = InntektsmeldingTjeneste.mapRefusjonsendring(refusjonsendring);
 
         assertThat(resultat.fom()).isEqualTo(START_DATO.plusMonths(1));
         assertThat(resultat.beløp()).isEqualByComparingTo(new BigDecimal("30000.00"));
@@ -65,7 +65,7 @@ class InntektsmeldingApiTjenesteMapperTest {
             .medMånedBeløp(new BigDecimal("500.00"))
             .build();
 
-        var resultat = InntektsmeldingApiTjeneste.mapBortfaltNaturalytelse(bortfalt);
+        var resultat = InntektsmeldingTjeneste.mapBortfaltNaturalytelse(bortfalt);
 
         assertThat(resultat.fom()).isEqualTo(START_DATO);
         assertThat(resultat.tom()).isEqualTo(START_DATO.plusMonths(3));
@@ -82,7 +82,7 @@ class InntektsmeldingApiTjenesteMapperTest {
             .medBleKjentFra(START_DATO.minusDays(5))
             .build();
 
-        var resultat = InntektsmeldingApiTjeneste.mapEndringsårsak(endringsårsak);
+        var resultat = InntektsmeldingTjeneste.mapEndringsårsak(endringsårsak);
 
         assertThat(resultat.årsak()).isEqualTo(no.nav.familie.inntektsmelding.inntektsmelding.rest.kontrakt.Endringsårsak.TARIFFENDRING);
         assertThat(resultat.fom()).isEqualTo(START_DATO);
@@ -96,7 +96,7 @@ class InntektsmeldingApiTjenesteMapperTest {
             .medÅrsak(Endringsårsak.BONUS)
             .build();
 
-        var resultat = InntektsmeldingApiTjeneste.mapEndringsårsak(endringsårsak);
+        var resultat = InntektsmeldingTjeneste.mapEndringsårsak(endringsårsak);
 
         assertThat(resultat.årsak()).isEqualTo(no.nav.familie.inntektsmelding.inntektsmelding.rest.kontrakt.Endringsårsak.BONUS);
         assertThat(resultat.fom()).isNull();
@@ -108,7 +108,7 @@ class InntektsmeldingApiTjenesteMapperTest {
     void skal_mappe_alle_endringsårsaker_korrekt() {
         for (var kodeÅrsak : Endringsårsak.values()) {
             var entitet = EndringsårsakEntitet.builder().medÅrsak(kodeÅrsak).build();
-            var resultat = InntektsmeldingApiTjeneste.mapEndringsårsak(entitet);
+            var resultat = InntektsmeldingTjeneste.mapEndringsårsak(entitet);
             assertThat(resultat.årsak().name()).isEqualTo(kodeÅrsak.name());
         }
     }
@@ -121,7 +121,7 @@ class InntektsmeldingApiTjenesteMapperTest {
                 .medType(type)
                 .medMånedBeløp(new BigDecimal("100"))
                 .build();
-            var resultat = InntektsmeldingApiTjeneste.mapBortfaltNaturalytelse(entitet);
+            var resultat = InntektsmeldingTjeneste.mapBortfaltNaturalytelse(entitet);
             assertThat(resultat.naturalytelsetype().name()).isEqualTo(type.name());
         }
     }
@@ -153,14 +153,14 @@ class InntektsmeldingApiTjenesteMapperTest {
             .build();
 
         // Map kontaktperson
-        var kontaktperson = InntektsmeldingApiTjeneste.mapKontaktperson(entitet);
+        var kontaktperson = InntektsmeldingTjeneste.mapKontaktperson(entitet);
         assertThat(kontaktperson).isNotNull();
         assertThat(kontaktperson.navn()).isEqualTo("Kari Nordmann");
-        assertThat(kontaktperson.tlf()).isEqualTo("87654321");
+        assertThat(kontaktperson.telefonnummer()).isEqualTo("87654321");
 
         // Map refusjonsendringer
         var refusjoner = entitet.getRefusjonsendringer().stream()
-            .map(InntektsmeldingApiTjeneste::mapRefusjonsendring)
+            .map(InntektsmeldingTjeneste::mapRefusjonsendring)
             .toList();
         assertThat(refusjoner).hasSize(2);
         assertThat(refusjoner.get(0).fom()).isEqualTo(START_DATO.plusMonths(1));
@@ -170,7 +170,7 @@ class InntektsmeldingApiTjenesteMapperTest {
 
         // Map bortfalte naturalytelser
         var naturalytelser = entitet.getBorfalteNaturalYtelser().stream()
-            .map(InntektsmeldingApiTjeneste::mapBortfaltNaturalytelse)
+            .map(InntektsmeldingTjeneste::mapBortfaltNaturalytelse)
             .toList();
         assertThat(naturalytelser).hasSize(1);
         assertThat(naturalytelser.getFirst().naturalytelsetype()).isEqualTo(InntektsmeldingDto.Naturalytelsetype.BIL);
@@ -178,7 +178,7 @@ class InntektsmeldingApiTjenesteMapperTest {
 
         // Map endringsårsaker
         var endringsårsaker = entitet.getEndringsårsaker().stream()
-            .map(InntektsmeldingApiTjeneste::mapEndringsårsak)
+            .map(InntektsmeldingTjeneste::mapEndringsårsak)
             .toList();
         assertThat(endringsårsaker).hasSize(2);
         assertThat(endringsårsaker.get(0).årsak()).isEqualTo(no.nav.familie.inntektsmelding.inntektsmelding.rest.kontrakt.Endringsårsak.FERIE);
@@ -191,21 +191,43 @@ class InntektsmeldingApiTjenesteMapperTest {
     void skal_mappe_entitet_uten_lister() {
         var entitet = lagBasisInntektsmeldingEntitet().build();
 
-        var kontaktperson = InntektsmeldingApiTjeneste.mapKontaktperson(entitet);
+        var kontaktperson = InntektsmeldingTjeneste.mapKontaktperson(entitet);
         var refusjoner = entitet.getRefusjonsendringer().stream()
-            .map(InntektsmeldingApiTjeneste::mapRefusjonsendring)
+            .map(InntektsmeldingTjeneste::mapRefusjonsendring)
             .toList();
         var naturalytelser = entitet.getBorfalteNaturalYtelser().stream()
-            .map(InntektsmeldingApiTjeneste::mapBortfaltNaturalytelse)
+            .map(InntektsmeldingTjeneste::mapBortfaltNaturalytelse)
             .toList();
         var endringsårsaker = entitet.getEndringsårsaker().stream()
-            .map(InntektsmeldingApiTjeneste::mapEndringsårsak)
+            .map(InntektsmeldingTjeneste::mapEndringsårsak)
             .toList();
 
         assertThat(kontaktperson).isNull();
         assertThat(refusjoner).isEmpty();
         assertThat(naturalytelser).isEmpty();
         assertThat(endringsårsaker).isEmpty();
+    }
+
+    @Test
+    void skal_mappe_månedRefusjon_og_opphørsdato_fra_entitet() {
+        var månedRefusjon = new BigDecimal("35000.00");
+        var opphørsdato = START_DATO.plusMonths(6);
+
+        var entitet = lagBasisInntektsmeldingEntitet()
+            .medMånedRefusjon(månedRefusjon)
+            .medRefusjonOpphørsdato(opphørsdato)
+            .build();
+
+        assertThat(entitet.getMånedRefusjon()).isEqualByComparingTo(månedRefusjon);
+        assertThat(entitet.getOpphørsdatoRefusjon()).isEqualTo(opphørsdato);
+    }
+
+    @Test
+    void skal_mappe_null_månedRefusjon_og_opphørsdato_når_ikke_satt() {
+        var entitet = lagBasisInntektsmeldingEntitet().build();
+
+        assertThat(entitet.getMånedRefusjon()).isNull();
+        assertThat(entitet.getOpphørsdatoRefusjon()).isNull();
     }
 
     @Test
@@ -238,16 +260,18 @@ class InntektsmeldingApiTjenesteMapperTest {
 
         var dto = InntektsmeldingDto.builder()
             .medInntektsmeldingUuid(uuid)
-            .medForespørselUuid(forespørselUuid)
-            .medFnr("12345678901")
+            .medAktørId("12345678901")
             .medYtelse(InntektsmeldingDto.Ytelse.FORELDREPENGER)
-            .medArbeidsgiver(new InntektsmeldingDto.ArbeidsgiverInformasjonDto(ARBEIDSGIVER_IDENT))
+            .medArbeidsgiver(new InntektsmeldingDto.Arbeidsgiver(ARBEIDSGIVER_IDENT))
             .medKontaktperson(new InntektsmeldingDto.Kontaktperson("11111111", "Test Testesen"))
             .medStartdato(START_DATO)
             .medInntekt(MÅNED_INNTEKT)
             .medInnsendingsårsak(InntektsmeldingDto.Innsendingsårsak.NY)
             .medInnsendingstype(InntektsmeldingDto.Innsendingstype.FORESPURT)
             .medInnsendtTidspunkt(tidspunkt)
+            .medKildesystem(InntektsmeldingDto.Kildesystem.LPS_API)
+            .medMånedRefusjon(new BigDecimal("30000.00"))
+            .medOpphørsdatoRefusjon(START_DATO.plusMonths(12))
             .medAvsenderSystem(new InntektsmeldingDto.AvsenderSystem("TestSystem", "1.0"))
             .medSøkteRefusjonsperioder(List.of(new InntektsmeldingDto.SøktRefusjon(START_DATO, new BigDecimal("25000"))))
             .medBortfaltNaturalytelsePerioder(List.of(
@@ -260,19 +284,21 @@ class InntektsmeldingApiTjenesteMapperTest {
             .build();
 
         assertThat(dto.getInntektsmeldingUuid()).isEqualTo(uuid);
-        assertThat(dto.getForespørselUuid()).isEqualTo(forespørselUuid);
-        assertThat(dto.getFnr()).isEqualTo("12345678901");
+        assertThat(dto.getAktørId()).isEqualTo("12345678901");
         assertThat(dto.getYtelse()).isEqualTo(InntektsmeldingDto.Ytelse.FORELDREPENGER);
-        assertThat(dto.getArbeidsgiver().orgnr()).isEqualTo(ARBEIDSGIVER_IDENT);
+        assertThat(dto.getArbeidsgiver().ident()).isEqualTo(ARBEIDSGIVER_IDENT);
         assertThat(dto.getKontaktperson().navn()).isEqualTo("Test Testesen");
-        assertThat(dto.getKontaktperson().tlf()).isEqualTo("11111111");
+        assertThat(dto.getKontaktperson().telefonnummer()).isEqualTo("11111111");
         assertThat(dto.getStartdato()).isEqualTo(START_DATO);
         assertThat(dto.getInntekt()).isEqualByComparingTo(MÅNED_INNTEKT);
         assertThat(dto.getInnsendingsårsak()).isEqualTo(InntektsmeldingDto.Innsendingsårsak.NY);
         assertThat(dto.getInnsendingstype()).isEqualTo(InntektsmeldingDto.Innsendingstype.FORESPURT);
         assertThat(dto.getInnsendtTidspunkt()).isEqualTo(tidspunkt);
-        assertThat(dto.getAvsenderSystem().systemNavn()).isEqualTo("TestSystem");
-        assertThat(dto.getAvsenderSystem().systemVersjon()).isEqualTo("1.0");
+        assertThat(dto.getKildesystem()).isEqualTo(InntektsmeldingDto.Kildesystem.LPS_API);
+        assertThat(dto.getMånedRefusjon()).isEqualByComparingTo(new BigDecimal("30000.00"));
+        assertThat(dto.getOpphørsdatoRefusjon()).isEqualTo(START_DATO.plusMonths(12));
+        assertThat(dto.getAvsenderSystem().navn()).isEqualTo("TestSystem");
+        assertThat(dto.getAvsenderSystem().versjon()).isEqualTo("1.0");
         assertThat(dto.getSøkteRefusjonsperioder()).hasSize(1);
         assertThat(dto.getBortfaltNaturalytelsePerioder()).hasSize(1);
         assertThat(dto.getEndringAvInntektÅrsaker()).hasSize(1);
@@ -283,13 +309,14 @@ class InntektsmeldingApiTjenesteMapperTest {
         var dto = InntektsmeldingDto.builder().build();
 
         assertThat(dto.getInntektsmeldingUuid()).isNull();
-        assertThat(dto.getForespørselUuid()).isNull();
-        assertThat(dto.getFnr()).isNull();
+        assertThat(dto.getAktørId()).isNull();
         assertThat(dto.getYtelse()).isNull();
         assertThat(dto.getArbeidsgiver()).isNull();
         assertThat(dto.getKontaktperson()).isNull();
         assertThat(dto.getStartdato()).isNull();
         assertThat(dto.getInntekt()).isNull();
+        assertThat(dto.getMånedRefusjon()).isNull();
+        assertThat(dto.getOpphørsdatoRefusjon()).isNull();
         assertThat(dto.getInnsendingsårsak()).isNull();
         assertThat(dto.getInnsendingstype()).isNull();
         assertThat(dto.getInnsendtTidspunkt()).isNull();
@@ -305,7 +332,7 @@ class InntektsmeldingApiTjenesteMapperTest {
 
     private InntektsmeldingEntitet.Builder lagBasisInntektsmeldingEntitetMedYtelse(Ytelsetype ytelsetype) {
         return InntektsmeldingEntitet.builder()
-            .medAktørId(new AktørIdEntitet(AKTØR_ID))
+            .medAktørId(new AktørId(AKTØR_ID))
             .medYtelsetype(ytelsetype)
             .medArbeidsgiverIdent(ARBEIDSGIVER_IDENT)
             .medStartDato(START_DATO)

@@ -6,25 +6,21 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
-import no.nav.familie.inntektsmelding.imdialog.modell.KontaktpersonEntitet;
-
 import org.junit.jupiter.api.Test;
 
-import no.nav.familie.inntektsmelding.imdialog.modell.BortaltNaturalytelseEntitet;
-import no.nav.familie.inntektsmelding.imdialog.modell.InntektsmeldingEntitet;
+import no.nav.familie.inntektsmelding.inntektsmelding.InntektsmeldingDto;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.familie.inntektsmelding.koder.Kildesystem;
 import no.nav.familie.inntektsmelding.koder.NaturalytelseType;
-import no.nav.familie.inntektsmelding.koder.Ytelsetype;
-import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
+import no.nav.familie.inntektsmelding.typer.entitet.AktørId;
 import no.nav.vedtak.konfig.Tid;
 import no.seres.xsd.nav.inntektsmelding_m._20181211.NaturalytelseDetaljer;
 
 class InntektsmeldingXMLMapperTest {
 
     private static final LocalDate NOW = LocalDate.now();
-    private static final String DUMMY_ARBEIDSGIVER_IDENT = "0123456789";
-    private static final AktørIdEntitet DUMMY_AKTØRID = AktørIdEntitet.dummy();
+    private static final String DUMMY_ARBEIDSGIVER_IDENT = "012345678";
+    private static final AktørId DUMMY_AKTØRID = AktørId.dummy();
     private static final String DUMMY_FNR = "12345678900";
 
     @Test
@@ -33,8 +29,9 @@ class InntektsmeldingXMLMapperTest {
         var forventetBeløp = BigDecimal.valueOf(1000L);
         var forventetFom = NOW.plusDays(31);
 
-        var inntektsmelding = lagInntektsmeldingEntitet(DUMMY_AKTØRID,
-            List.of(lagBortfaltNaturalytelseEntitet(NOW, forventetFom, forventetNaturalytelseType, forventetBeløp)), Kildesystem.ARBEIDSGIVERPORTAL);
+        var inntektsmelding = lagInntektsmeldingDto(DUMMY_AKTØRID,
+            List.of(lagBortfaltNaturalytelse(NOW, forventetFom, forventetNaturalytelseType, forventetBeløp)),
+            InntektsmeldingDto.Kildesystem.ARBEIDSGIVERPORTAL);
 
         var resultat = InntektsmeldingXMLMapper.map(inntektsmelding, PersonIdent.fra(DUMMY_FNR));
 
@@ -53,10 +50,9 @@ class InntektsmeldingXMLMapperTest {
         var forventetBeløp = BigDecimal.valueOf(1000L);
         var forventetFom = NOW;
 
-        var inntektsmelding = lagInntektsmeldingEntitet(DUMMY_AKTØRID,
-            List.of(lagBortfaltNaturalytelseEntitet(forventetFom, Tid.TIDENES_ENDE, forventetNaturalytelseType, forventetBeløp)),
-            Kildesystem.ARBEIDSGIVERPORTAL
-        );
+        var inntektsmelding = lagInntektsmeldingDto(DUMMY_AKTØRID,
+            List.of(lagBortfaltNaturalytelse(forventetFom, Tid.TIDENES_ENDE, forventetNaturalytelseType, forventetBeløp)),
+            InntektsmeldingDto.Kildesystem.ARBEIDSGIVERPORTAL);
 
         var resultat = InntektsmeldingXMLMapper.map(inntektsmelding, PersonIdent.fra(DUMMY_FNR));
 
@@ -69,13 +65,12 @@ class InntektsmeldingXMLMapperTest {
 
     @Test
     void test_overstyrt_inntektsmelding() {
-        var inntektsmelding = lagInntektsmeldingEntitet(DUMMY_AKTØRID, List.of(), Kildesystem.FPSAK);
+        var inntektsmelding = lagInntektsmeldingDto(DUMMY_AKTØRID, List.of(), InntektsmeldingDto.Kildesystem.SAKSBEHANDLER);
 
         var resultat = InntektsmeldingXMLMapper.map(inntektsmelding, PersonIdent.fra(DUMMY_FNR));
 
         assertThat(resultat.getSkjemainnhold().getAvsendersystem().getSystemnavn()).isEqualTo("OVERSTYRING_FPSAK");
     }
-
 
     private static void assertNaturalytelse(NaturalytelseDetaljer naturalytelseDetaljer,
                                             LocalDate forventetFom,
@@ -86,29 +81,27 @@ class InntektsmeldingXMLMapperTest {
         assertThat(naturalytelseDetaljer.getBeloepPrMnd().getValue()).isEqualTo(forventetBeløp);
     }
 
-    private static InntektsmeldingEntitet lagInntektsmeldingEntitet(AktørIdEntitet aktørId,
-                                                                    List<BortaltNaturalytelseEntitet> bortfaltNaturalytelseEntitet,
-                                                                    Kildesystem kildesystem) {
-        return InntektsmeldingEntitet.builder()
-            .medBortfaltNaturalytelser(bortfaltNaturalytelseEntitet)
-            .medArbeidsgiverIdent(DUMMY_ARBEIDSGIVER_IDENT)
-            .medAktørId(aktørId)
-            .medKontaktperson(new KontaktpersonEntitet("Test Testesen", "11111111"))
-            .medStartDato(NOW)
-            .medMånedInntekt(BigDecimal.ZERO)
+    private static InntektsmeldingDto lagInntektsmeldingDto(AktørId aktørId,
+                                                            List<InntektsmeldingDto.BortfaltNaturalytelse> naturalytelser,
+                                                            InntektsmeldingDto.Kildesystem kildesystem) {
+        return InntektsmeldingDto.builder()
+            .medAktørId(aktørId.getAktørId())
+            .medArbeidsgiver(new InntektsmeldingDto.Arbeidsgiver(DUMMY_ARBEIDSGIVER_IDENT))
+            .medStartdato(NOW)
+            .medInntekt(BigDecimal.ZERO)
+            .medYtelse(InntektsmeldingDto.Ytelse.FORELDREPENGER)
             .medKildesystem(kildesystem)
-            .medYtelsetype(Ytelsetype.FORELDREPENGER)
+            .medKontaktperson(new InntektsmeldingDto.Kontaktperson("11111111", "Test Person"))
+            .medBortfaltNaturalytelsePerioder(naturalytelser)
+            .medSøkteRefusjonsperioder(List.of())
             .build();
     }
 
-    private static BortaltNaturalytelseEntitet lagBortfaltNaturalytelseEntitet(LocalDate fom,
-                                                                               LocalDate tom,
-                                                                               NaturalytelseType type,
-                                                                               BigDecimal beløp) {
-        return BortaltNaturalytelseEntitet.builder()
-            .medPeriode(fom, tom)
-            .medType(type)
-            .medMånedBeløp(beløp)
-            .build();
+    private static InntektsmeldingDto.BortfaltNaturalytelse lagBortfaltNaturalytelse(LocalDate fom,
+                                                                                     LocalDate tom,
+                                                                                     NaturalytelseType type,
+                                                                                     BigDecimal beløp) {
+        return new InntektsmeldingDto.BortfaltNaturalytelse(fom, tom,
+            InntektsmeldingDto.Naturalytelsetype.valueOf(type.name()), beløp);
     }
 }

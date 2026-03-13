@@ -23,7 +23,7 @@ import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.metrikker.MetrikkerTjeneste;
 import no.nav.familie.inntektsmelding.typer.dto.KodeverkMapper;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
-import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
+import no.nav.familie.inntektsmelding.typer.entitet.AktørId;
 import no.nav.vedtak.exception.TekniskException;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskTjeneste;
@@ -65,7 +65,7 @@ public class InntektsmeldingMottakTjeneste {
         var orgnummer = new OrganisasjonsnummerDto(mottattInntektsmeldingDto.arbeidsgiverIdent().orgnr());
         //Ferdigstiller forespørsel hvis den ikke er ferdig fra før
         if (!forespørselEntitet.getStatus().equals(ForespørselStatus.FERDIG)) {
-            var aktørId = new AktørIdEntitet(mottattInntektsmeldingDto.aktorId().id());
+            var aktørId = new AktørId(mottattInntektsmeldingDto.aktorId().id());
             var ferdigstiltForespørsel = forespørselBehandlingTjeneste.ferdigstillForespørsel(mottattInntektsmeldingDto.foresporselUuid(), aktørId, orgnummer,
                 mottattInntektsmeldingDto.startdato(), LukkeÅrsak.ORDINÆR_INNSENDING, lagretIm.getUuid());
             MetrikkerTjeneste.loggForespørselLukkIntern(ferdigstiltForespørsel);
@@ -85,7 +85,7 @@ public class InntektsmeldingMottakTjeneste {
         var nyInntektsmelding = (årsak == ArbeidsgiverinitiertÅrsak.NYANSATT)
                                 ? InntektsmeldingMapper.mapTilEntitetArbeidsgiverinitiert(sendInntektsmeldingRequestDto)
                                 : InntektsmeldingMapper.mapTilEntitet(sendInntektsmeldingRequestDto);
-        var aktørId = new AktørIdEntitet(sendInntektsmeldingRequestDto.aktorId().id());
+        var aktørId = new AktørId(sendInntektsmeldingRequestDto.aktorId().id());
         var ytelseType = KodeverkMapper.mapYtelsetype(sendInntektsmeldingRequestDto.ytelse());
         var arbeidsgiverinitiertÅrsak = KodeverkMapper.mapArbeidsgiverinitiertÅrsak(sendInntektsmeldingRequestDto.arbeidsgiverinitiertÅrsak());
         var organisasjonsnummer = new OrganisasjonsnummerDto(sendInntektsmeldingRequestDto.arbeidsgiverIdent().orgnr());
@@ -135,7 +135,7 @@ public class InntektsmeldingMottakTjeneste {
         return inntektsmeldingRepository.hentInntektsmelding(imId);
     }
 
-    private ForespørselEntitet oppretterArbeidsgiverinitiertForespørsel(Ytelsetype ytelseType, AktørIdEntitet aktørId,
+    private ForespørselEntitet oppretterArbeidsgiverinitiertForespørsel(Ytelsetype ytelseType, AktørId aktørId,
                                                                         OrganisasjonsnummerDto organisasjonsnummer,
                                                                         ArbeidsgiverinitiertÅrsak arbeidsgiverinitiertÅrsak,
                                                                         LocalDate startdato) {

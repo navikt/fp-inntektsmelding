@@ -7,7 +7,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import no.nav.familie.inntektsmelding.forespørsel.tjenester.ForespørselTjeneste;
-import no.nav.familie.inntektsmelding.imdialog.tjenester.InntektsmeldingTjeneste;
+import no.nav.familie.inntektsmelding.inntektsmelding.InntektsmeldingTjeneste;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 
 @ApplicationScoped
@@ -31,13 +31,13 @@ public class PipTjeneste {
 
     public OrganisasjonsnummerDto hentOrganisasjonsnummerFor(long inntektsmeldingId) {
         return Optional.ofNullable(inntektsmeldingTjeneste.hentInntektsmelding(inntektsmeldingId))
-            .map(f -> new OrganisasjonsnummerDto(f.getArbeidsgiverIdent()))
+            .map(f -> new OrganisasjonsnummerDto(f.getArbeidsgiver().ident()))
             .orElse(null);
     }
 
     public OrganisasjonsnummerDto hentInntektsmeldingOrganisasjonsnummerFor(UUID inntektsmeldingUuid) {
-        return inntektsmeldingTjeneste.hentInntektsmelding(inntektsmeldingUuid)
-            .map(im -> new OrganisasjonsnummerDto(im.getArbeidsgiverIdent()))
+        return Optional.ofNullable(inntektsmeldingTjeneste.hentInntektsmelding(inntektsmeldingUuid))
+            .map(im -> new OrganisasjonsnummerDto(im.getArbeidsgiver().ident()))
             .orElse(null);
     }
 

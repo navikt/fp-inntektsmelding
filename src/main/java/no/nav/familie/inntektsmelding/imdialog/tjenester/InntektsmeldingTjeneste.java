@@ -31,10 +31,6 @@ public class InntektsmeldingTjeneste {
         this.fpDokgenTjeneste = fpDokgenTjeneste;
     }
 
-    public InntektsmeldingEntitet hentInntektsmelding(long inntektsmeldingId) {
-        return inntektsmeldingRepository.hentInntektsmelding(inntektsmeldingId);
-    }
-
     public Optional<InntektsmeldingEntitet> hentInntektsmelding(UUID inntektsmeldingUuid) {
         return inntektsmeldingRepository.hentInntektsmelding(inntektsmeldingUuid);
     }

@@ -14,7 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
-import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
+import no.nav.familie.inntektsmelding.typer.entitet.AktørId;
 import no.nav.vedtak.felles.integrasjon.rest.RestClient;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,7 +33,7 @@ class FpsakKlientTest {
 
     @Test
     void test_hent_info_om_sak() {
-        var aktørId = new AktørIdEntitet(AKTØR_ID);
+        var aktørId = new AktørId(AKTØR_ID);
         var ytelse = Ytelsetype.FORELDREPENGER;
         var førsteUttaksdato = LocalDate.now();
         var skjæringstidspunkt = førsteUttaksdato.plusDays(1);

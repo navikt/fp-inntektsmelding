@@ -29,7 +29,7 @@ import no.nav.familie.inntektsmelding.imdialog.modell.InntektsmeldingRepository;
 import no.nav.familie.inntektsmelding.integrasjoner.dokgen.FpDokgenTjeneste;
 import no.nav.familie.inntektsmelding.koder.ForespørselType;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
-import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
+import no.nav.familie.inntektsmelding.typer.entitet.AktørId;
 import no.nav.vedtak.sikkerhet.kontekst.IdentType;
 import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
 import no.nav.vedtak.sikkerhet.kontekst.RequestKontekst;
@@ -72,7 +72,7 @@ class InntektsmeldingTjenesteTest {
         // Arrange
         var uid = UUID.randomUUID();
         var orgnr = "123";
-        var søkerAktørId = new AktørIdEntitet("1111111111111");
+        var søkerAktørId = new AktørId("1111111111111");
         when(forespørselBehandlingTjeneste.hentForespørsel(uid)).thenReturn(Optional.of(new ForespørselEntitet(orgnr, LocalDate.now(),
             søkerAktørId, Ytelsetype.FORELDREPENGER, "123", LocalDate.now(), ForespørselType.BESTILT_AV_FAGSYSTEM)));
         var inntektsmelding = InntektsmeldingEntitet.builder().medMånedInntekt(BigDecimal.ZERO).medStartDato(LocalDate.now()).build();
@@ -91,7 +91,7 @@ class InntektsmeldingTjenesteTest {
         // Arrange
         var imId = 1;
         var startdato = LocalDate.now().minusDays(10);
-        var søkerAktørId = new AktørIdEntitet("1111111111111");
+        var søkerAktørId = new AktørId("1111111111111");
         var agIdent = "999999999";
         var im = InntektsmeldingEntitet.builder()
             .medMånedInntekt(BigDecimal.ZERO)

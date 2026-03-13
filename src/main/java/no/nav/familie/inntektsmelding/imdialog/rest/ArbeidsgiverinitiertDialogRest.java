@@ -23,7 +23,7 @@ import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.server.auth.api.AutentisertMedTokenX;
 import no.nav.familie.inntektsmelding.server.auth.api.Tilgangskontrollert;
-import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
+import no.nav.familie.inntektsmelding.typer.entitet.AktørId;
 import no.nav.vedtak.exception.FunksjonellException;
 
 @AutentisertMedTokenX
@@ -63,7 +63,7 @@ public class ArbeidsgiverinitiertDialogRest {
         if (personInfo == null) {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
-        var aktørIdEntitet = new AktørIdEntitet(personInfo.aktørId().getAktørId());
+        var aktørIdEntitet = new AktørId(personInfo.aktørId().getAktørId());
         var eksisterendeForepørslersisteTreÅr = grunnlagDtoTjeneste.finnForespørslerSisteTreÅr(request.ytelseType(),
             request.førsteFraværsdag(),
             aktørIdEntitet);
@@ -123,7 +123,7 @@ public class ArbeidsgiverinitiertDialogRest {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
 
-        var aktørId = new AktørIdEntitet(personInfo.aktørId().getAktørId());
+        var aktørId = new AktørId(personInfo.aktørId().getAktørId());
         var infoOmsak = fpsakTjeneste.henterInfoOmSakIFagsystem(aktørId, request.ytelseType());
         var førsteUttaksdato = infoOmsak.førsteUttaksdato();
 

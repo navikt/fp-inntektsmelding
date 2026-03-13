@@ -14,7 +14,7 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import no.nav.familie.inntektsmelding.inntektsmelding.InntektsmeldingApiTjeneste;
+import no.nav.familie.inntektsmelding.inntektsmelding.InntektsmeldingTjeneste;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,15 +34,15 @@ public class InntektsmeldingApiRest {
 
     public static final String BASE_PATH = "/inntektsmelding";
     private Tilgang tilgangskontroll;
-    private InntektsmeldingApiTjeneste inntektsmeldingApiTjeneste;
+    private InntektsmeldingTjeneste inntektsmeldingTjeneste;
 
     InntektsmeldingApiRest() {
         // CDI
     }
 
     @Inject
-    public InntektsmeldingApiRest(InntektsmeldingApiTjeneste inntektsmeldingApiTjeneste, Tilgang tilgangskontroll) {
-        this.inntektsmeldingApiTjeneste = inntektsmeldingApiTjeneste;
+    public InntektsmeldingApiRest(InntektsmeldingTjeneste inntektsmeldingTjeneste, Tilgang tilgangskontroll) {
+        this.inntektsmeldingTjeneste = inntektsmeldingTjeneste;
         this.tilgangskontroll = tilgangskontroll;
     }
 
@@ -55,7 +55,7 @@ public class InntektsmeldingApiRest {
                                         UUID inntektsmeldingUuid) {
         tilgangskontroll.sjekkErSystembruker();
         LOG.trace("Henter inntektsmelding med UUID: {}", inntektsmeldingUuid);
-        var inntektsmelding = inntektsmeldingApiTjeneste.hentInntektsmelding(inntektsmeldingUuid);
+        var inntektsmelding = inntektsmeldingTjeneste.hentInntektsmelding(inntektsmeldingUuid);
 
         if (inntektsmelding == null) {
             LOG.info("Fant ingen inntektsmelding for UUID: {}", inntektsmeldingUuid);

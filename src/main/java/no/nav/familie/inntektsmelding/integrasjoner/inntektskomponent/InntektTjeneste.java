@@ -20,7 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.nav.familie.inntektsmelding.typer.dto.MånedslønnStatus;
-import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
+import no.nav.familie.inntektsmelding.typer.entitet.AktørId;
 import no.nav.vedtak.exception.IntegrasjonException;
 import no.nav.vedtak.exception.TekniskException;
 
@@ -40,7 +40,7 @@ public class InntektTjeneste {
     }
 
     // Tar inn dagens dato som parameter for å gjøre det enklere å skrive tester
-    public Inntektsopplysninger hentInntekt(AktørIdEntitet aktørId, LocalDate skjæringstidspunkt, LocalDate dagensDato, String organisasjonsnummer,
+    public Inntektsopplysninger hentInntekt(AktørId aktørId, LocalDate skjæringstidspunkt, LocalDate dagensDato, String organisasjonsnummer,
                                             boolean harJobbetHeleBeregningsperioden) {
         // Hvis søker ikke har jobbet hele beregningsperioden, bryr vi oss ikke med å justere innhenting etter rapporteringsfrist
         var antallMånederViBerOm = harJobbetHeleBeregningsperioden ? finnAntallMånederViMåBeOm(skjæringstidspunkt, dagensDato) : 3;
@@ -174,7 +174,7 @@ public class InntektTjeneste {
     private record Månedsinntekt(YearMonth måned, BigDecimal beløp) {
     }
 
-    private FinnInntektRequest lagRequest(AktørIdEntitet aktørId, LocalDate fomDato, LocalDate tomDato) {
+    private FinnInntektRequest lagRequest(AktørId aktørId, LocalDate fomDato, LocalDate tomDato) {
         var fomÅrMåned = YearMonth.from(fomDato);
         var tomÅrMåned = YearMonth.from(tomDato);
 

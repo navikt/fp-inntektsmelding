@@ -6,37 +6,29 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Digits;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
-
-import com.fasterxml.jackson.annotation.JsonValue;
-
 public class InntektsmeldingDto {
-
     private final UUID inntektsmeldingUuid;
-    private final UUID forespørselUuid;
-    private final String fnr;
+    private final String aktørId;
     private final Ytelse ytelse;
-    private final ArbeidsgiverInformasjonDto arbeidsgiver;
+    private final Arbeidsgiver arbeidsgiver;
     private final Kontaktperson kontaktperson;
     private final LocalDate startdato;
     private final BigDecimal inntekt;
-    private final Innsendingsårsak innsendingsårsak;
-    private final Innsendingstype innsendingstype;
+    private final Innsendingsårsak innsendingsårsak; //TODO: finnes ikke i DB ennå
+    private final Innsendingstype innsendingstype; //TODO: finnes ikke i DB ennå
     private final LocalDateTime innsendtTidspunkt;
-    private final AvsenderSystem avsenderSystem;
+    private final Kildesystem kildesystem;
+    private final String opprettetAv;
+    private final AvsenderSystem avsenderSystem; //TODO: finnes ikke i DB ennå
+    private final BigDecimal månedRefusjon;
+    private final LocalDate opphørsdatoRefusjon;
     private final List<SøktRefusjon> søkteRefusjonsperioder;
     private final List<BortfaltNaturalytelse> bortfaltNaturalytelsePerioder;
     private final List<Endringsårsaker> endringAvInntektÅrsaker;
 
     private InntektsmeldingDto(Builder builder) {
         this.inntektsmeldingUuid = builder.inntektsmeldingUuid;
-        this.forespørselUuid = builder.forespørselUuid;
-        this.fnr = builder.fnr;
+        this.aktørId = builder.aktørId;
         this.ytelse = builder.ytelse;
         this.arbeidsgiver = builder.arbeidsgiver;
         this.kontaktperson = builder.kontaktperson;
@@ -45,7 +37,11 @@ public class InntektsmeldingDto {
         this.innsendingsårsak = builder.innsendingsårsak;
         this.innsendingstype = builder.innsendingstype;
         this.innsendtTidspunkt = builder.innsendtTidspunkt;
+        this.kildesystem = builder.kildesystem;
+        this.opprettetAv = builder.opprettetAv;
         this.avsenderSystem = builder.avsenderSystem;
+        this.månedRefusjon = builder.månedRefusjon;
+        this.opphørsdatoRefusjon = builder.opphørsdatoRefusjon;
         this.søkteRefusjonsperioder = builder.søkteRefusjonsperioder;
         this.bortfaltNaturalytelsePerioder = builder.bortfaltNaturalytelsePerioder;
         this.endringAvInntektÅrsaker = builder.endringAvInntektÅrsaker;
@@ -59,19 +55,15 @@ public class InntektsmeldingDto {
         return inntektsmeldingUuid;
     }
 
-    public UUID getForespørselUuid() {
-        return forespørselUuid;
-    }
-
-    public String getFnr() {
-        return fnr;
+    public String getAktørId() {
+        return aktørId;
     }
 
     public Ytelse getYtelse() {
         return ytelse;
     }
 
-    public ArbeidsgiverInformasjonDto getArbeidsgiver() {
+    public Arbeidsgiver getArbeidsgiver() {
         return arbeidsgiver;
     }
 
@@ -99,12 +91,28 @@ public class InntektsmeldingDto {
         return innsendtTidspunkt;
     }
 
+    public Kildesystem getKildesystem() {
+        return kildesystem;
+    }
+
+    public String getOpprettetAv() {
+        return opprettetAv;
+    }
+
     public AvsenderSystem getAvsenderSystem() {
         return avsenderSystem;
     }
 
     public List<SøktRefusjon> getSøkteRefusjonsperioder() {
         return søkteRefusjonsperioder;
+    }
+
+    public BigDecimal getMånedRefusjon() {
+        return månedRefusjon;
+    }
+
+    public LocalDate getOpphørsdatoRefusjon() {
+        return opphørsdatoRefusjon;
     }
 
     public List<BortfaltNaturalytelse> getBortfaltNaturalytelsePerioder() {
@@ -118,17 +126,20 @@ public class InntektsmeldingDto {
     public static class Builder {
 
         private UUID inntektsmeldingUuid;
-        private UUID forespørselUuid;
-        private String fnr;
+        private String aktørId;
         private Ytelse ytelse;
-        private ArbeidsgiverInformasjonDto arbeidsgiver;
+        private Arbeidsgiver arbeidsgiver;
         private Kontaktperson kontaktperson;
         private LocalDate startdato;
         private BigDecimal inntekt;
         private Innsendingsårsak innsendingsårsak;
         private Innsendingstype innsendingstype;
         private LocalDateTime innsendtTidspunkt;
+        private Kildesystem kildesystem;
+        private String opprettetAv;
         private AvsenderSystem avsenderSystem;
+        private BigDecimal månedRefusjon;
+        private LocalDate opphørsdatoRefusjon;
         private List<SøktRefusjon> søkteRefusjonsperioder;
         private List<BortfaltNaturalytelse> bortfaltNaturalytelsePerioder;
         private List<Endringsårsaker> endringAvInntektÅrsaker;
@@ -141,13 +152,8 @@ public class InntektsmeldingDto {
             return this;
         }
 
-        public Builder medForespørselUuid(UUID forespørselUuid) {
-            this.forespørselUuid = forespørselUuid;
-            return this;
-        }
-
-        public Builder medFnr(String fnr) {
-            this.fnr = fnr;
+        public Builder medAktørId(String aktørId) {
+            this.aktørId = aktørId;
             return this;
         }
 
@@ -156,7 +162,7 @@ public class InntektsmeldingDto {
             return this;
         }
 
-        public Builder medArbeidsgiver(ArbeidsgiverInformasjonDto arbeidsgiver) {
+        public Builder medArbeidsgiver(Arbeidsgiver arbeidsgiver) {
             this.arbeidsgiver = arbeidsgiver;
             return this;
         }
@@ -191,8 +197,28 @@ public class InntektsmeldingDto {
             return this;
         }
 
+        public Builder medKildesystem(Kildesystem kildesystem) {
+            this.kildesystem = kildesystem;
+            return this;
+        }
+
+        public Builder medOpprettetAv(String opprettetAv) {
+            this.opprettetAv = opprettetAv;
+            return this;
+        }
+
         public Builder medAvsenderSystem(AvsenderSystem avsenderSystem) {
             this.avsenderSystem = avsenderSystem;
+            return this;
+        }
+
+        public Builder medMånedRefusjon(BigDecimal månedRefusjon) {
+            this.månedRefusjon = månedRefusjon;
+            return this;
+        }
+
+        public Builder medOpphørsdatoRefusjon(LocalDate opphørsdatoRefusjon) {
+            this.opphørsdatoRefusjon = opphørsdatoRefusjon;
             return this;
         }
 
@@ -216,8 +242,7 @@ public class InntektsmeldingDto {
         }
     }
 
-    record ArbeidsgiverInformasjonDto(@JsonValue @NotNull @Digits(integer = 13, fraction = 0) @Pattern(regexp = REGEXP) String orgnr) {
-        private static final String REGEXP = "^(\\d{9}|\\d{13})$";
+    public record Arbeidsgiver(String ident) {
 
         @Override
         public String toString() {
@@ -225,20 +250,15 @@ public class InntektsmeldingDto {
         }
 
         private String maskerId() {
-            if (orgnr == null) {
+            if (ident == null) {
                 return "";
             }
-            var length = orgnr.length();
+            var length = ident.length();
             if (length <= 4) {
                 return "*".repeat(length);
             }
-            return "*".repeat(length - 4) + orgnr.substring(length - 4);
+            return "*".repeat(length - 4) + ident.substring(length - 4);
         }
-
-        public boolean erVirksomhet() {
-            return orgnr.length() == 9;
-        }
-
     }
 
     public enum Endringsårsak {
@@ -257,31 +277,31 @@ public class InntektsmeldingDto {
         PERMISJON
     }
 
-    public record SøktRefusjon(@NotNull LocalDate fom,
-                               @NotNull @Min(0) @Max(Integer.MAX_VALUE) @Digits(integer = 20, fraction = 2) BigDecimal beløp) {
+    public record SøktRefusjon(LocalDate fom,
+                               BigDecimal beløp) {
     }
 
-    public record BortfaltNaturalytelse(@NotNull LocalDate fom,
+    public record BortfaltNaturalytelse(LocalDate fom,
                                         LocalDate tom,
-                                        @NotNull Naturalytelsetype naturalytelsetype,
-                                        @NotNull @Min(0) @Max(Integer.MAX_VALUE) @Digits(integer = 20, fraction = 2) BigDecimal beløp) {
+                                        Naturalytelsetype naturalytelsetype,
+                                        BigDecimal beløp) {
     }
 
-    public record Endringsårsaker(@NotNull @Valid no.nav.familie.inntektsmelding.inntektsmelding.rest.kontrakt.Endringsårsak årsak,
+    public record Endringsårsaker(no.nav.familie.inntektsmelding.inntektsmelding.rest.kontrakt.Endringsårsak årsak,
                                   LocalDate fom,
                                   LocalDate tom,
                                   LocalDate bleKjentFom) {
     }
 
     public record Kontaktperson(
-        String tlf,
+        String telefonnummer,
         String navn
     ) {
     }
 
     public record AvsenderSystem(
-        String systemNavn,
-        String systemVersjon
+        String navn,
+        String versjon
     ) {
     }
 
@@ -320,6 +340,12 @@ public class InntektsmeldingDto {
         YRKEBIL_TJENESTLIGBEHOV_KILOMETER,
         YRKEBIL_TJENESTLIGBEHOV_LISTEPRIS,
         INNBETALING_TIL_UTENLANDSK_PENSJONSORDNING,
+    }
+
+    public enum Kildesystem {
+        SAKSBEHANDLER,
+        ARBEIDSGIVERPORTAL,
+        LPS_API
     }
 
 }

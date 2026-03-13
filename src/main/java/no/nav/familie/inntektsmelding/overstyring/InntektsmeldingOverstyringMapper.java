@@ -11,7 +11,7 @@ import no.nav.familie.inntektsmelding.imdialog.modell.InntektsmeldingEntitet;
 import no.nav.familie.inntektsmelding.imdialog.modell.RefusjonsendringEntitet;
 import no.nav.familie.inntektsmelding.koder.Kildesystem;
 import no.nav.familie.inntektsmelding.typer.dto.KodeverkMapper;
-import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
+import no.nav.familie.inntektsmelding.typer.entitet.AktørId;
 import no.nav.vedtak.konfig.Tid;
 
 class InntektsmeldingOverstyringMapper {
@@ -21,7 +21,7 @@ class InntektsmeldingOverstyringMapper {
 
     public static InntektsmeldingEntitet mapTilEntitet(SendOverstyrtInntektsmeldingRequestDto dto) {
         return InntektsmeldingEntitet.builder()
-            .medAktørId(new AktørIdEntitet(dto.aktorId().id()))
+            .medAktørId(new AktørId(dto.aktorId().id()))
             .medArbeidsgiverIdent(dto.arbeidsgiverIdent().orgnr())
             .medKildesystem(Kildesystem.FPSAK)
             .medOpprettetAv(dto.opprettetAv())

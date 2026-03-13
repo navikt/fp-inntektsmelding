@@ -7,7 +7,7 @@ import java.util.UUID;
 
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 
-import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
+import no.nav.familie.inntektsmelding.typer.entitet.AktørId;
 
 import no.nav.vedtak.konfig.Tid;
 
@@ -163,7 +163,7 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
             "123",
             LocalDate.now(), ForespørselType.BESTILT_AV_FAGSYSTEM);
 
-        var forespørsler = forespørselRepository.hentForespørslerFraFilter(new OrganisasjonsnummerDto(orgnr), new AktørIdEntitet("8888888888888"), null, null, null, null);
+        var forespørsler = forespørselRepository.hentForespørslerFraFilter(new OrganisasjonsnummerDto(orgnr), new AktørId("8888888888888"), null, null, null, null);
 
         assertThat(forespørsler).hasSize(2);
     }

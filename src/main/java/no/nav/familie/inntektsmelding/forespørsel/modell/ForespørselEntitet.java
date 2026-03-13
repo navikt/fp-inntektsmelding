@@ -23,7 +23,7 @@ import jakarta.persistence.Table;
 import no.nav.familie.inntektsmelding.koder.ForespørselStatus;
 import no.nav.familie.inntektsmelding.koder.ForespørselType;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
-import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
+import no.nav.familie.inntektsmelding.typer.entitet.AktørId;
 
 @SequenceGenerator(name = "GLOBAL_PK_SEQ_GENERATOR", sequenceName = "SEQ_GLOBAL_PK")
 @Entity(name = "ForespørselEntitet")
@@ -58,7 +58,7 @@ public class ForespørselEntitet {
 
     @Embedded
     @AttributeOverrides(@AttributeOverride(name = "aktørId", column = @Column(name = "bruker_aktoer_id", nullable = false, updatable = false)))
-    private AktørIdEntitet aktørId;
+    private AktørId aktørId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "ytelse_type", nullable = false, updatable = false)
@@ -82,7 +82,7 @@ public class ForespørselEntitet {
 
     public ForespørselEntitet(String organisasjonsnummer,
                               LocalDate skjæringstidspunkt,
-                              AktørIdEntitet aktørId,
+                              AktørId aktørId,
                               Ytelsetype ytelseType,
                               String fagsystemSaksnummer,
                               LocalDate førsteUttaksdato,
@@ -155,7 +155,7 @@ public class ForespørselEntitet {
         return Optional.ofNullable(skjæringstidspunkt);
     }
 
-    public AktørIdEntitet getAktørId() {
+    public AktørId getAktørId() {
         return aktørId;
     }
 
