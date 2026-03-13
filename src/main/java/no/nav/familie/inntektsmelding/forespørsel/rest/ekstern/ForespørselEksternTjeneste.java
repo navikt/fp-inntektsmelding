@@ -5,6 +5,7 @@ import jakarta.inject.Inject;
 
 import no.nav.familie.inntektsmelding.forespørsel.modell.ForespørselEntitet;
 import no.nav.familie.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
+import no.nav.familie.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonTjeneste;
 import no.nav.familie.inntektsmelding.typer.dto.ForespørselStatusDto;
 import no.nav.familie.inntektsmelding.typer.dto.KodeverkMapper;
@@ -50,7 +51,7 @@ public class ForespørselEksternTjeneste {
     }
 
     private ForespørselDto mapTilDto(ForespørselEntitet fp) {
-        var fnr = personTjeneste.finnPersonIdentForAktørId(fp.getAktørId()).getIdent();
+        var fnr = personTjeneste.finnPersonIdentForAktørId(new AktørId(fp.getAktørId().getAktørId())).getIdent();
         return new ForespørselDto(fp.getUuid(),
             new OrganisasjonsnummerDto(fp.getOrganisasjonsnummer()),
             fnr,

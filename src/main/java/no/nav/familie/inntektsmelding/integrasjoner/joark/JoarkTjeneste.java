@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import no.nav.familie.inntektsmelding.imdialog.modell.InntektsmeldingEntitet;
 import no.nav.familie.inntektsmelding.integrasjoner.organisasjon.OrganisasjonTjeneste;
+import no.nav.familie.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonTjeneste;
 import no.nav.familie.inntektsmelding.koder.Behandlingtema;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
@@ -119,7 +120,7 @@ public class JoarkTjeneste {
     }
 
     private AvsenderMottaker lagAvsenderPrivatperson(InntektsmeldingEntitet inntektsmeldingEntitet) {
-        var personInfo = personTjeneste.hentPersonInfoFraAktørId(new AktørIdEntitet(inntektsmeldingEntitet.getArbeidsgiverIdent()),
+        var personInfo = personTjeneste.hentPersonInfoFraAktørId(new AktørId(inntektsmeldingEntitet.getArbeidsgiverIdent()),
             inntektsmeldingEntitet.getYtelsetype());
         return new AvsenderMottaker(personInfo.fødselsnummer().getIdent(), AvsenderMottaker.AvsenderMottakerIdType.FNR, personInfo.mapNavn());
     }

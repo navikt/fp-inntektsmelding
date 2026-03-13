@@ -12,8 +12,6 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
-import no.nav.familie.inntektsmelding.koder.ForespørselType;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,8 +21,10 @@ import no.nav.familie.inntektsmelding.imdialog.modell.BortaltNaturalytelseEntite
 import no.nav.familie.inntektsmelding.imdialog.modell.InntektsmeldingEntitet;
 import no.nav.familie.inntektsmelding.imdialog.modell.KontaktpersonEntitet;
 import no.nav.familie.inntektsmelding.imdialog.modell.RefusjonsendringEntitet;
+import no.nav.familie.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonInfo;
+import no.nav.familie.inntektsmelding.koder.ForespørselType;
 import no.nav.familie.inntektsmelding.koder.NaturalytelseType;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
@@ -40,7 +40,7 @@ class InntektsmeldingPdfDataMapperTest {
     private static final String NAVN = "Kontaktperson navn";
     private static final String ORG_NUMMER = "999999999";
     private static final BigDecimal REFUSJON_BELØP = BigDecimal.valueOf(35000);
-    private static final AktørIdEntitet AKTØRID_SØKER = new AktørIdEntitet("1234567891234");
+    private static final AktørId AKTØRID_SØKER = new AktørId("1234567891234");
     private static final BigDecimal INNTEKT = BigDecimal.valueOf(40000);
     private static final LocalDateTime OPPRETTETT_TIDSPUNKT = LocalDateTime.now();
     private static final LocalDate START_DATO = LocalDate.of(2024, 5, 1);
@@ -254,7 +254,7 @@ class InntektsmeldingPdfDataMapperTest {
 
     private InntektsmeldingEntitet.Builder lagStandardInntektsmeldingBuilder() {
         return InntektsmeldingEntitet.builder()
-            .medAktørId(AKTØRID_SØKER)
+            .medAktørId(new AktørIdEntitet(AKTØRID_SØKER.getAktørId()))
             .medKontaktperson(new KontaktpersonEntitet(NAVN, ORG_NUMMER))
             .medYtelsetype(Ytelsetype.FORELDREPENGER)
             .medMånedInntekt(INNTEKT)

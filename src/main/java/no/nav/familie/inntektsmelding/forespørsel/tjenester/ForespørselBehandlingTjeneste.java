@@ -10,23 +10,17 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import no.nav.familie.inntektsmelding.integrasjoner.altinn.DialogportenKlient;
-
-import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
-import no.nav.familie.inntektsmelding.integrasjoner.person.PersonInfo;
-
-import no.nav.familie.inntektsmelding.typer.dto.ForespørselStatusDto;
-
-import no.nav.familie.inntektsmelding.typer.dto.KodeverkMapper;
-import no.nav.familie.inntektsmelding.typer.dto.YtelseTypeDto;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.nav.familie.inntektsmelding.forespørsel.modell.ForespørselEntitet;
 import no.nav.familie.inntektsmelding.forvaltning.rest.InntektsmeldingForespørselDto;
+import no.nav.familie.inntektsmelding.integrasjoner.altinn.DialogportenKlient;
 import no.nav.familie.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon.MinSideArbeidsgiverTjeneste;
 import no.nav.familie.inntektsmelding.integrasjoner.organisasjon.OrganisasjonTjeneste;
+import no.nav.familie.inntektsmelding.integrasjoner.person.AktørId;
+import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
+import no.nav.familie.inntektsmelding.integrasjoner.person.PersonInfo;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonTjeneste;
 import no.nav.familie.inntektsmelding.koder.ArbeidsgiverinitiertÅrsak;
 import no.nav.familie.inntektsmelding.koder.ForespørselStatus;
@@ -34,9 +28,12 @@ import no.nav.familie.inntektsmelding.koder.ForespørselType;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.metrikker.MetrikkerTjeneste;
 import no.nav.familie.inntektsmelding.typer.dto.ForespørselResultat;
+import no.nav.familie.inntektsmelding.typer.dto.ForespørselStatusDto;
+import no.nav.familie.inntektsmelding.typer.dto.KodeverkMapper;
 import no.nav.familie.inntektsmelding.typer.dto.NyBeskjedResultat;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.familie.inntektsmelding.typer.dto.SaksnummerDto;
+import no.nav.familie.inntektsmelding.typer.dto.YtelseTypeDto;
 import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
 import no.nav.foreldrepenger.konfig.Environment;
 
@@ -268,7 +265,7 @@ public class ForespørselBehandlingTjeneste {
                                                        LocalDate førsteUttaksdato) {
         var organisasjon = organisasjonTjeneste.finnOrganisasjon(orgnummer.orgnr());
 
-        var person = personTjeneste.hentPersonInfoFraAktørId(aktørIdEntitet, ytelsetype);
+        var person = personTjeneste.hentPersonInfoFraAktørId(new AktørId(aktørIdEntitet.getAktørId()), ytelsetype);
 
         var merkelapp = ForespørselTekster.finnMerkelapp(ytelsetype);
         var skjemaUri = URI.create(inntektsmeldingSkjemaLenke + "/" + forespørselUuid);
@@ -306,7 +303,7 @@ public class ForespørselBehandlingTjeneste {
                                                 AktørIdEntitet aktørIdEntitet,
                                                 Ytelsetype ytelsetype,
                                                 LocalDate førsteUttaksdato) {
-        var person = personTjeneste.hentPersonInfoFraAktørId(aktørIdEntitet, ytelsetype);
+        var person = personTjeneste.hentPersonInfoFraAktørId(new AktørId(aktørIdEntitet.getAktørId()), ytelsetype);
         var saksTittelDialog = lagSaksTittelForDialogporten(person);
 
         var dialogPortenUuid = dialogportenKlient.opprettDialog(forespørselUuid,
@@ -318,7 +315,7 @@ public class ForespørselBehandlingTjeneste {
     }
 
     private String lagSaksTittelForDialogporten(AktørIdEntitet aktørIdEntitet, Ytelsetype ytelsetype) {
-        var person = personTjeneste.hentPersonInfoFraAktørId(aktørIdEntitet, ytelsetype);
+        var person = personTjeneste.hentPersonInfoFraAktørId(new AktørId(aktørIdEntitet.getAktørId()), ytelsetype);
         return ForespørselTekster.lagSaksTittel(person.mapFulltNavn(), person.fødselsdato());
     }
 
@@ -344,7 +341,7 @@ public class ForespørselBehandlingTjeneste {
             forespørselType,
             skjæringstidspunkt);
 
-        var person = personTjeneste.hentPersonInfoFraAktørId(aktørId, ytelsetype);
+        var person = personTjeneste.hentPersonInfoFraAktørId(new AktørId(aktørId.getAktørId()), ytelsetype);
         var merkelapp = ForespørselTekster.finnMerkelapp(ytelsetype);
         var skjemaUri = URI.create(inntektsmeldingSkjemaLenke + "/" + uuid);
         var fagerSakId = minSideArbeidsgiverTjeneste.opprettSak(uuid.toString(),
@@ -397,7 +394,7 @@ public class ForespørselBehandlingTjeneste {
         var forespørselUuid = forespørsel.getUuid();
         var skjemaUri = URI.create(inntektsmeldingSkjemaLenke + "/" + forespørselUuid);
         var organisasjon = organisasjonTjeneste.finnOrganisasjon(organisasjonsnummer.orgnr());
-        var person = personTjeneste.hentPersonInfoFraAktørId(forespørsel.getAktørId(), forespørsel.getYtelseType());
+        var person = personTjeneste.hentPersonInfoFraAktørId(new AktørId(forespørsel.getAktørId().getAktørId()), forespørsel.getYtelseType());
         var varselTekst = ForespørselTekster.lagVarselFraSaksbehandlerTekst(forespørsel.getYtelseType(), organisasjon);
         var beskjedTekst = ForespørselTekster.lagBeskjedFraSaksbehandlerTekst(forespørsel.getYtelseType(), person.mapFulltNavn());
 
@@ -508,7 +505,7 @@ public class ForespørselBehandlingTjeneste {
         var aktørId = fnr == null ? null : personTjeneste.finnAktørIdForIdent(new PersonIdent(fnr))
             .orElseThrow(() -> new IllegalStateException("Finner ikke aktørId"));
         return forespørselTjeneste.hentForespørsler(orgnr,
-            aktørId,
+            Optional.ofNullable(aktørId).map(AktørId::getAktørId).map(AktørIdEntitet::new).orElse(null),
             status == null ? null : KodeverkMapper.mapForespørselStatus(status),
             ytelseType == null ? null : KodeverkMapper.mapYtelsetype(ytelseType),
             fom,

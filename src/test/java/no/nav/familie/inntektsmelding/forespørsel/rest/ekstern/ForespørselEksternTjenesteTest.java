@@ -1,15 +1,12 @@
 package no.nav.familie.inntektsmelding.forespørsel.rest.ekstern;
 
-import no.nav.familie.inntektsmelding.database.JpaExtension;
-import no.nav.familie.inntektsmelding.forespørsel.modell.ForespørselEntitet;
-import no.nav.familie.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
-import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
-import no.nav.familie.inntektsmelding.integrasjoner.person.PersonTjeneste;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
-import no.nav.familie.inntektsmelding.koder.ForespørselType;
-import no.nav.familie.inntektsmelding.koder.Ytelsetype;
-import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
-import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,13 +14,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
+import no.nav.familie.inntektsmelding.forespørsel.modell.ForespørselEntitet;
+import no.nav.familie.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
+import no.nav.familie.inntektsmelding.integrasjoner.person.AktørId;
+import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
+import no.nav.familie.inntektsmelding.integrasjoner.person.PersonTjeneste;
+import no.nav.familie.inntektsmelding.koder.ForespørselType;
+import no.nav.familie.inntektsmelding.koder.Ytelsetype;
+import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
+import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -52,7 +51,7 @@ class ForespørselEksternTjenesteTest {
             "123",
             LocalDate.now(),
             ForespørselType.BESTILT_AV_FAGSYSTEM);
-        when(personTjeneste.finnPersonIdentForAktørId(aktørId)).thenReturn(fnr);
+        when(personTjeneste.finnPersonIdentForAktørId(new AktørId(aktørId.getAktørId()))).thenReturn(fnr);
         var forespørselUuid = UUID.randomUUID();
         when(forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid)).thenReturn(Optional.of(forespørsel));
 
@@ -75,7 +74,7 @@ class ForespørselEksternTjenesteTest {
             "123",
             LocalDate.now(),
             ForespørselType.BESTILT_AV_FAGSYSTEM);
-        when(personTjeneste.finnPersonIdentForAktørId(aktørId)).thenReturn(fnr);
+        when(personTjeneste.finnPersonIdentForAktørId(new AktørId(aktørId.getAktørId()))).thenReturn(fnr);
         when(forespørselBehandlingTjeneste.hentForespørsler(new OrganisasjonsnummerDto(orgnr), null, null, null, null, null)).thenReturn(List.of(
             forespørsel));
 

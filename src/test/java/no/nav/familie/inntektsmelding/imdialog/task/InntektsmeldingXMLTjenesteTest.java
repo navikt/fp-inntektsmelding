@@ -17,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import no.nav.familie.inntektsmelding.imdialog.modell.BortaltNaturalytelseEntitet;
 import no.nav.familie.inntektsmelding.imdialog.modell.InntektsmeldingEntitet;
 import no.nav.familie.inntektsmelding.imdialog.modell.KontaktpersonEntitet;
+import no.nav.familie.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonTjeneste;
 import no.nav.familie.inntektsmelding.koder.NaturalytelseType;
@@ -61,7 +62,7 @@ class InntektsmeldingXMLTjenesteTest {
             .medBortfaltNaturalytelser(Collections.singletonList(naturalytelse))
             .build();
 
-        when(personTjeneste.finnPersonIdentForAktørId(aktørIdSøker)).thenReturn(fnrSøker);
+        when(personTjeneste.finnPersonIdentForAktørId(new AktørId(aktørIdSøker.getAktørId()))).thenReturn(fnrSøker);
 
         // Act
         var xml = inntektsmeldingXMLTjeneste.lagXMLAvInntektsmelding(inntektsmelding);
@@ -95,7 +96,7 @@ class InntektsmeldingXMLTjenesteTest {
             .medBortfaltNaturalytelser(Collections.singletonList(naturalytelse))
             .build();
 
-        when(personTjeneste.finnPersonIdentForAktørId(aktørIdSøker)).thenReturn(fnrSøker);
+        when(personTjeneste.finnPersonIdentForAktørId(new AktørId(aktørIdSøker.getAktørId()))).thenReturn(fnrSøker);
 
         // Act
         var xml = inntektsmeldingXMLTjeneste.lagXMLAvInntektsmelding(inntektsmelding);

@@ -13,10 +13,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import no.nav.familie.inntektsmelding.integrasjoner.altinn.DialogportenKlient;
-import no.nav.familie.inntektsmelding.koder.ArbeidsgiverinitiertÅrsak;
-import no.nav.familie.inntektsmelding.koder.ForespørselType;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,14 +24,18 @@ import no.nav.familie.inntektsmelding.database.JpaExtension;
 import no.nav.familie.inntektsmelding.forespørsel.modell.ForespørselEntitet;
 import no.nav.familie.inntektsmelding.forespørsel.modell.ForespørselRepository;
 import no.nav.familie.inntektsmelding.forvaltning.rest.InntektsmeldingForespørselDto;
-import no.nav.familie.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon.MinSideArbeidsgiverTjeneste;
+import no.nav.familie.inntektsmelding.integrasjoner.altinn.DialogportenKlient;
 import no.nav.familie.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon.Merkelapp;
+import no.nav.familie.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon.MinSideArbeidsgiverTjeneste;
 import no.nav.familie.inntektsmelding.integrasjoner.organisasjon.Organisasjon;
 import no.nav.familie.inntektsmelding.integrasjoner.organisasjon.OrganisasjonTjeneste;
+import no.nav.familie.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonInfo;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonTjeneste;
+import no.nav.familie.inntektsmelding.koder.ArbeidsgiverinitiertÅrsak;
 import no.nav.familie.inntektsmelding.koder.ForespørselStatus;
+import no.nav.familie.inntektsmelding.koder.ForespørselType;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.typer.dto.ForespørselResultat;
 import no.nav.familie.inntektsmelding.typer.dto.NyBeskjedResultat;
@@ -484,7 +484,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             null,
             "Navnesen",
             new PersonIdent("01019100000"),
-            new AktørIdEntitet(AKTØR_ID),
+            new AktørId(AKTØR_ID),
             LocalDate.of(1991, 1, 1).minusYears(30),
             null,
             null);
@@ -497,7 +497,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             beskjedtekst,
             varseltekst,
             uri)).thenReturn("beskjedId");
-        when(personTjeneste.hentPersonInfoFraAktørId(new AktørIdEntitet(AKTØR_ID), Ytelsetype.FORELDREPENGER)).thenReturn(personInfo);
+        when(personTjeneste.hentPersonInfoFraAktørId(new AktørId(AKTØR_ID), Ytelsetype.FORELDREPENGER)).thenReturn(personInfo);
 
         var resultat = forespørselBehandlingTjeneste.opprettNyBeskjedMedEksternVarsling(new SaksnummerDto(SAKSNUMMMER),
             new OrganisasjonsnummerDto(BRREG_ORGNUMMER));
@@ -707,7 +707,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         forespørselRepository.lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, BRREG_ORGNUMMER, SAKSNUMMMER, SKJÆRINGSTIDSPUNKT,
             ForespørselType.BESTILT_AV_FAGSYSTEM);
         var fnr = "123";
-        var feilAktørId = new AktørIdEntitet("1111111111111");
+        var feilAktørId = new AktørId("1111111111111");
         when(personTjeneste.finnAktørIdForIdent(new PersonIdent(fnr))).thenReturn(Optional.of(feilAktørId));
 
         getEntityManager().clear();
@@ -746,13 +746,13 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             null,
             "Navnesen",
             new PersonIdent("01019100000"),
-            new AktørIdEntitet(AKTØR_ID),
+            new AktørId(AKTØR_ID),
             LocalDate.of(1991, 1, 1).minusYears(30),
             null,
             null);
         var sakTittel = ForespørselTekster.lagSaksTittel(personInfo.mapFulltNavn(), personInfo.fødselsdato());
 
-        lenient().when(personTjeneste.hentPersonInfoFraAktørId(new AktørIdEntitet(AKTØR_ID), YTELSETYPE)).thenReturn(personInfo);
+        lenient().when(personTjeneste.hentPersonInfoFraAktørId(new AktørId(AKTØR_ID), YTELSETYPE)).thenReturn(personInfo);
         lenient().when(minSideArbeidsgiverTjeneste.opprettOppgave(any(), any(), any(), eq(BRREG_ORGNUMMER), any(), any(), any(), any()))
             .thenReturn(OPPGAVE_ID);
         lenient().when(minSideArbeidsgiverTjeneste.opprettSak(any(), any(), eq(BRREG_ORGNUMMER), eq(sakTittel), any())).thenReturn(sakId);
