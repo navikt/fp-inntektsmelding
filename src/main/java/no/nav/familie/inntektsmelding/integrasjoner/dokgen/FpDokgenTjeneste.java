@@ -3,6 +3,8 @@ package no.nav.familie.inntektsmelding.integrasjoner.dokgen;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import no.nav.familie.inntektsmelding.integrasjoner.person.AktørId;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +43,7 @@ public class FpDokgenTjeneste {
         var arbeidsgvierIdent = inntektsmelding.getArbeidsgiverIdent();
         var inntektsmeldingsid = inntektsmelding.getId() != null ? inntektsmelding.getId().intValue() : 1;
 
-        personInfo = personTjeneste.hentPersonInfoFraAktørId(inntektsmelding.getAktørId(), inntektsmelding.getYtelsetype());
+        personInfo = personTjeneste.hentPersonInfoFraAktørId(new AktørId(inntektsmelding.getAktørId().getAktørId()), inntektsmelding.getYtelsetype());
         arbeidsgiverNavn = finnArbeidsgiverNavn(inntektsmelding, arbeidsgvierIdent);
 
         InntektsmeldingPdfData imDokumentData = InntektsmeldingPdfDataMapper.mapInntektsmeldingPdfData(inntektsmelding,

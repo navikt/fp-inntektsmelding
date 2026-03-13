@@ -13,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
-import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
 import no.nav.pdl.FoedselsdatoResponseProjection;
 import no.nav.pdl.FolkeregisteridentifikatorResponseProjection;
 import no.nav.pdl.HentIdenterQueryRequest;
@@ -50,7 +49,7 @@ public class PersonTjeneste {
         this.pdlKlient = pdlKlient;
     }
 
-    public PersonInfo hentPersonInfoFraAktørId(AktørIdEntitet aktørId, Ytelsetype ytelseType) {
+    public PersonInfo hentPersonInfoFraAktørId(AktørId aktørId, Ytelsetype ytelseType) {
         var request = new HentPersonQueryRequest();
         request.setIdent(aktørId.getAktørId());
 
@@ -88,7 +87,7 @@ public class PersonTjeneste {
         var person = pdlKlient.hentPerson(utledYtelse(ytelseType), request, projection);
 
         if (PersonMappers.manglerIdentifikator(person)) {
-            var logAktørId = aktørId.map(AktørIdEntitet::toString).orElse("ManglerAktørId");
+            var logAktørId = aktørId.map(AktørId::toString).orElse("ManglerAktørId");
             LOG.warn("Person uten aktiv Folkeregisteridentifikator - sjekk om falsk eller utgått identitet. Oppgitt Ident {}. AktørId {}",
                 personIdent.getIdent(), logAktørId);
             throw new IllegalStateException("Person uten aktiv Folkeregisteridentifikator" + personIdent);
@@ -109,11 +108,11 @@ public class PersonTjeneste {
         };
     }
 
-    public Optional<AktørIdEntitet> finnAktørIdForIdent(PersonIdent personIdent) {
-        return pdlKlient.hentAktørIdForPersonIdent(personIdent.getIdent(), true).map(AktørIdEntitet::new);
+    public Optional<AktørId> finnAktørIdForIdent(PersonIdent personIdent) {
+        return pdlKlient.hentAktørIdForPersonIdent(personIdent.getIdent(), true).map(AktørId::new);
     }
 
-    public PersonIdent finnPersonIdentForAktørId(AktørIdEntitet aktørIdEntitet) {
+    public PersonIdent finnPersonIdentForAktørId(AktørId aktørIdEntitet) {
         return hentPersonidentForAktørId(aktørIdEntitet).orElseThrow(
             () -> new IllegalStateException("Finner ikke personnummer for id " + aktørIdEntitet));
     }
@@ -139,7 +138,7 @@ public class PersonTjeneste {
             .orElse(null);
     }
 
-    private Optional<PersonIdent> hentPersonidentForAktørId(AktørIdEntitet aktørId) {
+    private Optional<PersonIdent> hentPersonidentForAktørId(AktørId aktørId) {
         var request = new HentIdenterQueryRequest();
         request.setIdent(aktørId.getAktørId());
         request.setGrupper(List.of(IdentGruppe.FOLKEREGISTERIDENT, IdentGruppe.NPID));

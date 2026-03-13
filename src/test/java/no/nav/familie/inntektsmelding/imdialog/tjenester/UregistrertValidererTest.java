@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
 
 import no.nav.familie.inntektsmelding.integrasjoner.fpsak.FpsakKlient;
+import no.nav.familie.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonInfo;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
@@ -23,7 +24,7 @@ class UregistrertValidererTest {
         null,
         "Navnesen",
         new PersonIdent("01019100000"),
-        AKTØR_ID_ENTITET,
+        new AktørId(AKTØR_ID_ENTITET.getAktørId()),
         LocalDate.of(1991, 1, 1).minusYears(30),
         null,
         null);

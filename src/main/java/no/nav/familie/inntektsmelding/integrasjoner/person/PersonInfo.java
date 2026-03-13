@@ -2,9 +2,7 @@ package no.nav.familie.inntektsmelding.integrasjoner.person;
 
 import java.time.LocalDate;
 
-import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
-
-public record PersonInfo(String fornavn, String mellomnavn, String etternavn, PersonIdent fødselsnummer, AktørIdEntitet aktørId,
+public record PersonInfo(String fornavn, String mellomnavn, String etternavn, PersonIdent fødselsnummer, AktørId aktørId,
                          LocalDate fødselsdato, String telefonnummer, Kjønn kjønn) {
 
     public String mapNavn() {
