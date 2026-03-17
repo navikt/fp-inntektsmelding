@@ -125,7 +125,7 @@ public class ArbeidsgiverinitiertDialogRest {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
 
-        var aktørId = new AktørId(personInfo.aktørId().getAktørId());
+        var aktørId = personInfo.aktørId();
         var infoOmsak = fpsakTjeneste.henterInfoOmSakIFagsystem(aktørId, request.ytelseType());
         var førsteUttaksdato = infoOmsak.førsteUttaksdato();
 
