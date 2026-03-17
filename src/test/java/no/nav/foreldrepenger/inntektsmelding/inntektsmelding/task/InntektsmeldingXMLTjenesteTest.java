@@ -9,6 +9,8 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,7 +48,7 @@ class InntektsmeldingXMLTjenesteTest {
 
         var inntektsmelding = InntektsmeldingDto.builder()
             .medAktørId(aktørIdSøker)
-            .medArbeidsgiver(new InntektsmeldingDto.Arbeidsgiver("999999999"))
+            .medArbeidsgiver(new Arbeidsgiver("999999999"))
             .medStartdato(LocalDate.of(2024, 6, 1))
             .medYtelse(Ytelsetype.FORELDREPENGER)
             .medInntekt(BigDecimal.valueOf(35000))
@@ -82,7 +84,7 @@ class InntektsmeldingXMLTjenesteTest {
 
         var inntektsmelding = InntektsmeldingDto.builder()
             .medAktørId(aktørIdSøker)
-            .medArbeidsgiver(new InntektsmeldingDto.Arbeidsgiver("999999999"))
+            .medArbeidsgiver(new Arbeidsgiver("999999999"))
             .medStartdato(LocalDate.of(2024, 6, 1))
             .medYtelse(Ytelsetype.SVANGERSKAPSPENGER)
             .medInntekt(BigDecimal.valueOf(35000))

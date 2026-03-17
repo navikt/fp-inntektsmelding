@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.NaturalytelseType;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Endringsårsak;
@@ -256,25 +257,6 @@ public class InntektsmeldingDto {
 
         public InntektsmeldingDto build() {
             return new InntektsmeldingDto(this);
-        }
-    }
-
-    public record Arbeidsgiver(String ident) {
-
-        @Override
-        public String toString() {
-            return getClass().getSimpleName() + "<" + maskerId() + ">";
-        }
-
-        private String maskerId() {
-            if (ident == null) {
-                return "";
-            }
-            var length = ident.length();
-            if (length <= 4) {
-                return "*".repeat(length);
-            }
-            return "*".repeat(length - 4) + ident.substring(length - 4);
         }
     }
 

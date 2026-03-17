@@ -40,7 +40,7 @@ class InntektsmeldingXMLMapper {
 
         var skjemainnhold = new Skjemainnhold();
 
-        var arbeidsgiverIdent = inntektsmelding.getArbeidsgiver().ident();
+        var arbeidsgiverIdent = inntektsmelding.getArbeidsgiver().orgnr();
         if (OrganisasjonsnummerValidator.erGyldig(arbeidsgiverIdent)) {
             var arbeidsgiver = new Arbeidsgiver();
             arbeidsgiver.setVirksomhetsnummer(arbeidsgiverIdent);

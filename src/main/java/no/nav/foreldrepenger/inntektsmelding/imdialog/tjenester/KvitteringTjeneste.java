@@ -3,12 +3,11 @@ package no.nav.foreldrepenger.inntektsmelding.imdialog.tjenester;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.dokgen.DokumentGeneratorTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
-import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørId;
 
 @ApplicationScoped
 public class KvitteringTjeneste {
@@ -30,13 +29,13 @@ public class KvitteringTjeneste {
 
     public byte[] hentPDF(long inntektsmeldingId) {
         var inntektsmelding = inntektsmeldingTjeneste.hentInntektsmelding(inntektsmeldingId);
-        var forespørsler = forespørselBehandlingTjeneste.finnForespørsler(new AktørId(inntektsmelding.getAktørId().getAktørId()),
+        var forespørsler = forespørselBehandlingTjeneste.finnForespørsler(inntektsmelding.getAktørId(),
             Ytelsetype.valueOf(inntektsmelding.getYtelse().name()),
-            inntektsmelding.getArbeidsgiver().ident());
+            inntektsmelding.getArbeidsgiver().orgnr());
         var forespørselType = forespørsler
             .stream()
-            .filter(forespørselEntitet -> forespørselEntitet.getFørsteUttaksdato().equals(inntektsmelding.getStartdato()))
-            .map(ForespørselEntitet::getForespørselType)
+            .filter(forespørselEntitet -> forespørselEntitet.førsteUttaksdato().equals(inntektsmelding.getStartdato()))
+            .map(ForespørselDto::forespørselType)
             .findAny()
             .orElseThrow(() -> new IllegalStateException("Forespørseltype ikke funnet for inntektsmeldingId: " + inntektsmeldingId));
         return dokumentGeneratorTjeneste.mapDataOgGenererPdf(inntektsmelding, forespørselType);

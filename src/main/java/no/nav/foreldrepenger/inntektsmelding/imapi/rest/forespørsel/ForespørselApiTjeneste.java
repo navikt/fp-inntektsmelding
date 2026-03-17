@@ -1,25 +1,24 @@
 package no.nav.foreldrepenger.inntektsmelding.imapi.rest.forespørsel;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-
-import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
-import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.ArbeidsgiverInformasjonDto;
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.ForespørselDto;
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.YtelseType;
-import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
-import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste;
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.ForespørselStatusDto;
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.YtelseTypeDto;
-import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
-import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.ArbeidsgiverInformasjonDto;
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.ForespørselApiResponseDto;
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.YtelseType;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
+import no.nav.foreldrepenger.inntektsmelding.typer.dto.ForespørselStatusDto;
+import no.nav.foreldrepenger.inntektsmelding.typer.dto.YtelseTypeDto;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 
 @ApplicationScoped
 public class ForespørselApiTjeneste {
@@ -38,33 +37,31 @@ public class ForespørselApiTjeneste {
     }
 
 
-    public Optional<ForespørselDto> hentForesørselDto(UUID forespørselUuid) {
-        var forespørselEntitet = forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid);
-        return forespørselEntitet.map(this::mapTilDto);
+    public Optional<ForespørselApiResponseDto> hentForesørselDto(UUID forespørselUuid) {
+        return forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid).map(this::mapTilResponseDto);
     }
 
 
-    public List<ForespørselDto> hentForespørslerDto(OrganisasjonsnummerDto orgnr,
-                                                    String fnr,
-                                                    ForespørselStatusDto status,
-                                                    YtelseTypeDto ytelseTypeDto,
-                                                    LocalDate fom,
-                                                    LocalDate tom) {
-        var resultater = forespørselBehandlingTjeneste.hentForespørsler(orgnr, fnr, status, ytelseTypeDto, fom, tom);
-        return resultater.stream().map(this::mapTilDto).toList();
+    public List<ForespørselApiResponseDto> hentForespørslerDto(Arbeidsgiver arbeidsgiver,
+                                                               String fnr,
+                                                               ForespørselStatusDto status,
+                                                               YtelseTypeDto ytelseTypeDto,
+                                                               LocalDate fom,
+                                                               LocalDate tom) {
+        var resultater = forespørselBehandlingTjeneste.hentForespørsler(arbeidsgiver, fnr, status, ytelseTypeDto, fom, tom);
+        return resultater.stream().map(this::mapTilResponseDto).toList();
     }
 
-    private ForespørselDto mapTilDto(ForespørselEntitet fp) {
-        var fnr = personTjeneste.finnPersonIdentForAktørId(new AktørId(fp.getAktørId().getAktørId())).getIdent();
-        return new ForespørselDto(fp.getUuid(),
-            new ArbeidsgiverInformasjonDto(fp.getOrganisasjonsnummer()),
+    private ForespørselApiResponseDto mapTilResponseDto(ForespørselDto fp) {
+        var fnr = personTjeneste.finnPersonIdentForAktørId(fp.aktørId()).getIdent();
+        return new ForespørselApiResponseDto(fp.uuid(),
+            new ArbeidsgiverInformasjonDto(fp.arbeidsgiver().orgnr()),
             fnr,
-            fp.getFørsteUttaksdato(),
-            //todo skal det være mulig å sende inn arbeidsgiverinitert fp gjennom api. Det er kun da denne kan være null
-            fp.getSkjæringstidspunkt().orElse(null),
-            mapForespørselStatus(fp.getStatus()),
-            mapYtelsetype(fp.getYtelseType()),
-            fp.getOpprettetTidspunkt());
+            fp.førsteUttaksdato(),
+            fp.skjæringstidspunkt(),
+            mapForespørselStatus(fp.status()),
+            mapYtelsetype(fp.ytelseType()),
+            fp.opprettetTidspunkt());
     }
 
     private YtelseType mapYtelsetype(Ytelsetype ytelseType) {
@@ -74,13 +71,12 @@ public class ForespørselApiTjeneste {
         };
     }
 
-    private ForespørselDto.Status mapForespørselStatus(ForespørselStatus status) {
+    private ForespørselApiResponseDto.Status mapForespørselStatus(ForespørselStatus status) {
         return switch (status) {
-            case UNDER_BEHANDLING -> ForespørselDto.Status.UNDER_BEHANDLING;
-            case FERDIG -> ForespørselDto.Status.FERDIG;
-            case UTGÅTT -> ForespørselDto.Status.UTGÅTT;
+            case UNDER_BEHANDLING -> ForespørselApiResponseDto.Status.UNDER_BEHANDLING;
+            case FERDIG -> ForespørselApiResponseDto.Status.FERDIG;
+            case UTGÅTT -> ForespørselApiResponseDto.Status.UTGÅTT;
         };
     }
-
 
 }

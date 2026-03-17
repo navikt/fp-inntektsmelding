@@ -19,7 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import no.nav.foreldrepenger.inntektsmelding.pip.AltinnTilgangTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.pip.PipTjeneste;
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.vedtak.exception.ManglerTilgangException;
 import no.nav.vedtak.sikkerhet.kontekst.AnsattGruppe;
 import no.nav.vedtak.sikkerhet.kontekst.IdentType;
@@ -81,7 +81,7 @@ class TilgangTjenesteTest {
             });
         assertThat(ex.getMessage()).contains("Mangler informasjon om bedrift.");
 
-        verify(pipTjeneste).hentOrganisasjonsnummerFor(forespørselUuid);
+        verify(pipTjeneste).hentArbeidsgiverFor(forespørselUuid);
 
         verifyNoInteractions(altinnTilgangTjeneste);
     }
@@ -91,14 +91,14 @@ class TilgangTjenesteTest {
         KontekstHolder.setKontekst(fakeRequestKontekts(IdentType.EksternBruker));
         var forespørselUuid = UUID.randomUUID();
         var fakeOrgNr = "123456789";
-        when(pipTjeneste.hentOrganisasjonsnummerFor(forespørselUuid)).thenReturn(new OrganisasjonsnummerDto(fakeOrgNr));
+        when(pipTjeneste.hentArbeidsgiverFor(forespørselUuid)).thenReturn(Arbeidsgiver.fra(fakeOrgNr));
         when(altinnTilgangTjeneste.manglerTilgangTilBedriften(fakeOrgNr)).thenReturn(true);
 
         var ex = assertThrows(ManglerTilgangException.class,
             () -> tilgangTjeneste.sjekkAtArbeidsgiverHarTilgangTilBedrift(forespørselUuid));
         assertThat(ex.getMessage()).contains("Bruker mangler tilgang til bedriften i Altinn.");
 
-        verify(pipTjeneste).hentOrganisasjonsnummerFor(forespørselUuid);
+        verify(pipTjeneste).hentArbeidsgiverFor(forespørselUuid);
         verify(altinnTilgangTjeneste).manglerTilgangTilBedriften(fakeOrgNr);
 
     }
@@ -108,12 +108,12 @@ class TilgangTjenesteTest {
         KontekstHolder.setKontekst(fakeRequestKontekts(IdentType.EksternBruker));
         var forespørselUuid = UUID.randomUUID();
         var fakeOrgNr = "123456789";
-        when(pipTjeneste.hentOrganisasjonsnummerFor(forespørselUuid)).thenReturn(new OrganisasjonsnummerDto(fakeOrgNr));
+        when(pipTjeneste.hentArbeidsgiverFor(forespørselUuid)).thenReturn(Arbeidsgiver.fra(fakeOrgNr));
         when(altinnTilgangTjeneste.manglerTilgangTilBedriften(fakeOrgNr)).thenReturn(false);
 
         assertDoesNotThrow(() -> tilgangTjeneste.sjekkAtArbeidsgiverHarTilgangTilBedrift(forespørselUuid));
 
-        verify(pipTjeneste).hentOrganisasjonsnummerFor(forespørselUuid);
+        verify(pipTjeneste).hentArbeidsgiverFor(forespørselUuid);
         verify(altinnTilgangTjeneste).manglerTilgangTilBedriften(fakeOrgNr);
     }
 
@@ -124,7 +124,7 @@ class TilgangTjenesteTest {
 
         when(altinnTilgangTjeneste.manglerTilgangTilBedriften(fakeOrgNr)).thenReturn(true);
         var ex = assertThrows(ManglerTilgangException.class,
-            () -> tilgangTjeneste.sjekkAtArbeidsgiverHarTilgangTilBedrift(new OrganisasjonsnummerDto(fakeOrgNr)));
+            () -> tilgangTjeneste.sjekkAtArbeidsgiverHarTilgangTilBedrift(Arbeidsgiver.fra(fakeOrgNr)));
         assertThat(ex.getMessage()).contains("Bruker mangler tilgang til bedriften i Altinn.");
 
         verify(altinnTilgangTjeneste).manglerTilgangTilBedriften(fakeOrgNr);
@@ -137,7 +137,7 @@ class TilgangTjenesteTest {
 
         when(altinnTilgangTjeneste.manglerTilgangTilBedriften(okOrgNr)).thenReturn(false);
 
-        assertDoesNotThrow(() -> tilgangTjeneste.sjekkAtArbeidsgiverHarTilgangTilBedrift(new OrganisasjonsnummerDto(okOrgNr)));
+        assertDoesNotThrow(() -> tilgangTjeneste.sjekkAtArbeidsgiverHarTilgangTilBedrift(Arbeidsgiver.fra(okOrgNr)));
 
         verify(altinnTilgangTjeneste).manglerTilgangTilBedriften(okOrgNr);
     }
@@ -151,7 +151,7 @@ class TilgangTjenesteTest {
             () -> tilgangTjeneste.sjekkAtArbeidsgiverHarTilgangTilBedrift(inntektsmeldingId));
         assertThat(ex.getMessage()).contains("Mangler informasjon om bedrift.");
 
-        verify(pipTjeneste).hentOrganisasjonsnummerFor(inntektsmeldingId);
+        verify(pipTjeneste).hentArbeidsgiverFor(inntektsmeldingId);
         verifyNoInteractions(altinnTilgangTjeneste);
     }
 
@@ -160,14 +160,14 @@ class TilgangTjenesteTest {
         KontekstHolder.setKontekst(fakeRequestKontekts(IdentType.EksternBruker));
         var inntektsmeldingId = 1L;
         var fakeOrgNr = "123456789";
-        when(pipTjeneste.hentOrganisasjonsnummerFor(inntektsmeldingId)).thenReturn(new OrganisasjonsnummerDto(fakeOrgNr));
+        when(pipTjeneste.hentArbeidsgiverFor(inntektsmeldingId)).thenReturn(Arbeidsgiver.fra(fakeOrgNr));
         when(altinnTilgangTjeneste.manglerTilgangTilBedriften(fakeOrgNr)).thenReturn(true);
 
         var ex = assertThrows(ManglerTilgangException.class,
             () -> tilgangTjeneste.sjekkAtArbeidsgiverHarTilgangTilBedrift(inntektsmeldingId));
         assertThat(ex.getMessage()).contains("Bruker mangler tilgang til bedriften i Altinn.");
 
-        verify(pipTjeneste).hentOrganisasjonsnummerFor(inntektsmeldingId);
+        verify(pipTjeneste).hentArbeidsgiverFor(inntektsmeldingId);
         verify(altinnTilgangTjeneste).manglerTilgangTilBedriften(fakeOrgNr);
     }
 
@@ -176,12 +176,12 @@ class TilgangTjenesteTest {
         KontekstHolder.setKontekst(fakeRequestKontekts(IdentType.EksternBruker));
         var inntektsmeldingId = 1L;
         var fakeOrgNr = "123456789";
-        when(pipTjeneste.hentOrganisasjonsnummerFor(inntektsmeldingId)).thenReturn(new OrganisasjonsnummerDto(fakeOrgNr));
+        when(pipTjeneste.hentArbeidsgiverFor(inntektsmeldingId)).thenReturn(Arbeidsgiver.fra(fakeOrgNr));
         when(altinnTilgangTjeneste.manglerTilgangTilBedriften(fakeOrgNr)).thenReturn(false);
 
         assertDoesNotThrow(() -> tilgangTjeneste.sjekkAtArbeidsgiverHarTilgangTilBedrift(inntektsmeldingId));
 
-        verify(pipTjeneste).hentOrganisasjonsnummerFor(inntektsmeldingId);
+        verify(pipTjeneste).hentArbeidsgiverFor(inntektsmeldingId);
         verify(altinnTilgangTjeneste).manglerTilgangTilBedriften(fakeOrgNr);
     }
 

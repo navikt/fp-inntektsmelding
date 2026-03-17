@@ -11,8 +11,10 @@ import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.Inntektsmeldi
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.RefusjonsendringEntitet;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.KodeverkMapper;
+import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
 import no.nav.vedtak.konfig.Tid;
 
 class InntektsmeldingOverstyringMapper {
@@ -25,8 +27,8 @@ class InntektsmeldingOverstyringMapper {
     public static InntektsmeldingDto mapTilDto(SendOverstyrtInntektsmeldingRequestDto dto) {
         var opphørsdato = finnOpphørsdato(dto.refusjonsendringer()).orElse(Tid.TIDENES_ENDE);
         return InntektsmeldingDto.builder()
-            .medAktørId(new AktørId(dto.aktorId().id()))
-            .medArbeidsgiver(new InntektsmeldingDto.Arbeidsgiver(dto.arbeidsgiverIdent().ident()))
+            .medAktørId(AktørId.fra(dto.aktorId().id()))
+            .medArbeidsgiver(Arbeidsgiver.fra(dto.arbeidsgiverIdent().ident()))
             .medKildesystem(Kildesystem.FPSAK)
             .medOpprettetAv(dto.opprettetAv())
             .medInntekt(dto.inntekt())
@@ -46,7 +48,7 @@ class InntektsmeldingOverstyringMapper {
             .map(d -> new InntektsmeldingDto.BortfaltNaturalytelse(
                 d.fom(),
                 d.tom() != null ? d.tom() : Tid.TIDENES_ENDE,
-                KodeverkMapper.mapNaturalytelseTilEntitet(d.naturalytelsetype()),
+                KodeverkMapper.mapNaturalytelseTilDomene(d.naturalytelsetype()),
                 d.beløp()))
             .toList();
     }
@@ -67,7 +69,7 @@ class InntektsmeldingOverstyringMapper {
 
     public static InntektsmeldingEntitet mapTilEntitet(SendOverstyrtInntektsmeldingRequestDto dto) {
         return InntektsmeldingEntitet.builder()
-            .medAktørId(new no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørId(dto.aktorId().id()))
+            .medAktørId(new AktørIdEntitet(dto.aktorId().id()))
             .medArbeidsgiverIdent(dto.arbeidsgiverIdent().orgnr())
             .medKildesystem(Kildesystem.FPSAK)
             .medOpprettetAv(dto.opprettetAv())
@@ -111,7 +113,7 @@ class InntektsmeldingOverstyringMapper {
         return dto.stream()
             .map(d -> new BortaltNaturalytelseEntitet.Builder().medPeriode(d.fom(), d.tom() != null ? d.tom() : Tid.TIDENES_ENDE)
                 .medMånedBeløp(d.beløp())
-                .medType(KodeverkMapper.mapNaturalytelseTilEntitet(d.naturalytelsetype()))
+                .medType(KodeverkMapper.mapNaturalytelseTilDomene(d.naturalytelsetype()))
                 .build())
             .toList();
     }

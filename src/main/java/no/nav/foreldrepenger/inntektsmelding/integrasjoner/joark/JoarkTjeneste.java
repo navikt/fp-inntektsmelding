@@ -16,6 +16,8 @@ import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.organisasjon.OrganisasjonTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Saksnummer;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.vedtak.felles.integrasjon.dokarkiv.DokArkiv;
 import no.nav.vedtak.felles.integrasjon.dokarkiv.dto.AvsenderMottaker;
@@ -55,7 +57,7 @@ public class JoarkTjeneste {
     public String journalførInntektsmelding(String xmlAvInntektsmelding,
                                             InntektsmeldingDto inntektsmelding,
                                             byte[] pdf,
-                                            String fagsystemSaksnummer) {
+                                            Saksnummer fagsystemSaksnummer) {
         var request = opprettRequest(xmlAvInntektsmelding, inntektsmelding, pdf, fagsystemSaksnummer);
         try {
             var response = joarkKlient.opprettJournalpost(request, false);
@@ -70,8 +72,8 @@ public class JoarkTjeneste {
     private OpprettJournalpostRequest opprettRequest(String xmlAvInntektsmelding,
                                                      InntektsmeldingDto inntektsmeldingDto,
                                                      byte[] pdf,
-                                                     String fagsystemSaksnummer) {
-        var erBedrift = inntektsmeldingDto.getArbeidsgiver().ident().length() == 9;
+                                                     Saksnummer fagsystemSaksnummer) {
+        var erBedrift = inntektsmeldingDto.getArbeidsgiver().orgnr().length() == 9;
         var avsenderMottaker = erBedrift ? lagAvsenderBedrift(inntektsmeldingDto.getArbeidsgiver()) : lagAvsenderPrivatperson(inntektsmeldingDto.getArbeidsgiver(), Ytelsetype.valueOf(inntektsmeldingDto.getYtelse().name()));
         var opprettJournalpostRequestBuilder = OpprettJournalpostRequest.nyInngående()
             .medTittel(JOURNALFØRING_TITTEL)
@@ -87,7 +89,7 @@ public class JoarkTjeneste {
 
         if (fagsystemSaksnummer != null) {
             opprettJournalpostRequestBuilder
-                .medSak(new Sak(fagsystemSaksnummer, Fagsystem.FPSAK.getOffisiellKode(), Sak.Sakstype.FAGSAK));
+                .medSak(new Sak(fagsystemSaksnummer.saksnummer(), Fagsystem.FPSAK.getOffisiellKode(), Sak.Sakstype.FAGSAK));
         }
         return opprettJournalpostRequestBuilder.build();
     }
@@ -118,14 +120,14 @@ public class JoarkTjeneste {
         return new Bruker(aktørId.getAktørId(), Bruker.BrukerIdType.AKTOERID);
     }
 
-    private AvsenderMottaker lagAvsenderPrivatperson(InntektsmeldingDto.Arbeidsgiver arbeidsgiver, Ytelsetype ytelsetype) {
-        var personInfo = personTjeneste.hentPersonInfoFraAktørId(new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(arbeidsgiver.ident()),
+    private AvsenderMottaker lagAvsenderPrivatperson(Arbeidsgiver arbeidsgiver, Ytelsetype ytelsetype) {
+        var personInfo = personTjeneste.hentPersonInfoFraAktørId(new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(arbeidsgiver.orgnr()),
             ytelsetype);
         return new AvsenderMottaker(personInfo.fødselsnummer().getIdent(), AvsenderMottaker.AvsenderMottakerIdType.FNR, personInfo.mapNavn());
     }
 
-    private AvsenderMottaker lagAvsenderBedrift(InntektsmeldingDto.Arbeidsgiver arbeidsgiver) {
-        var org = organisasjonTjeneste.finnOrganisasjon(arbeidsgiver.ident());
+    private AvsenderMottaker lagAvsenderBedrift(Arbeidsgiver arbeidsgiver) {
+        var org = organisasjonTjeneste.finnOrganisasjon(arbeidsgiver);
         return new AvsenderMottaker(org.orgnr(), AvsenderMottaker.AvsenderMottakerIdType.ORGNR, org.navn());
     }
 

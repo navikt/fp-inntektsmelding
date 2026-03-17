@@ -3,8 +3,9 @@ package no.nav.foreldrepenger.inntektsmelding.integrasjoner.fpsak;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
-import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørId;
+import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
 
 @ApplicationScoped
 public class FpsakTjeneste {

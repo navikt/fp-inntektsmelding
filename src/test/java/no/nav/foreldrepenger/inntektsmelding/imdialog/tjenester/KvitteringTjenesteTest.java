@@ -11,11 +11,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
-import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingTjeneste;
-import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
-import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
-
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,8 +21,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDtoMapper;
+import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
+import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.dokgen.DokumentGeneratorTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
+import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
 import no.nav.vedtak.sikkerhet.kontekst.IdentType;
 import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
 import no.nav.vedtak.sikkerhet.kontekst.RequestKontekst;
@@ -41,7 +43,7 @@ class KvitteringTjenesteTest {
     private static final String INNMELDER_UID = "12324312345";
     private static final String ARBEIDSGIVER_IDENT = "999999999";
     private static final LocalDate START_DATO = LocalDate.now();
-    private static final no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørId SØKER_AKTØR_ID = new no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørId("1111111111111");
+    private static final AktørId SØKER_AKTØR_ID = new AktørId("1111111111111");
 
     @Mock
     private ForespørselBehandlingTjeneste forespørselBehandlingTjeneste;
@@ -76,7 +78,7 @@ class KvitteringTjenesteTest {
             .medInntekt(BigDecimal.ZERO)
             .medStartdato(START_DATO)
             .medAktørId(new AktørId(SØKER_AKTØR_ID.getAktørId()))
-            .medArbeidsgiver(new InntektsmeldingDto.Arbeidsgiver(ARBEIDSGIVER_IDENT))
+            .medArbeidsgiver(new Arbeidsgiver(ARBEIDSGIVER_IDENT))
             .medYtelse(Ytelsetype.FORELDREPENGER)
             .build();
         when(inntektsmeldingTjeneste.hentInntektsmeldinger(uid)).thenReturn(List.of(im));
@@ -96,13 +98,13 @@ class KvitteringTjenesteTest {
             .medInntekt(BigDecimal.ZERO)
             .medStartdato(START_DATO)
             .medAktørId(new AktørId(SØKER_AKTØR_ID.getAktørId()))
-            .medArbeidsgiver(new InntektsmeldingDto.Arbeidsgiver(ARBEIDSGIVER_IDENT))
+            .medArbeidsgiver(new Arbeidsgiver(ARBEIDSGIVER_IDENT))
             .medYtelse(Ytelsetype.FORELDREPENGER)
             .build();
         when(inntektsmeldingTjeneste.hentInntektsmelding(imId)).thenReturn(im);
         var forespørsel = new ForespørselEntitet(ARBEIDSGIVER_IDENT, LocalDate.now(),
-            SØKER_AKTØR_ID, Ytelsetype.FORELDREPENGER, "123", START_DATO, ForespørselType.BESTILT_AV_FAGSYSTEM);
-        when(forespørselBehandlingTjeneste.finnForespørsler(new no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørId(SØKER_AKTØR_ID.getAktørId()), Ytelsetype.FORELDREPENGER, ARBEIDSGIVER_IDENT)).thenReturn(List.of(forespørsel));
+            new AktørIdEntitet(SØKER_AKTØR_ID.getAktørId()), Ytelsetype.FORELDREPENGER, "123", START_DATO, ForespørselType.BESTILT_AV_FAGSYSTEM);
+        when(forespørselBehandlingTjeneste.finnForespørsler(SØKER_AKTØR_ID, Ytelsetype.FORELDREPENGER, ARBEIDSGIVER_IDENT)).thenReturn(List.of(ForespørselDtoMapper.mapFraEntitet(forespørsel)));
 
         // Act
         kvitteringTjeneste.hentPDF(imId);

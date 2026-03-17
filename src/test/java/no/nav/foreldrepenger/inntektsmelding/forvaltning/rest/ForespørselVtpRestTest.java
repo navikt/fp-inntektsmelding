@@ -7,6 +7,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 
+import no.nav.foreldrepenger.inntektsmelding.typer.dto.SaksnummerDto;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,7 +34,7 @@ class ForespørselVtpRestTest {
     @Test
     void skal_kaste_exception_om_i_prod() {
         try (var environment = Mockito.mockStatic(Environment.class, Answers.RETURNS_DEEP_STUBS)) {
-            assertThrows(RuntimeException.class, () -> forespørselVtpRest.finnForespoerselForSaksnummer(null));
+            assertThrows(RuntimeException.class, () -> forespørselVtpRest.finnForespoerselForSaksnummer(new SaksnummerDto("123456")));
         }
     }
 
@@ -42,7 +44,7 @@ class ForespørselVtpRestTest {
             var vtpEnv = mock(Environment.class);
             when(vtpEnv.isLocal()).thenReturn(true);
             environment.when(Environment::current).thenReturn(vtpEnv);
-            var response = forespørselVtpRest.finnForespoerselForSaksnummer(null);
+            var response = forespørselVtpRest.finnForespoerselForSaksnummer(new SaksnummerDto("123456"));
             assertThat(response).isNotNull();
         }
     }

@@ -20,6 +20,8 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,7 +76,7 @@ public class ForespørselApiRest {
     @Tilgangskontrollert
     public Response hentForespørsler(@Valid @NotNull ForespørselFilterRequest filterRequest) {
         sjekkErSystemkall();
-        var dtoer = forespørselApiTjeneste.hentForespørslerDto(filterRequest.orgnr(),
+        var dtoer = forespørselApiTjeneste.hentForespørslerDto(Arbeidsgiver.fra(filterRequest.orgnr().orgnr()),
             filterRequest.fnr(),
             filterRequest.status(),
             filterRequest.ytelseType(),

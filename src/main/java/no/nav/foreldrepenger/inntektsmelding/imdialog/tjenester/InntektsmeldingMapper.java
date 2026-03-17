@@ -8,11 +8,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
 import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.InntektsmeldingResponseDto;
 import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.SendInntektsmeldingRequestDto;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.AktørIdDto;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.ArbeidsgiverDto;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.ArbeidsgiverinitiertÅrsakDto;
@@ -41,8 +42,8 @@ public class InntektsmeldingMapper {
             .medMånedRefusjon(refusjonPrMnd)
             .medOpphørsdatoRefusjon(opphørsdato)
             .medSøkteRefusjonsperioder(mapRefusjonsendringerTilDto(dto.startdato(), opphørsdato, dto.refusjon()))
-            .medBortfaltNaturalytelsePerioder(List.of())
-            .medEndringAvInntektÅrsaker(List.of())
+            .medBortfaltNaturalytelsePerioder(mapBortfalteNaturalYtelserTilDto(dto.bortfaltNaturalytelsePerioder()))
+            .medEndringAvInntektÅrsaker(mapEndringsårsakerTilDto(dto.endringAvInntektÅrsaker()))
             .build();
     }
 
@@ -51,19 +52,20 @@ public class InntektsmeldingMapper {
         var refusjonPrMnd = finnFørsteRefusjon(dto.refusjon(), dto.startdato()).orElse(null);
         var opphørsdato = refusjonPrMnd == null ? null : finnOpphørsdato(dto.refusjon(), dto.startdato()).orElse(Tid.TIDENES_ENDE);
         var builder = opprettDtoBuilderOgSettFellesFelter(dto);
-        return builder.medInntekt(dto.inntekt())
+        return builder
+            .medInntekt(dto.inntekt())
             .medMånedRefusjon(refusjonPrMnd)
             .medOpphørsdatoRefusjon(opphørsdato)
-            .medEndringAvInntektÅrsaker(mapEndringsårsakerTilDto(dto.endringAvInntektÅrsaker()))
-            .medBortfaltNaturalytelsePerioder(mapBortfalteNaturalYtelserTilDto(dto.bortfaltNaturalytelsePerioder()))
             .medSøkteRefusjonsperioder(mapRefusjonsendringerTilDto(dto.startdato(), opphørsdato, dto.refusjon()))
+            .medBortfaltNaturalytelsePerioder(mapBortfalteNaturalYtelserTilDto(dto.bortfaltNaturalytelsePerioder()))
+            .medEndringAvInntektÅrsaker(mapEndringsårsakerTilDto(dto.endringAvInntektÅrsaker()))
             .build();
     }
 
     private static InntektsmeldingDto.Builder opprettDtoBuilderOgSettFellesFelter(SendInntektsmeldingRequestDto dto) {
         return InntektsmeldingDto.builder()
             .medAktørId(new AktørId(dto.aktorId().id()))
-            .medArbeidsgiver(new InntektsmeldingDto.Arbeidsgiver(dto.arbeidsgiverIdent().ident()))
+            .medArbeidsgiver(new Arbeidsgiver(dto.arbeidsgiverIdent().ident()))
             .medKildesystem(Kildesystem.ARBEIDSGIVERPORTAL)
             .medStartdato(dto.startdato())
             .medYtelse(KodeverkMapper.mapYtelsetype(dto.ytelse()))
@@ -88,7 +90,7 @@ public class InntektsmeldingMapper {
             .map(d -> new InntektsmeldingDto.BortfaltNaturalytelse(
                 d.fom(),
                 d.tom() != null ? d.tom() : Tid.TIDENES_ENDE,
-                KodeverkMapper.mapNaturalytelseTilEntitet(d.naturalytelsetype()),
+                KodeverkMapper.mapNaturalytelseTilDomene(d.naturalytelsetype()),
                 d.beløp()))
             .toList();
     }
@@ -117,7 +119,7 @@ public class InntektsmeldingMapper {
         return Optional.of(refusjonPåStartdato.getFirst().beløp());
     }
 
-    public static InntektsmeldingResponseDto mapFraDomene(InntektsmeldingDto dto, ForespørselEntitet forespørselEntitet) {
+    public static InntektsmeldingResponseDto mapFraDomene(InntektsmeldingDto dto, ForespørselDto forespørsel) {
         var refusjoner = mapRefusjonerTilDto(dto);
 
         var bortfalteNaturalytelser = dto.getBortfaltNaturalytelsePerioder().stream().map(i ->
@@ -135,14 +137,14 @@ public class InntektsmeldingMapper {
                 e.bleKjentFom()))
             .toList();
 
-        var forespørselType = forespørselEntitet.getForespørselType().equals(ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT) ? ArbeidsgiverinitiertÅrsakDto.NYANSATT : null;
+        var forespørselType = ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT.equals(forespørsel.forespørselType()) ? ArbeidsgiverinitiertÅrsakDto.NYANSATT : null;
 
         return new InntektsmeldingResponseDto(
             dto.getId(),
-            forespørselEntitet.getUuid(),
+            forespørsel.uuid(),
             new AktørIdDto(dto.getAktørId().getAktørId()),
             KodeverkMapper.mapYtelsetype(dto.getYtelse()),
-            new ArbeidsgiverDto(dto.getArbeidsgiver().ident()),
+            new ArbeidsgiverDto(dto.getArbeidsgiver().orgnr()),
             new SendInntektsmeldingRequestDto.KontaktpersonRequestDto(dto.getKontaktperson().navn(), dto.getKontaktperson().telefonnummer()),
             dto.getStartdato(),
             dto.getMånedInntekt(),

@@ -16,11 +16,14 @@ import java.util.stream.Stream;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
+
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.MånedslønnStatus;
-import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørId;
 import no.nav.vedtak.exception.IntegrasjonException;
 import no.nav.vedtak.exception.TekniskException;
 
@@ -40,7 +43,7 @@ public class InntektTjeneste {
     }
 
     // Tar inn dagens dato som parameter for å gjøre det enklere å skrive tester
-    public Inntektsopplysninger hentInntekt(AktørId aktørId, LocalDate skjæringstidspunkt, LocalDate dagensDato, String organisasjonsnummer,
+    public Inntektsopplysninger hentInntekt(AktørId aktørId, LocalDate skjæringstidspunkt, LocalDate dagensDato, Arbeidsgiver arbeidsgiver,
                                             boolean harJobbetHeleBeregningsperioden) {
         // Hvis søker ikke har jobbet hele beregningsperioden, bryr vi oss ikke med å justere innhenting etter rapporteringsfrist
         var antallMånederViBerOm = harJobbetHeleBeregningsperioden ? finnAntallMånederViMåBeOm(skjæringstidspunkt, dagensDato) : 3;
@@ -49,15 +52,15 @@ public class InntektTjeneste {
         var request = lagRequest(aktørId, fomDato, tomDato);
         try {
             var respons = inntektskomponentKlient.finnInntekt(request);
-            var inntekter = oversettRespons(respons, organisasjonsnummer);
+            var inntekter = oversettRespons(respons, arbeidsgiver.orgnr());
             var alleMåneder = inntekter.size() == antallMånederViBerOm
                               ? inntekter
                               : fyllInnManglendeMåneder(fomDato, antallMånederViBerOm, inntekter);
             var kuttetNedTilTreMndInntekt = fjernOverflødigeMånederOmNødvendig(alleMåneder);
-            return beregnSnittOgLeggPåStatus(kuttetNedTilTreMndInntekt, dagensDato, organisasjonsnummer, harJobbetHeleBeregningsperioden);
+            return beregnSnittOgLeggPåStatus(kuttetNedTilTreMndInntekt, dagensDato, arbeidsgiver.orgnr(), harJobbetHeleBeregningsperioden);
         } catch (IntegrasjonException e) {
             LOG.warn("Nedetid i inntektskomponenten, returnerer tomme måneder uten snittlønn til frontend. Fikk feil {}", e.getMessage());
-            return lagTomRespons(skjæringstidspunkt, organisasjonsnummer);
+            return lagTomRespons(skjæringstidspunkt, arbeidsgiver.orgnr());
         }
     }
 

@@ -12,6 +12,8 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,11 +21,11 @@ import no.nav.foreldrepenger.inntektsmelding.imdialog.tjenester.GrunnlagDtoTjene
 import no.nav.foreldrepenger.inntektsmelding.imdialog.tjenester.UregistrertValiderer;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.fpsak.FpsakKlient;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.fpsak.FpsakTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
-import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.AutentisertMedTokenX;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.Tilgangskontrollert;
-import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørId;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.vedtak.exception.FunksjonellException;
 
 @AutentisertMedTokenX
@@ -63,20 +65,20 @@ public class ArbeidsgiverinitiertDialogRest {
         if (personInfo == null) {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
-        var aktørIdEntitet = new AktørId(personInfo.aktørId().getAktørId());
+        var aktørId = new AktørId(personInfo.aktørId().getAktørId());
         var eksisterendeForepørslersisteTreÅr = grunnlagDtoTjeneste.finnForespørslerSisteTreÅr(request.ytelseType(),
             request.førsteFraværsdag(),
-            aktørIdEntitet);
+            aktørId);
         if (eksisterendeForepørslersisteTreÅr.isEmpty()) {
-            LOG.info("Fant ikke forespørsel siste tre år for aktør {}, spør fpsak.", aktørIdEntitet);
+            LOG.info("Fant ikke forespørsel siste tre år for aktør {}, spør fpsak.", aktørId);
 
-            var infoOmSakRespons = fpsakTjeneste.henterInfoOmSakIFagsystem(aktørIdEntitet, request.ytelseType());
+            var infoOmSakRespons = fpsakTjeneste.henterInfoOmSakIFagsystem(aktørId, request.ytelseType());
             var finnesYtelseIFpsak = FpsakKlient.StatusSakInntektsmelding.ÅPEN_FOR_BEHANDLING.equals(infoOmSakRespons.statusInntektsmelding());
 
             if (!finnesYtelseIFpsak) {
                 var tekst = String.format("Du kan ikke sende inn inntektsmelding på %s for denne personen med aktør id %s",
                     request.ytelseType(),
-                    aktørIdEntitet);
+                    aktørId);
                 throw new FunksjonellException("INGEN_SAK_FUNNET", tekst, null, null);
             }
         }
@@ -107,7 +109,7 @@ public class ArbeidsgiverinitiertDialogRest {
         var dto = grunnlagDtoTjeneste.lagArbeidsgiverinitiertNyansattDialogDto(request.fødselsnummer(),
             request.ytelseType(),
             request.førsteFraværsdag(),
-            request.organisasjonsnummer().orgnr());
+            Arbeidsgiver.fra(request.organisasjonsnummer().orgnr()));
         return Response.ok(dto).build();
     }
 
@@ -134,7 +136,7 @@ public class ArbeidsgiverinitiertDialogRest {
         var dto = grunnlagDtoTjeneste.lagArbeidsgiverinitiertUregistrertDialogDto(request.fødselsnummer(),
             request.ytelseType(),
             førsteUttaksdato,
-            request.organisasjonsnummer().orgnr(),
+            Arbeidsgiver.fra(request.organisasjonsnummer().orgnr()),
             infoOmsak.skjæringstidspunkt());
         return Response.ok(dto).build();
     }

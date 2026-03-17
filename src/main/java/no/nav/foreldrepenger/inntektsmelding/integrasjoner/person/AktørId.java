@@ -9,6 +9,10 @@ public class AktørId {
 
     private String aktørId;
 
+    public static AktørId fra(String aktørId) {
+        return new AktørId(aktørId);
+    }
+
     public AktørId(String aktørId) {
         Objects.requireNonNull(aktørId, "aktørId");
         if (!VALID.matcher(aktørId).matches()) {

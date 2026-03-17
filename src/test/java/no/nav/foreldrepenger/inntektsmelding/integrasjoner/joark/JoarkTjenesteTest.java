@@ -26,6 +26,8 @@ import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonInfo;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Saksnummer;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.NaturalytelseType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.vedtak.felles.integrasjon.dokarkiv.dto.OpprettJournalpostRequest;
@@ -64,7 +66,7 @@ class JoarkTjenesteTest {
                 NaturalytelseType.AKSJER_GRUNNFONDSBEVIS_TIL_UNDERKURS, BigDecimal.valueOf(2000));
         var arbeidsgiverIdent = "999999999";
         var inntektsmelding = InntektsmeldingDto.builder()
-            .medArbeidsgiver(new InntektsmeldingDto.Arbeidsgiver(arbeidsgiverIdent))
+            .medArbeidsgiver(new Arbeidsgiver(arbeidsgiverIdent))
             .medStartdato(LocalDate.of(2024, 6, 1))
             .medYtelse(Ytelsetype.FORELDREPENGER)
             .medOpphørsdatoRefusjon(Tid.TIDENES_ENDE)
@@ -79,11 +81,11 @@ class JoarkTjenesteTest {
         var testBedrift = new Organisasjon("Test Bedrift", arbeidsgiverIdent);
 
         // Kan foreløpig ikke teste med spesifikk request i mock siden eksternreferanse genereres on the fly
-        when(organisasjonTjeneste.finnOrganisasjon(arbeidsgiverIdent)).thenReturn(testBedrift);
+        when(organisasjonTjeneste.finnOrganisasjon(Arbeidsgiver.fra(arbeidsgiverIdent))).thenReturn(testBedrift);
         when(klient.opprettJournalpost(any(), anyBoolean())).thenReturn(new OpprettJournalpostResponse("9999", false, Collections.emptyList()));
 
         // Act
-        var fagsystemSaksnummer = "23423423";
+        var fagsystemSaksnummer = Saksnummer.fra( "23423423");
         var journalpostId = joarkTjeneste.journalførInntektsmelding("XML", inntektsmelding, PDFSIGNATURE, fagsystemSaksnummer);
 
         // Assert
@@ -94,7 +96,7 @@ class JoarkTjenesteTest {
 
         var opprettJournalpostRequest = argumentCaptor.getValue();
         assertThat(opprettJournalpostRequest.sak()).isNotNull();
-        assertThat(opprettJournalpostRequest.sak().fagsakId()).isEqualTo(fagsystemSaksnummer);
+        assertThat(opprettJournalpostRequest.sak().fagsakId()).isEqualTo(fagsystemSaksnummer.saksnummer());
         assertThat(opprettJournalpostRequest.sak().fagsaksystem()).isEqualTo(Fagsystem.FPSAK.getOffisiellKode());
         assertThat(opprettJournalpostRequest.sak().sakstype()).isEqualTo(Sak.Sakstype.FAGSAK);
         assertThat(opprettJournalpostRequest.bruker().id()).isEqualTo(aktør);
@@ -113,7 +115,7 @@ class JoarkTjenesteTest {
 
         var aktørIdArbeidsgiver = "2222222222222";
         var inntektsmelding = InntektsmeldingDto.builder()
-            .medArbeidsgiver(new InntektsmeldingDto.Arbeidsgiver(aktørIdArbeidsgiver))
+            .medArbeidsgiver(new Arbeidsgiver(aktørIdArbeidsgiver))
             .medStartdato(LocalDate.of(2024, 6, 1))
             .medYtelse(Ytelsetype.FORELDREPENGER)
             .medInntekt(BigDecimal.valueOf(35000))
@@ -127,7 +129,7 @@ class JoarkTjenesteTest {
 
         // Kan foreløpig ikke teste med spesifikk request i mock siden eksternreferanse genereres on the fly
         when(personTjeneste.hentPersonInfoFraAktørId(new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(aktørIdArbeidsgiver), Ytelsetype.FORELDREPENGER)).thenReturn(
-            new PersonInfo("Navn", null, "Navnesen", new PersonIdent("9999999999999"), new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(aktørIdSøker.getAktørId()), LocalDate.now(), null, null));
+            new PersonInfo("Navn", null, "Navnesen", new PersonIdent("9999999999999"), aktørIdSøker, LocalDate.now(), null, null));
         when(klient.opprettJournalpost(any(), anyBoolean())).thenReturn(new OpprettJournalpostResponse("9999", false, Collections.emptyList()));
         // Act
         var journalpostId = joarkTjeneste.journalførInntektsmelding("XML", inntektsmelding, PDFSIGNATURE, null);

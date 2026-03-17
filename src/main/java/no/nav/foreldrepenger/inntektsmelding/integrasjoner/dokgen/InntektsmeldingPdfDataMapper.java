@@ -10,6 +10,7 @@ import java.util.List;
 
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonInfo;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.NaturalytelseType;
@@ -25,14 +26,14 @@ class InntektsmeldingPdfDataMapper {
     public static InntektsmeldingPdfData mapInntektsmeldingPdfData(InntektsmeldingDto inntektsmelding,
                                                                    String arbeidsgiverNavn,
                                                                    PersonInfo personInfo,
-                                                                   String arbeidsgvierIdent,
+                                                                   Arbeidsgiver arbeidsgvierIdent,
                                                                    ForespørselType forespørselType) {
         var startdato = inntektsmelding.getStartdato();
         //Felles
         var imDokumentdataBuilder = new InntektsmeldingPdfData.Builder()
             .medNavn(personInfo.mapNavn())
             .medPersonnummer(personInfo.fødselsnummer().getIdent())
-            .medArbeidsgiverIdent(arbeidsgvierIdent)
+            .medArbeidsgiverIdent(arbeidsgvierIdent.orgnr())
             .medArbeidsgiverNavn(arbeidsgiverNavn)
             .medAvsenderSystem("NAV_NO")
             .medYtelseNavn(Ytelsetype.valueOf(inntektsmelding.getYtelse().name()))

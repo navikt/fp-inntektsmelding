@@ -11,6 +11,8 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Saksnummer;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +54,9 @@ public class InntektsmeldingFpsakRest {
         LOG.info("Mottok overstyrt inntektsmelding fra saksbehandler {}", sendInntektsmeldingRequestDto.opprettetAv());
         tilgangskontroll.sjekkErSystembruker();
 
-        inntektsmeldingOverstyringTjeneste.mottaOverstyrtInntektsmelding(sendInntektsmeldingRequestDto);
+        inntektsmeldingOverstyringTjeneste.mottaOverstyrtInntektsmelding(
+            InntektsmeldingOverstyringMapper.mapTilDto(sendInntektsmeldingRequestDto),
+            Saksnummer.fra(sendInntektsmeldingRequestDto.fagsystemSaksnummer().saksnr()));
         return Response.ok().build();
     }
 }

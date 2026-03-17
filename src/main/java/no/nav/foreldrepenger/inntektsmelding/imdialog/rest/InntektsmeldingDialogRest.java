@@ -32,8 +32,8 @@ import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingTjen
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.AutentisertMedTokenX;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.Tilgangskontrollert;
 import no.nav.foreldrepenger.inntektsmelding.server.tilgangsstyring.Tilgang;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.ArbeidsgiverinitiertÅrsakDto;
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
 
 @AutentisertMedTokenX
@@ -110,11 +110,11 @@ public class InntektsmeldingDialogRest {
     public Response sendInntektsmelding(@NotNull @Valid SendInntektsmeldingRequestDto sendInntektsmeldingRequestDto) {
         var arbeidsgiverinitiertÅrsakDto = sendInntektsmeldingRequestDto.arbeidsgiverinitiertÅrsak();
         if (ArbeidsgiverinitiertÅrsakDto.NYANSATT.equals(arbeidsgiverinitiertÅrsakDto)) {
-            tilgang.sjekkAtArbeidsgiverHarTilgangTilBedrift(new OrganisasjonsnummerDto(sendInntektsmeldingRequestDto.arbeidsgiverIdent().orgnr()));
+            tilgang.sjekkAtArbeidsgiverHarTilgangTilBedrift(Arbeidsgiver.fra(sendInntektsmeldingRequestDto.arbeidsgiverIdent().orgnr()));
             LOG.info("Mottok arbeidsgiverinitert inntektsmelding årsak nyansatt for aktørId {}", sendInntektsmeldingRequestDto.aktorId());
            return Response.ok(inntektsmeldingMottakTjeneste.mottaArbeidsgiverinitiertInntektsmelding(sendInntektsmeldingRequestDto, mapArbeidsgiverinitiertÅrsak(arbeidsgiverinitiertÅrsakDto))).build();
         } else if (ArbeidsgiverinitiertÅrsakDto.UREGISTRERT.equals(arbeidsgiverinitiertÅrsakDto)) {
-            tilgang.sjekkAtArbeidsgiverHarTilgangTilBedrift(new OrganisasjonsnummerDto(sendInntektsmeldingRequestDto.arbeidsgiverIdent().orgnr()));
+            tilgang.sjekkAtArbeidsgiverHarTilgangTilBedrift(Arbeidsgiver.fra(sendInntektsmeldingRequestDto.arbeidsgiverIdent().orgnr()));
             LOG.info("Mottok arbeidsgiverinitert inntektsmelding årsak uregistrert for aktørId {}", sendInntektsmeldingRequestDto.aktorId());
             return Response.ok(inntektsmeldingMottakTjeneste.mottaArbeidsgiverinitiertInntektsmelding(sendInntektsmeldingRequestDto, mapArbeidsgiverinitiertÅrsak(arbeidsgiverinitiertÅrsakDto))).build();
         } else {

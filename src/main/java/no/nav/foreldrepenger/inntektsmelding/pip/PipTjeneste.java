@@ -6,9 +6,11 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingTjeneste;
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 
 @ApplicationScoped
 public class PipTjeneste {
@@ -25,19 +27,19 @@ public class PipTjeneste {
         this.inntektsmeldingTjeneste = inntektsmeldingTjeneste;
     }
 
-    public OrganisasjonsnummerDto hentOrganisasjonsnummerFor(UUID forespørselUuid) {
-        return forespørselTjeneste.hentForespørsel(forespørselUuid).map(f -> new OrganisasjonsnummerDto(f.getOrganisasjonsnummer())).orElse(null);
+    public Arbeidsgiver hentArbeidsgiverFor(UUID forespørselUuid) {
+        return forespørselTjeneste.hentForespørsel(forespørselUuid).map(ForespørselDto::arbeidsgiver).orElse(null);
     }
 
-    public OrganisasjonsnummerDto hentOrganisasjonsnummerFor(long inntektsmeldingId) {
+    public Arbeidsgiver hentArbeidsgiverFor(long inntektsmeldingId) {
         return Optional.ofNullable(inntektsmeldingTjeneste.hentInntektsmelding(inntektsmeldingId))
-            .map(f -> new OrganisasjonsnummerDto(f.getArbeidsgiver().ident()))
+            .map(InntektsmeldingDto::getArbeidsgiver)
             .orElse(null);
     }
 
-    public OrganisasjonsnummerDto hentInntektsmeldingOrganisasjonsnummerFor(UUID inntektsmeldingUuid) {
+    public Arbeidsgiver hentInntektsmeldingOrganisasjonsnummerFor(UUID inntektsmeldingUuid) {
         return Optional.ofNullable(inntektsmeldingTjeneste.hentInntektsmelding(inntektsmeldingUuid))
-            .map(im -> new OrganisasjonsnummerDto(im.getArbeidsgiver().ident()))
+            .map(InntektsmeldingDto::getArbeidsgiver)
             .orElse(null);
     }
 

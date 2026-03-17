@@ -17,11 +17,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
-import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.SaksnummerDto;
-import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørId;
+import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
 
 @Dependent
 public class ForespørselRepository {
@@ -37,15 +34,7 @@ public class ForespørselRepository {
         this.entityManager = entityManager;
     }
 
-    public UUID lagreForespørsel(LocalDate skjæringstidspunkt, Ytelsetype ytelsetype, String aktørId, String orgnummer, String fagsakSaksnummer,
-                                 LocalDate førsteUttaksdato, ForespørselType forespørselType) {
-        var forespørselEntitet = new ForespørselEntitet(orgnummer,
-            skjæringstidspunkt,
-            new AktørId(aktørId),
-            ytelsetype,
-            fagsakSaksnummer,
-            førsteUttaksdato,
-            forespørselType);
+    public UUID lagreForespørsel(ForespørselEntitet forespørselEntitet) {
         LOG.info("ForespørselRepository: lagrer forespørsel entitet: {}", forespørselEntitet);
         entityManager.persist(forespørselEntitet);
         entityManager.flush();
@@ -72,23 +61,23 @@ public class ForespørselRepository {
         }
     }
 
-    public Optional<ForespørselEntitet> hentForespørsel(UUID uuid) {
+    public Optional<ForespørselEntitet> hentForespørsel(UUID foreldpørselUuid) {
         var query = entityManager.createQuery("FROM ForespørselEntitet where uuid = :foresporselUUID", ForespørselEntitet.class)
-            .setParameter("foresporselUUID", uuid);
+            .setParameter("foresporselUUID", foreldpørselUuid);
 
         var resultList = query.getResultList();
         if (resultList.isEmpty()) {
             return Optional.empty();
         } else if (resultList.size() > 1) {
-            throw new IllegalStateException("Forventet å finne kun en forespørsel for oppgitt uuid " + uuid);
+            throw new IllegalStateException("Forventet å finne kun en forespørsel for oppgitt uuid " + foreldpørselUuid);
         } else {
             return Optional.of(resultList.getFirst());
         }
     }
 
     public void ferdigstillForespørsel(String arbeidsgiverNotifikasjonSakId) {
-        var query = entityManager.createQuery("FROM ForespørselEntitet where sakId = :SAK_ID", ForespørselEntitet.class)
-            .setParameter("SAK_ID", arbeidsgiverNotifikasjonSakId);
+        var query = entityManager.createQuery("FROM ForespørselEntitet where sakId = :sak_id", ForespørselEntitet.class)
+            .setParameter("sak_id", arbeidsgiverNotifikasjonSakId);
         var resultList = query.getResultList();
 
         resultList.forEach(f -> {
@@ -99,8 +88,8 @@ public class ForespørselRepository {
     }
 
     public void settForespørselTilUtgått(String arbeidsgiverNotifikasjonSakId) {
-        var query = entityManager.createQuery("FROM ForespørselEntitet where sakId = :SAK_ID", ForespørselEntitet.class)
-            .setParameter("SAK_ID", arbeidsgiverNotifikasjonSakId);
+        var query = entityManager.createQuery("FROM ForespørselEntitet where sakId = :sak_id", ForespørselEntitet.class)
+            .setParameter("sak_id", arbeidsgiverNotifikasjonSakId);
         var resultList = query.getResultList();
 
         resultList.forEach(f -> {
@@ -111,19 +100,18 @@ public class ForespørselRepository {
     }
 
 
-    public List<ForespørselEntitet> hentForespørslerPåSak(SaksnummerDto fagsakSaksnummer) {
+    public List<ForespørselEntitet> hentForespørslerPåSak(String fagsakSaksnummer) {
         var query = entityManager.createQuery("FROM ForespørselEntitet f where fagsystemSaksnummer = :saksnr", ForespørselEntitet.class)
-            .setParameter("saksnr", fagsakSaksnummer.saksnr());
+            .setParameter("saksnr", fagsakSaksnummer);
         return query.getResultList();
     }
 
-    public Optional<ForespørselEntitet> finnGjeldendeForespørsel(AktørId aktørId,
+    public Optional<ForespørselEntitet> finnGjeldendeForespørsel(AktørIdEntitet aktørId,
                                                                  Ytelsetype ytelsetype,
-                                                                 OrganisasjonsnummerDto organisasjonsnummer,
                                                                  LocalDate stp,
-                                                                 SaksnummerDto fagsakSaksnummer,
+                                                                 String arbeidsgiverIdent,
+                                                                 String fagsakSaksnummer,
                                                                  LocalDate førsteUttaksdato) {
-        var arbeidsgiverIdent = organisasjonsnummer.orgnr();
         var query = entityManager.createQuery("FROM ForespørselEntitet where status in(:fpStatuser) "
                     + "and aktørId = :brukerAktørId "
                     + "and fagsystemSaksnummer = :fagsakNr "
@@ -134,7 +122,7 @@ public class ForespørselRepository {
                 ForespørselEntitet.class)
             .setParameter("fpStatuser", Set.of(ForespørselStatus.UNDER_BEHANDLING, ForespørselStatus.FERDIG))
             .setParameter("brukerAktørId", aktørId)
-            .setParameter("fagsakNr", fagsakSaksnummer.saksnr())
+            .setParameter("fagsakNr", fagsakSaksnummer)
             .setParameter("arbeidsgiverIdent", arbeidsgiverIdent)
             .setParameter("skjæringstidspunkt", stp)
             .setParameter("førsteUttaksdato", førsteUttaksdato)
@@ -145,31 +133,29 @@ public class ForespørselRepository {
             return Optional.empty();
         } else if (resultList.size() > 1) {
             throw new IllegalStateException(
-                "Forventet å finne kun en forespørsel for gitt sak {}, orgnr {}, skjæringstidspunkt {} og første uttaksdato" + fagsakSaksnummer
-                    + organisasjonsnummer + stp + førsteUttaksdato);
+                "Forventet å finne kun en forespørsel for gitt sak: %s, orgnr: %s, skjæringstidspunkt: %s og første uttaksdato: %s".formatted(fagsakSaksnummer, arbeidsgiverIdent, stp, førsteUttaksdato));
         } else {
             return Optional.of(resultList.getFirst());
         }
     }
 
-    public List<ForespørselEntitet> finnÅpenForespørsel(SaksnummerDto fagsystemSaksnummer) {
+    public List<ForespørselEntitet> finnÅpenForespørsel(String fagsystemSaksnummer) {
         var query = entityManager.createQuery("FROM ForespørselEntitet where status=:status " + "and fagsystemSaksnummer=:saksnummer",
                 ForespørselEntitet.class)
-            .setParameter("saksnummer", fagsystemSaksnummer.saksnr())
+            .setParameter("saksnummer", fagsystemSaksnummer)
             .setParameter("status", ForespørselStatus.UNDER_BEHANDLING);
         return query.getResultList();
     }
 
-    public Optional<ForespørselEntitet> finnÅpenForespørsel(SaksnummerDto fagsakSaksnummer,
-                                                            OrganisasjonsnummerDto organisasjonsnummer) {
-        var arbeidsgiverIdent = organisasjonsnummer.orgnr();
+    public Optional<ForespørselEntitet> finnÅpenForespørsel(String fagsakSaksnummer,
+                                                            String organisasjonsnummer) {
         var query = entityManager.createQuery("FROM ForespørselEntitet where status = :fpStatus "
                     + "and fagsystemSaksnummer = :fagsakNr "
                     + "and organisasjonsnummer = :arbeidsgiverIdent ",
                 ForespørselEntitet.class)
             .setParameter("fpStatus", ForespørselStatus.UNDER_BEHANDLING)
-            .setParameter("fagsakNr", fagsakSaksnummer.saksnr())
-            .setParameter("arbeidsgiverIdent", arbeidsgiverIdent);
+            .setParameter("fagsakNr", fagsakSaksnummer)
+            .setParameter("arbeidsgiverIdent", organisasjonsnummer);
 
         var resultList = query.getResultList();
         if (resultList.isEmpty()) {
@@ -181,7 +167,7 @@ public class ForespørselRepository {
         }
     }
 
-    public List<ForespørselEntitet> finnForespørslerForAktørId(AktørId aktørId, Ytelsetype ytelsetype) {
+    public List<ForespørselEntitet> finnForespørslerForAktørId(AktørIdEntitet aktørId, Ytelsetype ytelsetype) {
         var query = entityManager.createQuery("FROM ForespørselEntitet where aktørId=:aktørId "
                     + "and status !=:utgått and ytelseType=:ytelseType",
                 ForespørselEntitet.class)
@@ -191,7 +177,7 @@ public class ForespørselRepository {
         return query.getResultList();
     }
 
-    public List<ForespørselEntitet> finnForespørsler(AktørId aktørId, Ytelsetype ytelsetype, String orgnr) {
+    public List<ForespørselEntitet> finnForespørsler(AktørIdEntitet aktørId, Ytelsetype ytelsetype, String orgnr) {
         var query = entityManager.createQuery("FROM ForespørselEntitet where aktørId=:aktørId "
                     + "and ytelseType=:ytelseType and organisasjonsnummer=:orgnr",
                 ForespørselEntitet.class)
@@ -201,11 +187,18 @@ public class ForespørselRepository {
         return query.getResultList();
     }
 
-    public ForespørselEntitet oppdaterFørsteUttaksdato(ForespørselEntitet forespørselEnitet, LocalDate førsteUttaksdato) {
-        forespørselEnitet.setFørsteUttaksdato(førsteUttaksdato);
-        entityManager.persist(forespørselEnitet);
-        entityManager.flush();
-        return forespørselEnitet;
+    public ForespørselEntitet oppdaterFørsteUttaksdato(UUID forespørselUuid, LocalDate førsteUttaksdato) {
+        var forespørselOpt = hentForespørsel(forespørselUuid);
+        if (forespørselOpt.isPresent()) {
+            var forespørselEnitet = forespørselOpt.get();
+            forespørselEnitet.setFørsteUttaksdato(førsteUttaksdato);
+            entityManager.persist(forespørselEnitet);
+            entityManager.flush();
+            return forespørselEnitet;
+        } else {
+            LOG.info("Finner ikke forespørsel med id {}", forespørselUuid);
+        }
+        return null;
     }
 
     public void oppdaterDialogportenUuid(UUID forespørselUuid, UUID dialogportenUuid) {
@@ -221,19 +214,19 @@ public class ForespørselRepository {
         }
     }
 
-    public List<ForespørselEntitet> hentForespørslerFraFilter(OrganisasjonsnummerDto orgnr,
-                                          AktørId aktørId,
-                                          ForespørselStatus status,
-                                          Ytelsetype ytelseType,
-                                          LocalDate fom,
-                                          LocalDate tom) {
+    public List<ForespørselEntitet> hentForespørslerFraFilter(String orgnr,
+                                                              AktørIdEntitet aktørId,
+                                                              ForespørselStatus status,
+                                                              Ytelsetype ytelseType,
+                                                              LocalDate fom,
+                                                              LocalDate tom) {
         var cb = entityManager.getCriteriaBuilder();
         var cq = cb.createQuery(ForespørselEntitet.class);
         var root = cq.from(ForespørselEntitet.class);
 
         var predicates = new ArrayList<Predicate>();
 
-        predicates.add(cb.equal(root.get("organisasjonsnummer"), Objects.requireNonNull(orgnr.orgnr())));
+        predicates.add(cb.equal(root.get("organisasjonsnummer"), Objects.requireNonNull(orgnr)));
         if (aktørId != null) {
             predicates.add(cb.equal(root.get("aktørId"), aktørId));
         }

@@ -16,13 +16,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.MånedslønnStatus;
-import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørId;
 import no.nav.vedtak.exception.IntegrasjonException;
 
 @ExtendWith(MockitoExtension.class)
 class InntektTjenesteTest {
-    private static final String ORGNR = "111111111";
+    private static final Arbeidsgiver ORGNR = Arbeidsgiver.fra("111111111");
     private static final String AKTØR_ID = "9999999999999";
 
     @Mock
@@ -388,10 +389,10 @@ class InntektTjenesteTest {
 
     private void assertResultat(Inntektsopplysninger inntektsopplysinger,
                                 List<Inntektsopplysninger.InntektMåned> forventetListe,
-                                String orgnr,
+                                Arbeidsgiver arbeidsgiver,
                                 BigDecimal forventetSnittlønn) {
         assertThat(inntektsopplysinger).isNotNull();
-        assertThat(inntektsopplysinger.orgnummer()).isEqualTo(orgnr);
+        assertThat(inntektsopplysinger.orgnummer()).isEqualTo(arbeidsgiver.orgnr());
         if (forventetSnittlønn == null) {
             assertThat(inntektsopplysinger.gjennomsnitt()).isNull();
         } else {
@@ -404,7 +405,7 @@ class InntektTjenesteTest {
     private static InntektskomponentKlient.Inntektsinformasjon getInntekt(YearMonth årMåned, BigDecimal... beløp) {
         List<BigDecimal> alleBeløp = beløp == null ? Collections.emptyList() : Arrays.asList(beløp);
         var alleInntekter = alleBeløp.stream().map(b -> new InntektskomponentKlient.Inntekt("Loennsinntekt", b)).toList();
-        return new InntektskomponentKlient.Inntektsinformasjon(årMåned, ORGNR, alleInntekter);
+        return new InntektskomponentKlient.Inntektsinformasjon(årMåned, ORGNR.orgnr(), alleInntekter);
     }
 
 }

@@ -12,13 +12,13 @@ import no.nav.foreldrepenger.inntektsmelding.integrasjoner.fpsak.FpsakKlient;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonInfo;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
-import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørId;
+import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
 import no.nav.vedtak.exception.FunksjonellException;
 import no.nav.vedtak.konfig.Tid;
 
 class UregistrertValidererTest {
     private static final LocalDate FØRSTE_UTTAKSDATO = LocalDate.now();
-    private static final AktørId AKTØR_ID_ENTITET = new AktørId("1234567891234");
+    private static final AktørIdEntitet AKTØR_ID_ENTITET = new AktørIdEntitet("1234567891234");
     private static final PersonInfo PERSON_INFO = new PersonInfo("Navn",
         null,
         "Navnesen",

@@ -11,12 +11,12 @@ import org.junit.jupiter.api.Test;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.LukkeÅrsak;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 
 class DialogportenRequestMapperTest {
     private static final String SERVICE_RESOURCE = "urn:altinn:resource:nav_foreldrepenger_inntektsmelding";
-    private final OrganisasjonsnummerDto ORGANISASJONSNUMMER = new OrganisasjonsnummerDto("999999999");
+    private final Arbeidsgiver ARBEIDSGIVER = Arbeidsgiver.fra("999999999");
     private final UUID FORESPØRSEL_UUID = UUID.randomUUID();
     private final String INNTEKTSMELDING_SKJEMA_LENKE = "https://arbeidsgiver.nav.no/fp-im-dialog";
     private final LocalDate FØRSTE_UTTAKSDATO = LocalDate.now().plusWeeks(4);
@@ -26,7 +26,7 @@ class DialogportenRequestMapperTest {
         var party = "urn:altinn:organization:identifier-no:999999999";
         var fødselsnummer = new PersonIdent("01019100000");
 
-        var opprettRequest = DialogportenRequestMapper.opprettDialogRequest(ORGANISASJONSNUMMER,
+        var opprettRequest = DialogportenRequestMapper.opprettDialogRequest(ARBEIDSGIVER,
             FORESPØRSEL_UUID, "Sakstittel", FØRSTE_UTTAKSDATO, Ytelsetype.FORELDREPENGER, INNTEKTSMELDING_SKJEMA_LENKE, fødselsnummer);
 
         var transmissionContent = opprettRequest.transmissions().getFirst().content().title().value().getFirst().value();
@@ -52,7 +52,7 @@ class DialogportenRequestMapperTest {
     @Test
     void opprettFerdigstillPatchRequest() {
         var ferdigstillPatchRequest = DialogportenRequestMapper.opprettFerdigstillPatchRequest("Sakstittel",
-            new OrganisasjonsnummerDto("999999999"),
+            ARBEIDSGIVER,
             Ytelsetype.FORELDREPENGER,
             FØRSTE_UTTAKSDATO,
             Optional.of(FORESPØRSEL_UUID),
@@ -85,7 +85,7 @@ class DialogportenRequestMapperTest {
     @Test
     void opprettFerdigstillPatchRequestLukketEksternt() {
         var ferdigstillPatchRequest = DialogportenRequestMapper.opprettFerdigstillPatchRequest("Sakstittel",
-            new OrganisasjonsnummerDto("999999999"),
+            ARBEIDSGIVER,
             Ytelsetype.FORELDREPENGER,
             FØRSTE_UTTAKSDATO,
             Optional.of(FORESPØRSEL_UUID),
@@ -135,8 +135,8 @@ class DialogportenRequestMapperTest {
 
     @Test
     void opprettInnsendtInntektsmeldingRequest() {
-        var innsendtInntektsmeldingRequest = DialogportenRequestMapper.opprettInnsendtInntektsmeldingPatchRequest(new OrganisasjonsnummerDto(
-                "999999999"),
+        var innsendtInntektsmeldingRequest = DialogportenRequestMapper.opprettInnsendtInntektsmeldingPatchRequest(
+            ARBEIDSGIVER,
             Optional.of(FORESPØRSEL_UUID),
             INNTEKTSMELDING_SKJEMA_LENKE);
 

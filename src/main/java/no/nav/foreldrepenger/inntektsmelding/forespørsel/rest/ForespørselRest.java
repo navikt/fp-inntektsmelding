@@ -20,13 +20,14 @@ import org.slf4j.LoggerFactory;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.metrikker.MetrikkerTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.AutentisertMedAzure;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.Tilgangskontrollert;
 import no.nav.foreldrepenger.inntektsmelding.server.tilgangsstyring.Tilgang;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Saksnummer;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.ForespørselResultat;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.KodeverkMapper;
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
-import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørId;
 
 @AutentisertMedAzure
 @ApplicationScoped
@@ -75,9 +76,9 @@ public class ForespørselRest {
             request.organisasjonsnumre().forEach(organisasjonsnummer -> {
                 var bleForespørselOpprettet = forespørselBehandlingTjeneste.håndterInnkommendeForespørsel(skjæringstidspunkt,
                     KodeverkMapper.mapYtelsetype(request.ytelsetype()),
-                    new AktørId(request.aktørId().id()),
-                    new OrganisasjonsnummerDto(organisasjonsnummer.orgnr()),
-                    fagsakSaksnummer,
+                    AktørId.fra(request.aktørId().id()),
+                    Arbeidsgiver.fra(organisasjonsnummer.orgnr()),
+                    Saksnummer.fra(fagsakSaksnummer.saksnr()),
                     førsteUttaksdato);
 
                 if (ForespørselResultat.FORESPØRSEL_OPPRETTET.equals(bleForespørselOpprettet)) {
@@ -104,7 +105,10 @@ public class ForespørselRest {
 
         sjekkErSystemkall();
 
-        forespørselBehandlingTjeneste.lukkForespørsel(request.fagsakSaksnummer(), request.orgnummer(), request.skjæringstidspunkt());
+        forespørselBehandlingTjeneste.lukkForespørsel(
+            Saksnummer.fra(request.fagsakSaksnummer().saksnr()),
+            Arbeidsgiver.fra(request.orgnummer().orgnr()),
+            request.skjæringstidspunkt());
         return Response.ok().build();
     }
 
@@ -125,7 +129,9 @@ public class ForespørselRest {
 
         sjekkErSaksbehandlerkall();
 
-        var resultat = forespørselBehandlingTjeneste.opprettNyBeskjedMedEksternVarsling(request.fagsakSaksnummer(), request.orgnummer());
+        var resultat = forespørselBehandlingTjeneste.opprettNyBeskjedMedEksternVarsling(
+            Saksnummer.fra(request.fagsakSaksnummer().saksnr()),
+            Arbeidsgiver.fra(request.orgnummer().orgnr()));
         return Response.ok(new SendNyBeskjedResponse(resultat)).build();
     }
 
@@ -137,7 +143,7 @@ public class ForespørselRest {
 
         sjekkErSystemkall();
 
-        forespørselBehandlingTjeneste.settForespørselTilUtgått(request.fagsakSaksnummer(), request.orgnummer(), request.skjæringstidspunkt());
+        forespørselBehandlingTjeneste.settForespørselTilUtgått(Saksnummer.fra(request.fagsakSaksnummer().saksnr()), Arbeidsgiver.fra(request.orgnummer().orgnr()), request.skjæringstidspunkt());
         return Response.ok().build();
     }
 

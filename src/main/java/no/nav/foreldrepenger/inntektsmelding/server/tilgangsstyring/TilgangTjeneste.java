@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import no.nav.foreldrepenger.inntektsmelding.pip.AltinnTilgangTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.pip.PipTjeneste;
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.vedtak.exception.ManglerTilgangException;
 import no.nav.vedtak.sikkerhet.kontekst.AnsattGruppe;
 import no.nav.vedtak.sikkerhet.kontekst.IdentType;
@@ -43,19 +43,19 @@ public class TilgangTjeneste implements Tilgang {
 
         var orgNrSet = Optional.of(forespørselUuid)
             .stream()
-            .map(pipTjeneste::hentOrganisasjonsnummerFor)
+            .map(pipTjeneste::hentArbeidsgiverFor)
             .filter(Objects::nonNull)
-            .map(OrganisasjonsnummerDto::orgnr)
+            .map(Arbeidsgiver::orgnr)
             .collect(Collectors.toSet());
 
         sjekkBorgersAltinnTilgangTilOrganisasjon(orgNrSet);
     }
 
     @Override
-    public void sjekkAtArbeidsgiverHarTilgangTilBedrift(OrganisasjonsnummerDto organisasjonsnummer) {
+    public void sjekkAtArbeidsgiverHarTilgangTilBedrift(Arbeidsgiver arbeidsgiver) {
         sjekkErBorger();
 
-        sjekkBorgersAltinnTilgangTilOrganisasjon(Set.of(organisasjonsnummer.orgnr()));
+        sjekkBorgersAltinnTilgangTilOrganisasjon(Set.of(arbeidsgiver.orgnr()));
     }
 
     @Override
@@ -64,9 +64,9 @@ public class TilgangTjeneste implements Tilgang {
 
         var orgNrSet = Optional.of(inntektsmeldingId)
             .stream()
-            .map(pipTjeneste::hentOrganisasjonsnummerFor)
+            .map(pipTjeneste::hentArbeidsgiverFor)
             .filter(Objects::nonNull)
-            .map(OrganisasjonsnummerDto::orgnr)
+            .map(Arbeidsgiver::orgnr)
             .collect(Collectors.toSet());
 
         sjekkBorgersAltinnTilgangTilOrganisasjon(orgNrSet);
@@ -81,7 +81,7 @@ public class TilgangTjeneste implements Tilgang {
             .stream()
             .map(pipTjeneste::hentInntektsmeldingOrganisasjonsnummerFor)
             .filter(Objects::nonNull)
-            .map(OrganisasjonsnummerDto::orgnr)
+            .map(Arbeidsgiver::orgnr)
             .collect(Collectors.toSet());
 
         sjekkBorgersAltinnTilgangTilOrganisasjon(orgNrSet);

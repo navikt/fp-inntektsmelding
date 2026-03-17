@@ -6,6 +6,8 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +47,7 @@ public class DokumentGeneratorTjeneste {
     public byte[] mapDataOgGenererPdf(InntektsmeldingDto inntektsmelding, ForespørselType forespørselType) {
         PersonInfo personInfo;
         String arbeidsgiverNavn;
-        var arbeidsgvierIdent = inntektsmelding.getArbeidsgiver().ident();
+        var arbeidsgvierIdent = inntektsmelding.getArbeidsgiver();
         var inntektsmeldingUuid = Optional.ofNullable(inntektsmelding.getInntektsmeldingUuid()).orElse(UUID.randomUUID());
 
         personInfo = personTjeneste.hentPersonInfoFraAktørId(inntektsmelding.getAktørId(), Ytelsetype.valueOf(inntektsmelding.getYtelse().name()));
@@ -60,10 +62,10 @@ public class DokumentGeneratorTjeneste {
         return genererPdf(imDokumentData, forespørselType);
     }
 
-    private String finnArbeidsgiverNavn(String arbeidsgvierIdent, Ytelsetype ytelsetype) {
+    private String finnArbeidsgiverNavn(Arbeidsgiver arbeidsgvierIdent, Ytelsetype ytelsetype) {
         String arbeidsgiverNavn;
-        if (!OrganisasjonsnummerValidator.erGyldig(arbeidsgvierIdent)) {
-            var personIdent = new PersonIdent(arbeidsgvierIdent);
+        if (!OrganisasjonsnummerValidator.erGyldig(arbeidsgvierIdent.orgnr())) {
+            var personIdent = new PersonIdent(arbeidsgvierIdent.orgnr());
             arbeidsgiverNavn = personTjeneste.hentPersonFraIdent(personIdent, ytelsetype).mapNavn();
         } else {
             arbeidsgiverNavn = organisasjonTjeneste.finnOrganisasjon(arbeidsgvierIdent).navn();

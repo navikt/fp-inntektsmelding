@@ -11,8 +11,10 @@ import java.util.List;
 import java.util.UUID;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDtoMapper;
 
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.ArbeidsgiverinitiertÅrsakDto;
@@ -29,7 +31,7 @@ import no.nav.foreldrepenger.inntektsmelding.typer.dto.EndringsårsakDto;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.KodeverkMapper;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.NaturalytelsetypeDto;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.YtelseTypeDto;
-import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørId;
+import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
 import no.nav.vedtak.konfig.Tid;
 
 class InntektsmeldingMapperTest {
@@ -48,7 +50,7 @@ class InntektsmeldingMapperTest {
 
         // Assert
         assertThat(dto.getAktørId().getAktørId()).isEqualTo(request.aktorId().id());
-        assertThat(dto.getArbeidsgiver().ident()).isEqualTo(request.arbeidsgiverIdent().ident());
+        assertThat(dto.getArbeidsgiver().orgnr()).isEqualTo(request.arbeidsgiverIdent().ident());
         assertThat(dto.getMånedInntekt()).isEqualByComparingTo(request.inntekt());
         assertThat(dto.getStartdato()).isEqualTo(request.startdato());
         assertThat(dto.getYtelse()).isEqualTo(KodeverkMapper.mapYtelsetype(request.ytelse()));
@@ -81,7 +83,7 @@ class InntektsmeldingMapperTest {
 
         // Assert
         assertThat(dto.getAktørId().getAktørId()).isEqualTo(request.aktorId().id());
-        assertThat(dto.getArbeidsgiver().ident()).isEqualTo(request.arbeidsgiverIdent().ident());
+        assertThat(dto.getArbeidsgiver().orgnr()).isEqualTo(request.arbeidsgiverIdent().ident());
         assertThat(dto.getMånedInntekt()).isEqualByComparingTo(request.inntekt());
         assertThat(dto.getStartdato()).isEqualTo(request.startdato());
         assertThat(dto.getYtelse()).isEqualTo(KodeverkMapper.mapYtelsetype(request.ytelse()));
@@ -114,7 +116,7 @@ class InntektsmeldingMapperTest {
 
         // Assert
         assertThat(dto.getAktørId().getAktørId()).isEqualTo(request.aktorId().id());
-        assertThat(dto.getArbeidsgiver().ident()).isEqualTo(request.arbeidsgiverIdent().ident());
+        assertThat(dto.getArbeidsgiver().orgnr()).isEqualTo(request.arbeidsgiverIdent().ident());
         assertThat(dto.getMånedInntekt()).isEqualByComparingTo(request.inntekt());
         assertThat(dto.getStartdato()).isEqualTo(request.startdato());
         assertThat(dto.getYtelse()).isEqualTo(KodeverkMapper.mapYtelsetype(request.ytelse()));
@@ -154,7 +156,7 @@ class InntektsmeldingMapperTest {
 
         // Assert
         assertThat(dto.getAktørId().getAktørId()).isEqualTo(request.aktorId().id());
-        assertThat(dto.getArbeidsgiver().ident()).isEqualTo(request.arbeidsgiverIdent().ident());
+        assertThat(dto.getArbeidsgiver().orgnr()).isEqualTo(request.arbeidsgiverIdent().ident());
         assertThat(dto.getMånedInntekt()).isEqualByComparingTo(request.inntekt());
         assertThat(dto.getStartdato()).isEqualTo(request.startdato());
         assertThat(dto.getYtelse()).isEqualTo(KodeverkMapper.mapYtelsetype(request.ytelse()));
@@ -171,7 +173,7 @@ class InntektsmeldingMapperTest {
         assertThat(dto.getBortfaltNaturalytelsePerioder().getFirst().beløp()).isEqualByComparingTo(
             request.bortfaltNaturalytelsePerioder().getFirst().beløp());
         assertThat(dto.getBortfaltNaturalytelsePerioder().getFirst().naturalytelsetype()).isEqualTo(
-            KodeverkMapper.mapNaturalytelseTilEntitet(request.bortfaltNaturalytelsePerioder().getFirst().naturalytelsetype()));
+            KodeverkMapper.mapNaturalytelseTilDomene(request.bortfaltNaturalytelsePerioder().getFirst().naturalytelsetype()));
         assertThat(dto.getBortfaltNaturalytelsePerioder().getFirst().fom()).isEqualTo(request.bortfaltNaturalytelsePerioder()
             .getFirst()
             .fom());
@@ -195,7 +197,7 @@ class InntektsmeldingMapperTest {
             .medMånedRefusjon(BigDecimal.valueOf(5000))
             .medOpphørsdatoRefusjon(LocalDate.now().plusDays(5))
             .medStartdato(LocalDate.now())
-            .medArbeidsgiver(new InntektsmeldingDto.Arbeidsgiver("999999999"))
+            .medArbeidsgiver(new Arbeidsgiver("999999999"))
             .medInnsendtTidspunkt(opprettetTidspunkt)
             .medBortfaltNaturalytelsePerioder(List.of(
                 new InntektsmeldingDto.BortfaltNaturalytelse(LocalDate.now(), Tid.TIDENES_ENDE, NaturalytelseType.LOSJI, new BigDecimal(20)),
@@ -210,14 +212,14 @@ class InntektsmeldingMapperTest {
 
         var forespørselEntitet = new ForespørselEntitet("999999999",
             LocalDate.now(),
-            new AktørId("9999999999999"),
+            new AktørIdEntitet("9999999999999"),
             Ytelsetype.FORELDREPENGER,
             "123",
             LocalDate.now(),
             ForespørselType.BESTILT_AV_FAGSYSTEM);
 
         // Act
-        var result = InntektsmeldingMapper.mapFraDomene(imDto, forespørselEntitet);
+        var result = InntektsmeldingMapper.mapFraDomene(imDto, ForespørselDtoMapper.mapFraEntitet(forespørselEntitet));
 
         // Assert
         assertThat(result.aktorId().id()).isEqualTo("9999999999999");
@@ -254,7 +256,7 @@ class InntektsmeldingMapperTest {
             .medMånedRefusjon(BigDecimal.valueOf(5000))
             .medOpphørsdatoRefusjon(LocalDate.now().plusDays(10))
             .medStartdato(LocalDate.now())
-            .medArbeidsgiver(new InntektsmeldingDto.Arbeidsgiver("999999999"))
+            .medArbeidsgiver(new Arbeidsgiver("999999999"))
             .medInnsendtTidspunkt(opprettetTidspunkt)
             .medSøkteRefusjonsperioder(List.of(new InntektsmeldingDto.SøktRefusjon(LocalDate.now().plusDays(5), BigDecimal.valueOf(4000))))
             .medBortfaltNaturalytelsePerioder(List.of(
@@ -269,14 +271,14 @@ class InntektsmeldingMapperTest {
 
         var forespørselEntitet = new ForespørselEntitet("999999999",
             LocalDate.now(),
-            new AktørId("9999999999999"),
+            new AktørIdEntitet("9999999999999"),
             Ytelsetype.FORELDREPENGER,
             "123",
             LocalDate.now(),
             ForespørselType.BESTILT_AV_FAGSYSTEM);
 
         // Act
-        var result = InntektsmeldingMapper.mapFraDomene(imDto, forespørselEntitet);
+        var result = InntektsmeldingMapper.mapFraDomene(imDto, ForespørselDtoMapper.mapFraEntitet(forespørselEntitet));
 
         // Assert
         assertThat(result.aktorId().id()).isEqualTo("9999999999999");
@@ -315,7 +317,7 @@ class InntektsmeldingMapperTest {
             .medMånedRefusjon(BigDecimal.valueOf(5000))
             .medOpphørsdatoRefusjon(Tid.TIDENES_ENDE)
             .medStartdato(LocalDate.now())
-            .medArbeidsgiver(new InntektsmeldingDto.Arbeidsgiver("999999999"))
+            .medArbeidsgiver(new Arbeidsgiver("999999999"))
             .medInnsendtTidspunkt(opprettetTidspunkt)
             .medSøkteRefusjonsperioder(List.of())
             .medBortfaltNaturalytelsePerioder(List.of(
@@ -330,14 +332,14 @@ class InntektsmeldingMapperTest {
 
         var forespørselEntitet = new ForespørselEntitet("999999999",
             LocalDate.now(),
-            new AktørId("9999999999999"),
+            new AktørIdEntitet("9999999999999"),
             Ytelsetype.FORELDREPENGER,
             "123",
             LocalDate.now(),
             ForespørselType.BESTILT_AV_FAGSYSTEM);
 
         // Act
-        var result = InntektsmeldingMapper.mapFraDomene(imDto, forespørselEntitet);
+        var result = InntektsmeldingMapper.mapFraDomene(imDto, ForespørselDtoMapper.mapFraEntitet(forespørselEntitet));
 
         // Assert
         assertThat(result.aktorId().id()).isEqualTo("9999999999999");
@@ -372,7 +374,7 @@ class InntektsmeldingMapperTest {
             .medMånedRefusjon(BigDecimal.valueOf(5000))
             .medOpphørsdatoRefusjon(Tid.TIDENES_ENDE)
             .medStartdato(LocalDate.now())
-            .medArbeidsgiver(new InntektsmeldingDto.Arbeidsgiver("999999999"))
+            .medArbeidsgiver(new Arbeidsgiver("999999999"))
             .medInnsendtTidspunkt(opprettetTidspunkt)
             .medSøkteRefusjonsperioder(List.of())
             .medBortfaltNaturalytelsePerioder(List.of())
@@ -381,14 +383,14 @@ class InntektsmeldingMapperTest {
 
         var forespørselEntitet = new ForespørselEntitet("999999999",
             LocalDate.now(),
-            new AktørId("9999999999999"),
+            new AktørIdEntitet("9999999999999"),
             Ytelsetype.FORELDREPENGER,
             "123",
             LocalDate.now(),
             ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT);
 
         // Act
-        var result = InntektsmeldingMapper.mapFraDomene(imDto, forespørselEntitet);
+        var result = InntektsmeldingMapper.mapFraDomene(imDto, ForespørselDtoMapper.mapFraEntitet(forespørselEntitet));
 
         // Assert
         assertThat(result.aktorId().id()).isEqualTo("9999999999999");

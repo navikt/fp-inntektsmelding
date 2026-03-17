@@ -7,6 +7,7 @@ import java.util.concurrent.TimeUnit;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.utils.OrganisasjonsnummerValidator;
 
 import org.slf4j.Logger;
@@ -37,34 +38,34 @@ public class OrganisasjonTjeneste {
      * Henter informasjon fra Enhetsregisteret hvis applikasjonen ikke kjenner til
      * orgnr eller har data som er eldre enn 24 timer.
      *
-     * @param orgNummer orgnummeret
+     * @param arbeidsgiver orgnummeret
      * @return relevant informasjon om virksomheten.
      * @throws IllegalArgumentException ved forespørsel om orgnr som ikke finnes i
      *                                  enhetsreg
      */
 
-    public Organisasjon finnOrganisasjon(String orgNummer) {
-        return finnOrganisasjonOptional(orgNummer).orElseThrow(
-            () -> new IllegalStateException("Forventet å finne organisasjon med orgnummer " + orgNummer));
+    public Organisasjon finnOrganisasjon(Arbeidsgiver arbeidsgiver) {
+        return finnOrganisasjonOptional(arbeidsgiver).orElseThrow(
+            () -> new IllegalStateException("Forventet å finne organisasjon med orgnummer " + arbeidsgiver));
     }
 
-    public Optional<Organisasjon> finnOrganisasjonOptional(String orgNummer) {
-        if (!OrganisasjonsnummerValidator.erGyldig(orgNummer)) {
-            LOG.info("Ugyldig orgnummer: {}", orgNummer);
+    public Optional<Organisasjon> finnOrganisasjonOptional(Arbeidsgiver arbeidsgiver) {
+        if (!OrganisasjonsnummerValidator.erGyldig(arbeidsgiver.orgnr())) {
+            LOG.info("Ugyldig orgnummer: {}", arbeidsgiver);
             return Optional.empty();
         }
-        return Optional.of(hent(orgNummer));
+        return Optional.of(hent(arbeidsgiver));
     }
 
-    private Organisasjon hent(String orgnr) {
-        var virksomhet = Optional.ofNullable(CACHE.get(orgnr)).orElseGet(() -> hentOrganisasjonRest(orgnr));
-        CACHE.put(orgnr, virksomhet);
+    private Organisasjon hent(Arbeidsgiver arbeidsgiver) {
+        var virksomhet = Optional.ofNullable(CACHE.get(arbeidsgiver.orgnr())).orElseGet(() -> hentOrganisasjonRest(arbeidsgiver));
+        CACHE.put(arbeidsgiver.orgnr(), virksomhet);
         return virksomhet;
     }
 
-    private Organisasjon hentOrganisasjonRest(String orgNummer) {
-        Objects.requireNonNull(orgNummer, "orgNummer");
-        var org = eregRestKlient.hentOrganisasjon(orgNummer);
+    private Organisasjon hentOrganisasjonRest(Arbeidsgiver arbeidsgiver) {
+        Objects.requireNonNull(arbeidsgiver, "orgNummer");
+        var org = eregRestKlient.hentOrganisasjon(arbeidsgiver.orgnr());
         return new Organisasjon(org.getNavn(), org.organisasjonsnummer());
     }
 }

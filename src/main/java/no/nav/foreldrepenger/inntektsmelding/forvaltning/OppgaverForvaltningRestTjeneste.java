@@ -31,6 +31,8 @@ import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.Forespørsel
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.AutentisertMedAzure;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.Tilgangskontrollert;
 import no.nav.foreldrepenger.inntektsmelding.server.tilgangsstyring.Tilgang;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Saksnummer;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.SaksnummerDto;
 import no.nav.foreldrepenger.konfig.Environment;
@@ -70,7 +72,8 @@ public class OppgaverForvaltningRestTjeneste {
         @Parameter(description = "Informasjon om oppgaven") @Valid SlettOppgaveRequest inputDto) {
         sjekkAtKallerHarRollenDrift();
         LOG.info("Sletter oppgave med saksnummer {}", inputDto.saksnummer());
-        forespørselBehandlingTjeneste.slettForespørsel(inputDto.saksnummer(), inputDto.orgnr(), inputDto.stp());
+        forespørselBehandlingTjeneste.slettForespørsel(
+            Saksnummer.fra(inputDto.saksnummer().saksnr()), Arbeidsgiver.fra(inputDto.orgnr().orgnr()), inputDto.stp());
         return Response.status(Response.Status.ACCEPTED).build();
     }
 
@@ -109,7 +112,9 @@ public class OppgaverForvaltningRestTjeneste {
             return Response.ok().build();
         }
         LOG.info("Oppretter beskjed på oppgave med saksnummer {}", inputDto.fagsakSaksnummer());
-        var resultat = forespørselBehandlingTjeneste.opprettNyBeskjedMedEksternVarsling(inputDto.fagsakSaksnummer(), inputDto.orgnummer());
+        var resultat = forespørselBehandlingTjeneste.opprettNyBeskjedMedEksternVarsling(
+            Saksnummer.fra(inputDto.fagsakSaksnummer().saksnr()),
+            Arbeidsgiver.fra(inputDto.orgnummer().orgnr()));
         LOG.info("Resultat for opprett beskjed {}", resultat.name());
         return Response.ok(resultat).build();
     }

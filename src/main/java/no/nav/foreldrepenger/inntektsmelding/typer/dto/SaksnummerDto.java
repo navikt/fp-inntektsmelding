@@ -31,6 +31,6 @@ public record SaksnummerDto(
 
     @Override
     public String toString() {
-        return "FagsakSaksnummer[" + "saksnr=" + saksnr + ']';
+        return "FagsakSaksnummer[" + "saksnummer=" + saksnr + ']';
     }
 }

@@ -7,9 +7,6 @@ import static org.mockito.Mockito.when;
 import java.time.LocalDate;
 import java.util.List;
 
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
-import no.nav.vedtak.konfig.Tid;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,6 +15,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.foreldrepenger.inntektsmelding.pip.AltinnTilgangTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
+import no.nav.vedtak.konfig.Tid;
 
 @ExtendWith(MockitoExtension.class)
 class ArbeidstakerTjenesteTest {
@@ -99,7 +98,7 @@ class ArbeidstakerTjenesteTest {
     @Test
     void returnerer_organisasjoner_innsender_har_tilgang_til() {
         var organisasjoner = List.of("000000000", "000000001", "000000002");
-        var forventetListe = organisasjoner.stream().map(OrganisasjonsnummerDto::new).toList();
+        var forventetListe = organisasjoner.stream().map(Arbeidsgiver::new).toList();
 
         when(altinnTilgangTjenesteMock.hentBedrifterArbeidsgiverHarTilgangTil()).thenReturn(organisasjoner);
 

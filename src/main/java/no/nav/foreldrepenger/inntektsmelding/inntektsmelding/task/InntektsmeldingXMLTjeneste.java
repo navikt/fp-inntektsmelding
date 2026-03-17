@@ -36,7 +36,7 @@ class InntektsmeldingXMLTjeneste {
         var søkerIdent = personTjeneste.finnPersonIdentForAktørId(søkerAktørId);
         aktørIdIdentMap.put(søkerAktørId, søkerIdent);
 
-        var arbeidsgiver = inntektsmelding.getArbeidsgiver().ident();
+        var arbeidsgiver = inntektsmelding.getArbeidsgiver().orgnr();
         if (!OrganisasjonsnummerValidator.erGyldig(arbeidsgiver) && arbeidsgiver.length() == 13) {
             var arbeidsgiverAktørId = new AktørId(arbeidsgiver);
             var arbeidsgiverIdent = personTjeneste.finnPersonIdentForAktørId(arbeidsgiverAktørId);

@@ -7,6 +7,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
+
 import org.junit.jupiter.api.Test;
 
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.BortaltNaturalytelseEntitet;
@@ -18,7 +20,7 @@ import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Endringsårsak;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.NaturalytelseType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
-import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørId;
+import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
 
 class InntektsmeldingDtoMapperTest {
 
@@ -262,7 +264,7 @@ class InntektsmeldingDtoMapperTest {
             .medInntektsmeldingUuid(uuid)
             .medAktørId(aktørId)
             .medYtelse(Ytelsetype.FORELDREPENGER)
-            .medArbeidsgiver(new InntektsmeldingDto.Arbeidsgiver(ARBEIDSGIVER_IDENT))
+            .medArbeidsgiver(new Arbeidsgiver(ARBEIDSGIVER_IDENT))
             .medKontaktperson(new InntektsmeldingDto.Kontaktperson("11111111", "Test Testesen"))
             .medStartdato(START_DATO)
             .medInntekt(MÅNED_INNTEKT)
@@ -286,7 +288,7 @@ class InntektsmeldingDtoMapperTest {
         assertThat(dto.getInntektsmeldingUuid()).isEqualTo(uuid);
         assertThat(dto.getAktørId()).isEqualTo(aktørId);
         assertThat(dto.getYtelse()).isEqualTo(Ytelsetype.FORELDREPENGER);
-        assertThat(dto.getArbeidsgiver().ident()).isEqualTo(ARBEIDSGIVER_IDENT);
+        assertThat(dto.getArbeidsgiver().orgnr()).isEqualTo(ARBEIDSGIVER_IDENT);
         assertThat(dto.getKontaktperson().navn()).isEqualTo("Test Testesen");
         assertThat(dto.getKontaktperson().telefonnummer()).isEqualTo("11111111");
         assertThat(dto.getStartdato()).isEqualTo(START_DATO);
@@ -332,7 +334,7 @@ class InntektsmeldingDtoMapperTest {
 
     private InntektsmeldingEntitet.Builder lagBasisInntektsmeldingEntitetMedYtelse(Ytelsetype ytelsetype) {
         return InntektsmeldingEntitet.builder()
-            .medAktørId(new AktørId(AKTØR_ID))
+            .medAktørId(new AktørIdEntitet(AKTØR_ID))
             .medYtelsetype(ytelsetype)
             .medArbeidsgiverIdent(ARBEIDSGIVER_IDENT)
             .medStartDato(START_DATO)

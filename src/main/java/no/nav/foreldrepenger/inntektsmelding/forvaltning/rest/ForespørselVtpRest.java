@@ -15,6 +15,7 @@ import jakarta.ws.rs.core.Response;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Saksnummer;
 import no.nav.vedtak.exception.TekniskException;
 
 import org.slf4j.Logger;
@@ -63,7 +64,7 @@ public class ForespørselVtpRest {
             throw new TekniskException("FP_INNTEKTSMELDING_VTP", "Endepunkt for listing av forespørsler per sak skal kun brukes for verdikjedetesting, lokalt eller på github");
         }
         LOG.info("Mottok forespørsel om uuid for forespørsel for sak {}", saksnummer);
-        var forespørsler = forespørselBehandlingTjeneste.finnForespørslerForFagsak(saksnummer);
+        var forespørsler = forespørselBehandlingTjeneste.finnForespørslerForFagsak(Saksnummer.fra(saksnummer.saksnr()));
         return Response.ok(new ListForespørslerResponse(forespørsler)).build();
     }
 }

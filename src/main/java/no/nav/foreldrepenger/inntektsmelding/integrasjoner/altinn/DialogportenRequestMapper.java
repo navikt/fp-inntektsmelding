@@ -8,8 +8,8 @@ import java.util.UUID;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.LukkeÅrsak;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 
 public class DialogportenRequestMapper {
     private static final String ALTINN_RESSURS_PREFIX = "urn:altinn:resource:";
@@ -18,14 +18,14 @@ public class DialogportenRequestMapper {
         //statisk klasse
     }
 
-    public static DialogportenRequest opprettDialogRequest(OrganisasjonsnummerDto organisasjonsnummer,
+    public static DialogportenRequest opprettDialogRequest(Arbeidsgiver arbeidsgiver,
                                                            UUID forespørselUuid,
                                                            String sakstittel,
                                                            LocalDate førsteUttaksdato,
                                                            Ytelsetype ytelsetype,
                                                            String inntektsmeldingSkjemaLenke,
                                                            PersonIdent fødselsnummer) {
-        var party = String.format("urn:altinn:organization:identifier-no:%s", organisasjonsnummer.orgnr());
+        var party = String.format("urn:altinn:organization:identifier-no:%s", arbeidsgiver.orgnr());
         var altinnressursFP = ALTINN_RESSURS_PREFIX + AltinnRessurser.ALTINN_TRE_INNTEKTSMELDING_RESSURS;
 
         //Oppretter dialog
@@ -64,7 +64,7 @@ public class DialogportenRequestMapper {
     }
 
     public static List<DialogportenPatchRequest> opprettFerdigstillPatchRequest(String sakstittel,
-                                                                                OrganisasjonsnummerDto organisasjonsnummer,
+                                                                                Arbeidsgiver arbeidsgiver,
                                                                                 Ytelsetype ytelsetype,
                                                                                 LocalDate førsteUttaksdato,
                                                                                 Optional<UUID> inntektsmeldingUuid,
@@ -85,15 +85,15 @@ public class DialogportenRequestMapper {
             DialogportenPatchRequest.PATH_CONTENT,
             contentRequest);
 
-        var patchTransmission = inntektsmeldingMottattTransmission(organisasjonsnummer, inntektsmeldingUuid, årsak, inntektsmeldingSkjemaLenke, true);
+        var patchTransmission = inntektsmeldingMottattTransmission(arbeidsgiver, inntektsmeldingUuid, årsak, inntektsmeldingSkjemaLenke, true);
 
         return List.of(patchStatus, patchContent, patchTransmission);
     }
 
-    public static List<DialogportenPatchRequest> opprettInnsendtInntektsmeldingPatchRequest(OrganisasjonsnummerDto organisasjonsnummer,
+    public static List<DialogportenPatchRequest> opprettInnsendtInntektsmeldingPatchRequest(Arbeidsgiver arbeidsgiver,
                                                                                             Optional<UUID> inntektsmeldingUuid,
                                                                                             String inntektsmeldingSkjemaLenke) {
-        var patchTransmission = inntektsmeldingMottattTransmission(organisasjonsnummer,
+        var patchTransmission = inntektsmeldingMottattTransmission(arbeidsgiver,
             inntektsmeldingUuid,
             LukkeÅrsak.ORDINÆR_INNSENDING,
             inntektsmeldingSkjemaLenke,
@@ -102,10 +102,10 @@ public class DialogportenRequestMapper {
         return List.of(patchTransmission);
     }
 
-    private static DialogportenPatchRequest inntektsmeldingMottattTransmission(OrganisasjonsnummerDto organisasjonsnummer,
-                                                                        Optional<UUID> inntektsmeldingUuid,
-                                                                        LukkeÅrsak årsak,
-                                                                        String inntektsmeldingSkjemaLenke,
+    private static DialogportenPatchRequest inntektsmeldingMottattTransmission(Arbeidsgiver arbeidsgiver,
+                                                                               Optional<UUID> inntektsmeldingUuid,
+                                                                               LukkeÅrsak årsak,
+                                                                               String inntektsmeldingSkjemaLenke,
                                                                                boolean førsteInnsending) {
         //Ny transmission som sier at inntektsmelding er mottatt, og med en lenke til kvittering. Ekstern innsending har ingen kvittering.
         var mottattTekst = førsteInnsending ? "Inntektsmelding er mottatt" : "Oppdatert inntektsmelding er mottatt";
@@ -125,7 +125,7 @@ public class DialogportenRequestMapper {
             var attachment = new DialogportenRequest.Attachment(contentAttachement, List.of(urlApi, urlGui));
             return List.of(attachment);
         }).orElse(List.of());
-        var actorId = String.format("urn:altinn:organization:identifier-no:%s", organisasjonsnummer.orgnr());
+        var actorId = String.format("urn:altinn:organization:identifier-no:%s", arbeidsgiver.orgnr());
 
         var transmission = new DialogportenRequest.Transmission(DialogportenRequest.TransmissionType.Acceptance,
             DialogportenRequest.ExtendedType.INNTEKTSMELDING,

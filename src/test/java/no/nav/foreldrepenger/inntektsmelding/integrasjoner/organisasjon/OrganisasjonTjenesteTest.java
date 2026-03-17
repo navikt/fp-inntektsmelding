@@ -9,6 +9,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.vedtak.felles.integrasjon.organisasjon.OrganisasjonEReg;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,7 +34,7 @@ class OrganisasjonTjenesteTest {
         when(eregRestKlient.hentOrganisasjon(testOrgnr)).thenReturn(respons);
         when(respons.getNavn()).thenReturn(testNavn);
         when(respons.organisasjonsnummer()).thenReturn(testOrgnr);
-        var organisasjon = organisasjonTjeneste.finnOrganisasjonOptional(testOrgnr).orElseThrow();
+        var organisasjon = organisasjonTjeneste.finnOrganisasjonOptional(Arbeidsgiver.fra(testOrgnr)).orElseThrow();
 
         assertThat(organisasjon.navn()).isEqualTo(testNavn);
         assertThat(organisasjon.orgnr()).isEqualTo(testOrgnr);

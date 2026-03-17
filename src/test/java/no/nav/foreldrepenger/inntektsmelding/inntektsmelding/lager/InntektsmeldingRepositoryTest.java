@@ -14,7 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import no.nav.foreldrepenger.inntektsmelding.database.JpaExtension;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Endringsårsak;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
-import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørId;
+import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
 import no.nav.vedtak.felles.testutilities.db.EntityManagerAwareTest;
 import no.nav.vedtak.konfig.Tid;
 
@@ -32,7 +32,7 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
     void skal_lagre_inntektsmelding() {
         // Arrange
         var førLagring = InntektsmeldingEntitet.builder()
-            .medAktørId(new AktørId("9999999999999"))
+            .medAktørId(new AktørIdEntitet("9999999999999"))
             .medKontaktperson(new KontaktpersonEntitet("Testy test", "999999999"))
             .medYtelsetype(Ytelsetype.FORELDREPENGER)
             .medMånedInntekt(BigDecimal.valueOf(4000))
@@ -61,7 +61,7 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
         // Arrange
         var startdato = LocalDate.now();
         var førLagring = InntektsmeldingEntitet.builder()
-            .medAktørId(new AktørId("9999999999999"))
+            .medAktørId(new AktørIdEntitet("9999999999999"))
             .medKontaktperson(new KontaktpersonEntitet("Testy test", "999999999"))
             .medYtelsetype(Ytelsetype.FORELDREPENGER)
             .medMånedInntekt(BigDecimal.valueOf(4000))
@@ -104,7 +104,7 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
             .medBleKjentFra(LocalDate.now().plusDays(10))
             .build();
         var førLagring = InntektsmeldingEntitet.builder()
-            .medAktørId(new AktørId("9999999999999"))
+            .medAktørId(new AktørIdEntitet("9999999999999"))
             .medKontaktperson(new KontaktpersonEntitet("Testy test", "999999999"))
             .medYtelsetype(Ytelsetype.FORELDREPENGER)
             .medMånedInntekt(BigDecimal.valueOf(4000))
@@ -141,7 +141,7 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
     @Test
     void skal_hente_siste_inntektsmelding() {
         // Arrange
-        var aktørId = new AktørId("9999999999999");
+        var aktørId = new AktørIdEntitet("9999999999999");
         var arbeidsgiverIdent = "999999999";
         var startDato = LocalDate.now();
 
@@ -184,7 +184,7 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
     @Test
     void skal_hente_alle_im_for_forespørsel() {
         // Arrange
-        var aktørId = new AktørId("9999999999999");
+        var aktørId = new AktørIdEntitet("9999999999999");
         var arbeidsgiverIdent = "999999999";
         var startDato = LocalDate.now();
 
@@ -202,7 +202,7 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
             .build();
 
         var im2 = InntektsmeldingEntitet.builder()
-            .medAktørId(new AktørId("1234567891111"))
+            .medAktørId(new AktørIdEntitet("1234567891111"))
             .medKontaktperson(new KontaktpersonEntitet("Andre", "999999999"))
             .medYtelsetype(Ytelsetype.FORELDREPENGER)
             .medMånedInntekt(BigDecimal.valueOf(4000))
@@ -258,7 +258,7 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
     void skal_hente_inntektsmelding_fra_uuid() {
         // Arrange
         var førLagring = InntektsmeldingEntitet.builder()
-            .medAktørId(new AktørId("9999999999999"))
+            .medAktørId(new AktørIdEntitet("9999999999999"))
             .medKontaktperson(new KontaktpersonEntitet("Testy test", "999999999"))
             .medYtelsetype(Ytelsetype.FORELDREPENGER)
             .medMånedInntekt(BigDecimal.valueOf(4000))

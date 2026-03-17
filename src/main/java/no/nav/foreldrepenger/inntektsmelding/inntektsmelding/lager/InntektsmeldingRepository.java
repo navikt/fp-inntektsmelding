@@ -10,7 +10,7 @@ import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
-import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørId;
+import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
 
 @Dependent
 public class InntektsmeldingRepository {
@@ -33,11 +33,11 @@ public class InntektsmeldingRepository {
     }
 
     //TODO: Denne brukes kun til test - vurder fjerning
-    public Optional<InntektsmeldingEntitet> hentSisteInntektsmelding(AktørId aktørId, String arbeidsgiverIdent, LocalDate startDato, Ytelsetype ytelsetype) {
+    public Optional<InntektsmeldingEntitet> hentSisteInntektsmelding(AktørIdEntitet aktørId, String arbeidsgiverIdent, LocalDate startDato, Ytelsetype ytelsetype) {
         return hentInntektsmeldingerSortertNyesteFørst(aktørId, arbeidsgiverIdent,  startDato, ytelsetype).stream().findFirst();
     }
 
-    public List<InntektsmeldingEntitet> hentInntektsmeldingerSortertNyesteFørst(AktørId aktørId, String arbeidsgiverIdent, LocalDate startDato, Ytelsetype ytelsetype) {
+    public List<InntektsmeldingEntitet> hentInntektsmeldingerSortertNyesteFørst(AktørIdEntitet aktørId, String arbeidsgiverIdent, LocalDate startDato, Ytelsetype ytelsetype) {
         var query = entityManager.createQuery(
                 "FROM InntektsmeldingEntitet where aktørId = :brukerAktørId and ytelsetype = :ytelsetype and arbeidsgiverIdent = :arbeidsgiverIdent and startDato = :startDato order by opprettetTidspunkt desc",
                 InntektsmeldingEntitet.class)

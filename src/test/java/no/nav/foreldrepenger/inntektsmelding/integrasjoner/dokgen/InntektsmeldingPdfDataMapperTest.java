@@ -20,6 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonInfo;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.NaturalytelseType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
@@ -30,7 +31,7 @@ class InntektsmeldingPdfDataMapperTest {
     private static final String FORNAVN = "Test";
     private static final String MELLOMNAVN = "Tester";
     private static final String ETTERNAVN = "Testesen";
-    private static final String ARBEIDSGIVER_IDENT = "999999999";
+    private static final Arbeidsgiver ARBEIDSGIVER_IDENT = Arbeidsgiver.fra("999999999");
     private static final String ARBEIDSGIVER_NAVN = "Arbeidsgvier 1";
     private static final String NAVN = "Kontaktperson navn";
     private static final String ORG_NUMMER = "999999999";
@@ -62,7 +63,7 @@ class InntektsmeldingPdfDataMapperTest {
 
         var pdfData = InntektsmeldingPdfDataMapper.mapInntektsmeldingPdfData(inntektsmeldingDto, ARBEIDSGIVER_NAVN, personInfo, ARBEIDSGIVER_IDENT, ForespørselType.BESTILT_AV_FAGSYSTEM);
 
-        assertThat(pdfData.getArbeidsgiverIdent()).isEqualTo(ARBEIDSGIVER_IDENT);
+        assertThat(pdfData.getArbeidsgiverIdent()).isEqualTo(ARBEIDSGIVER_IDENT.orgnr());
         assertThat(pdfData.getAvsenderSystem()).isEqualTo("NAV_NO");
         assertThat(pdfData.getArbeidsgiverNavn()).isEqualTo(ARBEIDSGIVER_NAVN);
         assertThat(pdfData.getKontaktperson().navn()).isEqualTo(NAVN);
@@ -252,7 +253,7 @@ class InntektsmeldingPdfDataMapperTest {
             .medMånedRefusjon(REFUSJON_BELØP)
             .medOpphørsdatoRefusjon(Tid.TIDENES_ENDE)
             .medInnsendtTidspunkt(OPPRETTETT_TIDSPUNKT)
-            .medArbeidsgiver(new InntektsmeldingDto.Arbeidsgiver(ARBEIDSGIVER_IDENT))
+            .medArbeidsgiver(ARBEIDSGIVER_IDENT)
             .medSøkteRefusjonsperioder(List.of())
             .medBortfaltNaturalytelsePerioder(List.of())
             .medEndringAvInntektÅrsaker(List.of());

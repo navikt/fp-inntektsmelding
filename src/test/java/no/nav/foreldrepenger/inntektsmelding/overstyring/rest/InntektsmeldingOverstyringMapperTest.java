@@ -45,7 +45,7 @@ class InntektsmeldingOverstyringMapperTest {
         // Assert
         assertThat(dto).isNotNull();
         assertThat(dto.getAktørId().getAktørId()).isEqualTo("9999999999999");
-        assertThat(dto.getArbeidsgiver().ident()).isEqualTo("999999999");
+        assertThat(dto.getArbeidsgiver().orgnr()).isEqualTo("999999999");
         assertThat(dto.getMånedInntekt()).isEqualByComparingTo(BigDecimal.valueOf(5000));
         assertThat(dto.getMånedRefusjon()).isEqualByComparingTo(BigDecimal.valueOf(5000));
         assertThat(dto.getStartdato()).isEqualTo(stp);
@@ -65,9 +65,10 @@ class InntektsmeldingOverstyringMapperTest {
     void skal_teste_dto_mapping_uten_refusjonsendringer() {
         // Arrange
         var stp = LocalDate.now();
+        var orgnr = "999999999";
         var request = new SendOverstyrtInntektsmeldingRequestDto(new AktørIdDto("9999999999999"),
             YtelseTypeDto.FORELDREPENGER,
-            new ArbeidsgiverDto("999999999"),
+            new ArbeidsgiverDto(orgnr),
             stp,
             BigDecimal.valueOf(5000),
             BigDecimal.valueOf(5000),
@@ -83,6 +84,7 @@ class InntektsmeldingOverstyringMapperTest {
         assertThat(dto).isNotNull();
         assertThat(dto.getSøkteRefusjonsperioder()).isEmpty();
         assertThat(dto.getOpphørsdatoRefusjon()).isEqualTo(java.time.LocalDate.of(9999, 12, 31));
+        assertThat(dto.getArbeidsgiver().orgnr()).isEqualTo(orgnr);
     }
 
     @Test
@@ -109,7 +111,7 @@ class InntektsmeldingOverstyringMapperTest {
 
         // Assert - verify equivalent data
         assertThat(dto.getAktørId().getAktørId()).isEqualTo(entitet.getAktørId().getAktørId());
-        assertThat(dto.getArbeidsgiver().ident()).isEqualTo(entitet.getArbeidsgiverIdent());
+        assertThat(dto.getArbeidsgiver().orgnr()).isEqualTo(entitet.getArbeidsgiverIdent());
         assertThat(dto.getMånedInntekt()).isEqualByComparingTo(entitet.getMånedInntekt());
         assertThat(dto.getStartdato()).isEqualTo(entitet.getStartDato());
         assertThat(dto.getYtelse()).isEqualTo(entitet.getYtelsetype());

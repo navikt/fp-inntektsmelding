@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-class AktørIdTest {
+class AktørIdEntitetTest {
 
     private static final String GYLDIG_AKTØR_ID = "1234567890123";
 

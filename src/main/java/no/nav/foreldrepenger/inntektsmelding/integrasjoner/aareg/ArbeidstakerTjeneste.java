@@ -1,20 +1,18 @@
 package no.nav.foreldrepenger.inntektsmelding.integrasjoner.aareg;
 
+import java.time.LocalDate;
+import java.util.Collections;
+import java.util.List;
+
 import jakarta.enterprise.context.ApplicationScoped;
-
 import jakarta.inject.Inject;
-
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.foreldrepenger.inntektsmelding.pip.AltinnTilgangTjeneste;
-
-import java.time.LocalDate;
-import java.util.Collections;
-import java.util.List;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 
 @ApplicationScoped
 public class ArbeidstakerTjeneste {
@@ -53,9 +51,9 @@ public class ArbeidstakerTjeneste {
         return arbeidsforholdArbeidsgiverHarTilgangTil;
     }
 
-    public List<OrganisasjonsnummerDto> finnOrganisasjonerArbeidsgiverHarTilgangTil(PersonIdent ident) {
+    public List<Arbeidsgiver> finnOrganisasjonerArbeidsgiverHarTilgangTil(PersonIdent ident) {
         var organisasjoner = altinnTilgangTjeneste.hentBedrifterArbeidsgiverHarTilgangTil().stream()
-            .map(OrganisasjonsnummerDto::new)
+            .map(Arbeidsgiver::new)
             .toList();
 
         LOG.info("Arbeidsgiver har tilgang til følgende organisasjoner {} for {}", organisasjoner, ident);

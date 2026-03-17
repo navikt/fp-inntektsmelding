@@ -9,6 +9,7 @@ import jakarta.inject.Inject;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.InntektsmeldingRepository;
+import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
 
 @Dependent
 public class InntektsmeldingTjeneste {
@@ -40,10 +41,10 @@ public class InntektsmeldingTjeneste {
             .orElseThrow(
                 () -> new IllegalStateException("Prøver å hente data for en forespørsel som ikke finnes, forespørselUUID: " + forespørselUuid));
 
-        return inntektsmeldingRepository.hentInntektsmeldingerSortertNyesteFørst(forespørsel.getAktørId(),
-                forespørsel.getOrganisasjonsnummer(),
-                forespørsel.getFørsteUttaksdato(),
-                forespørsel.getYtelseType())
+        return inntektsmeldingRepository.hentInntektsmeldingerSortertNyesteFørst(new AktørIdEntitet(forespørsel.aktørId().getAktørId()),
+                forespørsel.arbeidsgiver().orgnr(),
+                forespørsel.førsteUttaksdato(),
+                forespørsel.ytelseType())
             .stream().map(InntektsmeldingDtoMapper::mapFraEntitet).toList();
     }
 

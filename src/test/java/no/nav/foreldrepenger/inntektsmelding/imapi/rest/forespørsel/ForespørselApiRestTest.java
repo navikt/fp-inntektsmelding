@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.ForespørselDto;
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.ForespørselApiResponseDto;
 
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,12 +43,12 @@ class ForespørselApiRestTest {
         var førsteUttaksdato = LocalDate.now();
         var skjæringstidspunkt = LocalDate.now();
         var forespørselUuid = UUID.randomUUID();
-        var forventetForespørselDto = new ForespørselDto(forespørselUuid,
+        var forventetForespørselDto = new ForespørselApiResponseDto(forespørselUuid,
             orgnummer,
             "11111111111",
             førsteUttaksdato,
             skjæringstidspunkt,
-            ForespørselDto.Status.UNDER_BEHANDLING,
+            ForespørselApiResponseDto.Status.UNDER_BEHANDLING,
             YtelseType.FORELDREPENGER,
             LocalDateTime.now());
 

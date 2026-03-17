@@ -23,7 +23,7 @@ import jakarta.persistence.Table;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
-import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørId;
+import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
 
 @SequenceGenerator(name = "GLOBAL_PK_SEQ_GENERATOR", sequenceName = "SEQ_GLOBAL_PK")
 @Entity(name = "ForespørselEntitet")
@@ -58,7 +58,7 @@ public class ForespørselEntitet {
 
     @Embedded
     @AttributeOverrides(@AttributeOverride(name = "aktørId", column = @Column(name = "bruker_aktoer_id", nullable = false, updatable = false)))
-    private AktørId aktørId;
+    private AktørIdEntitet aktørId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "ytelse_type", nullable = false, updatable = false)
@@ -82,7 +82,7 @@ public class ForespørselEntitet {
 
     public ForespørselEntitet(String organisasjonsnummer,
                               LocalDate skjæringstidspunkt,
-                              AktørId aktørId,
+                              AktørIdEntitet aktørId,
                               Ytelsetype ytelseType,
                               String fagsystemSaksnummer,
                               LocalDate førsteUttaksdato,
@@ -155,7 +155,7 @@ public class ForespørselEntitet {
         return Optional.ofNullable(skjæringstidspunkt);
     }
 
-    public AktørId getAktørId() {
+    public AktørIdEntitet getAktørId() {
         return aktørId;
     }
 
@@ -185,10 +185,6 @@ public class ForespørselEntitet {
 
     public Optional<UUID> getDialogportenUuid() {
         return Optional.ofNullable(dialogportenUuid);
-    }
-
-    public boolean erArbeidsgiverInitiertNyansatt() {
-        return ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT.equals(forespørselType);
     }
 
     @Override

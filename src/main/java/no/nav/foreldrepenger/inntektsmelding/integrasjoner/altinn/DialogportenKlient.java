@@ -12,8 +12,8 @@ import jakarta.enterprise.context.ApplicationScoped;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.LukkeÅrsak;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.foreldrepenger.konfig.Environment;
 import no.nav.vedtak.exception.IntegrasjonException;
 import no.nav.vedtak.felles.integrasjon.rest.RestClient;
@@ -44,13 +44,13 @@ public class DialogportenKlient {
     }
 
     public String opprettDialog(UUID forespørselUuid,
-                                OrganisasjonsnummerDto orgnr,
+                                Arbeidsgiver arbeidsgiver,
                                 String sakstittel,
                                 LocalDate førsteUttaksdato,
                                 Ytelsetype ytelsetype,
                                 PersonIdent fødselsnummer) {
         var target = URI.create(restConfig.endpoint().toString() + "/dialogporten/api/v1/serviceowner/dialogs");
-        var opprettRequest = DialogportenRequestMapper.opprettDialogRequest(orgnr,
+        var opprettRequest = DialogportenRequestMapper.opprettDialogRequest(arbeidsgiver,
             forespørselUuid,
             sakstittel,
             førsteUttaksdato,
@@ -65,14 +65,14 @@ public class DialogportenKlient {
     }
 
     public void ferdigstillDialog(UUID dialogUuid,
-                                  OrganisasjonsnummerDto orgnr,
+                                  Arbeidsgiver arbeidsgiver,
                                   String sakstittel,
                                   Ytelsetype ytelsetype,
                                   LocalDate førsteUttaksdato,
                                   Optional<UUID> inntektsmeldingUuid,
                                   LukkeÅrsak lukkeÅrsak) {
         var patchRequestFerdig = DialogportenRequestMapper.opprettFerdigstillPatchRequest(sakstittel,
-            orgnr,
+            arbeidsgiver,
             ytelsetype,
             førsteUttaksdato,
             inntektsmeldingUuid,
@@ -82,10 +82,10 @@ public class DialogportenKlient {
     }
 
     public void oppdaterDialogMedEndretInntektsmelding(UUID dialogUuid,
-                                                       OrganisasjonsnummerDto orgnr,
+                                                       Arbeidsgiver arbeidsgiver,
                                                        Optional<UUID> inntektsmeldingUuid) {
         var patchRequestInnsendt = DialogportenRequestMapper.opprettInnsendtInntektsmeldingPatchRequest(
-            orgnr,
+            arbeidsgiver,
             inntektsmeldingUuid,
             inntektsmeldingSkjemaLenke);
         sendPatchRequest(dialogUuid, patchRequestInnsendt);

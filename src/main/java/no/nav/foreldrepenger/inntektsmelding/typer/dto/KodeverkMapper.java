@@ -12,7 +12,7 @@ public class KodeverkMapper {
         // Skjuler default konstruktør
     }
 
-    public static NaturalytelseType mapNaturalytelseTilEntitet(NaturalytelsetypeDto dto) {
+    public static NaturalytelseType mapNaturalytelseTilDomene(NaturalytelsetypeDto dto) {
         return switch (dto) {
             case ELEKTRISK_KOMMUNIKASJON -> NaturalytelseType.ELEKTRISK_KOMMUNIKASJON;
             case AKSJER_GRUNNFONDSBEVIS_TIL_UNDERKURS -> NaturalytelseType.AKSJER_GRUNNFONDSBEVIS_TIL_UNDERKURS;
@@ -103,15 +103,11 @@ public class KodeverkMapper {
     }
 
     public static ArbeidsgiverinitiertÅrsak mapArbeidsgiverinitiertÅrsak(ArbeidsgiverinitiertÅrsakDto arbeidsgiverinitiertÅrsakDto) {
-        switch (arbeidsgiverinitiertÅrsakDto) {
-            case NYANSATT -> {
-                return ArbeidsgiverinitiertÅrsak.NYANSATT;
-            }
-            case UREGISTRERT -> {
-                return ArbeidsgiverinitiertÅrsak.UREGISTRERT;
-            }
+        return switch (arbeidsgiverinitiertÅrsakDto) {
+            case NYANSATT -> ArbeidsgiverinitiertÅrsak.NYANSATT;
+            case UREGISTRERT ->  ArbeidsgiverinitiertÅrsak.UREGISTRERT;
             case null -> throw new NullPointerException("Mangler årsak for arbeidsgiverinitiert inntektsmelding");
-        }
+        };
     }
 
 }

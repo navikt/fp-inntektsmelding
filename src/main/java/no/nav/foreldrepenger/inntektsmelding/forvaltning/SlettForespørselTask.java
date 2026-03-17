@@ -1,21 +1,20 @@
 package no.nav.foreldrepenger.inntektsmelding.forvaltning;
 
+import java.util.Optional;
+import java.util.UUID;
+
 import jakarta.enterprise.context.ApplicationScoped;
-
 import jakarta.inject.Inject;
-
-import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.SaksnummerDto;
-import no.nav.vedtak.felles.prosesstask.api.ProsessTask;
-import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
-import no.nav.vedtak.felles.prosesstask.api.ProsessTaskHandler;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Optional;
-import java.util.UUID;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Saksnummer;
+import no.nav.vedtak.felles.prosesstask.api.ProsessTask;
+import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
+import no.nav.vedtak.felles.prosesstask.api.ProsessTaskHandler;
 
 @ApplicationScoped
 @ProsessTask(value = "slettForesporsel", maxFailedRuns = 1)
@@ -38,16 +37,16 @@ public class SlettForespørselTask implements ProsessTaskHandler {
         var forespørselUuid = Optional.ofNullable(prosessTaskData.getPropertyValue(FORESPØRSEL_UUID)).map(String::valueOf).orElseThrow();
         var forespørsel = forespørselBehandlingTjeneste.hentForespørsel(UUID.fromString(forespørselUuid)).orElseThrow();
 
-        var stp = forespørsel.getSkjæringstidspunkt().orElseThrow();
-        forespørselBehandlingTjeneste.slettForespørsel(new SaksnummerDto(forespørsel.getFagsystemSaksnummer().orElseThrow()),
-            new OrganisasjonsnummerDto(forespørsel.getOrganisasjonsnummer()),
+        var stp = forespørsel.skjæringstidspunkt();
+        forespørselBehandlingTjeneste.slettForespørsel(Saksnummer.fra(forespørsel.fagsystemSaksnummer()),
+            Arbeidsgiver.fra(forespørsel.arbeidsgiver().orgnr()),
             stp);
-        var saksnummer = forespørsel.getFagsystemSaksnummer().orElse(null);
+        var saksnummer = forespørsel.fagsystemSaksnummer();
         LOG.info("FEILAKTIGE_FORESPØRSLER: Forespørsel {} med oppgaveid {} for saksnummer {} med orgnummer {} og skjæringstidspunkt {} er slettet",
-            forespørsel.getUuid(),
-            Optional.ofNullable(forespørsel.getOppgaveId()),
+            forespørsel.uuid(),
+            forespørsel.oppgaveId(),
             saksnummer,
-            forespørsel.getOrganisasjonsnummer(),
+            forespørsel.arbeidsgiver().orgnr(),
             stp);
     }
 }

@@ -9,6 +9,8 @@ import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.Inntektsmeldi
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.KontaktpersonEntitet;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.RefusjonsendringEntitet;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
+import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
 
 public class InntektsmeldingDtoMapper {
 
@@ -24,7 +26,7 @@ public class InntektsmeldingDtoMapper {
             .medInntektsmeldingUuid(entitet.getUuid().orElseThrow()) // siden vi søker med uuid, så skal denne alltid være satt
             .medAktørId(new AktørId(entitet.getAktørId().getAktørId()))
             .medYtelse(entitet.getYtelsetype())
-            .medArbeidsgiver(new InntektsmeldingDto.Arbeidsgiver(entitet.getArbeidsgiverIdent()))
+            .medArbeidsgiver(new Arbeidsgiver(entitet.getArbeidsgiverIdent()))
             .medKontaktperson(mapKontaktperson(entitet))
             .medStartdato(entitet.getStartDato())
             .medInntekt(entitet.getMånedInntekt())
@@ -73,9 +75,9 @@ public class InntektsmeldingDtoMapper {
 
     public static InntektsmeldingEntitet mapTilEntitet(InntektsmeldingDto inntektsmeldingDto) {
         return InntektsmeldingEntitet.builder()
-            .medAktørId(new no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørId(inntektsmeldingDto.getAktørId().getAktørId()))
+            .medAktørId(new AktørIdEntitet(inntektsmeldingDto.getAktørId().getAktørId()))
             .medYtelsetype(inntektsmeldingDto.getYtelse())
-            .medArbeidsgiverIdent(inntektsmeldingDto.getArbeidsgiver().ident())
+            .medArbeidsgiverIdent(inntektsmeldingDto.getArbeidsgiver().orgnr())
             .medKontaktperson(new KontaktpersonEntitet(inntektsmeldingDto.getKontaktperson().navn(), inntektsmeldingDto.getKontaktperson().telefonnummer()))
             .medStartDato(inntektsmeldingDto.getStartdato())
             .medMånedInntekt(inntektsmeldingDto.getMånedInntekt())

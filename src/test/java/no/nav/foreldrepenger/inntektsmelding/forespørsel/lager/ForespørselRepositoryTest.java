@@ -5,12 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.LocalDate;
 import java.util.UUID;
 
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
-
-import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørId;
-
-import no.nav.vedtak.konfig.Tid;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,7 +12,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import no.nav.foreldrepenger.inntektsmelding.database.JpaExtension;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
+import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
 import no.nav.vedtak.felles.testutilities.db.EntityManagerAwareTest;
+import no.nav.vedtak.konfig.Tid;
 
 @ExtendWith(JpaExtension.class)
 class ForespørselRepositoryTest extends EntityManagerAwareTest {
@@ -30,9 +26,15 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
         this.forespørselRepository = new ForespørselRepository(getEntityManager());
     }
 
+    private UUID lagreForespørsel(LocalDate skjæringstidspunkt, Ytelsetype ytelsetype, String aktørId, String orgnr, String saksnummer,
+                                  LocalDate førsteUttaksdato, ForespørselType type) {
+        return forespørselRepository.lagreForespørsel(
+            new ForespørselEntitet(orgnr, skjæringstidspunkt, new AktørIdEntitet(aktørId), ytelsetype, saksnummer, førsteUttaksdato, type));
+    }
+
     @Test
     void skal_lagre_arbeidsgiverinitiert_forespørsel() {
-        var uuid = forespørselRepository.lagreForespørsel(null,
+        var uuid = lagreForespørsel(null,
             Ytelsetype.FORELDREPENGER,
             "9999999999999",
             "999999999",
@@ -53,7 +55,7 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
 
     @Test
     void skal_lagre_forespørsel_bestilt_fra_fagsystem() {
-        var uuid = forespørselRepository.lagreForespørsel(LocalDate.now(),
+        var uuid = lagreForespørsel(LocalDate.now(),
             Ytelsetype.FORELDREPENGER,
             "9999999999999",
             "999999999",
@@ -73,7 +75,7 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
 
     @Test
     void skal_lagre_forespørsel_og_oppdatere_med_dialogporten_uuid() {
-        var uuid = forespørselRepository.lagreForespørsel(LocalDate.now(),
+        var uuid = lagreForespørsel(LocalDate.now(),
             Ytelsetype.FORELDREPENGER,
             "9999999999999",
             "999999999",
@@ -99,20 +101,20 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
     @Test
     void skal_søke_på_forespørsler_når_kun_orgnr_oppgitt() {
         var orgnr = "999999999";
-        forespørselRepository.lagreForespørsel(LocalDate.now(),
+        lagreForespørsel(LocalDate.now(),
             Ytelsetype.FORELDREPENGER,
             "9999999999999",
             orgnr,
             "123",
             LocalDate.now(), ForespørselType.BESTILT_AV_FAGSYSTEM);
-        forespørselRepository.lagreForespørsel(LocalDate.now(),
+        lagreForespørsel(LocalDate.now(),
             Ytelsetype.SVANGERSKAPSPENGER,
             "9999999999999",
             orgnr,
             "123",
             LocalDate.now(), ForespørselType.BESTILT_AV_FAGSYSTEM);
 
-        var forespørsler = forespørselRepository.hentForespørslerFraFilter(new OrganisasjonsnummerDto(orgnr), null, null, null, null, null);
+        var forespørsler = forespørselRepository.hentForespørslerFraFilter(orgnr, null, null, null, null, null);
 
         assertThat(forespørsler).hasSize(2);
     }
@@ -120,21 +122,21 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
     @Test
     void skal_søke_på_forespørsler_når_kun_orgnr_og_ytelse_oppgitt() {
         var orgnr = "999999999";
-        forespørselRepository.lagreForespørsel(LocalDate.now(),
+        lagreForespørsel(LocalDate.now(),
             Ytelsetype.FORELDREPENGER,
             "9999999999999",
             orgnr,
             "123",
             LocalDate.now(), ForespørselType.BESTILT_AV_FAGSYSTEM);
 
-        forespørselRepository.lagreForespørsel(LocalDate.now(),
+        lagreForespørsel(LocalDate.now(),
             Ytelsetype.SVANGERSKAPSPENGER,
             "9999999999999",
             orgnr,
             "123",
             LocalDate.now(), ForespørselType.BESTILT_AV_FAGSYSTEM);
 
-        var forespørsler = forespørselRepository.hentForespørslerFraFilter(new OrganisasjonsnummerDto(orgnr), null, null, Ytelsetype.SVANGERSKAPSPENGER, null, null);
+        var forespørsler = forespørselRepository.hentForespørslerFraFilter(orgnr, null, null, Ytelsetype.SVANGERSKAPSPENGER, null, null);
 
         assertThat(forespørsler).hasSize(1);
     }
@@ -142,28 +144,28 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
     @Test
     void skal_søke_på_forespørsler_når_kun_orgnr_og_aktørId_er_oppgitt() {
         var orgnr = "999999999";
-        forespørselRepository.lagreForespørsel(LocalDate.now(),
+        lagreForespørsel(LocalDate.now(),
             Ytelsetype.FORELDREPENGER,
             "9999999999999",
             orgnr,
             "123",
             LocalDate.now(), ForespørselType.BESTILT_AV_FAGSYSTEM);
 
-        forespørselRepository.lagreForespørsel(LocalDate.now(),
+        lagreForespørsel(LocalDate.now(),
             Ytelsetype.SVANGERSKAPSPENGER,
             "8888888888888",
             orgnr,
             "123",
             LocalDate.now(), ForespørselType.BESTILT_AV_FAGSYSTEM);
 
-        forespørselRepository.lagreForespørsel(LocalDate.now(),
+        lagreForespørsel(LocalDate.now(),
             Ytelsetype.FORELDREPENGER,
             "8888888888888",
             orgnr,
             "123",
             LocalDate.now(), ForespørselType.BESTILT_AV_FAGSYSTEM);
 
-        var forespørsler = forespørselRepository.hentForespørslerFraFilter(new OrganisasjonsnummerDto(orgnr), new AktørId("8888888888888"), null, null, null, null);
+        var forespørsler = forespørselRepository.hentForespørslerFraFilter(orgnr, new AktørIdEntitet("8888888888888"), null, null, null, null);
 
         assertThat(forespørsler).hasSize(2);
     }
@@ -171,21 +173,21 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
     @Test
     void skal_søke_på_intervall() {
         var orgnr = "999999999";
-        forespørselRepository.lagreForespørsel(LocalDate.now(),
+        lagreForespørsel(LocalDate.now(),
             Ytelsetype.FORELDREPENGER,
             "9999999999999",
             orgnr,
             "123",
             LocalDate.now(), ForespørselType.BESTILT_AV_FAGSYSTEM);
 
-        forespørselRepository.lagreForespørsel(LocalDate.now(),
+        lagreForespørsel(LocalDate.now(),
             Ytelsetype.SVANGERSKAPSPENGER,
             "8888888888888",
             orgnr,
             "123",
             LocalDate.now(), ForespørselType.BESTILT_AV_FAGSYSTEM);
 
-        var forespørsler = forespørselRepository.hentForespørslerFraFilter(new OrganisasjonsnummerDto(orgnr), null, null, null,
+        var forespørsler = forespørselRepository.hentForespørslerFraFilter(orgnr, null, null, null,
             Tid.TIDENES_BEGYNNELSE, Tid.TIDENES_ENDE);
 
         assertThat(forespørsler).hasSize(2);
@@ -194,21 +196,21 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
     @Test
     void skal_søke_på_intervall_med_0_resultat() {
         var orgnr = "999999999";
-        forespørselRepository.lagreForespørsel(LocalDate.now(),
+        lagreForespørsel(LocalDate.now(),
             Ytelsetype.FORELDREPENGER,
             "9999999999999",
             orgnr,
             "123",
             LocalDate.now(), ForespørselType.BESTILT_AV_FAGSYSTEM);
 
-        forespørselRepository.lagreForespørsel(LocalDate.now(),
+        lagreForespørsel(LocalDate.now(),
             Ytelsetype.SVANGERSKAPSPENGER,
             "8888888888888",
             orgnr,
             "123",
             LocalDate.now(), ForespørselType.BESTILT_AV_FAGSYSTEM);
 
-        var forespørsler = forespørselRepository.hentForespørslerFraFilter(new OrganisasjonsnummerDto(orgnr), null, null, null,
+        var forespørsler = forespørselRepository.hentForespørslerFraFilter(orgnr, null, null, null,
             LocalDate.now().plusDays(7), Tid.TIDENES_ENDE);
 
         assertThat(forespørsler).isEmpty();
@@ -217,28 +219,28 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
     @Test
     void skal_søke_på_åpent_intervall() {
         var orgnr = "999999999";
-        forespørselRepository.lagreForespørsel(LocalDate.now(),
+        lagreForespørsel(LocalDate.now(),
             Ytelsetype.FORELDREPENGER,
             "9999999999999",
             orgnr,
             "123",
             LocalDate.now(), ForespørselType.BESTILT_AV_FAGSYSTEM);
 
-        forespørselRepository.lagreForespørsel(LocalDate.now(),
+        lagreForespørsel(LocalDate.now(),
             Ytelsetype.SVANGERSKAPSPENGER,
             "8888888888888",
             orgnr,
             "111",
             LocalDate.now(), ForespørselType.BESTILT_AV_FAGSYSTEM);
 
-        forespørselRepository.lagreForespørsel(LocalDate.now(),
+        lagreForespørsel(LocalDate.now(),
             Ytelsetype.FORELDREPENGER,
             "7777777777777",
             orgnr,
             "321",
             LocalDate.now(), ForespørselType.BESTILT_AV_FAGSYSTEM);
 
-        var forespørsler = forespørselRepository.hentForespørslerFraFilter(new OrganisasjonsnummerDto(orgnr), null, null, null,
+        var forespørsler = forespørselRepository.hentForespørslerFraFilter(orgnr, null, null, null,
             null, LocalDate.now().plusDays(7));
 
         assertThat(forespørsler).hasSize(3);

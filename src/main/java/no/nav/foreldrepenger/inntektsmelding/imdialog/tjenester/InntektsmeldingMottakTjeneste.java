@@ -9,10 +9,14 @@ import jakarta.inject.Inject;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingTjeneste;
 
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
+
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.LukkeÅrsak;
 import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.InntektsmeldingResponseDto;
@@ -24,8 +28,6 @@ import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.metrikker.MetrikkerTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.KodeverkMapper;
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
-import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørId;
 import no.nav.vedtak.exception.TekniskException;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskTjeneste;
@@ -54,31 +56,34 @@ public class InntektsmeldingMottakTjeneste {
     }
 
     public InntektsmeldingResponseDto mottaInntektsmelding(SendInntektsmeldingRequestDto mottattInntektsmeldingDto) {
-        var forespørselEntitet = forespørselBehandlingTjeneste.hentForespørsel(mottattInntektsmeldingDto.foresporselUuid())
+        var forespørsel = forespørselBehandlingTjeneste.hentForespørsel(mottattInntektsmeldingDto.foresporselUuid())
             .orElseThrow(this::manglerForespørselFeil);
 
-        if (ForespørselStatus.UTGÅTT.equals(forespørselEntitet.getStatus())) {
+        if (ForespørselStatus.UTGÅTT.equals(forespørsel.status())) {
             throw new IllegalStateException("Kan ikke motta nye inntektsmeldinger på utgåtte forespørsler");
         }
 
         var inntektsmeldingDto = InntektsmeldingMapper.mapTilDto(mottattInntektsmeldingDto);
 
-        var lagretIm = lagreOgJournalførInntektsmelding(inntektsmeldingDto, forespørselEntitet);
-        var orgnummer = new OrganisasjonsnummerDto(mottattInntektsmeldingDto.arbeidsgiverIdent().orgnr());
+        var lagretIm = lagreOgJournalførInntektsmelding(inntektsmeldingDto, forespørsel);
         //Ferdigstiller forespørsel hvis den ikke er ferdig fra før
-        if (!forespørselEntitet.getStatus().equals(ForespørselStatus.FERDIG)) {
+
+        var arbeidsgiver = Arbeidsgiver.fra(mottattInntektsmeldingDto.arbeidsgiverIdent().ident());
+        if (!forespørsel.status().equals(ForespørselStatus.FERDIG)) {
             var aktørId = new AktørId(mottattInntektsmeldingDto.aktorId().id());
-            var ferdigstiltForespørsel = forespørselBehandlingTjeneste.ferdigstillForespørsel(mottattInntektsmeldingDto.foresporselUuid(), aktørId, orgnummer,
+            var ferdigstiltForespørsel = forespørselBehandlingTjeneste.ferdigstillForespørsel(mottattInntektsmeldingDto.foresporselUuid(), aktørId,
+                arbeidsgiver,
                 mottattInntektsmeldingDto.startdato(), LukkeÅrsak.ORDINÆR_INNSENDING, Optional.ofNullable(lagretIm.getInntektsmeldingUuid()));
             MetrikkerTjeneste.loggForespørselLukkIntern(ferdigstiltForespørsel);
         } else {
             //legger inn oppdatert inntektsmelding i portaler
-            forespørselBehandlingTjeneste.oppdaterPortalerMedEndretInntektsmelding(forespørselEntitet, Optional.ofNullable(lagretIm.getInntektsmeldingUuid()), orgnummer);
+            forespørselBehandlingTjeneste.oppdaterPortalerMedEndretInntektsmelding(forespørsel, Optional.ofNullable(lagretIm.getInntektsmeldingUuid()),
+                arbeidsgiver);
         }
 
         MetrikkerTjeneste.loggInnsendtInntektsmelding(lagretIm);
 
-        return InntektsmeldingMapper.mapFraDomene(lagretIm, forespørselEntitet);
+        return InntektsmeldingMapper.mapFraDomene(lagretIm, forespørsel);
     }
 
     public InntektsmeldingResponseDto mottaArbeidsgiverinitiertInntektsmelding(
@@ -87,40 +92,40 @@ public class InntektsmeldingMottakTjeneste {
         var nyInntektsmelding = (årsak == ArbeidsgiverinitiertÅrsak.NYANSATT)
                                 ? InntektsmeldingMapper.mapTilDtoArbeidsgiverinitiert(sendInntektsmeldingRequestDto)
                                 : InntektsmeldingMapper.mapTilDto(sendInntektsmeldingRequestDto);
-        var aktørId = new AktørId(sendInntektsmeldingRequestDto.aktorId().id());
+        var aktørId = AktørId.fra(sendInntektsmeldingRequestDto.aktorId().id());
         var ytelseType = KodeverkMapper.mapYtelsetype(sendInntektsmeldingRequestDto.ytelse());
         var arbeidsgiverinitiertÅrsak = KodeverkMapper.mapArbeidsgiverinitiertÅrsak(sendInntektsmeldingRequestDto.arbeidsgiverinitiertÅrsak());
-        var organisasjonsnummer = new OrganisasjonsnummerDto(sendInntektsmeldingRequestDto.arbeidsgiverIdent().orgnr());
+        var arbeidsgiver = Arbeidsgiver.fra(sendInntektsmeldingRequestDto.arbeidsgiverIdent().orgnr());
         var finnesForespørselFraFør = sendInntektsmeldingRequestDto.foresporselUuid() != null;
-        ForespørselEntitet forespørselEnitet;
+        ForespørselDto forespørselDto;
         InntektsmeldingDto lagretInntektsmelding;
 
         if (finnesForespørselFraFør) {
-            forespørselEnitet = forespørselBehandlingTjeneste.hentForespørsel(sendInntektsmeldingRequestDto.foresporselUuid())
+            forespørselDto = forespørselBehandlingTjeneste.hentForespørsel(sendInntektsmeldingRequestDto.foresporselUuid())
                 .orElseThrow(this::manglerForespørselFeil);
 
             if (årsak == ArbeidsgiverinitiertÅrsak.NYANSATT &&
-                sendInntektsmeldingRequestDto.startdato() != forespørselEnitet.getFørsteUttaksdato()) {
-                forespørselEnitet = forespørselBehandlingTjeneste.oppdaterFørsteUttaksdato(forespørselEnitet,
+                sendInntektsmeldingRequestDto.startdato() != forespørselDto.førsteUttaksdato()) {
+                forespørselDto = forespørselBehandlingTjeneste.oppdaterFørsteUttaksdato(forespørselDto,
                     sendInntektsmeldingRequestDto.startdato());
             }
 
-            lagretInntektsmelding = lagreOgJournalførInntektsmelding(nyInntektsmelding, forespørselEnitet);
+            lagretInntektsmelding = lagreOgJournalførInntektsmelding(nyInntektsmelding, forespørselDto);
             //legger inn oppdatert inntektsmelding i portaler
-            forespørselBehandlingTjeneste.oppdaterPortalerMedEndretInntektsmelding(forespørselEnitet,
+            forespørselBehandlingTjeneste.oppdaterPortalerMedEndretInntektsmelding(forespørselDto,
                 Optional.ofNullable(lagretInntektsmelding.getInntektsmeldingUuid()),
-                organisasjonsnummer
+                arbeidsgiver
             );
 
         } else {
-            forespørselEnitet = oppretterArbeidsgiverinitiertForespørsel(ytelseType,
+            forespørselDto = oppretterArbeidsgiverinitiertForespørsel(ytelseType,
                 aktørId,
-                organisasjonsnummer,
+                arbeidsgiver,
                 arbeidsgiverinitiertÅrsak,
                 sendInntektsmeldingRequestDto.startdato());
 
-            lagretInntektsmelding = lagreOgJournalførInntektsmelding(nyInntektsmelding, forespørselEnitet);
-            forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørselEnitet.getUuid(), aktørId, organisasjonsnummer,
+            lagretInntektsmelding = lagreOgJournalførInntektsmelding(nyInntektsmelding, forespørselDto);
+            forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørselDto.uuid(), aktørId, arbeidsgiver,
                 sendInntektsmeldingRequestDto.startdato(), LukkeÅrsak.ORDINÆR_INNSENDING, Optional.ofNullable(lagretInntektsmelding.getInntektsmeldingUuid()));
         }
 
@@ -129,18 +134,18 @@ public class InntektsmeldingMottakTjeneste {
         } else {
             MetrikkerTjeneste.logginnsendtArbeidsgiverinitiertUregistrertIm(lagretInntektsmelding);
         }
-        return InntektsmeldingMapper.mapFraDomene(lagretInntektsmelding, forespørselEnitet);
+        return InntektsmeldingMapper.mapFraDomene(lagretInntektsmelding, forespørselDto);
     }
 
-    private InntektsmeldingDto lagreOgJournalførInntektsmelding(InntektsmeldingDto inntektsmeldingDto, ForespørselEntitet forespørselEnitet) {
-        var imId = lagreOgLagJournalførTask(inntektsmeldingDto, forespørselEnitet);
+    private InntektsmeldingDto lagreOgJournalførInntektsmelding(InntektsmeldingDto inntektsmeldingDto, ForespørselDto forespørsel) {
+        var imId = lagreOgLagJournalførTask(inntektsmeldingDto, forespørsel);
         return inntektsmeldingTjeneste.hentInntektsmelding(imId);
     }
 
-    private ForespørselEntitet oppretterArbeidsgiverinitiertForespørsel(Ytelsetype ytelseType, AktørId aktørId,
-                                                                        OrganisasjonsnummerDto organisasjonsnummer,
-                                                                        ArbeidsgiverinitiertÅrsak arbeidsgiverinitiertÅrsak,
-                                                                        LocalDate startdato) {
+    private ForespørselDto oppretterArbeidsgiverinitiertForespørsel(Ytelsetype ytelseType, AktørId aktørId,
+                                                                    Arbeidsgiver arbeidsgiver,
+                                                                    ArbeidsgiverinitiertÅrsak arbeidsgiverinitiertÅrsak,
+                                                                    LocalDate startdato) {
         // dersom uregistrert så må vi hente skjæringstidspunkt fra fpsak. Vi trenger denne for å hente riktig inntektsperioder ved endring av inntektsmelding
         LocalDate skjæringstidspunkt = Tid.TIDENES_ENDE;
         if (arbeidsgiverinitiertÅrsak.equals(ArbeidsgiverinitiertÅrsak.UREGISTRERT)) {
@@ -149,7 +154,7 @@ public class InntektsmeldingMottakTjeneste {
 
         var forespørselUuid = forespørselBehandlingTjeneste.opprettForespørselForArbeidsgiverInitiertIm(ytelseType,
             aktørId,
-            organisasjonsnummer,
+            arbeidsgiver,
             startdato,
             arbeidsgiverinitiertÅrsak,
             skjæringstidspunkt == Tid.TIDENES_ENDE ? null : skjæringstidspunkt);
@@ -158,18 +163,20 @@ public class InntektsmeldingMottakTjeneste {
             .orElseThrow(this::manglerForespørselFeil);
     }
 
-    private Long lagreOgLagJournalførTask(InntektsmeldingDto inntektsmeldingDto, ForespørselEntitet forespørsel) {
-        LOG.info("Lagrer inntektsmelding for forespørsel {}", forespørsel.getUuid());
+    private Long lagreOgLagJournalførTask(InntektsmeldingDto inntektsmeldingDto, ForespørselDto forespørsel) {
+        LOG.info("Lagrer inntektsmelding for forespørsel {}", forespørsel.uuid());
         var imId = inntektsmeldingTjeneste.lagreInntektsmelding(inntektsmeldingDto);
         opprettTaskForSendTilJoark(imId, forespørsel);
         return imId;
     }
 
-    private void opprettTaskForSendTilJoark(Long imId, ForespørselEntitet forespørsel) {
+    private void opprettTaskForSendTilJoark(Long imId, ForespørselDto forespørsel) {
         var task = ProsessTaskData.forProsessTask(SendTilJoarkTask.class);
-        forespørsel.getFagsystemSaksnummer().ifPresent(task::setSaksnummer);
+        if (forespørsel.fagsystemSaksnummer() != null) {
+            task.setSaksnummer(forespørsel.fagsystemSaksnummer());
+        }
         task.setProperty(SendTilJoarkTask.KEY_INNTEKTSMELDING_ID, imId.toString());
-        task.setProperty(SendTilJoarkTask.KEY_FORESPOERSEL_TYPE, forespørsel.getForespørselType().toString());
+        task.setProperty(SendTilJoarkTask.KEY_FORESPOERSEL_TYPE, forespørsel.forespørselType().toString());
         prosessTaskTjeneste.lagre(task);
         LOG.info("Opprettet task for oversending til joark");
     }

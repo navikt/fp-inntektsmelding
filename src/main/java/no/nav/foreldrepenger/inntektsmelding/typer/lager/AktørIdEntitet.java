@@ -8,17 +8,17 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 
 @Embeddable
-public class AktørId {
+public class AktørIdEntitet {
     private static final Pattern VALID = Pattern.compile("^\\d{13}");
 
     @Column(name = "aktoer_id")
     private String aktørId;
 
-    public AktørId() {
+    public AktørIdEntitet() {
         // Hibernate
     }
 
-    public AktørId(String aktørId) {
+    public AktørIdEntitet(String aktørId) {
         Objects.requireNonNull(aktørId, "aktørId");
         if (!VALID.matcher(aktørId).matches()) {
             // skal ikke skje, funksjonelle feilmeldinger håndteres ikke her.
@@ -55,7 +55,7 @@ public class AktørId {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        AktørId that = (AktørId) o;
+        AktørIdEntitet that = (AktørIdEntitet) o;
         return Objects.equals(aktørId, that.aktørId);
     }
 
@@ -69,7 +69,7 @@ public class AktørId {
     /**
      * Genererer dummy aktørid unikt for test.
      */
-    public static AktørId dummy() {
-        return new AktørId(String.valueOf(DUMMY_AKTØRID.getAndIncrement()));
+    public static AktørIdEntitet dummy() {
+        return new AktørIdEntitet(String.valueOf(DUMMY_AKTØRID.getAndIncrement()));
     }
 }

@@ -9,9 +9,6 @@ import static org.mockito.Mockito.when;
 import java.time.LocalDate;
 import java.util.List;
 
-import no.nav.foreldrepenger.inntektsmelding.forespørsel.rest.ForespørselRest;
-import no.nav.foreldrepenger.inntektsmelding.forespørsel.rest.OpprettForespørselRequest;
-import no.nav.foreldrepenger.inntektsmelding.forespørsel.rest.OpprettForespørselResponsNy;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,15 +16,20 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.rest.ForespørselRest;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.rest.OpprettForespørselRequest;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.rest.OpprettForespørselResponsNy;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
-import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.foreldrepenger.inntektsmelding.server.tilgangsstyring.Tilgang;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Saksnummer;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.AktørIdDto;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.ForespørselResultat;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.SaksnummerDto;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.YtelseTypeDto;
-import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørId;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 
 @ExtendWith(MockitoExtension.class)
 class ForespørselRestTest {
@@ -62,7 +64,7 @@ class ForespørselRestTest {
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK_200);
         assertThat(response.getEntity()).isEqualTo(forventetResultat);
         verify(forespørselBehandlingTjeneste).håndterInnkommendeForespørsel(LocalDate.now(), Ytelsetype.FORELDREPENGER,
-            new AktørId(aktørId.id()), orgnummer, fagsakSaksnummer, LocalDate.now().plusDays(5));
+            AktørId.fra(aktørId.id()), Arbeidsgiver.fra(BRREG_ORGNUMMER), Saksnummer.fra(fagsakSaksnummer.saksnr()), LocalDate.now().plusDays(5));
     }
 
     @Test

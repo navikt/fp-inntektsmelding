@@ -1,6 +1,9 @@
 package no.nav.foreldrepenger.inntektsmelding.forvaltning;
 
-import io.swagger.v3.oas.annotations.Operation;
+import java.time.LocalDate;
+import java.util.Optional;
+import java.util.UUID;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -13,22 +16,20 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import no.nav.foreldrepenger.inntektsmelding.integrasjoner.altinn.DialogportenKlient;
-import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
-import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
-import no.nav.foreldrepenger.inntektsmelding.server.auth.api.AutentisertMedAzure;
-import no.nav.foreldrepenger.inntektsmelding.server.auth.api.Tilgangskontrollert;
-import no.nav.foreldrepenger.inntektsmelding.server.tilgangsstyring.Tilgang;
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
-import no.nav.foreldrepenger.konfig.Environment;
-import no.nav.vedtak.util.InputValideringRegex;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.LocalDate;
-import java.util.Optional;
-import java.util.UUID;
+import io.swagger.v3.oas.annotations.Operation;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.altinn.DialogportenKlient;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
+import no.nav.foreldrepenger.inntektsmelding.server.auth.api.AutentisertMedAzure;
+import no.nav.foreldrepenger.inntektsmelding.server.auth.api.Tilgangskontrollert;
+import no.nav.foreldrepenger.inntektsmelding.server.tilgangsstyring.Tilgang;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
+import no.nav.foreldrepenger.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
+import no.nav.foreldrepenger.konfig.Environment;
+import no.nav.vedtak.util.InputValideringRegex;
 
 @ApplicationScoped
 @Path(DialogportenForvaltningRestTjeneste.BASE_PATH)
@@ -65,7 +66,7 @@ public class DialogportenForvaltningRestTjeneste {
             opprettNyDialogDto.forespørselUuid(),
             opprettNyDialogDto.organisasjonsnummer().orgnr());
         return Response.accepted(dialogportenKlient.opprettDialog(opprettNyDialogDto.forespørselUuid(),
-            opprettNyDialogDto.organisasjonsnummer(),
+            Arbeidsgiver.fra(opprettNyDialogDto.organisasjonsnummer().orgnr()),
             "Forespørsel om inntektsmelding",
             LocalDate.now(),
             Ytelsetype.FORELDREPENGER,

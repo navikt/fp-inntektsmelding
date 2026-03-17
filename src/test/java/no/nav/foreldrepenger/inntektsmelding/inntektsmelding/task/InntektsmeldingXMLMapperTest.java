@@ -6,6 +6,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
+
 import org.junit.jupiter.api.Test;
 
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
@@ -88,7 +90,7 @@ class InntektsmeldingXMLMapperTest {
                                                             Kildesystem kildesystem) {
         return InntektsmeldingDto.builder()
             .medAktørId(aktørId)
-            .medArbeidsgiver(new InntektsmeldingDto.Arbeidsgiver(DUMMY_ARBEIDSGIVER_IDENT))
+            .medArbeidsgiver(new Arbeidsgiver(DUMMY_ARBEIDSGIVER_IDENT))
             .medStartdato(NOW)
             .medInntekt(BigDecimal.ZERO)
             .medYtelse(Ytelsetype.FORELDREPENGER)

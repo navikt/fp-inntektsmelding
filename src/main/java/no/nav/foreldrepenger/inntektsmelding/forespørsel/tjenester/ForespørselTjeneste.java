@@ -10,12 +10,13 @@ import jakarta.inject.Inject;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselRepository;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Saksnummer;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.SaksnummerDto;
-import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørId;
+import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
 
 @ApplicationScoped
 public class ForespørselTjeneste {
@@ -33,29 +34,39 @@ public class ForespørselTjeneste {
     public UUID opprettForespørsel(LocalDate skjæringstidspunkt,
                                    Ytelsetype ytelseType,
                                    AktørId brukerAktørId,
-                                   OrganisasjonsnummerDto orgnr,
-                                   SaksnummerDto fagsakSaksnummer,
+                                   Arbeidsgiver arbeidsgiver,
+                                   Saksnummer fagsakSaksnummer,
                                    LocalDate førsteUttaksdato) {
-        return forespørselRepository.lagreForespørsel(skjæringstidspunkt, ytelseType, brukerAktørId.getAktørId(), orgnr.orgnr(),
-            fagsakSaksnummer.saksnr(), førsteUttaksdato, ForespørselType.BESTILT_AV_FAGSYSTEM);
+        return forespørselRepository.lagreForespørsel(new ForespørselEntitet(arbeidsgiver.orgnr(),
+            skjæringstidspunkt,
+            new AktørIdEntitet(brukerAktørId.getAktørId()),
+            ytelseType,
+            fagsakSaksnummer.saksnummer(),
+            førsteUttaksdato,
+            ForespørselType.BESTILT_AV_FAGSYSTEM));
     }
 
     public UUID opprettForespørselArbeidsgiverinitiert(Ytelsetype ytelseType,
                                                        AktørId brukerAktørId,
-                                                       OrganisasjonsnummerDto orgnr,
+                                                       Arbeidsgiver arbeidsgiver,
                                                        LocalDate førsteUttaksdato,
                                                        ForespørselType forespørselType,
                                                        LocalDate skjæringstidspunkt) {
-        return forespørselRepository.lagreForespørsel(skjæringstidspunkt, ytelseType, brukerAktørId.getAktørId(), orgnr.orgnr(),
-            null, førsteUttaksdato, forespørselType);
+        return forespørselRepository.lagreForespørsel(new ForespørselEntitet(arbeidsgiver.orgnr(),
+            skjæringstidspunkt,
+            new AktørIdEntitet(brukerAktørId.getAktørId()),
+            ytelseType,
+            null,
+            førsteUttaksdato,
+            forespørselType));
     }
 
     public void setOppgaveId(UUID forespørselUUID, String oppgaveId) {
         forespørselRepository.oppdaterOppgaveId(forespørselUUID, oppgaveId);
     }
 
-    public ForespørselEntitet setFørsteUttaksdato(ForespørselEntitet forespørselEnitet, LocalDate førsteUttaksdato) {
-        return forespørselRepository.oppdaterFørsteUttaksdato(forespørselEnitet, førsteUttaksdato);
+    public ForespørselDto setFørsteUttaksdato(UUID forespørselUUID, LocalDate førsteUttaksdato) {
+        return ForespørselDtoMapper.mapFraEntitet(forespørselRepository.oppdaterFørsteUttaksdato(forespørselUUID, førsteUttaksdato));
     }
 
     public void setArbeidsgiverNotifikasjonSakId(UUID forespørselUUID, String arbeidsgiverNotifikasjonSakId) {
@@ -70,36 +81,45 @@ public class ForespørselTjeneste {
         forespørselRepository.settForespørselTilUtgått(arbeidsgiverNotifikasjonSakId);
     }
 
-    public Optional<ForespørselEntitet> finnGjeldendeForespørsel(LocalDate skjæringstidspunkt,
-                                                                 Ytelsetype ytelseType,
-                                                                 AktørId brukerAktørId,
-                                                                 OrganisasjonsnummerDto orgnr,
-                                                                 SaksnummerDto fagsakSaksnummer, LocalDate førsteUttaksdato) {
-        return forespørselRepository.finnGjeldendeForespørsel(brukerAktørId, ytelseType, orgnr, skjæringstidspunkt, fagsakSaksnummer, førsteUttaksdato);
+    public Optional<ForespørselDto> finnGjeldendeForespørsel(LocalDate skjæringstidspunkt,
+                                                             Ytelsetype ytelseType,
+                                                             AktørId brukerAktørId,
+                                                             Arbeidsgiver arbeidsgiver,
+                                                             Saksnummer fagsakSaksnummer,
+                                                             LocalDate førsteUttaksdato) {
+        return forespørselRepository.finnGjeldendeForespørsel(mapTilEntitet(brukerAktørId), ytelseType,
+                skjæringstidspunkt, arbeidsgiver.orgnr(), fagsakSaksnummer.saksnummer(), førsteUttaksdato)
+            .map(ForespørselDtoMapper::mapFraEntitet);
     }
 
-    public List<ForespørselEntitet> finnÅpneForespørslerForFagsak(SaksnummerDto fagsakSaksnummer) {
-        return forespørselRepository.finnÅpenForespørsel(fagsakSaksnummer);
+    public List<ForespørselDto> finnÅpneForespørslerForFagsak(Saksnummer fagsakSaksnummer) {
+        return forespørselRepository.finnÅpenForespørsel(fagsakSaksnummer.saksnummer()).stream().map(ForespørselDtoMapper::mapFraEntitet).toList();
     }
 
-    public Optional<ForespørselEntitet> finnÅpenForespørslelForFagsak(SaksnummerDto fagsakSaksnummer, OrganisasjonsnummerDto orgnr) {
-        return forespørselRepository.finnÅpenForespørsel(fagsakSaksnummer, orgnr);
+    public Optional<ForespørselDto> finnÅpenForespørslelForFagsak(Saksnummer fagsakSaksnummer, Arbeidsgiver arbeidsgiver) {
+        return forespørselRepository.finnÅpenForespørsel(fagsakSaksnummer.saksnummer(), arbeidsgiver.orgnr()).map(ForespørselDtoMapper::mapFraEntitet);
     }
 
-    public Optional<ForespørselEntitet> hentForespørsel(UUID forespørselUuid) {
-        return forespørselRepository.hentForespørsel(forespørselUuid);
+    public Optional<ForespørselDto> hentForespørsel(UUID forespørselUuid) {
+        return forespørselRepository.hentForespørsel(forespørselUuid).map(ForespørselDtoMapper::mapFraEntitet);
     }
 
-    public List<ForespørselEntitet> finnForespørslerForAktørid(AktørId aktørId, Ytelsetype ytelsetype) {
-        return forespørselRepository.finnForespørslerForAktørId(aktørId, ytelsetype);
+    public List<ForespørselDto> finnForespørslerForAktørid(AktørId aktørId, Ytelsetype ytelsetype) {
+        return forespørselRepository.finnForespørslerForAktørId(mapTilEntitet(aktørId), ytelsetype)
+            .stream()
+            .map(ForespørselDtoMapper::mapFraEntitet)
+            .toList();
     }
 
-    public List<ForespørselEntitet> finnForespørslerForFagsak(SaksnummerDto fagsakSaksnummer) {
-        return forespørselRepository.hentForespørslerPåSak(fagsakSaksnummer);
+    public List<ForespørselDto> finnForespørslerForFagsak(Saksnummer fagsakSaksnummer) {
+        return forespørselRepository.hentForespørslerPåSak(fagsakSaksnummer.saksnummer()).stream().map(ForespørselDtoMapper::mapFraEntitet).toList();
     }
 
-    public List<ForespørselEntitet> finnForespørsler(AktørId aktørId, Ytelsetype ytelsetype, String orgnr) {
-        return forespørselRepository.finnForespørsler(aktørId, ytelsetype, orgnr);
+    public List<ForespørselDto> finnForespørsler(AktørId aktørId, Ytelsetype ytelsetype, String orgnr) {
+        return forespørselRepository.finnForespørsler(mapTilEntitet(aktørId), ytelsetype, orgnr)
+            .stream()
+            .map(ForespørselDtoMapper::mapFraEntitet)
+            .toList();
     }
 
     public void setDialogportenUuid(UUID forespørselUuid, UUID dialogportenUuid) {
@@ -107,9 +127,17 @@ public class ForespørselTjeneste {
 
     }
 
-    public List<ForespørselEntitet> hentForespørsler(OrganisasjonsnummerDto orgnr, AktørId aktørId, ForespørselStatus status,
-                                                     Ytelsetype ytelseType,
-                                                     LocalDate fom, LocalDate tom) {
-        return forespørselRepository.hentForespørslerFraFilter(orgnr, aktørId, status, ytelseType, fom, tom);
+    public List<ForespørselDto> hentForespørsler(Arbeidsgiver arbeidsgiver,
+                                                 AktørId aktørId,
+                                                 ForespørselStatus status,
+                                                 Ytelsetype ytelseType,
+                                                 LocalDate fom, LocalDate tom) {
+        return forespørselRepository.hentForespørslerFraFilter(arbeidsgiver.orgnr(), mapTilEntitet(aktørId), status, ytelseType, fom, tom).stream()
+            .map(ForespørselDtoMapper::mapFraEntitet).toList();
     }
+
+    private AktørIdEntitet mapTilEntitet(AktørId aktørId) {
+        return Optional.ofNullable(aktørId).map(aktør -> new AktørIdEntitet(aktør.getAktørId())).orElse(null);
+    }
+
 }

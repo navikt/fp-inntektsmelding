@@ -13,7 +13,7 @@ import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.ImmutableTag;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Tag;
-import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.konfig.Environment;
@@ -76,7 +76,7 @@ public class MetrikkerTjeneste {
         }
     }
 
-    public static void loggForespørselLukkEkstern(ForespørselEntitet forespørsel) {
+    public static void loggForespørselLukkEkstern(ForespørselDto forespørsel) {
         try {
             forsøkLoggForespørselLukkEkstern(forespørsel);
         } catch (Exception e) {
@@ -92,7 +92,7 @@ public class MetrikkerTjeneste {
         }
     }
 
-    public static void loggForespørselLukkIntern(ForespørselEntitet forespørsel) {
+    public static void loggForespørselLukkIntern(ForespørselDto forespørsel) {
         try {
             OPPGAVE_VARIGHET_INTERN_TELLER.record(finnAntallDagerÅpen(forespørsel));
         } catch (Exception e) {
@@ -100,15 +100,15 @@ public class MetrikkerTjeneste {
         }
     }
 
-    private static void forsøkLoggForespørselLukkEkstern(ForespørselEntitet forespørsel) {
+    private static void forsøkLoggForespørselLukkEkstern(ForespørselDto forespørsel) {
         var tags = new ArrayList<Tag>();
-        tags.add(new ImmutableTag(TAG_YTELSE, forespørsel.getYtelseType().name()));
+        tags.add(new ImmutableTag(TAG_YTELSE, forespørsel.ytelseType().name()));
         Metrics.counter(COUNTER_LUKK_EKSTERN, tags).increment();
         OPPGAVE_VARIGHET_EKSTERN_TELLER.record(finnAntallDagerÅpen(forespørsel));
     }
 
-    private static long finnAntallDagerÅpen(ForespørselEntitet forespørsel) {
-        var opprettetDato = forespørsel.getOpprettetTidspunkt().toLocalDate();
+    private static long finnAntallDagerÅpen(ForespørselDto forespørsel) {
+        var opprettetDato = forespørsel.opprettetTidspunkt().toLocalDate();
         return ChronoUnit.DAYS.between(opprettetDato, LocalDate.now());
     }
 
@@ -185,10 +185,10 @@ public class MetrikkerTjeneste {
         }
     }
 
-    public static void loggRedirectFraAGITilVanligForespørsel(ForespørselEntitet forespørsel) {
+    public static void loggRedirectFraAGITilVanligForespørsel(ForespørselDto forespørsel) {
         try {
             var tags = new ArrayList<Tag>();
-            tags.add(new ImmutableTag(TAG_YTELSE, forespørsel.getYtelseType().name()));
+            tags.add(new ImmutableTag(TAG_YTELSE, forespørsel.ytelseType().name()));
             Metrics.counter(ARBEIDSGIVERINITIERT_REDIRECT, tags).increment();
         } catch (Exception e) {
             loggFeil(e, "loggRedirectFraAGITilVanligForespørsel");
