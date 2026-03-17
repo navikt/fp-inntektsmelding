@@ -47,16 +47,14 @@ public class DialogportenKlient {
                                 Arbeidsgiver arbeidsgiver,
                                 String sakstittel,
                                 LocalDate førsteUttaksdato,
-                                Ytelsetype ytelsetype,
-                                PersonIdent fødselsnummer) {
+                                Ytelsetype ytelsetype) {
         var target = URI.create(restConfig.endpoint().toString() + "/dialogporten/api/v1/serviceowner/dialogs");
         var opprettRequest = DialogportenRequestMapper.opprettDialogRequest(arbeidsgiver,
             forespørselUuid,
             sakstittel,
             førsteUttaksdato,
             ytelsetype,
-            inntektsmeldingSkjemaLenke,
-            fødselsnummer);
+            inntektsmeldingSkjemaLenke);
         var request = RestRequest.newPOSTJson(opprettRequest, target, restConfig)
             .otherAuthorizationSupplier(() -> tokenKlient.hentAltinnToken(this.restConfig.scopes()));
 

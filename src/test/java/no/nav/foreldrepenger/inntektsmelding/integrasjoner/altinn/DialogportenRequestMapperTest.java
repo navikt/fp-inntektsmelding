@@ -24,15 +24,16 @@ class DialogportenRequestMapperTest {
     @Test
     void opprettDialogRequest() {
         var party = "urn:altinn:organization:identifier-no:999999999";
-        var fødselsnummer = new PersonIdent("01019100000");
 
         var opprettRequest = DialogportenRequestMapper.opprettDialogRequest(ARBEIDSGIVER,
-            FORESPØRSEL_UUID, "Sakstittel", FØRSTE_UTTAKSDATO, Ytelsetype.FORELDREPENGER, INNTEKTSMELDING_SKJEMA_LENKE, fødselsnummer);
+            FORESPØRSEL_UUID, "Sakstittel", FØRSTE_UTTAKSDATO, Ytelsetype.FORELDREPENGER, INNTEKTSMELDING_SKJEMA_LENKE);
 
         var transmissionContent = opprettRequest.transmissions().getFirst().content().title().value().getFirst().value();
         var attachment = opprettRequest.transmissions().getFirst().attachments().getFirst();
         var attachmentName = attachment.displayName().getFirst().value();
-        var attachmentUrl = attachment.urls().getFirst().url();
+        var attachmentUrls = attachment.urls();
+        var guiUrl = attachmentUrls.stream().filter(u -> u.consumerType() == DialogportenRequest.AttachmentUrlConsumerType.Gui).findFirst().orElseThrow().url();
+        var apiUrl = attachmentUrls.stream().filter(u -> u.consumerType() == DialogportenRequest.AttachmentUrlConsumerType.Api).findFirst().orElseThrow().url();
         var apiActionEndpointUrl = opprettRequest.apiActions().getFirst().endpoints().getFirst().url();
 
         assertThat(opprettRequest.party()).isEqualTo(party);
@@ -40,13 +41,13 @@ class DialogportenRequestMapperTest {
         assertThat(opprettRequest.status()).isEqualTo(DialogportenRequest.DialogStatus.RequiresAttention);
         assertThat(opprettRequest.transmissions()).hasSize(1);
         assertThat(opprettRequest.apiActions()).hasSize(1);
-        assertThat(opprettRequest.externalReference()).isEqualTo(fødselsnummer.getIdent());
+        assertThat(opprettRequest.externalReference()).isNull(); // Fødselsnummer skal ikke sendes
         assertThat(opprettRequest.content().title().value().getFirst().value()).isEqualTo("Sakstittel");
         assertThat(attachmentName).isEqualTo("Innsending av inntektsmelding på min side - arbeidsgiver hos Nav");
-        assertThat(attachmentUrl).isEqualTo(INNTEKTSMELDING_SKJEMA_LENKE + "/" + FORESPØRSEL_UUID);
-        assertThat(apiActionEndpointUrl).isEqualTo(INNTEKTSMELDING_SKJEMA_LENKE + "/" + FORESPØRSEL_UUID);
+        assertThat(guiUrl).isEqualTo(INNTEKTSMELDING_SKJEMA_LENKE + "/" + FORESPØRSEL_UUID);
+        assertThat(apiUrl).isEqualTo(INNTEKTSMELDING_SKJEMA_LENKE + "/server/api/ekstern/opplysninger?foresporselUuid=" + FORESPØRSEL_UUID);
+        assertThat(apiActionEndpointUrl).isEqualTo(INNTEKTSMELDING_SKJEMA_LENKE + "/server/api/ekstern/opplysninger?foresporselUuid=" + FORESPØRSEL_UUID);
         assertThat(transmissionContent).isEqualTo("Send inn inntektsmelding");
-        assertThat(opprettRequest.toString()).contains("externalReference=***");
     }
 
     @Test

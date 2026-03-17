@@ -69,8 +69,7 @@ public class DialogportenForvaltningRestTjeneste {
             Arbeidsgiver.fra(opprettNyDialogDto.organisasjonsnummer().orgnr()),
             "Forespørsel om inntektsmelding",
             LocalDate.now(),
-            Ytelsetype.FORELDREPENGER,
-            new PersonIdent("01019100000"))).build();
+            Ytelsetype.FORELDREPENGER)).build();
     }
 
     @POST
