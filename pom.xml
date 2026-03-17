@@ -9,7 +9,7 @@
         <version>5.3.1</version>
     </parent>
 
-    <groupId>no.nav.familie.inntektsmelding</groupId>
+    <groupId>no.nav.foreldrepenger.inntektsmelding</groupId>
     <artifactId>fp-inntektsmelding</artifactId>
     <version>1.0-SNAPSHOT</version>
 
@@ -252,7 +252,7 @@
                         <configuration>
                             <graphqlSchemaPaths>${project.basedir}/src/main/resources/graphql/produsent.graphql</graphqlSchemaPaths>
                             <outputDir>${project.build.directory}/generated-sources/client-arbeidsgiver-notifikasjon</outputDir>
-                            <modelPackageName>no.nav.familie.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon</modelPackageName>
+                            <modelPackageName>no.nav.foreldrepenger.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon</modelPackageName>
                             <customTypesMapping>
                                 <DateTime>java.util.Date</DateTime>
                             </customTypesMapping>
@@ -298,7 +298,7 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>lib/</classpathPrefix>
-                            <mainClass>no.nav.familie.inntektsmelding.server.JettyServer</mainClass>
+                            <mainClass>no.nav.foreldrepenger.inntektsmelding.server.JettyServer</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
