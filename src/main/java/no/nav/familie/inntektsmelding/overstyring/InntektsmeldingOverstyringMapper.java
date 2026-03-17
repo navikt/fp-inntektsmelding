@@ -22,7 +22,7 @@ class InntektsmeldingOverstyringMapper {
     public static InntektsmeldingEntitet mapTilEntitet(SendOverstyrtInntektsmeldingRequestDto dto) {
         return InntektsmeldingEntitet.builder()
             .medAktørId(new AktørIdEntitet(dto.aktorId().id()))
-            .medArbeidsgiverIdent(dto.arbeidsgiverIdent().ident())
+            .medArbeidsgiverIdent(dto.arbeidsgiverIdent().orgnr())
             .medKildesystem(Kildesystem.FPSAK)
             .medOpprettetAv(dto.opprettetAv())
             .medMånedInntekt(dto.inntekt())

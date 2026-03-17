@@ -10,20 +10,19 @@ import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
-
 import jakarta.validation.constraints.Size;
 
 import no.nav.familie.inntektsmelding.typer.dto.AktørIdDto;
-import no.nav.familie.inntektsmelding.typer.dto.ArbeidsgiverDto;
 import no.nav.familie.inntektsmelding.typer.dto.ArbeidsgiverinitiertÅrsakDto;
 import no.nav.familie.inntektsmelding.typer.dto.EndringsårsakDto;
 import no.nav.familie.inntektsmelding.typer.dto.NaturalytelsetypeDto;
+import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.familie.inntektsmelding.typer.dto.YtelseTypeDto;
 
 public record SendInntektsmeldingRequestDto(@Valid UUID foresporselUuid,
                                             @NotNull @Valid AktørIdDto aktorId,
                                             @NotNull @Valid YtelseTypeDto ytelse,
-                                            @NotNull @Valid ArbeidsgiverDto arbeidsgiverIdent,
+                                            @NotNull @Valid OrganisasjonsnummerDto arbeidsgiverIdent,
                                             @NotNull @Valid KontaktpersonRequestDto kontaktperson,
                                             @NotNull LocalDate startdato,
                                             @Min(0) @Max(Integer.MAX_VALUE) @Digits(integer = 20, fraction = 2) BigDecimal inntekt,

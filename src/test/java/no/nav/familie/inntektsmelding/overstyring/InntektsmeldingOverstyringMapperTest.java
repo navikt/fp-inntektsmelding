@@ -7,12 +7,11 @@ import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 
-import no.nav.familie.inntektsmelding.typer.dto.SaksnummerDto;
-
 import org.junit.jupiter.api.Test;
 
 import no.nav.familie.inntektsmelding.typer.dto.AktørIdDto;
-import no.nav.familie.inntektsmelding.typer.dto.ArbeidsgiverDto;
+import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
+import no.nav.familie.inntektsmelding.typer.dto.SaksnummerDto;
 import no.nav.familie.inntektsmelding.typer.dto.YtelseTypeDto;
 
 class InntektsmeldingOverstyringMapperTest {
@@ -26,7 +25,7 @@ class InntektsmeldingOverstyringMapperTest {
             new SendOverstyrtInntektsmeldingRequestDto.RefusjonendringRequestDto(stp.plusDays(15), BigDecimal.ZERO));
         var request = new SendOverstyrtInntektsmeldingRequestDto(new AktørIdDto("9999999999999"),
             YtelseTypeDto.FORELDREPENGER,
-            new ArbeidsgiverDto("999999999"),
+            new OrganisasjonsnummerDto("999999999"),
             stp,
             BigDecimal.valueOf(5000),
             BigDecimal.valueOf(5000),

@@ -1,7 +1,6 @@
 package no.nav.familie.inntektsmelding.imdialog.task;
 
 import java.util.List;
-import java.util.Map;
 
 import jakarta.xml.bind.JAXBElement;
 
@@ -10,12 +9,9 @@ import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.familie.inntektsmelding.koder.Kildesystem;
 import no.nav.familie.inntektsmelding.koder.NaturalytelseType;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
-import no.nav.familie.inntektsmelding.typer.OrganisasjonsnummerValidator;
-import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
 import no.nav.familie.inntektsmelding.utils.mapper.NaturalYtelseMapper;
 import no.seres.xsd.nav.inntektsmelding_m._20181211.Arbeidsforhold;
 import no.seres.xsd.nav.inntektsmelding_m._20181211.Arbeidsgiver;
-import no.seres.xsd.nav.inntektsmelding_m._20181211.ArbeidsgiverPrivat;
 import no.seres.xsd.nav.inntektsmelding_m._20181211.Avsendersystem;
 import no.seres.xsd.nav.inntektsmelding_m._20181211.EndringIRefusjon;
 import no.seres.xsd.nav.inntektsmelding_m._20181211.EndringIRefusjonsListe;
@@ -37,26 +33,18 @@ public class InntektsmeldingXMLMapper {
         // Hide constructor for static util class
     }
 
-    public static InntektsmeldingM map(InntektsmeldingEntitet inntektsmelding, Map<AktørIdEntitet, PersonIdent> aktørIdFnrMap) {
+    public static InntektsmeldingM map(InntektsmeldingEntitet inntektsmelding, PersonIdent søkerFnr) {
 
         var skjemainnhold = new Skjemainnhold();
 
-        if (OrganisasjonsnummerValidator.erGyldig(inntektsmelding.getArbeidsgiverIdent())) {
-            var arbeidsgiver = new Arbeidsgiver();
-            arbeidsgiver.setVirksomhetsnummer(inntektsmelding.getArbeidsgiverIdent());
-            arbeidsgiver.setKontaktinformasjon(lagKontaktperson(inntektsmelding));
-            var agOrg = of.createSkjemainnholdArbeidsgiver(arbeidsgiver);
-            skjemainnhold.setArbeidsgiver(agOrg);
-        } else if (inntektsmelding.getArbeidsgiverIdent().length() == 13) {
-            var arbeidsgiver = new ArbeidsgiverPrivat();
-            var identArbeidsgiver = aktørIdFnrMap.get(new AktørIdEntitet(inntektsmelding.getArbeidsgiverIdent()));
-            arbeidsgiver.setArbeidsgiverFnr(identArbeidsgiver.getIdent());
-            arbeidsgiver.setKontaktinformasjon(lagKontaktperson(inntektsmelding));
-            var agPriv = of.createSkjemainnholdArbeidsgiverPrivat(arbeidsgiver);
-            skjemainnhold.setArbeidsgiverPrivat(agPriv);
-        }
+        var arbeidsgiver = new Arbeidsgiver();
+        arbeidsgiver.setVirksomhetsnummer(inntektsmelding.getArbeidsgiverIdent());
+        arbeidsgiver.setKontaktinformasjon(lagKontaktperson(inntektsmelding));
+        var agOrg = of.createSkjemainnholdArbeidsgiver(arbeidsgiver);
+        skjemainnhold.setArbeidsgiver(agOrg);
+
         skjemainnhold.setArbeidsforhold(lagArbeidsforholdXml(inntektsmelding));
-        skjemainnhold.setArbeidstakerFnr(aktørIdFnrMap.get(inntektsmelding.getAktørId()).getIdent());
+        skjemainnhold.setArbeidstakerFnr(søkerFnr.getIdent());
 
         skjemainnhold.setAarsakTilInnsending("Ny");
         skjemainnhold.setAvsendersystem(lagAvsendersysem(inntektsmelding));
