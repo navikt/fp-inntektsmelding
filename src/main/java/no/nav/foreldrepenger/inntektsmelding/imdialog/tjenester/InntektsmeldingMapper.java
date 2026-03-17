@@ -42,8 +42,6 @@ public class InntektsmeldingMapper {
             .medMånedRefusjon(refusjonPrMnd)
             .medOpphørsdatoRefusjon(opphørsdato)
             .medSøkteRefusjonsperioder(mapRefusjonsendringerTilDto(dto.startdato(), opphørsdato, dto.refusjon()))
-            .medBortfaltNaturalytelsePerioder(mapBortfalteNaturalYtelserTilDto(dto.bortfaltNaturalytelsePerioder()))
-            .medEndringAvInntektÅrsaker(mapEndringsårsakerTilDto(dto.endringAvInntektÅrsaker()))
             .build();
     }
 
