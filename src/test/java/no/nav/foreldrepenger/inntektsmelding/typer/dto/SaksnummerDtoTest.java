@@ -1,10 +1,9 @@
-package no.nav.foreldrepenger.inntektsmelding.typer;
+package no.nav.foreldrepenger.inntektsmelding.typer.dto;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.SaksnummerDto;
 import no.nav.vedtak.mapper.json.DefaultJsonMapper;
 
 class SaksnummerDtoTest {

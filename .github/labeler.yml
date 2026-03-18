@@ -1,0 +1,11 @@
+kontrakt:
+- any:
+  - changed-files:
+    - any-glob-to-any-file: "kontrakter/src/main/java/**/*"
+    - any-glob-to-any-file: "kontrakter/pom.xml"
+
+pom:
+- any:
+  - changed-files:
+    - any-glob-to-any-file: "**/*/pom.xml"
+    - any-glob-to-any-file: "pom.xml"
