@@ -146,7 +146,10 @@ public class ForespørselRest {
 
         sjekkErSystemkall();
 
-        forespørselBehandlingTjeneste.settForespørselTilUtgått(Saksnummer.fra(request.fagsakSaksnummer().saksnr()), Arbeidsgiver.fra(request.orgnummer().orgnr()), request.skjæringstidspunkt());
+        forespørselBehandlingTjeneste.settForespørselTilUtgått(
+            Saksnummer.fra(request.fagsakSaksnummer().saksnr()),
+            Optional.ofNullable(request.orgnummer()).map(OrganisasjonsnummerDto::orgnr).map(Arbeidsgiver::new).orElse(null),
+            request.skjæringstidspunkt());
         return Response.ok().build();
     }
 
