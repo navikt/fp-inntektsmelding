@@ -6,8 +6,6 @@ import java.util.Optional;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import no.nav.foreldrepenger.inntektsmelding.typer.domene.Saksnummer;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
