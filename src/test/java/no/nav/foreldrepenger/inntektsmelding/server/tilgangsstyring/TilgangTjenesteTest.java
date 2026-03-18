@@ -123,8 +123,9 @@ class TilgangTjenesteTest {
         var fakeOrgNr = "123456789";
 
         when(altinnTilgangTjeneste.manglerTilgangTilBedriften(fakeOrgNr)).thenReturn(true);
+        var arbeidsgiver = Arbeidsgiver.fra(fakeOrgNr);
         var ex = assertThrows(ManglerTilgangException.class,
-            () -> tilgangTjeneste.sjekkAtArbeidsgiverHarTilgangTilBedrift(Arbeidsgiver.fra(fakeOrgNr)));
+            () -> tilgangTjeneste.sjekkAtArbeidsgiverHarTilgangTilBedrift(arbeidsgiver));
         assertThat(ex.getMessage()).contains("Bruker mangler tilgang til bedriften i Altinn.");
 
         verify(altinnTilgangTjeneste).manglerTilgangTilBedriften(fakeOrgNr);

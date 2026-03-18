@@ -17,19 +17,17 @@ import no.nav.foreldrepenger.konfig.Environment;
 
 @ApplicationScoped
 class MinSideArbeidsgiverTjenesteImpl implements MinSideArbeidsgiverTjeneste {
-
+    private static final Environment ENV = Environment.current();
     static final String SERVICE_CODE = "4936";
     static final String SERVICE_EDITION_CODE = "1";
     static final String SAK_STATUS_TEKST = "";
     static final String SAK_STATUS_TEKST_ARBEIDSGIVERINITIERT = "Mottatt - Se kvittering eller korriger inntektsmelding";
     static final Sendevindu VARSEL_SENDEVINDU = Sendevindu.LOEPENDE;
     static final int PÅMINNELSE_ETTER_DAGER;
-    static final String ALTINN_INNTEKTSMELDING_RESSURS;
+    static final String ALTINN_INNTEKTSMELDING_RESSURS = AltinnRessurser.ALTINN_TRE_INNTEKTSMELDING_RESSURS;
     public static final boolean BRUK_ALTINN_TRE_RESSURS_TOGGLE;
 
     static {
-        var ENV = Environment.current();
-        ALTINN_INNTEKTSMELDING_RESSURS = AltinnRessurser.ALTINN_TRE_INNTEKTSMELDING_RESSURS;
         BRUK_ALTINN_TRE_RESSURS_TOGGLE = ENV.getProperty("bruk.altinn.tre.ressurs.i.fager.toggle", boolean.class, false);
         PÅMINNELSE_ETTER_DAGER = ENV.getProperty("paaminnelse.etter.dager", int.class, 14);
     }
@@ -118,7 +116,7 @@ class MinSideArbeidsgiverTjenesteImpl implements MinSideArbeidsgiverTjeneste {
                                                   String beskjedTekst,
                                                   String varselTekst,
                                                   URI oppgaveLenke) {
-        return sendNyBeskjed(grupperingsid, beskjedMerkelapp, eksternId, organisasjonsnummer, beskjedTekst, Optional.of(varselTekst), oppgaveLenke);
+        return sendNyBeskjed(grupperingsid, beskjedMerkelapp, organisasjonsnummer, beskjedTekst, Optional.of(varselTekst), oppgaveLenke);
     }
 
     @Override
@@ -128,13 +126,12 @@ class MinSideArbeidsgiverTjenesteImpl implements MinSideArbeidsgiverTjeneste {
                                 String organisasjonsnummer,
                                 String beskjedTekst,
                                 URI lenke) {
-        return sendNyBeskjed(grupperingsid, beskjedMerkelapp, eksternId, organisasjonsnummer, beskjedTekst, Optional.empty(), lenke);
+        return sendNyBeskjed(grupperingsid, beskjedMerkelapp, organisasjonsnummer, beskjedTekst, Optional.empty(), lenke);
     }
 
 
     private String sendNyBeskjed(String grupperingsid,
                                  Merkelapp beskjedMerkelapp,
-                                 String eksternId,
                                  String organisasjonsnumme,
                                  String beskjedTekst,
                                  Optional<String> varselTekst,

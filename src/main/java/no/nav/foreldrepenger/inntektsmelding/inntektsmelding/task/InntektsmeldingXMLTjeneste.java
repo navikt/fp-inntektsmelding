@@ -1,7 +1,6 @@
 package no.nav.foreldrepenger.inntektsmelding.inntektsmelding.task;
 
 import java.io.StringWriter;
-import java.util.Map;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -9,10 +8,7 @@ import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
-import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
-import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste;
-import no.nav.foreldrepenger.inntektsmelding.utils.OrganisasjonsnummerValidator;
 import no.seres.xsd.nav.inntektsmelding_m._20181211.InntektsmeldingM;
 import no.seres.xsd.nav.inntektsmelding_m._20181211.ObjectFactory;
 

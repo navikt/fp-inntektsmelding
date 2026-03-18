@@ -74,7 +74,7 @@ public class GrunnlagDtoTjeneste {
         var organisasjonDto = lagOrganisasjonDto(organisasjonsnummer);
         var innmelderDto = lagInnmelderDto(forespørsel.ytelseType());
         var erArbeidsgiverInitiertNyansatt = ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT.equals(forespørsel.forespørselType());
-        var datoForInntekter = erArbeidsgiverInitiertNyansatt ? forespørsel.førsteUttaksdato() : (forespørsel.skjæringstidspunkt() != null ? forespørsel.skjæringstidspunkt() : forespørsel.førsteUttaksdato());
+        var datoForInntekter = erArbeidsgiverInitiertNyansatt ? forespørsel.førsteUttaksdato() : Optional.ofNullable(forespørsel.skjæringstidspunkt()).orElse(forespørsel.førsteUttaksdato());
         var inntektDtoer = lagInntekterDto(personInfo,
             datoForInntekter,
             forespørsel.arbeidsgiver());

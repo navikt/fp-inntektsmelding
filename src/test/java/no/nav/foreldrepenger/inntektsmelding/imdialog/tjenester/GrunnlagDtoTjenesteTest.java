@@ -556,9 +556,10 @@ class GrunnlagDtoTjenesteTest {
 
         when(personTjeneste.hentPersonFraIdent(fødselsnummer, ytelsetype)).thenReturn(personInfo);
         when(forespørselBehandlingTjeneste.finnForespørslerForAktørId(aktørId, ytelsetype)).thenReturn(List.of());
-        when(arbeidsforholdTjeneste.hentArbeidsforhold(fødselsnummer, førsteUttaksdato)).thenReturn(List.of(new Arbeidsforhold(organisasjonsnummer,new Arbeidsforhold.Ansettelsesperiode(førsteUttaksdato.minusYears(1), Tid.TIDENES_ENDE))));
+        when(arbeidsforholdTjeneste.hentArbeidsforhold(fødselsnummer, førsteUttaksdato)).thenReturn(List.of(new Arbeidsforhold(organisasjonsnummer, new Arbeidsforhold.Ansettelsesperiode(førsteUttaksdato.minusYears(1), Tid.TIDENES_ENDE))));
 
-        var ex = assertThrows(FunksjonellException.class, () -> grunnlagDtoTjeneste.lagArbeidsgiverinitiertUregistrertDialogDto(fødselsnummer, ytelsetype, førsteUttaksdato, Arbeidsgiver.fra(organisasjonsnummer), førsteUttaksdato));
+        var arbeidsgiver = Arbeidsgiver.fra(organisasjonsnummer);
+        var ex = assertThrows(FunksjonellException.class, () -> grunnlagDtoTjeneste.lagArbeidsgiverinitiertUregistrertDialogDto(fødselsnummer, ytelsetype, førsteUttaksdato, arbeidsgiver, førsteUttaksdato));
 
         // Assert
         AssertionsForClassTypes.assertThat(ex.getMessage()).isEqualTo(

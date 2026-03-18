@@ -23,6 +23,9 @@ import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
 @Dependent
 public class ForespørselRepository {
 
+    protected static final String AKTØR_ID = "aktørId";
+    protected static final String YTELSE_TYPE = "ytelseType";
+    protected static final String OPPRETTET_TIDSPUNKT = "opprettetTidspunkt";
     private EntityManager entityManager;
     private static final Logger LOG = LoggerFactory.getLogger(ForespørselRepository.class);
 
@@ -171,9 +174,9 @@ public class ForespørselRepository {
         var query = entityManager.createQuery("FROM ForespørselEntitet where aktørId=:aktørId "
                     + "and status !=:utgått and ytelseType=:ytelseType",
                 ForespørselEntitet.class)
-            .setParameter("aktørId", aktørId)
+            .setParameter(AKTØR_ID, aktørId)
             .setParameter("utgått", ForespørselStatus.UTGÅTT)
-            .setParameter("ytelseType", ytelsetype);
+            .setParameter(YTELSE_TYPE, ytelsetype);
         return query.getResultList();
     }
 
@@ -181,8 +184,8 @@ public class ForespørselRepository {
         var query = entityManager.createQuery("FROM ForespørselEntitet where aktørId=:aktørId "
                     + "and ytelseType=:ytelseType and organisasjonsnummer=:orgnr",
                 ForespørselEntitet.class)
-            .setParameter("aktørId", aktørId)
-            .setParameter("ytelseType", ytelsetype)
+            .setParameter(AKTØR_ID, aktørId)
+            .setParameter(YTELSE_TYPE, ytelsetype)
             .setParameter("orgnr", orgnr);
         return query.getResultList();
     }
@@ -228,23 +231,23 @@ public class ForespørselRepository {
 
         predicates.add(cb.equal(root.get("organisasjonsnummer"), Objects.requireNonNull(orgnr)));
         if (aktørId != null) {
-            predicates.add(cb.equal(root.get("aktørId"), aktørId));
+            predicates.add(cb.equal(root.get(AKTØR_ID), aktørId));
         }
         if (status != null) {
             predicates.add(cb.equal(root.get("status"), status));
         }
         if (ytelseType != null) {
-            predicates.add(cb.equal(root.get("ytelseType"), ytelseType));
+            predicates.add(cb.equal(root.get(YTELSE_TYPE), ytelseType));
         }
         if (fom != null) {
-            predicates.add(cb.greaterThanOrEqualTo(root.get("opprettetTidspunkt"), fom.atStartOfDay()));
+            predicates.add(cb.greaterThanOrEqualTo(root.get(OPPRETTET_TIDSPUNKT), fom.atStartOfDay()));
         }
         if (tom != null) {
-            predicates.add(cb.lessThan(root.get("opprettetTidspunkt"), tom.plusDays(1).atStartOfDay()));
+            predicates.add(cb.lessThan(root.get(OPPRETTET_TIDSPUNKT), tom.plusDays(1).atStartOfDay()));
         }
         cq.where(predicates.toArray(new Predicate[0]));
 
-        cq.orderBy(cb.asc(root.get("opprettetTidspunkt")));
+        cq.orderBy(cb.asc(root.get(OPPRETTET_TIDSPUNKT)));
         var query = entityManager.createQuery(cq);
         query.setMaxResults(1001);
         var result = query.getResultList();

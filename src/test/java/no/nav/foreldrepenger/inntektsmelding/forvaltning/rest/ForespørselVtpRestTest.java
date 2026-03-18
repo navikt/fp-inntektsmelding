@@ -33,8 +33,9 @@ class ForespørselVtpRestTest {
 
     @Test
     void skal_kaste_exception_om_i_prod() {
-        try (var environment = Mockito.mockStatic(Environment.class, Answers.RETURNS_DEEP_STUBS)) {
-            assertThrows(RuntimeException.class, () -> forespørselVtpRest.finnForespoerselForSaksnummer(new SaksnummerDto("123456")));
+        try (var _ = Mockito.mockStatic(Environment.class, Answers.RETURNS_DEEP_STUBS)) {
+            var saksnummer = new SaksnummerDto("123456");
+            assertThrows(RuntimeException.class, () -> forespørselVtpRest.finnForespoerselForSaksnummer(saksnummer));
         }
     }
 

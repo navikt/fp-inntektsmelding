@@ -16,10 +16,10 @@ import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 
 class DialogportenRequestMapperTest {
     private static final String SERVICE_RESOURCE = "urn:altinn:resource:nav_foreldrepenger_inntektsmelding";
-    private final Arbeidsgiver ARBEIDSGIVER = Arbeidsgiver.fra("999999999");
-    private final UUID FORESPØRSEL_UUID = UUID.randomUUID();
-    private final String INNTEKTSMELDING_SKJEMA_LENKE = "https://arbeidsgiver.nav.no/fp-im-dialog";
-    private final LocalDate FØRSTE_UTTAKSDATO = LocalDate.now().plusWeeks(4);
+    private static final Arbeidsgiver ARBEIDSGIVER = Arbeidsgiver.fra("999999999");
+    private static final UUID FORESPØRSEL_UUID = UUID.randomUUID();
+    private static final String INNTEKTSMELDING_SKJEMA_LENKE = "https://arbeidsgiver.nav.no/fp-im-dialog";
+    private static final LocalDate FØRSTE_UTTAKSDATO = LocalDate.now().plusWeeks(4);
 
     @Test
     void opprettDialogRequest() {

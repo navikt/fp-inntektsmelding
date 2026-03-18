@@ -6,14 +6,12 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
-import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
-
 import org.junit.jupiter.api.Test;
 
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
-import no.nav.familie.inntektsmelding.koder.Kildesystem;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.NaturalytelseType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;

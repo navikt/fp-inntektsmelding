@@ -7,7 +7,7 @@ public class AktørId {
 
     private static final Pattern VALID = Pattern.compile("^\\d{13}");
 
-    private String aktørId;
+    private final String aktørId;
 
     public static AktørId fra(String aktørId) {
         return new AktørId(aktørId);

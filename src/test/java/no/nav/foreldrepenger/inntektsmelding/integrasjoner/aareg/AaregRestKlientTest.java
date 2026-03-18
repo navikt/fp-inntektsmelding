@@ -77,10 +77,11 @@ class AaregRestKlientTest {
 
         when(restClient.sendReturnUnhandled(any(RestRequest.class)))
             .thenThrow(new IllegalArgumentException("Invalid URI"));
+        var now = LocalDate.now();
 
         // Act & Assert
         var exception = assertThrows(IllegalArgumentException.class,
-            () -> aaregRestKlient.finnArbeidsforholdForArbeidstaker(ident, LocalDate.now()));
+            () -> aaregRestKlient.finnArbeidsforholdForArbeidstaker(ident, now));
 
         assertThat(exception.getMessage())
             .isEqualTo("Utviklerfeil syntax-exception for finnArbeidsforholdForArbeidstaker");
@@ -127,9 +128,9 @@ class AaregRestKlientTest {
 
         when(restClient.sendReturnUnhandled(any(RestRequest.class)))
             .thenThrow(new IntegrasjonException("FP-w00t", "Ukjent feil"));
-
+        var now = LocalDate.now();
         var exception = assertThrows(IntegrasjonException.class,
-            () -> aaregRestKlient.finnArbeidsforholdForArbeidstaker(ident, LocalDate.now()));
+            () -> aaregRestKlient.finnArbeidsforholdForArbeidstaker(ident, now));
         assertThat(exception.getMessage())
             .isEqualTo("FP-w00t: Ukjent feil");
     }

@@ -87,12 +87,5 @@ class AktørIdTest {
 
         assertThat(aktørId).isNotNull();
     }
-
-    @Test
-    void skal_være_lik_seg_selv() {
-        var aktørId = new AktørId(GYLDIG_AKTØR_ID);
-
-        assertThat(aktørId).isEqualTo(aktørId);
-    }
 }
 

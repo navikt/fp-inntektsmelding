@@ -44,7 +44,7 @@ public class JettyServer {
         this.serverPort = serverPort;
     }
 
-    public static void main(String[] args) throws Exception {
+    static void main() throws Exception {
         jettyServer().bootStrap();
     }
 

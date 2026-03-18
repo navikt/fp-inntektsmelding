@@ -18,6 +18,7 @@ public class OpenApiRest extends OpenApiResource {
     @Produces({MediaType.APPLICATION_JSON, "application/yaml"})
     @Operation(hidden = true)
     @AutentisertMedAzure
+    @Override
     public Response getOpenApi(@Context HttpHeaders headers,
                                @Context UriInfo uriInfo,
                                @PathParam("type") String type) throws Exception {
