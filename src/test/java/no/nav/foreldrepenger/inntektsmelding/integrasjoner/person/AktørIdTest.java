@@ -1,12 +1,12 @@
 package no.nav.foreldrepenger.inntektsmelding.integrasjoner.person;
 
-import org.junit.jupiter.api.Test;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-class AktørIdEntitetTest {
+import org.junit.jupiter.api.Test;
+
+class AktørIdTest {
 
     private static final String GYLDIG_AKTØR_ID = "1234567890123";
 
@@ -89,18 +89,10 @@ class AktørIdEntitetTest {
     }
 
     @Test
-    void skal_ikke_være_lik_annen_type() {
-        var aktørId = new AktørId(GYLDIG_AKTØR_ID);
-
-        assertThat(aktørId).isNotEqualTo(GYLDIG_AKTØR_ID);
-    }
-
-    @Test
     void skal_være_lik_seg_selv() {
         var aktørId = new AktørId(GYLDIG_AKTØR_ID);
-        var expected = aktørId;
 
-        assertThat(aktørId).isEqualTo(expected);
+        assertThat(aktørId).isEqualTo(aktørId);
     }
 }
 

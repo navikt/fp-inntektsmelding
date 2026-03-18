@@ -130,10 +130,7 @@ public class InntektsmeldingDialogRest {
     @Tilgangskontrollert
     public Response lastNedPDF(@NotNull @Valid @QueryParam("id") long inntektsmeldingId) {
         tilgang.sjekkAtArbeidsgiverHarTilgangTilBedrift(inntektsmeldingId);
-
-        LOG.info("Henter inntektsmelding for id {}", inntektsmeldingId);
         var pdf = kvitteringTjeneste.hentPDF(inntektsmeldingId);
-
         var responseBuilder = Response.ok(pdf);
         responseBuilder.type("application/pdf");
         responseBuilder.header("Content-Disposition", "attachment; filename=inntektsmelding.pdf");
