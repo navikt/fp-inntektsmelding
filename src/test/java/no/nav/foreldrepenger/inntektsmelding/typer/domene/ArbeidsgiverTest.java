@@ -21,33 +21,32 @@ class ArbeidsgiverTest {
     @Test
     void skal_maskere_orgnr_i_toString() {
         var arbeidsgiver = Arbeidsgiver.fra("974760673");
-        assertThat(arbeidsgiver.toString()).isEqualTo("Arbeidsgiver<*****0673>");
+        assertThat(arbeidsgiver).hasToString("Arbeidsgiver<*****0673>");
     }
 
     @Test
     void skal_maskere_kort_orgnr_helt() {
         var arbeidsgiver = Arbeidsgiver.fra("1234");
-        assertThat(arbeidsgiver.toString()).isEqualTo("Arbeidsgiver<****>");
+        assertThat(arbeidsgiver).hasToString("Arbeidsgiver<****>");
     }
 
     @Test
     void skal_maskere_veldig_kort_orgnr() {
         var arbeidsgiver = Arbeidsgiver.fra("ab");
-        assertThat(arbeidsgiver.toString()).isEqualTo("Arbeidsgiver<**>");
+        assertThat(arbeidsgiver).hasToString("Arbeidsgiver<**>");
     }
 
     @Test
     void skal_håndtere_null_orgnr_i_toString() {
         var arbeidsgiver = new Arbeidsgiver(null);
-        assertThat(arbeidsgiver.toString()).isEqualTo("Arbeidsgiver<>");
+        assertThat(arbeidsgiver).hasToString("Arbeidsgiver<>");
     }
 
     @Test
     void skal_være_lik_ved_samme_orgnr() {
         var a = Arbeidsgiver.fra("974760673");
         var b = Arbeidsgiver.fra("974760673");
-        assertThat(a).isEqualTo(b);
-        assertThat(a.hashCode()).isEqualTo(b.hashCode());
+        assertThat(a).isEqualTo(b).hasSameHashCodeAs(b);
     }
 
     @Test
