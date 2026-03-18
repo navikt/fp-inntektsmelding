@@ -2,6 +2,7 @@ package no.nav.foreldrepenger.inntektsmelding.forespørsel.rest;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -14,6 +15,8 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+
+import no.nav.foreldrepenger.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -107,7 +110,7 @@ public class ForespørselRest {
 
         forespørselBehandlingTjeneste.lukkForespørsel(
             Saksnummer.fra(request.fagsakSaksnummer().saksnr()),
-            Arbeidsgiver.fra(request.orgnummer().orgnr()),
+            Optional.ofNullable(request.orgnummer()).map(OrganisasjonsnummerDto::orgnr).map(Arbeidsgiver::new).orElse(null),
             request.skjæringstidspunkt());
         return Response.ok().build();
     }
