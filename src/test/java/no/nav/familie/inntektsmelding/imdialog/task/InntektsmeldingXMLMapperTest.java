@@ -6,6 +6,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+import no.nav.familie.inntektsmelding.imdialog.modell.KontaktpersonEntitet;
+
 import org.junit.jupiter.api.Test;
 
 import no.nav.familie.inntektsmelding.imdialog.modell.BortaltNaturalytelseEntitet;
@@ -91,6 +93,7 @@ class InntektsmeldingXMLMapperTest {
             .medBortfaltNaturalytelser(bortfaltNaturalytelseEntitet)
             .medArbeidsgiverIdent(DUMMY_ARBEIDSGIVER_IDENT)
             .medAktørId(aktørId)
+            .medKontaktperson(new KontaktpersonEntitet("Test Testesen", "11111111"))
             .medStartDato(NOW)
             .medMånedInntekt(BigDecimal.ZERO)
             .medKildesystem(kildesystem)
