@@ -7,15 +7,14 @@ import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 
-import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
-import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.SaksnummerDto;
-
 import org.junit.jupiter.api.Test;
 
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.AktørIdDto;
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.ArbeidsgiverDto;
+import no.nav.foreldrepenger.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
+import no.nav.foreldrepenger.inntektsmelding.typer.dto.SaksnummerDto;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.YtelseTypeDto;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 
 class InntektsmeldingOverstyringMapperTest {
 
@@ -30,7 +29,7 @@ class InntektsmeldingOverstyringMapperTest {
             new SendOverstyrtInntektsmeldingRequestDto.RefusjonendringRequestDto(stp.plusDays(15), BigDecimal.ZERO));
         var request = new SendOverstyrtInntektsmeldingRequestDto(new AktørIdDto("9999999999999"),
             YtelseTypeDto.FORELDREPENGER,
-            new ArbeidsgiverDto("999999999"),
+            new OrganisasjonsnummerDto("999999999"),
             stp,
             BigDecimal.valueOf(5000),
             BigDecimal.valueOf(5000),
@@ -68,7 +67,7 @@ class InntektsmeldingOverstyringMapperTest {
         var orgnr = "999999999";
         var request = new SendOverstyrtInntektsmeldingRequestDto(new AktørIdDto("9999999999999"),
             YtelseTypeDto.FORELDREPENGER,
-            new ArbeidsgiverDto(orgnr),
+            new OrganisasjonsnummerDto(orgnr),
             stp,
             BigDecimal.valueOf(5000),
             BigDecimal.valueOf(5000),
@@ -96,7 +95,7 @@ class InntektsmeldingOverstyringMapperTest {
             new SendOverstyrtInntektsmeldingRequestDto.RefusjonendringRequestDto(stp.plusDays(15), BigDecimal.ZERO));
         var request = new SendOverstyrtInntektsmeldingRequestDto(new AktørIdDto("9999999999999"),
             YtelseTypeDto.FORELDREPENGER,
-            new ArbeidsgiverDto("999999999"),
+            new OrganisasjonsnummerDto("999999999"),
             stp,
             BigDecimal.valueOf(5000),
             BigDecimal.valueOf(5000),
@@ -136,7 +135,7 @@ class InntektsmeldingOverstyringMapperTest {
             new SendOverstyrtInntektsmeldingRequestDto.RefusjonendringRequestDto(stp.plusDays(15), BigDecimal.ZERO));
         var request = new SendOverstyrtInntektsmeldingRequestDto(new AktørIdDto("9999999999999"),
             YtelseTypeDto.FORELDREPENGER,
-            new ArbeidsgiverDto("999999999"),
+            new OrganisasjonsnummerDto("999999999"),
             stp,
             BigDecimal.valueOf(5000),
             BigDecimal.valueOf(5000),

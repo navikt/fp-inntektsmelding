@@ -70,9 +70,7 @@ class InntektsmeldingXMLMapperTest {
     @Test
     void test_overstyrt_inntektsmelding() {
         var inntektsmelding = lagInntektsmeldingDto(DUMMY_AKTØRID, List.of(), Kildesystem.FPSAK);
-
         var resultat = InntektsmeldingXMLMapper.map(inntektsmelding, PersonIdent.fra(DUMMY_FNR));
-
         assertThat(resultat.getSkjemainnhold().getAvsendersystem().getSystemnavn()).isEqualTo("OVERSTYRING_FPSAK");
     }
 

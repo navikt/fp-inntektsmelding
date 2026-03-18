@@ -30,19 +30,8 @@ class InntektsmeldingXMLTjeneste {
     }
 
     public String lagXMLAvInntektsmelding(InntektsmeldingDto inntektsmelding) {
-        var aktørIdIdentMap = new HashMap<AktørId, PersonIdent>();
-
-        var søkerAktørId = inntektsmelding.getAktørId();
-        var søkerIdent = personTjeneste.finnPersonIdentForAktørId(søkerAktørId);
-        aktørIdIdentMap.put(søkerAktørId, søkerIdent);
-
-        var arbeidsgiver = inntektsmelding.getArbeidsgiver().orgnr();
-        if (!OrganisasjonsnummerValidator.erGyldig(arbeidsgiver) && arbeidsgiver.length() == 13) {
-            var arbeidsgiverAktørId = new AktørId(arbeidsgiver);
-            var arbeidsgiverIdent = personTjeneste.finnPersonIdentForAktørId(arbeidsgiverAktørId);
-            aktørIdIdentMap.put(arbeidsgiverAktørId, arbeidsgiverIdent);
-        }
-        var inntektsmeldingXml = InntektsmeldingXMLMapper.map(inntektsmelding, aktørIdIdentMap);
+        var søkerIdent = personTjeneste.finnPersonIdentForAktørId(inntektsmelding.getAktørId());
+        var inntektsmeldingXml = InntektsmeldingXMLMapper.map(inntektsmelding, søkerIdent);
         try {
             return marshalXml(inntektsmeldingXml);
         } catch (JAXBException ex) {

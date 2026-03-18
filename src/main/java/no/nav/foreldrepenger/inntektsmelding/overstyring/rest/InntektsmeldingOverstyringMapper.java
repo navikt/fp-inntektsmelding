@@ -6,14 +6,14 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
+import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.BortaltNaturalytelseEntitet;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.InntektsmeldingEntitet;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.RefusjonsendringEntitet;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
-import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
-import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.KodeverkMapper;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
 import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
 import no.nav.vedtak.konfig.Tid;
 
@@ -28,7 +28,7 @@ class InntektsmeldingOverstyringMapper {
         var opphørsdato = finnOpphørsdato(dto.refusjonsendringer()).orElse(Tid.TIDENES_ENDE);
         return InntektsmeldingDto.builder()
             .medAktørId(AktørId.fra(dto.aktorId().id()))
-            .medArbeidsgiver(Arbeidsgiver.fra(dto.arbeidsgiverIdent().ident()))
+            .medArbeidsgiver(Arbeidsgiver.fra(dto.arbeidsgiverIdent().orgnr()))
             .medKildesystem(Kildesystem.FPSAK)
             .medOpprettetAv(dto.opprettetAv())
             .medInntekt(dto.inntekt())

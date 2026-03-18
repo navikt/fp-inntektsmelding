@@ -10,27 +10,24 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
-import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDtoMapper;
-
-import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
-import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
-import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
-
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.ArbeidsgiverinitiertÅrsakDto;
-
 import org.junit.jupiter.api.Test;
 
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDtoMapper;
 import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.SendInntektsmeldingRequestDto;
-import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Endringsårsak;
-import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.NaturalytelseType;
-import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
+import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.AktørIdDto;
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.ArbeidsgiverDto;
+import no.nav.foreldrepenger.inntektsmelding.typer.dto.ArbeidsgiverinitiertÅrsakDto;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.EndringsårsakDto;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.KodeverkMapper;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.NaturalytelsetypeDto;
+import no.nav.foreldrepenger.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.YtelseTypeDto;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Endringsårsak;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.NaturalytelseType;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
 import no.nav.vedtak.konfig.Tid;
 
@@ -42,7 +39,7 @@ class InntektsmeldingMapperTest {
     void skal_teste_dto_mapping_uten_ref_og_naturalytelse() {
         // Arrange
         var request = new SendInntektsmeldingRequestDto(UUID.randomUUID(), new AktørIdDto("9999999999999"), YtelseTypeDto.FORELDREPENGER,
-            new ArbeidsgiverDto("999999999"), new SendInntektsmeldingRequestDto.KontaktpersonRequestDto("Testy test", "999999999"), LocalDate.now(),
+            new OrganisasjonsnummerDto("999999999"), new SendInntektsmeldingRequestDto.KontaktpersonRequestDto("Testy test", "999999999"), LocalDate.now(),
             BigDecimal.valueOf(5000), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), null);
 
         // Act
@@ -50,7 +47,7 @@ class InntektsmeldingMapperTest {
 
         // Assert
         assertThat(dto.getAktørId().getAktørId()).isEqualTo(request.aktorId().id());
-        assertThat(dto.getArbeidsgiver().orgnr()).isEqualTo(request.arbeidsgiverIdent().ident());
+        assertThat(dto.getArbeidsgiver().orgnr()).isEqualTo(request.arbeidsgiverIdent().orgnr());
         assertThat(dto.getMånedInntekt()).isEqualByComparingTo(request.inntekt());
         assertThat(dto.getStartdato()).isEqualTo(request.startdato());
         assertThat(dto.getYtelse()).isEqualTo(KodeverkMapper.mapYtelsetype(request.ytelse()));
@@ -68,7 +65,7 @@ class InntektsmeldingMapperTest {
         var request = new SendInntektsmeldingRequestDto(UUID.randomUUID(),
             new AktørIdDto("9999999999999"),
             YtelseTypeDto.FORELDREPENGER,
-            new ArbeidsgiverDto("999999999"),
+            new OrganisasjonsnummerDto("999999999"),
             new SendInntektsmeldingRequestDto.KontaktpersonRequestDto("Testy test", "999999999"),
             LocalDate.now(),
             BigDecimal.valueOf(5000),
@@ -83,7 +80,7 @@ class InntektsmeldingMapperTest {
 
         // Assert
         assertThat(dto.getAktørId().getAktørId()).isEqualTo(request.aktorId().id());
-        assertThat(dto.getArbeidsgiver().orgnr()).isEqualTo(request.arbeidsgiverIdent().ident());
+        assertThat(dto.getArbeidsgiver().orgnr()).isEqualTo(request.arbeidsgiverIdent().orgnr());
         assertThat(dto.getMånedInntekt()).isEqualByComparingTo(request.inntekt());
         assertThat(dto.getStartdato()).isEqualTo(request.startdato());
         assertThat(dto.getYtelse()).isEqualTo(KodeverkMapper.mapYtelsetype(request.ytelse()));
@@ -100,7 +97,7 @@ class InntektsmeldingMapperTest {
         var request = new SendInntektsmeldingRequestDto(UUID.randomUUID(),
             new AktørIdDto("9999999999999"),
             YtelseTypeDto.FORELDREPENGER,
-            new ArbeidsgiverDto("999999999"),
+            new OrganisasjonsnummerDto("999999999"),
             new SendInntektsmeldingRequestDto.KontaktpersonRequestDto("Testy test", "999999999"),
             LocalDate.now(),
             BigDecimal.valueOf(5000),
@@ -116,7 +113,7 @@ class InntektsmeldingMapperTest {
 
         // Assert
         assertThat(dto.getAktørId().getAktørId()).isEqualTo(request.aktorId().id());
-        assertThat(dto.getArbeidsgiver().orgnr()).isEqualTo(request.arbeidsgiverIdent().ident());
+        assertThat(dto.getArbeidsgiver().orgnr()).isEqualTo(request.arbeidsgiverIdent().orgnr());
         assertThat(dto.getMånedInntekt()).isEqualByComparingTo(request.inntekt());
         assertThat(dto.getStartdato()).isEqualTo(request.startdato());
         assertThat(dto.getYtelse()).isEqualTo(KodeverkMapper.mapYtelsetype(request.ytelse()));
@@ -135,7 +132,7 @@ class InntektsmeldingMapperTest {
         var request = new SendInntektsmeldingRequestDto(UUID.randomUUID(),
             new AktørIdDto("9999999999999"),
             YtelseTypeDto.FORELDREPENGER,
-            new ArbeidsgiverDto("999999999"),
+            new OrganisasjonsnummerDto("999999999"),
             new SendInntektsmeldingRequestDto.KontaktpersonRequestDto("Testy test", "999999999"),
             LocalDate.now(),
             BigDecimal.valueOf(5000),
@@ -156,7 +153,7 @@ class InntektsmeldingMapperTest {
 
         // Assert
         assertThat(dto.getAktørId().getAktørId()).isEqualTo(request.aktorId().id());
-        assertThat(dto.getArbeidsgiver().orgnr()).isEqualTo(request.arbeidsgiverIdent().ident());
+        assertThat(dto.getArbeidsgiver().orgnr()).isEqualTo(request.arbeidsgiverIdent().orgnr());
         assertThat(dto.getMånedInntekt()).isEqualByComparingTo(request.inntekt());
         assertThat(dto.getStartdato()).isEqualTo(request.startdato());
         assertThat(dto.getYtelse()).isEqualTo(KodeverkMapper.mapYtelsetype(request.ytelse()));
@@ -223,7 +220,7 @@ class InntektsmeldingMapperTest {
 
         // Assert
         assertThat(result.aktorId().id()).isEqualTo("9999999999999");
-        assertThat(result.arbeidsgiverIdent().ident()).isEqualTo("999999999");
+        assertThat(result.arbeidsgiverIdent().orgnr()).isEqualTo("999999999");
         assertThat(result.inntekt()).isEqualByComparingTo(BigDecimal.valueOf(5000));
         assertThat(result.startdato()).isEqualTo(LocalDate.now());
         assertThat(KodeverkMapper.mapYtelsetype(result.ytelse())).isEqualTo(Ytelsetype.FORELDREPENGER);
@@ -282,7 +279,7 @@ class InntektsmeldingMapperTest {
 
         // Assert
         assertThat(result.aktorId().id()).isEqualTo("9999999999999");
-        assertThat(result.arbeidsgiverIdent().ident()).isEqualTo("999999999");
+        assertThat(result.arbeidsgiverIdent().orgnr()).isEqualTo("999999999");
         assertThat(result.inntekt()).isEqualByComparingTo(BigDecimal.valueOf(5000));
         assertThat(result.startdato()).isEqualTo(LocalDate.now());
         assertThat(KodeverkMapper.mapYtelsetype(result.ytelse())).isEqualTo(Ytelsetype.FORELDREPENGER);
@@ -343,7 +340,7 @@ class InntektsmeldingMapperTest {
 
         // Assert
         assertThat(result.aktorId().id()).isEqualTo("9999999999999");
-        assertThat(result.arbeidsgiverIdent().ident()).isEqualTo("999999999");
+        assertThat(result.arbeidsgiverIdent().orgnr()).isEqualTo("999999999");
         assertThat(result.inntekt()).isEqualByComparingTo(BigDecimal.valueOf(5000));
         assertThat(result.startdato()).isEqualTo(LocalDate.now());
         assertThat(KodeverkMapper.mapYtelsetype(result.ytelse())).isEqualTo(Ytelsetype.FORELDREPENGER);
@@ -394,7 +391,7 @@ class InntektsmeldingMapperTest {
 
         // Assert
         assertThat(result.aktorId().id()).isEqualTo("9999999999999");
-        assertThat(result.arbeidsgiverIdent().ident()).isEqualTo("999999999");
+        assertThat(result.arbeidsgiverIdent().orgnr()).isEqualTo("999999999");
         assertThat(result.inntekt()).isEqualByComparingTo(BigDecimal.valueOf(5000));
         assertThat(result.startdato()).isEqualTo(LocalDate.now());
         assertThat(KodeverkMapper.mapYtelsetype(result.ytelse())).isEqualTo(Ytelsetype.FORELDREPENGER);

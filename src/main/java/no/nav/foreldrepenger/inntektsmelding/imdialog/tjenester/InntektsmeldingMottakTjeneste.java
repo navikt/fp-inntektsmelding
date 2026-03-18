@@ -6,28 +6,25 @@ import java.util.Optional;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
-import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingTjeneste;
-
-import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
-
-import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.LukkeÅrsak;
 import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.InntektsmeldingResponseDto;
 import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.SendInntektsmeldingRequestDto;
+import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
+import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.task.SendTilJoarkTask;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.fpsak.FpsakTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.metrikker.MetrikkerTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
+import no.nav.foreldrepenger.inntektsmelding.typer.dto.KodeverkMapper;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ArbeidsgiverinitiertÅrsak;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
-import no.nav.foreldrepenger.inntektsmelding.integrasjoner.metrikker.MetrikkerTjeneste;
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.KodeverkMapper;
 import no.nav.vedtak.exception.TekniskException;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskTjeneste;
@@ -68,7 +65,7 @@ public class InntektsmeldingMottakTjeneste {
         var lagretIm = lagreOgJournalførInntektsmelding(inntektsmeldingDto, forespørsel);
         //Ferdigstiller forespørsel hvis den ikke er ferdig fra før
 
-        var arbeidsgiver = Arbeidsgiver.fra(mottattInntektsmeldingDto.arbeidsgiverIdent().ident());
+        var arbeidsgiver = Arbeidsgiver.fra(mottattInntektsmeldingDto.arbeidsgiverIdent().orgnr());
         if (!forespørsel.status().equals(ForespørselStatus.FERDIG)) {
             var aktørId = new AktørId(mottattInntektsmeldingDto.aktorId().id());
             var ferdigstiltForespørsel = forespørselBehandlingTjeneste.ferdigstillForespørsel(mottattInntektsmeldingDto.foresporselUuid(), aktørId,
@@ -87,27 +84,27 @@ public class InntektsmeldingMottakTjeneste {
     }
 
     public InntektsmeldingResponseDto mottaArbeidsgiverinitiertInntektsmelding(
-        SendInntektsmeldingRequestDto sendInntektsmeldingRequestDto,
+        SendInntektsmeldingRequestDto requestDto,
         ArbeidsgiverinitiertÅrsak årsak) {
         var nyInntektsmelding = (årsak == ArbeidsgiverinitiertÅrsak.NYANSATT)
-                                ? InntektsmeldingMapper.mapTilDtoArbeidsgiverinitiert(sendInntektsmeldingRequestDto)
-                                : InntektsmeldingMapper.mapTilDto(sendInntektsmeldingRequestDto);
-        var aktørId = AktørId.fra(sendInntektsmeldingRequestDto.aktorId().id());
-        var ytelseType = KodeverkMapper.mapYtelsetype(sendInntektsmeldingRequestDto.ytelse());
-        var arbeidsgiverinitiertÅrsak = KodeverkMapper.mapArbeidsgiverinitiertÅrsak(sendInntektsmeldingRequestDto.arbeidsgiverinitiertÅrsak());
-        var arbeidsgiver = Arbeidsgiver.fra(sendInntektsmeldingRequestDto.arbeidsgiverIdent().orgnr());
-        var finnesForespørselFraFør = sendInntektsmeldingRequestDto.foresporselUuid() != null;
+                                ? InntektsmeldingMapper.mapTilDtoArbeidsgiverinitiert(requestDto)
+                                : InntektsmeldingMapper.mapTilDto(requestDto);
+        var aktørId = AktørId.fra(requestDto.aktorId().id());
+        var ytelseType = KodeverkMapper.mapYtelsetype(requestDto.ytelse());
+        var arbeidsgiverinitiertÅrsak = KodeverkMapper.mapArbeidsgiverinitiertÅrsak(requestDto.arbeidsgiverinitiertÅrsak());
+        var arbeidsgiver = Arbeidsgiver.fra(requestDto.arbeidsgiverIdent().orgnr());
+        var finnesForespørselFraFør = requestDto.foresporselUuid() != null;
         ForespørselDto forespørselDto;
         InntektsmeldingDto lagretInntektsmelding;
 
         if (finnesForespørselFraFør) {
-            forespørselDto = forespørselBehandlingTjeneste.hentForespørsel(sendInntektsmeldingRequestDto.foresporselUuid())
+            forespørselDto = forespørselBehandlingTjeneste.hentForespørsel(requestDto.foresporselUuid())
                 .orElseThrow(this::manglerForespørselFeil);
 
             if (årsak == ArbeidsgiverinitiertÅrsak.NYANSATT &&
-                sendInntektsmeldingRequestDto.startdato() != forespørselDto.førsteUttaksdato()) {
+                requestDto.startdato() != forespørselDto.førsteUttaksdato()) {
                 forespørselDto = forespørselBehandlingTjeneste.oppdaterFørsteUttaksdato(forespørselDto,
-                    sendInntektsmeldingRequestDto.startdato());
+                    requestDto.startdato());
             }
 
             lagretInntektsmelding = lagreOgJournalførInntektsmelding(nyInntektsmelding, forespørselDto);
@@ -122,11 +119,11 @@ public class InntektsmeldingMottakTjeneste {
                 aktørId,
                 arbeidsgiver,
                 arbeidsgiverinitiertÅrsak,
-                sendInntektsmeldingRequestDto.startdato());
+                requestDto.startdato());
 
             lagretInntektsmelding = lagreOgJournalførInntektsmelding(nyInntektsmelding, forespørselDto);
             forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørselDto.uuid(), aktørId, arbeidsgiver,
-                sendInntektsmeldingRequestDto.startdato(), LukkeÅrsak.ORDINÆR_INNSENDING, Optional.ofNullable(lagretInntektsmelding.getInntektsmeldingUuid()));
+                requestDto.startdato(), LukkeÅrsak.ORDINÆR_INNSENDING, Optional.ofNullable(lagretInntektsmelding.getInntektsmeldingUuid()));
         }
 
         if (årsak == ArbeidsgiverinitiertÅrsak.NYANSATT) {

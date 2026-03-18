@@ -15,10 +15,10 @@ import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.AktørIdDto;
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.ArbeidsgiverDto;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.ArbeidsgiverinitiertÅrsakDto;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.KodeverkMapper;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.NaturalytelsetypeDto;
+import no.nav.foreldrepenger.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
 import no.nav.vedtak.konfig.Tid;
@@ -65,7 +65,7 @@ public class InntektsmeldingMapper {
     private static InntektsmeldingDto.Builder opprettDtoBuilderOgSettFellesFelter(SendInntektsmeldingRequestDto dto) {
         return InntektsmeldingDto.builder()
             .medAktørId(new AktørId(dto.aktorId().id()))
-            .medArbeidsgiver(new Arbeidsgiver(dto.arbeidsgiverIdent().ident()))
+            .medArbeidsgiver(new Arbeidsgiver(dto.arbeidsgiverIdent().orgnr()))
             .medKildesystem(Kildesystem.ARBEIDSGIVERPORTAL)
             .medStartdato(dto.startdato())
             .medYtelse(KodeverkMapper.mapYtelsetype(dto.ytelse()))
@@ -144,7 +144,7 @@ public class InntektsmeldingMapper {
             forespørsel.uuid(),
             new AktørIdDto(dto.getAktørId().getAktørId()),
             KodeverkMapper.mapYtelsetype(dto.getYtelse()),
-            new ArbeidsgiverDto(dto.getArbeidsgiver().orgnr()),
+            new OrganisasjonsnummerDto(dto.getArbeidsgiver().orgnr()),
             new SendInntektsmeldingRequestDto.KontaktpersonRequestDto(dto.getKontaktperson().navn(), dto.getKontaktperson().telefonnummer()),
             dto.getStartdato(),
             dto.getMånedInntekt(),

@@ -5,13 +5,10 @@ import java.util.List;
 import jakarta.xml.bind.JAXBElement;
 
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
-import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.NaturalytelseType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
-import no.nav.foreldrepenger.inntektsmelding.utils.OrganisasjonsnummerValidator;
-import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
 import no.nav.foreldrepenger.inntektsmelding.utils.mapper.NaturalYtelseMapper;
 import no.seres.xsd.nav.inntektsmelding_m._20181211.Arbeidsforhold;
 import no.seres.xsd.nav.inntektsmelding_m._20181211.Arbeidsgiver;
@@ -36,27 +33,19 @@ class InntektsmeldingXMLMapper {
         // Hide constructor for static util class
     }
 
-    static InntektsmeldingM map(InntektsmeldingDto inntektsmelding, Map<AktørId, PersonIdent> aktørIdFnrMap) {
+    static InntektsmeldingM map(InntektsmeldingDto inntektsmelding, PersonIdent søkerIdent) {
 
         var skjemainnhold = new Skjemainnhold();
 
         var arbeidsgiverIdent = inntektsmelding.getArbeidsgiver().orgnr();
-        if (OrganisasjonsnummerValidator.erGyldig(arbeidsgiverIdent)) {
-            var arbeidsgiver = new Arbeidsgiver();
-            arbeidsgiver.setVirksomhetsnummer(arbeidsgiverIdent);
-            arbeidsgiver.setKontaktinformasjon(lagKontaktperson(inntektsmelding));
-            var agOrg = of.createSkjemainnholdArbeidsgiver(arbeidsgiver);
-            skjemainnhold.setArbeidsgiver(agOrg);
-        } else if (arbeidsgiverIdent.length() == 13) {
-            var arbeidsgiver = new ArbeidsgiverPrivat();
-            var identArbeidsgiver = aktørIdFnrMap.get(new AktørId(arbeidsgiverIdent));
-            arbeidsgiver.setArbeidsgiverFnr(identArbeidsgiver.getIdent());
-            arbeidsgiver.setKontaktinformasjon(lagKontaktperson(inntektsmelding));
-            var agPriv = of.createSkjemainnholdArbeidsgiverPrivat(arbeidsgiver);
-            skjemainnhold.setArbeidsgiverPrivat(agPriv);
-        }
+        var arbeidsgiver = new Arbeidsgiver();
+        arbeidsgiver.setVirksomhetsnummer(arbeidsgiverIdent);
+        arbeidsgiver.setKontaktinformasjon(lagKontaktperson(inntektsmelding));
+        var agOrg = of.createSkjemainnholdArbeidsgiver(arbeidsgiver);
+        skjemainnhold.setArbeidsgiver(agOrg);
+
         skjemainnhold.setArbeidsforhold(lagArbeidsforholdXml(inntektsmelding));
-        skjemainnhold.setArbeidstakerFnr(aktørIdFnrMap.get(inntektsmelding.getAktørId()).getIdent());
+        skjemainnhold.setArbeidstakerFnr(søkerIdent.getIdent());
 
         skjemainnhold.setAarsakTilInnsending("Ny");
         skjemainnhold.setAvsendersystem(lagAvsendersysem(inntektsmelding));
@@ -83,14 +72,18 @@ class InntektsmeldingXMLMapper {
     // TODO Vi bør ta en diskusjon på hva denne skal være
     private static Avsendersystem lagAvsendersysem(InntektsmeldingDto inntektsmelding) {
         var as = new Avsendersystem();
-        if (Kildesystem.FPSAK.equals(inntektsmelding.getKildesystem())) {
-            as.setSystemnavn(Systemnavn.OVERSTYRING_FPSAK.name());
-        } else {
-            as.setSystemnavn(Systemnavn.NAV_NO.name());
-        }
+        as.setSystemnavn(mapTilSystem(inntektsmelding.getKildesystem()).name());
         as.setSystemversjon("1.0");
         as.setInnsendingstidspunkt(of.createAvsendersystemInnsendingstidspunkt(inntektsmelding.getInnsendtTidspunkt()));
         return as;
+    }
+
+    private static Systemnavn mapTilSystem(Kildesystem kildesystem) {
+        return switch (kildesystem) {
+            case FPSAK -> Systemnavn.OVERSTYRING_FPSAK;
+            case ARBEIDSGIVERPORTAL -> Systemnavn.NAV_NO;
+            case API -> Systemnavn.HR_SYSTEM_API;
+        };
     }
 
     private static JAXBElement<GjenopptakelseNaturalytelseListe> lagGjennopptattNaturalytelse(List<NaturalYtelseMapper.NaturalYtelse> ytelser) {
@@ -203,6 +196,7 @@ class InntektsmeldingXMLMapper {
     // OBS OBS: Disse sendes inn i XML og skal ikke omdøpes!
     enum Systemnavn {
         OVERSTYRING_FPSAK,
-        NAV_NO
+        NAV_NO,
+        HR_SYSTEM_API
     }
 }

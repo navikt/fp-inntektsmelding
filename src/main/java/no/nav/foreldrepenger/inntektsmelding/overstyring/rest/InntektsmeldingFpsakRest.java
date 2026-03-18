@@ -50,13 +50,13 @@ public class InntektsmeldingFpsakRest {
     @Operation(description = "Sender inn inntektsmelding fra fpsak", tags = "imdialog")
     @Tilgangskontrollert
     public Response sendInntektsmelding(@Parameter(description = "Datapakke med informasjon om inntektsmeldingen") @NotNull @Valid
-                                        SendOverstyrtInntektsmeldingRequestDto sendInntektsmeldingRequestDto) {
-        LOG.info("Mottok overstyrt inntektsmelding fra saksbehandler {}", sendInntektsmeldingRequestDto.opprettetAv());
+                                        SendOverstyrtInntektsmeldingRequestDto requestDto) {
+        LOG.info("Mottok overstyrt inntektsmelding fra saksbehandler {}", requestDto.opprettetAv());
         tilgangskontroll.sjekkErSystembruker();
 
         inntektsmeldingOverstyringTjeneste.mottaOverstyrtInntektsmelding(
-            InntektsmeldingOverstyringMapper.mapTilDto(sendInntektsmeldingRequestDto),
-            Saksnummer.fra(sendInntektsmeldingRequestDto.fagsystemSaksnummer().saksnr()));
+            InntektsmeldingOverstyringMapper.mapTilDto(requestDto),
+            Saksnummer.fra(requestDto.fagsystemSaksnummer().saksnr()));
         return Response.ok().build();
     }
 }
