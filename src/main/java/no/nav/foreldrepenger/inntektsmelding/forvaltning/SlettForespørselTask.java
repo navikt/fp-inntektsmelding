@@ -38,15 +38,16 @@ public class SlettForespørselTask implements ProsessTaskHandler {
         var forespørsel = forespørselBehandlingTjeneste.hentForespørsel(UUID.fromString(forespørselUuid)).orElseThrow();
 
         var stp = forespørsel.skjæringstidspunkt();
-        forespørselBehandlingTjeneste.slettForespørsel(Saksnummer.fra(forespørsel.fagsystemSaksnummer()),
-            Arbeidsgiver.fra(forespørsel.arbeidsgiver().orgnr()),
-            stp);
         var saksnummer = forespørsel.fagsystemSaksnummer();
+        var arbeidsgiver = forespørsel.arbeidsgiver();
+
+        forespørselBehandlingTjeneste.slettForespørsel(saksnummer, arbeidsgiver, stp);
+
         LOG.info("FEILAKTIGE_FORESPØRSLER: Forespørsel {} med oppgaveid {} for saksnummer {} med orgnummer {} og skjæringstidspunkt {} er slettet",
             forespørsel.uuid(),
             forespørsel.oppgaveId(),
-            saksnummer,
-            forespørsel.arbeidsgiver().orgnr(),
+            saksnummer.saksnummer(),
+            arbeidsgiver.orgnr(),
             stp);
     }
 }

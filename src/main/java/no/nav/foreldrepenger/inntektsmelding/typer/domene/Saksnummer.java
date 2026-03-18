@@ -27,6 +27,6 @@ public record Saksnummer(String saksnummer) {
 
     @Override
     public String toString() {
-        return "Saksnummer[" + "saksnummer=" + saksnummer + ']';
+        return getClass().getSimpleName() + "<" + saksnummer + ">";
     }
 }

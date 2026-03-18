@@ -463,7 +463,7 @@ public class ForespørselBehandlingTjeneste {
         var msg = String.format("Setter forespørsel til utgått, orgnr: %s, stp: %s, saksnummer: %s, ytelse: %s",
             forespørselDto.arbeidsgiver().orgnr(),
             forespørselDto.skjæringstidspunkt(),
-            forespørselDto.fagsystemSaksnummer(),
+            forespørselDto.fagsystemSaksnummer().saksnummer(),
             forespørselDto.ytelseType());
         LOG.info(msg);
     }

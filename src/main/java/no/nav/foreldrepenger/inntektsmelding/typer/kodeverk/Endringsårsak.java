@@ -18,7 +18,8 @@ public enum Endringsårsak implements DatabaseKode {
     TARIFFENDRING("Tariffendring"),
     FERIE("Ferie"),
     VARIG_LØNNSENDRING("Varig lønnsendring"),
-    PERMISJON("Permisjon");
+    PERMISJON("Permisjon")
+    ;
 
     private final String beskrivelse;
 

@@ -29,7 +29,7 @@ public class NaturalYtelseMapper {
         LOG.info("Fant {} bortfalte naturalytelser", resultat.size());
 
         var tilkomneNaturalYtelser = naturalYtelser.stream()
-            .filter(naturalytelse -> naturalytelse.tom().isBefore(Tid.TIDENES_ENDE))
+            .filter(naturalytelse -> Tid.tomEllerMax(naturalytelse.tom()).isBefore(Tid.TIDENES_ENDE))
             .map(NaturalYtelseMapper::mapTilkomneNaturalYtelser)
             .toList();
 
@@ -51,7 +51,7 @@ public class NaturalYtelseMapper {
         resultat.addAll(bortfalte);
 
         var tilkomne = naturalytelser.stream()
-            .filter(n -> n.tom() != null && n.tom().isBefore(Tid.TIDENES_ENDE))
+            .filter(n -> Tid.tomEllerMax(n.tom()).isBefore(Tid.TIDENES_ENDE))
             .map(n -> new NaturalYtelse(n.tom().plusDays(1), NaturalytelseType.valueOf(n.naturalytelsetype().name()), n.beløp(), false))
             .toList();
         resultat.addAll(tilkomne);

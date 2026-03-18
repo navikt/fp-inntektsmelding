@@ -6,6 +6,8 @@ import java.util.Optional;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Saksnummer;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,9 +85,7 @@ public class InntektsmeldingMottakTjeneste {
         return InntektsmeldingMapper.mapFraDomene(lagretIm, forespørsel);
     }
 
-    public InntektsmeldingResponseDto mottaArbeidsgiverinitiertInntektsmelding(
-        SendInntektsmeldingRequestDto requestDto,
-        ArbeidsgiverinitiertÅrsak årsak) {
+    public InntektsmeldingResponseDto mottaArbeidsgiverinitiertInntektsmelding(SendInntektsmeldingRequestDto requestDto, ArbeidsgiverinitiertÅrsak årsak) {
         var nyInntektsmelding = (årsak == ArbeidsgiverinitiertÅrsak.NYANSATT)
                                 ? InntektsmeldingMapper.mapTilDtoArbeidsgiverinitiert(requestDto)
                                 : InntektsmeldingMapper.mapTilDto(requestDto);
@@ -169,11 +169,12 @@ public class InntektsmeldingMottakTjeneste {
 
     private void opprettTaskForSendTilJoark(Long imId, ForespørselDto forespørsel) {
         var task = ProsessTaskData.forProsessTask(SendTilJoarkTask.class);
-        if (forespørsel.fagsystemSaksnummer() != null) {
-            task.setSaksnummer(forespørsel.fagsystemSaksnummer());
+        var saksnummer = forespørsel.fagsystemSaksnummer();
+        if (saksnummer != null) {
+            task.setSaksnummer(saksnummer.saksnummer());
         }
         task.setProperty(SendTilJoarkTask.KEY_INNTEKTSMELDING_ID, imId.toString());
-        task.setProperty(SendTilJoarkTask.KEY_FORESPOERSEL_TYPE, forespørsel.forespørselType().toString());
+        task.setProperty(SendTilJoarkTask.KEY_FORESPOERSEL_TYPE, forespørsel.forespørselType().name());
         prosessTaskTjeneste.lagre(task);
         LOG.info("Opprettet task for oversending til joark");
     }

@@ -89,7 +89,7 @@ public class InntektsmeldingMapper {
         return dto.stream()
             .map(d -> new InntektsmeldingDto.BortfaltNaturalytelse(
                 d.fom(),
-                d.tom() != null ? d.tom() : Tid.TIDENES_ENDE,
+                Tid.tomEllerMax(d.tom()),
                 KodeverkMapper.mapNaturalytelseTilDomene(d.naturalytelsetype()),
                 d.beløp()))
             .toList();
@@ -126,7 +126,7 @@ public class InntektsmeldingMapper {
             new SendInntektsmeldingRequestDto.BortfaltNaturalytelseRequestDto(
                 i.fom(),
                 Objects.equals(i.tom(), Tid.TIDENES_ENDE) ? null : i.tom(),
-                NaturalytelsetypeDto.valueOf(i.naturalytelsetype().toString()),
+                NaturalytelsetypeDto.valueOf(i.naturalytelsetype().name()),
                 i.beløp()
             )
         ).toList();

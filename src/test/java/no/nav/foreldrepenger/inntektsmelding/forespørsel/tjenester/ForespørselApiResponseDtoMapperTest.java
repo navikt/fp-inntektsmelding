@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDate;
 
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Saksnummer;
 import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
 
 import org.junit.jupiter.api.Test;
@@ -39,6 +40,7 @@ class ForespørselApiResponseDtoMapperTest {
         );
 
         var dto = ForespørselDtoMapper.mapFraEntitet(entitet);
+        var expectedSaksnummer = Saksnummer.fra(FAGSAK_SAKSNUMMER);
 
         assertThat(dto.uuid()).isEqualTo(entitet.getUuid());
         assertThat(dto.arbeidsgiver()).isEqualTo(ARBEIDSGIVER);
@@ -48,7 +50,7 @@ class ForespørselApiResponseDtoMapperTest {
         assertThat(dto.forespørselType()).isEqualTo(ForespørselType.BESTILT_AV_FAGSYSTEM);
         assertThat(dto.skjæringstidspunkt()).isEqualTo(SKJÆRINGSTIDSPUNKT);
         assertThat(dto.førsteUttaksdato()).isEqualTo(FØRSTE_UTTAKSDATO);
-        assertThat(dto.fagsystemSaksnummer()).isEqualTo(FAGSAK_SAKSNUMMER);
+        assertThat(dto.fagsystemSaksnummer()).isEqualTo(expectedSaksnummer);
         assertThat(dto.opprettetTidspunkt()).isNotNull();
         assertThat(dto.oppgaveId()).isNull();
         assertThat(dto.arbeidsgiverNotifikasjonSakId()).isNull();

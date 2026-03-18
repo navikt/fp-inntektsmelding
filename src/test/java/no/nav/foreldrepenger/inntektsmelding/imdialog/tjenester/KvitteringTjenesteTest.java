@@ -1,6 +1,5 @@
 package no.nav.foreldrepenger.inntektsmelding.imdialog.tjenester;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -68,26 +67,6 @@ class KvitteringTjenesteTest {
     @BeforeEach
     void setUp() {
         kvitteringTjeneste = new KvitteringTjeneste(forespørselBehandlingTjeneste, inntektsmeldingTjeneste, dokumentGeneratorTjeneste);
-    }
-
-    @Test
-    void skal_hent_alle_inntektsmeldinger_for_en_forespørsel() {
-        // Arrange
-        var uid = UUID.randomUUID();
-        var im = InntektsmeldingDto.builder()
-            .medInntekt(BigDecimal.ZERO)
-            .medStartdato(START_DATO)
-            .medAktørId(new AktørId(SØKER_AKTØR_ID.getAktørId()))
-            .medArbeidsgiver(new Arbeidsgiver(ARBEIDSGIVER_IDENT))
-            .medYtelse(Ytelsetype.FORELDREPENGER)
-            .build();
-        when(inntektsmeldingTjeneste.hentInntektsmeldinger(uid)).thenReturn(List.of(im));
-
-        // Act
-        var inntektsmeldinger = inntektsmeldingTjeneste.hentInntektsmeldinger(uid);
-
-        // Assert
-        assertThat(inntektsmeldinger).hasSize(1).containsAll(List.of(im));
     }
 
     @Test

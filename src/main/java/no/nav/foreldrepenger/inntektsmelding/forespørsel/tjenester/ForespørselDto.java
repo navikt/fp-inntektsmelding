@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Saksnummer;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
@@ -18,7 +19,7 @@ public record ForespørselDto(UUID uuid,
                              ForespørselType forespørselType,
                              LocalDate skjæringstidspunkt,
                              LocalDate førsteUttaksdato,
-                             String fagsystemSaksnummer,
+                             Saksnummer fagsystemSaksnummer,
                              LocalDateTime opprettetTidspunkt,
                              String arbeidsgiverNotifikasjonSakId,
                              String oppgaveId,

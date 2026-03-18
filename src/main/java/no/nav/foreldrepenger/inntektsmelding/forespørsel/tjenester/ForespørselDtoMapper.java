@@ -3,6 +3,7 @@ package no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Saksnummer;
 
 public class ForespørselDtoMapper {
 
@@ -23,7 +24,7 @@ public class ForespørselDtoMapper {
             entitet.getForespørselType(),
             entitet.getSkjæringstidspunkt().orElse(null),
             entitet.getFørsteUttaksdato(),
-            entitet.getFagsystemSaksnummer().orElse(null),
+            entitet.getFagsystemSaksnummer().map(Saksnummer::new).orElse(null),
             entitet.getOpprettetTidspunkt(),
             entitet.getArbeidsgiverNotifikasjonSakId(),
             entitet.getOppgaveId().orElse(null),
