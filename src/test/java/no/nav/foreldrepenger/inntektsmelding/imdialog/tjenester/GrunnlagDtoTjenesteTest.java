@@ -189,7 +189,7 @@ class GrunnlagDtoTjenesteTest {
             new PersonInfo(innsenderNavn, null, innsenderEtternavn, new PersonIdent(INNMELDER_UID), null, stp, innsenderTelefonnummer, null));
         when(arbeidsforholdTjeneste.hentArbeidsforhold(personIdent, stp))
             .thenReturn(List.of(new Arbeidsforhold(orgnr, new Arbeidsforhold.Ansettelsesperiode(stp.minusMonths(6), stp.plusMonths(1)))));
-        when(inntektTjeneste.hentInntekt(new AktørId(forespørsel.getAktørId().getAktørId()), stp, stp,
+        when(inntektTjeneste.hentInntekt(forespørsel.getAktørId(), stp, stp,
             Arbeidsgiver.fra(forespørsel.getOrganisasjonsnummer()), true)).thenReturn(new Inntektsopplysninger(BigDecimal.valueOf(52000),
             forespørsel.getOrganisasjonsnummer(),
             List.of()));
@@ -274,7 +274,7 @@ class GrunnlagDtoTjenesteTest {
         var ytelsetype = Ytelsetype.FORELDREPENGER;
         var eksForespørselDato = LocalDate.now().minusYears(4);
         var førsteFraværsdag = LocalDate.now();
-        var aktørId = new AktørId("9999999999999");
+        var aktørId = AktørId.fra("9999999999999");
         var forespørsel = new ForespørselEntitet("999999998",
             eksForespørselDato,
             new AktørIdEntitet(aktørId.getAktørId()),
@@ -294,7 +294,7 @@ class GrunnlagDtoTjenesteTest {
         var ytelsetype = Ytelsetype.FORELDREPENGER;
         var eksForespørselDato = LocalDate.now().plusDays(10);
         var førsteFraværsdag = LocalDate.now();
-        var aktørId = new AktørId("9999999999999");
+        var aktørId = AktørId.fra("9999999999999");
         var forespørsel = new ForespørselEntitet("999999998",
             eksForespørselDato,
             new AktørIdEntitet(aktørId.getAktørId()),
@@ -316,7 +316,7 @@ class GrunnlagDtoTjenesteTest {
         var eksForespørselDato = LocalDate.now().minusYears(1);
         var førsteDatoMedRefusjon = LocalDate.now();
         var organisasjonsnummer = "999999999";
-        var aktørId = new AktørId("9999999999999");
+        var aktørId = AktørId.fra("9999999999999");
         var forespørsel = new ForespørselEntitet("999999998",
             eksForespørselDato,
             new AktørIdEntitet(aktørId.getAktørId()),
@@ -366,7 +366,7 @@ class GrunnlagDtoTjenesteTest {
         var førsteFraværsdag = LocalDate.now();
         var eksFpFørsteUttaksdato = LocalDate.now().minusDays(2);
         var orgnr = "999999999";
-        var aktørId = new AktørId("9999999999999");
+        var aktørId = AktørId.fra("9999999999999");
         var forespørsel = new ForespørselEntitet("999999999", eksFpFørsteUttaksdato, new AktørIdEntitet(aktørId.getAktørId()), ytelsetype, "123", eksFpFørsteUttaksdato, ForespørselType.BESTILT_AV_FAGSYSTEM);
         var personInfo = new PersonInfo("Navn", null, "Navnesen", personIdent, new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(aktørId.getAktørId()), LocalDate.now(), null, null);
 
@@ -407,7 +407,7 @@ class GrunnlagDtoTjenesteTest {
         var førsteFraværsdag = LocalDate.now();
         var eksFpFørsteUttaksdato = LocalDate.now().minusDays(2);
         var organisasjonsnummer = "999999999";
-        var aktørId = new AktørId("9999999999999");
+        var aktørId = AktørId.fra("9999999999999");
         var forespørsel = new ForespørselEntitet("999999999", eksFpFørsteUttaksdato, new AktørIdEntitet(aktørId.getAktørId()), ytelsetype, "123", eksFpFørsteUttaksdato, ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT);
         var personInfo = new PersonInfo("Navn", null, "Navnesen", fødselsnummer, new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(aktørId.getAktørId()), LocalDate.now(), null, null);
         var ansattfraDato1 = LocalDate.now().minusYears(2);
@@ -452,7 +452,7 @@ class GrunnlagDtoTjenesteTest {
         var førsteUttaksdato = LocalDate.of(2024, 12, 20);
         var skjæringstidspunkt = LocalDate.of(2024, 12, 21);
         var orgnr = "999999999";
-        var aktørId = new AktørId("9999999999999");
+        var aktørId = AktørId.fra("9999999999999");
         var forespørsel = new ForespørselEntitet("999999998",
             eksForespørselDato,
             new AktørIdEntitet(aktørId.getAktørId()),
@@ -509,7 +509,7 @@ class GrunnlagDtoTjenesteTest {
         var ytelsetype = Ytelsetype.FORELDREPENGER;
         var førsteUttaksdato = LocalDate.now().minusMonths(1);
         var orgnr = "999999999";
-        var aktørId = new AktørId("9999999999999");
+        var aktørId = AktørId.fra("9999999999999");
         var forespørsel = new ForespørselEntitet("999999999", førsteUttaksdato, new AktørIdEntitet(aktørId.getAktørId()), ytelsetype, "123", førsteUttaksdato, ForespørselType.BESTILT_AV_FAGSYSTEM);
         var personInfo = new PersonInfo("Navn", null, "Navnesen", personIdent, new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(aktørId.getAktørId()), LocalDate.now(), null, null);
 
@@ -550,7 +550,7 @@ class GrunnlagDtoTjenesteTest {
         var ytelsetype = Ytelsetype.FORELDREPENGER;
         var førsteUttaksdato = LocalDate.now().minusMonths(1);
         var organisasjonsnummer = "999999999";
-        var aktørId = new AktørId("9999999999999");
+        var aktørId = AktørId.fra("9999999999999");
 
         var personInfo = new PersonInfo("Navn", null, "Navnesen", fødselsnummer, aktørId, LocalDate.now(), null, null);
 

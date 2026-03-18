@@ -106,7 +106,7 @@ class JoarkTjenesteTest {
     void skal_teste_oversending_privapterson() {
         // Arrange
         var aktør = "1234567891234";
-        var aktørIdSøker = new AktørId(aktør);
+        var aktørIdSøker = AktørId.fra(aktør);
         var naturalytelse = new InntektsmeldingDto.BortfaltNaturalytelse(
             LocalDate.of(2024, 6, 10),
                 LocalDate.of(2024, 6, 30),

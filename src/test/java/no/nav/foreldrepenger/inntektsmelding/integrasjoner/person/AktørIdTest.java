@@ -12,7 +12,7 @@ class AktørIdTest {
 
     @Test
     void skal_opprette_aktørId_med_gyldig_13_sifret_id() {
-        var aktørId = new AktørId(GYLDIG_AKTØR_ID);
+        var aktørId = AktørId.fra(GYLDIG_AKTØR_ID);
 
         assertThat(aktørId.getAktørId()).isEqualTo(GYLDIG_AKTØR_ID);
     }
@@ -20,41 +20,41 @@ class AktørIdTest {
     @Test
     void skal_kaste_NullPointerException_når_aktørId_er_null() {
         assertThatNullPointerException()
-            .isThrownBy(() -> new AktørId(null))
+            .isThrownBy(() -> AktørId.fra(null))
             .withMessageContaining("aktørId");
     }
 
     @Test
     void skal_kaste_IllegalArgumentException_for_tom_streng() {
-        assertThatThrownBy(() -> new AktørId(""))
+        assertThatThrownBy(() -> AktørId.fra(""))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("Ugyldig aktørId");
     }
 
     @Test
     void skal_kaste_IllegalArgumentException_for_for_kort_id() {
-        assertThatThrownBy(() -> new AktørId("123456789012"))
+        assertThatThrownBy(() -> AktørId.fra("123456789012"))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("Ugyldig aktørId");
     }
 
     @Test
     void skal_kaste_IllegalArgumentException_for_bokstaver() {
-        assertThatThrownBy(() -> new AktørId("123456789012a"))
+        assertThatThrownBy(() -> AktørId.fra("123456789012a"))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("Ugyldig aktørId");
     }
 
     @Test
     void skal_kaste_IllegalArgumentException_for_spesialtegn() {
-        assertThatThrownBy(() -> new AktørId("123456789012!"))
+        assertThatThrownBy(() -> AktørId.fra("123456789012!"))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("Ugyldig aktørId");
     }
 
     @Test
     void skal_maskere_aktørId_i_toString() {
-        var aktørId = new AktørId(GYLDIG_AKTØR_ID);
+        var aktørId = AktørId.fra(GYLDIG_AKTØR_ID);
 
         var resultat = aktørId.toString();
 
@@ -65,8 +65,8 @@ class AktørIdTest {
 
     @Test
     void skal_være_lik_når_samme_aktørId() {
-        var aktørId1 = new AktørId(GYLDIG_AKTØR_ID);
-        var aktørId2 = new AktørId(GYLDIG_AKTØR_ID);
+        var aktørId1 = AktørId.fra(GYLDIG_AKTØR_ID);
+        var aktørId2 = AktørId.fra(GYLDIG_AKTØR_ID);
 
         assertThat(aktørId1)
             .isEqualTo(aktørId2)
@@ -75,15 +75,15 @@ class AktørIdTest {
 
     @Test
     void skal_ikke_være_lik_når_ulik_aktørId() {
-        var aktørId1 = new AktørId("1234567890123");
-        var aktørId2 = new AktørId("9876543210123");
+        var aktørId1 = AktørId.fra("1234567890123");
+        var aktørId2 = AktørId.fra("9876543210123");
 
         assertThat(aktørId1).isNotEqualTo(aktørId2);
     }
 
     @Test
     void skal_ikke_være_lik_null() {
-        var aktørId = new AktørId(GYLDIG_AKTØR_ID);
+        var aktørId = AktørId.fra(GYLDIG_AKTØR_ID);
 
         assertThat(aktørId).isNotNull();
     }

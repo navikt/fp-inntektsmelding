@@ -79,7 +79,7 @@ class InntektsmeldingXMLTjenesteTest {
     void skal_teste_xml_generering_svp() {
         // Arrange
         var opprettetTidspunkt = LocalDateTime.of(2024, 6, 30, 12, 12, 30);
-        var aktørIdSøker = new AktørId("1234567891234");
+        var aktørIdSøker = AktørId.fra("1234567891234");
         var fnrSøker = new PersonIdent("11111111111");
 
         var inntektsmelding = InntektsmeldingDto.builder()

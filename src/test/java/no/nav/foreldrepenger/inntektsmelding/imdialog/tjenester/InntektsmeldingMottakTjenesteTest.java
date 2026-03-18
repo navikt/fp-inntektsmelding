@@ -123,7 +123,7 @@ class InntektsmeldingMottakTjenesteTest {
         // Arrange
         var uuid = UUID.randomUUID();
         var ytelse = Ytelsetype.FORELDREPENGER;
-        var aktørId = new AktørId("9999999999999");
+        var aktørId = AktørId.fra("9999999999999");
         var orgnr = "999999999";
         var startdato = LocalDate.now();
         var forespørsel = new ForespørselEntitet(orgnr,
@@ -135,7 +135,7 @@ class InntektsmeldingMottakTjenesteTest {
             ForespørselType.BESTILT_AV_FAGSYSTEM);
 
         var im = InntektsmeldingDto.builder()
-            .medAktørId(new AktørId(aktørId.getAktørId()))
+            .medAktørId(AktørId.fra(aktørId.getAktørId()))
             .medKontaktperson(new InntektsmeldingDto.Kontaktperson("Test", "Test"))
             .medYtelse(Ytelsetype.FORELDREPENGER)
             .medInntekt(BigDecimal.valueOf(100))
@@ -184,7 +184,7 @@ class InntektsmeldingMottakTjenesteTest {
         // Arrange
         var uuid = UUID.randomUUID();
         var ytelse = Ytelsetype.FORELDREPENGER;
-        var aktørId = new AktørId("9999999999999");
+        var aktørId = AktørId.fra("9999999999999");
         var orgnr = "999999999";
         var startdato = LocalDate.now();
         var eksisterendeForespørsel = new ForespørselEntitet(orgnr,
@@ -253,7 +253,7 @@ class InntektsmeldingMottakTjenesteTest {
         // Arrange
         var uuid = UUID.randomUUID();
         var ytelse = Ytelsetype.FORELDREPENGER;
-        var aktørId = new AktørId("9999999999999");
+        var aktørId = AktørId.fra("9999999999999");
         var orgnr = "999999999";
         var startdato = LocalDate.now();
         var forespørsel = new ForespørselEntitet(orgnr,
@@ -319,7 +319,7 @@ class InntektsmeldingMottakTjenesteTest {
         // Arrange
         var uuid = UUID.randomUUID();
         var ytelse = Ytelsetype.FORELDREPENGER;
-        var aktørId = new AktørId("9999999999999");
+        var aktørId = AktørId.fra("9999999999999");
         var orgnr = "999999999";
         var startdato = LocalDate.now();
         var eksisterendeForespørsel = new ForespørselEntitet(orgnr,

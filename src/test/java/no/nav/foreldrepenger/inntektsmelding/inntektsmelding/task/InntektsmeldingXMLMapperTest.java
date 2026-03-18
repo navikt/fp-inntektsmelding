@@ -22,7 +22,7 @@ class InntektsmeldingXMLMapperTest {
 
     private static final LocalDate NOW = LocalDate.now();
     private static final String DUMMY_ARBEIDSGIVER_IDENT = "012345678";
-    private static final AktørId DUMMY_AKTØRID = new AktørId("1234567890123");
+    private static final AktørId DUMMY_AKTØRID = AktørId.fra("1234567890123");
     private static final String DUMMY_FNR = "12345678900";
 
     @Test

@@ -37,7 +37,7 @@ class InntektTjenesteTest {
 
     @Test
     void skal_teste_at_inntekter_innhentes_happy_case() {
-        var aktørId = new AktørId(AKTØR_ID);
+        var aktørId = AktørId.fra(AKTØR_ID);
         var stp = LocalDate.of(2024,10,15);
         var dagensDato = stp.plusDays(10);
         var forventetRequest = new FinnInntektRequest(aktørId.getAktørId(), YearMonth.of(2024, 7), YearMonth.of(2024, 9));
@@ -58,7 +58,7 @@ class InntektTjenesteTest {
 
     @Test
     void skal_teste_at_inntekter_ikke_finnes() {
-        var aktørId = new AktørId(AKTØR_ID);
+        var aktørId = AktørId.fra(AKTØR_ID);
         var stp = LocalDate.of(2024,10,15);
         var dagensDato = LocalDate.of(2024,10,15);
         var forventetRequest = new FinnInntektRequest(aktørId.getAktørId(), YearMonth.of(2024, 7), YearMonth.of(2024, 9));
@@ -76,7 +76,7 @@ class InntektTjenesteTest {
 
     @Test
     void skal_teste_at_inntekter_innhentes_dagens_dato_er_før_rapporteringsfrist_og_inntekt_ikke_finnes_for_siste_måned() {
-        var aktørId = new AktørId(AKTØR_ID);
+        var aktørId = AktørId.fra(AKTØR_ID);
         var stp = LocalDate.of(2024,10,15);
         var dagensDato = LocalDate.of(2024,10,1);
         var forventetRequest = new FinnInntektRequest(aktørId.getAktørId(), YearMonth.of(2024, 6), YearMonth.of(2024, 9));
@@ -98,7 +98,7 @@ class InntektTjenesteTest {
 
     @Test
     void skal_teste_at_inntekter_innhentes_dagens_dato_er_før_rapporteringsfrist_og_inntekt_finnes_for_siste_måned() {
-        var aktørId = new AktørId(AKTØR_ID);
+        var aktørId = AktørId.fra(AKTØR_ID);
         var stp = LocalDate.of(2024,10,15);
         var dagensDato = LocalDate.of(2024,10,1);
         var forventetRequest = new FinnInntektRequest(aktørId.getAktørId(), YearMonth.of(2024, 6), YearMonth.of(2024, 9));
@@ -122,7 +122,7 @@ class InntektTjenesteTest {
 
     @Test
     void skal_teste_at_inntekter_innhentes_når_det_mangler_inntekt_midt_i_perioden_uten_justering() {
-        var aktørId = new AktørId(AKTØR_ID);
+        var aktørId = AktørId.fra(AKTØR_ID);
         var stp = LocalDate.of(2024,10,15);
         var dagensDato = LocalDate.of(2024,10,15);
         var forventetRequest = new FinnInntektRequest(aktørId.getAktørId(), YearMonth.of(2024, 7), YearMonth.of(2024, 9));
@@ -143,7 +143,7 @@ class InntektTjenesteTest {
 
     @Test
     void skal_teste_at_inntekter_innhentes_når_det_mangler_inntekt_midt_i_perioden_med_justering() {
-        var aktørId = new AktørId(AKTØR_ID);
+        var aktørId = AktørId.fra(AKTØR_ID);
         var stp = LocalDate.of(2024,10,15);
         var dagensDato = LocalDate.of(2024,10,2);
         var forventetRequest = new FinnInntektRequest(aktørId.getAktørId(), YearMonth.of(2024, 6), YearMonth.of(2024, 9));
@@ -166,7 +166,7 @@ class InntektTjenesteTest {
 
     @Test
     void skal_teste_når_ingen_inntekter_er_rapportert() {
-        var aktørId = new AktørId(AKTØR_ID);
+        var aktørId = AktørId.fra(AKTØR_ID);
         var stp = LocalDate.of(2024,10,15);
         var dagensDato = LocalDate.of(2024,10,15);
         var forventetRequest = new FinnInntektRequest(aktørId.getAktørId(), YearMonth.of(2024, 7), YearMonth.of(2024, 9));
@@ -183,7 +183,7 @@ class InntektTjenesteTest {
 
     @Test
     void skal_teste_at_inntekter_innhentes_dagens_dato_er_før_rapporteringsfrist_og_4_uker_før_stp() {
-        var aktørId = new AktørId(AKTØR_ID);
+        var aktørId = AktørId.fra(AKTØR_ID);
         var stp = LocalDate.of(2024,12,1);
         var dagensDato = LocalDate.of(2024,11,4);
         var forventetRequest = new FinnInntektRequest(aktørId.getAktørId(), YearMonth.of(2024, 7), YearMonth.of(2024, 11));
@@ -206,7 +206,7 @@ class InntektTjenesteTest {
 
     @Test
     void skal_teste_at_inntekter_innhentes_dagens_dato_er_før_rapporteringsfrist_og_4_uker_før_stp_men_midterste_måned_finnes() {
-        var aktørId = new AktørId(AKTØR_ID);
+        var aktørId = AktørId.fra(AKTØR_ID);
         var stp = LocalDate.of(2024,12,1);
         var dagensDato = LocalDate.of(2024,11,4);
         var forventetRequest = new FinnInntektRequest(aktørId.getAktørId(), YearMonth.of(2024, 7), YearMonth.of(2024, 11));
@@ -229,7 +229,7 @@ class InntektTjenesteTest {
 
     @Test
     void skal_teste_flere_inntekter_pr_måned() {
-        var aktørId = new AktørId(AKTØR_ID);
+        var aktørId = AktørId.fra(AKTØR_ID);
         var stp = LocalDate.of(2024,10,15);
         var dagensDato = stp.plusDays(10);
         var forventetRequest = new FinnInntektRequest(aktørId.getAktørId(), YearMonth.of(2024, 7), YearMonth.of(2024, 9));
@@ -250,7 +250,7 @@ class InntektTjenesteTest {
 
     @Test
     void skal_teste_flere_inntekter_pr_måned_noen_null() {
-        var aktørId = new AktørId(AKTØR_ID);
+        var aktørId = AktørId.fra(AKTØR_ID);
         var stp = LocalDate.of(2024,10,15);
         var dagensDato = stp.plusDays(10);
         var forventetRequest = new FinnInntektRequest(aktørId.getAktørId(), YearMonth.of(2024, 7), YearMonth.of(2024, 9));
@@ -271,7 +271,7 @@ class InntektTjenesteTest {
 
     @Test
     void skal_fjerne_alle_eldre_måneder_uten_inntekt_når_tre_nyeste_er_rapportert() {
-        var aktørId = new AktørId(AKTØR_ID);
+        var aktørId = AktørId.fra(AKTØR_ID);
         var stp = LocalDate.of(2024,12,15);
         var dagensDato = LocalDate.of(2024,11,18);
         var forventetRequest = new FinnInntektRequest(aktørId.getAktørId(), YearMonth.of(2024, 8), YearMonth.of(2024, 11));
@@ -293,7 +293,7 @@ class InntektTjenesteTest {
 
     @Test
     void skal_returnere_tomme_inntekter_hvis_inntektskomponenten_er_nede() {
-        var aktørId = new AktørId(AKTØR_ID);
+        var aktørId = AktørId.fra(AKTØR_ID);
         var stp = LocalDate.of(2024,12,15);
         var dagensDato = LocalDate.of(2024,11,18);
         var forventetRequest = new FinnInntektRequest(aktørId.getAktørId(), YearMonth.of(2024, 8), YearMonth.of(2024, 11));
@@ -310,7 +310,7 @@ class InntektTjenesteTest {
 
     @Test
     void skal_teste_negative_inntekter_blir_til_0() {
-        var aktørId = new AktørId(AKTØR_ID);
+        var aktørId = AktørId.fra(AKTØR_ID);
         var stp = LocalDate.of(2024,10,15);
         var dagensDato = stp.plusDays(10);
         var forventetRequest = new FinnInntektRequest(aktørId.getAktørId(), YearMonth.of(2024, 7), YearMonth.of(2024, 9));
@@ -331,7 +331,7 @@ class InntektTjenesteTest {
 
     @Test
     void skal_teste_at_søker_ansatt_i_deler_av_beregningsperioden_får_snitt_fra_korrekte_måneder() {
-        var aktørId = new AktørId(AKTØR_ID);
+        var aktørId = AktørId.fra(AKTØR_ID);
         var stp = LocalDate.of(2024,10,15);
         var dagensDato = stp.plusDays(10);
         var forventetRequest = new FinnInntektRequest(aktørId.getAktørId(), YearMonth.of(2024, 7), YearMonth.of(2024, 9));
@@ -351,7 +351,7 @@ class InntektTjenesteTest {
 
     @Test
     void skal_teste_søker_ansatt_i_deler_av_beregningsperioden_men_ingen_inntekter_rapportert() {
-        var aktørId = new AktørId(AKTØR_ID);
+        var aktørId = AktørId.fra(AKTØR_ID);
         var stp = LocalDate.of(2024,10,15);
         var dagensDato = stp.plusDays(10);
         var forventetRequest = new FinnInntektRequest(aktørId.getAktørId(), YearMonth.of(2024, 7), YearMonth.of(2024, 9));
@@ -368,7 +368,7 @@ class InntektTjenesteTest {
 
     @Test
     void skal_teste_søker_ansatt_i_deler_av_beregningsperioden_og_alle_inntekter_rapportert() {
-        var aktørId = new AktørId(AKTØR_ID);
+        var aktørId = AktørId.fra(AKTØR_ID);
         var stp = LocalDate.of(2024,10,15);
         var dagensDato = stp.plusDays(10);
         var forventetRequest = new FinnInntektRequest(aktørId.getAktørId(), YearMonth.of(2024, 7), YearMonth.of(2024, 9));

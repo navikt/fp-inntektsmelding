@@ -69,7 +69,7 @@ public class InntektsmeldingMottakTjeneste {
 
         var arbeidsgiver = Arbeidsgiver.fra(mottattInntektsmeldingDto.arbeidsgiverIdent().orgnr());
         if (!forespørsel.status().equals(ForespørselStatus.FERDIG)) {
-            var aktørId = new AktørId(mottattInntektsmeldingDto.aktorId().id());
+            var aktørId = AktørId.fra(mottattInntektsmeldingDto.aktorId().id());
             var ferdigstiltForespørsel = forespørselBehandlingTjeneste.ferdigstillForespørsel(mottattInntektsmeldingDto.foresporselUuid(), aktørId,
                 arbeidsgiver,
                 mottattInntektsmeldingDto.startdato(), LukkeÅrsak.ORDINÆR_INNSENDING, Optional.ofNullable(lagretIm.getInntektsmeldingUuid()));

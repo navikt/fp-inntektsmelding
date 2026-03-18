@@ -65,7 +65,7 @@ public class ArbeidsgiverinitiertDialogRest {
         if (personInfo == null) {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
-        var aktørId = new AktørId(personInfo.aktørId().getAktørId());
+        var aktørId = personInfo.aktørId();
         var eksisterendeForepørslersisteTreÅr = grunnlagDtoTjeneste.finnForespørslerSisteTreÅr(request.ytelseType(),
             request.førsteFraværsdag(),
             aktørId);

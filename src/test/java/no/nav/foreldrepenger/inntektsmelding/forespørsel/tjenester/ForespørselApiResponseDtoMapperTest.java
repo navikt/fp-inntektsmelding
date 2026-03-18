@@ -24,7 +24,7 @@ class ForespørselApiResponseDtoMapperTest {
     private static final LocalDate FØRSTE_UTTAKSDATO = LocalDate.of(2026, 4, 1);
     private static final String AKTØR_ID_VERDI = "1234567890123";
     private static final AktørIdEntitet AKTØR_ID_ENTITET = new AktørIdEntitet(AKTØR_ID_VERDI);
-    private static final AktørId AKTØR_ID = new AktørId(AKTØR_ID_VERDI);
+    private static final AktørId AKTØR_ID = AktørId.fra(AKTØR_ID_VERDI);
     private static final String FAGSAK_SAKSNUMMER = "SAK123";
 
     @Test

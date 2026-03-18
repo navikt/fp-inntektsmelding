@@ -42,7 +42,7 @@ class KvitteringTjenesteTest {
     private static final String INNMELDER_UID = "12324312345";
     private static final String ARBEIDSGIVER_IDENT = "999999999";
     private static final LocalDate START_DATO = LocalDate.now();
-    private static final AktørId SØKER_AKTØR_ID = new AktørId("1111111111111");
+    private static final AktørId SØKER_AKTØR_ID = AktørId.fra("1111111111111");
 
     @Mock
     private ForespørselBehandlingTjeneste forespørselBehandlingTjeneste;
@@ -76,7 +76,7 @@ class KvitteringTjenesteTest {
         var im = InntektsmeldingDto.builder()
             .medInntekt(BigDecimal.ZERO)
             .medStartdato(START_DATO)
-            .medAktørId(new AktørId(SØKER_AKTØR_ID.getAktørId()))
+            .medAktørId(SØKER_AKTØR_ID)
             .medArbeidsgiver(new Arbeidsgiver(ARBEIDSGIVER_IDENT))
             .medYtelse(Ytelsetype.FORELDREPENGER)
             .build();

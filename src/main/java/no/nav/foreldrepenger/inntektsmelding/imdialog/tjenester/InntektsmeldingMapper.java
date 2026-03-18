@@ -64,7 +64,7 @@ public class InntektsmeldingMapper {
 
     private static InntektsmeldingDto.Builder opprettDtoBuilderOgSettFellesFelter(SendInntektsmeldingRequestDto dto) {
         return InntektsmeldingDto.builder()
-            .medAktørId(new AktørId(dto.aktorId().id()))
+            .medAktørId(AktørId.fra(dto.aktorId().id()))
             .medArbeidsgiver(new Arbeidsgiver(dto.arbeidsgiverIdent().orgnr()))
             .medKildesystem(Kildesystem.ARBEIDSGIVERPORTAL)
             .medStartdato(dto.startdato())
