@@ -122,8 +122,8 @@ class ForespørselDtoTest {
             .fagsystemSaksnummer(SAKSNUMMER)
             .build();
 
-        assertThat(dto1).isEqualTo(dto2);
-        assertThat(dto1.hashCode()).isEqualTo(dto2.hashCode());
+        assertThat(dto1).isEqualTo(dto2)
+            .hasSameHashCodeAs(dto2);
     }
 
     @Test
@@ -181,9 +181,9 @@ class ForespørselDtoTest {
             .build();
 
         var toString = dto.toString();
-        assertThat(toString).contains("ForespørselDto");
-        assertThat(toString).contains(UUID_1.toString());
-        assertThat(toString).contains("UNDER_BEHANDLING");
+        assertThat(toString).contains("ForespørselDto")
+            .contains(UUID_1.toString())
+            .contains("UNDER_BEHANDLING");
     }
 }
 

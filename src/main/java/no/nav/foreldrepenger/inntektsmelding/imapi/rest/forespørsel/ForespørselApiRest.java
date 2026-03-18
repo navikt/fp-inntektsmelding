@@ -76,7 +76,8 @@ public class ForespørselApiRest {
     @Tilgangskontrollert
     public Response hentForespørsler(@Valid @NotNull ForespørselFilterRequest filterRequest) {
         sjekkErSystemkall();
-        var dtoer = forespørselApiTjeneste.hentForespørslerDto(Arbeidsgiver.fra(filterRequest.orgnr().orgnr()),
+        var dtoer = forespørselApiTjeneste.hentForespørslerDto(
+            Arbeidsgiver.fra(filterRequest.orgnr().orgnr()),
             filterRequest.fnr(),
             filterRequest.status(),
             filterRequest.ytelseType(),
