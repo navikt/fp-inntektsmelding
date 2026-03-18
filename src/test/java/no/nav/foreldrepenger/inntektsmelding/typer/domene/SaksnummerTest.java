@@ -21,7 +21,7 @@ class SaksnummerTest {
     @Test
     void skal_vise_saksnummer_i_toString() {
         var saksnummer = Saksnummer.fra("FAGSAK_123");
-        assertThat(saksnummer.toString()).hasToString("Saksnummer<FAGSAK_123>");
+        assertThat(saksnummer).hasToString("Saksnummer<FAGSAK_123>");
     }
 
     @Test

@@ -15,21 +15,21 @@ public class ForespørselDtoMapper {
         if (entitet == null) {
             return null;
         }
-        return new ForespørselDto(
-            entitet.getUuid(),
-            Arbeidsgiver.fra(entitet.getOrganisasjonsnummer()),
-            AktørId.fra(entitet.getAktørId().getAktørId()),
-            entitet.getYtelseType(),
-            entitet.getStatus(),
-            entitet.getForespørselType(),
-            entitet.getSkjæringstidspunkt().orElse(null),
-            entitet.getFørsteUttaksdato(),
-            entitet.getFagsystemSaksnummer().map(Saksnummer::new).orElse(null),
-            entitet.getOpprettetTidspunkt(),
-            entitet.getArbeidsgiverNotifikasjonSakId(),
-            entitet.getOppgaveId().orElse(null),
-            entitet.getDialogportenUuid().orElse(null)
-        );
+        return ForespørselDto.builder()
+            .uuid(entitet.getUuid())
+            .arbeidsgiver(Arbeidsgiver.fra(entitet.getOrganisasjonsnummer()))
+            .aktørId(AktørId.fra(entitet.getAktørId().getAktørId()))
+            .ytelseType(entitet.getYtelseType())
+            .status(entitet.getStatus())
+            .forespørselType(entitet.getForespørselType())
+            .skjæringstidspunkt(entitet.getSkjæringstidspunkt().orElse(null))
+            .førsteUttaksdato(entitet.getFørsteUttaksdato())
+            .fagsystemSaksnummer(entitet.getFagsystemSaksnummer().map(Saksnummer::new).orElse(null))
+            .opprettetTidspunkt(entitet.getOpprettetTidspunkt())
+            .arbeidsgiverNotifikasjonSakId(entitet.getArbeidsgiverNotifikasjonSakId())
+            .oppgaveId(entitet.getOppgaveId().orElse(null))
+            .dialogportenUuid(entitet.getDialogportenUuid().orElse(null))
+            .build();
     }
 }
 

@@ -16,7 +16,7 @@ import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 
-class ForespørselApiResponseDtoMapperTest {
+class ForespørselDtoMapperTest {
 
     private static final String ORGNR = "999999999";
     private static final Arbeidsgiver ARBEIDSGIVER = new Arbeidsgiver(ORGNR);
