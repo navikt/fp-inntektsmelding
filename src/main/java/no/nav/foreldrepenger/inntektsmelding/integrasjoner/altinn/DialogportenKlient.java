@@ -31,6 +31,7 @@ public class DialogportenKlient {
     private final RestConfig restConfig;
     private final AltinnExchangeTokenKlient tokenKlient;
     private final String inntektsmeldingSkjemaLenke;
+    private final String inntektsmeldingApiLenke;
 
     DialogportenKlient() {
         this(RestClient.client());
@@ -41,6 +42,7 @@ public class DialogportenKlient {
         this.restConfig = RestConfig.forClient(this.getClass());
         this.tokenKlient = AltinnExchangeTokenKlient.instance();
         this.inntektsmeldingSkjemaLenke = ENV.getProperty("inntektsmelding.skjema.lenke", "https://arbeidsgiver.nav.no/fp-im-dialog");
+        this.inntektsmeldingApiLenke = ENV.getProperty("inntektsmelding.api.lenke", "https://foreldrepenger-inntektsmelding-api.ekstern.nav.no/v1/inntektsmelding/send-inn");
     }
 
     public String opprettDialog(UUID forespørselUuid,
@@ -54,7 +56,8 @@ public class DialogportenKlient {
             sakstittel,
             førsteUttaksdato,
             ytelsetype,
-            inntektsmeldingSkjemaLenke);
+            inntektsmeldingSkjemaLenke,
+            inntektsmeldingApiLenke);
         var request = RestRequest.newPOSTJson(opprettRequest, target, restConfig)
             .otherAuthorizationSupplier(() -> tokenKlient.hentAltinnToken(this.restConfig.scopes()));
 

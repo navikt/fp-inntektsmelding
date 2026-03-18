@@ -23,7 +23,8 @@ public class DialogportenRequestMapper {
                                                            String sakstittel,
                                                            LocalDate førsteUttaksdato,
                                                            Ytelsetype ytelsetype,
-                                                           String inntektsmeldingSkjemaLenke) {
+                                                           String inntektsmeldingSkjemaLenke,
+                                                           String inntektsmeldingApiLenke) {
         var party = String.format("urn:altinn:organization:identifier-no:%s", arbeidsgiver.orgnr());
         var altinnressursFP = ALTINN_RESSURS_PREFIX + AltinnRessurser.ALTINN_TRE_INNTEKTSMELDING_RESSURS;
 
@@ -37,7 +38,7 @@ public class DialogportenRequestMapper {
         var contentTransmission = new DialogportenRequest.Content(lagContentValue("Send inn inntektsmelding"), null, null);
         var guiUrl = new DialogportenRequest.Url(inntektsmeldingSkjemaLenke + "/" + forespørselUuid.toString(), DialogportenRequest.NB,
             DialogportenRequest.AttachmentUrlConsumerType.Gui);
-        var apiUrl = new DialogportenRequest.Url(inntektsmeldingSkjemaLenke + "/server/api/ekstern/opplysninger?foresporselUuid=" + forespørselUuid.toString(),
+        var apiUrl = new DialogportenRequest.Url(inntektsmeldingApiLenke,
             DialogportenRequest.TEXT_PLAIN,
             DialogportenRequest.AttachmentUrlConsumerType.Api);
         var attachementTransmission = new DialogportenRequest.Attachment(
@@ -54,8 +55,8 @@ public class DialogportenRequestMapper {
         var apiAction = new DialogportenRequest.ApiAction(String.format("Innsending av inntektsmelding for %s med startdato %s",
             ytelsetype.name().toLowerCase(),
             førsteUttaksdato.format(DateTimeFormatter.ofPattern("dd.MM.yy"))),
-            List.of(new DialogportenRequest.Endpoint(inntektsmeldingSkjemaLenke + "/server/api/ekstern/opplysninger?foresporselUuid=" + forespørselUuid.toString(), DialogportenRequest.HttpMethod.GET, null)),
-            DialogportenRequest.ACTION_READ);
+            List.of(new DialogportenRequest.Endpoint(inntektsmeldingApiLenke, DialogportenRequest.HttpMethod.POST, null)),
+            DialogportenRequest.ACTION_WRITE);
 
         return new DialogportenRequest(altinnressursFP,
             party,
