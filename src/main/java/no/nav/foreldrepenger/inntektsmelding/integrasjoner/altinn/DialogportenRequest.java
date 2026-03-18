@@ -6,7 +6,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
-//NOSONAR
+@SuppressWarnings("java:S115")
 public record DialogportenRequest(@NotNull String serviceResource,
                                   @NotNull String party,
                                   String externalReference,
@@ -19,7 +19,6 @@ public record DialogportenRequest(@NotNull String serviceResource,
     public static final String NB = "nb";
     public static final String ACTION_READ = "read";
 
-    //NOSONAR
     enum DialogStatus {
         InProgress,
         Draft,
@@ -30,7 +29,7 @@ public record DialogportenRequest(@NotNull String serviceResource,
     }
 
     enum ExtendedDialogStatus {
-        Utgått, //NOSONAR
+        Utgått,
     }
 
     protected record ApiAction(String name, List<Endpoint> endpoints, String action) {
@@ -94,7 +93,6 @@ public record DialogportenRequest(@NotNull String serviceResource,
     protected record Url(String url, String mediaType, AttachmentUrlConsumerType consumerType) {
     }
 
-    //NOSONAR
     protected enum AttachmentUrlConsumerType {
         Gui,
         Api,

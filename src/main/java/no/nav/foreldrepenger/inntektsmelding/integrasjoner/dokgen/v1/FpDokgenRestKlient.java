@@ -17,7 +17,6 @@ import no.nav.vedtak.felles.integrasjon.rest.TokenFlow;
 public class FpDokgenRestKlient {
 
     protected static final String API_PATH = "/api";
-    private static final String V1_GENERER_PATH = "/v1/dokument/generer";
 
     private final RestClient restClient;
     private final RestConfig restConfig;
@@ -33,7 +32,7 @@ public class FpDokgenRestKlient {
 
     public byte[] genererPdf(FpDokgenRequest requestDto) {
 
-        var endpoint = UriBuilder.fromUri(restConfig.fpContextPath()).path(API_PATH).path(V1_GENERER_PATH).path("/pdf").build();
+        var endpoint = UriBuilder.fromUri(restConfig.fpContextPath()).path(API_PATH).path("/v1/dokument/generer/pdf").build();
 
         var request = RestRequest.newPOSTJson(requestDto, endpoint, restConfig)
             .header(HttpHeaders.ACCEPT, "application/pdf");
