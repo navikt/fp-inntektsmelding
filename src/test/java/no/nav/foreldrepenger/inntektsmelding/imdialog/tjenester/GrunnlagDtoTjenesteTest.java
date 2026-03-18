@@ -189,7 +189,7 @@ class GrunnlagDtoTjenesteTest {
             new PersonInfo(innsenderNavn, null, innsenderEtternavn, new PersonIdent(INNMELDER_UID), null, stp, innsenderTelefonnummer, null));
         when(arbeidsforholdTjeneste.hentArbeidsforhold(personIdent, stp))
             .thenReturn(List.of(new Arbeidsforhold(orgnr, new Arbeidsforhold.Ansettelsesperiode(stp.minusMonths(6), stp.plusMonths(1)))));
-        when(inntektTjeneste.hentInntekt(forespørsel.getAktørId(), stp, stp,
+        when(inntektTjeneste.hentInntekt(AktørId.fra(forespørsel.getAktørId().getAktørId()), stp, stp,
             Arbeidsgiver.fra(forespørsel.getOrganisasjonsnummer()), true)).thenReturn(new Inntektsopplysninger(BigDecimal.valueOf(52000),
             forespørsel.getOrganisasjonsnummer(),
             List.of()));
