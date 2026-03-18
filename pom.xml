@@ -20,7 +20,7 @@
 
         <felles.version>7.7.2</felles.version>
         <prosesstask.version>5.2.5</prosesstask.version>
-        <fp-kontrakter.version>9.4.29</fp-kontrakter.version>
+        <fp-kontrakter.version>9.4.30</fp-kontrakter.version>
     </properties>
 
     <dependencyManagement>
