@@ -1,5 +1,7 @@
 package no.nav.familie.inntektsmelding.imdialog.rest;
 
+import static no.nav.familie.inntektsmelding.typer.dto.KodeverkMapper.mapArbeidsgiverinitiertÅrsak;
+
 import java.util.UUID;
 
 import jakarta.enterprise.context.RequestScoped;
@@ -16,24 +18,20 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import no.nav.familie.inntektsmelding.forespørsel.tjenester.ForespørselTjeneste;
 import no.nav.familie.inntektsmelding.imdialog.tjenester.GrunnlagDtoTjeneste;
 import no.nav.familie.inntektsmelding.imdialog.tjenester.InntektsmeldingMapper;
 import no.nav.familie.inntektsmelding.imdialog.tjenester.InntektsmeldingMottakTjeneste;
-import no.nav.familie.inntektsmelding.koder.ArbeidsgiverinitiertÅrsak;
-import no.nav.familie.inntektsmelding.koder.Kildesystem;
-import no.nav.familie.inntektsmelding.typer.dto.ArbeidsgiverinitiertÅrsakDto;
-import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import no.nav.familie.inntektsmelding.imdialog.tjenester.InntektsmeldingTjeneste;
+import no.nav.familie.inntektsmelding.koder.Kildesystem;
 import no.nav.familie.inntektsmelding.server.auth.api.AutentisertMedTokenX;
 import no.nav.familie.inntektsmelding.server.auth.api.Tilgangskontrollert;
 import no.nav.familie.inntektsmelding.server.tilgangsstyring.Tilgang;
-
-import static no.nav.familie.inntektsmelding.typer.dto.KodeverkMapper.mapArbeidsgiverinitiertÅrsak;
+import no.nav.familie.inntektsmelding.typer.dto.ArbeidsgiverinitiertÅrsakDto;
+import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 
 @AutentisertMedTokenX
 @RequestScoped
@@ -107,11 +105,11 @@ public class InntektsmeldingDialogRest {
     public Response sendInntektsmelding(@NotNull @Valid SendInntektsmeldingRequestDto sendInntektsmeldingRequestDto) {
         var arbeidsgiverinitiertÅrsakDto = sendInntektsmeldingRequestDto.arbeidsgiverinitiertÅrsak();
         if (ArbeidsgiverinitiertÅrsakDto.NYANSATT.equals(arbeidsgiverinitiertÅrsakDto)) {
-            tilgang.sjekkAtArbeidsgiverHarTilgangTilBedrift(new OrganisasjonsnummerDto(sendInntektsmeldingRequestDto.arbeidsgiverIdent().ident()));
+            tilgang.sjekkAtArbeidsgiverHarTilgangTilBedrift(new OrganisasjonsnummerDto(sendInntektsmeldingRequestDto.arbeidsgiverIdent().orgnr()));
             LOG.info("Mottok arbeidsgiverinitert inntektsmelding årsak nyansatt for aktørId {}", sendInntektsmeldingRequestDto.aktorId());
            return Response.ok(inntektsmeldingMottakTjeneste.mottaArbeidsgiverinitiertInntektsmelding(sendInntektsmeldingRequestDto, mapArbeidsgiverinitiertÅrsak(arbeidsgiverinitiertÅrsakDto))).build();
         } else if (ArbeidsgiverinitiertÅrsakDto.UREGISTRERT.equals(arbeidsgiverinitiertÅrsakDto)) {
-            tilgang.sjekkAtArbeidsgiverHarTilgangTilBedrift(new OrganisasjonsnummerDto(sendInntektsmeldingRequestDto.arbeidsgiverIdent().ident()));
+            tilgang.sjekkAtArbeidsgiverHarTilgangTilBedrift(new OrganisasjonsnummerDto(sendInntektsmeldingRequestDto.arbeidsgiverIdent().orgnr()));
             LOG.info("Mottok arbeidsgiverinitert inntektsmelding årsak uregistrert for aktørId {}", sendInntektsmeldingRequestDto.aktorId());
             return Response.ok(inntektsmeldingMottakTjeneste.mottaArbeidsgiverinitiertInntektsmelding(sendInntektsmeldingRequestDto, mapArbeidsgiverinitiertÅrsak(arbeidsgiverinitiertÅrsakDto))).build();
         } else {

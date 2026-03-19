@@ -39,7 +39,6 @@ import no.nav.familie.inntektsmelding.koder.ForespørselStatus;
 import no.nav.familie.inntektsmelding.koder.ForespørselType;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.typer.dto.AktørIdDto;
-import no.nav.familie.inntektsmelding.typer.dto.ArbeidsgiverDto;
 import no.nav.familie.inntektsmelding.typer.dto.ArbeidsgiverinitiertÅrsakDto;
 import no.nav.familie.inntektsmelding.typer.dto.EndringsårsakDto;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
@@ -102,7 +101,7 @@ class InntektsmeldingMottakTjenesteTest {
         var innsendingDto = new SendInntektsmeldingRequestDto(uuid,
             new AktørIdDto("9999999999999"),
             YtelseTypeDto.FORELDREPENGER,
-            new ArbeidsgiverDto("999999999"),
+            new OrganisasjonsnummerDto("999999999"),
             new SendInntektsmeldingRequestDto.KontaktpersonRequestDto("Navn", "123"),
             LocalDate.now(),
             BigDecimal.valueOf(10000),
@@ -155,7 +154,7 @@ class InntektsmeldingMottakTjenesteTest {
         var innsendingDto = new SendInntektsmeldingRequestDto(null,
             new AktørIdDto("9999999999999"),
             YtelseTypeDto.FORELDREPENGER,
-            new ArbeidsgiverDto(orgnr),
+            new OrganisasjonsnummerDto(orgnr),
             new SendInntektsmeldingRequestDto.KontaktpersonRequestDto("Navn", "123"),
             LocalDate.now(),
             null,
@@ -220,7 +219,7 @@ class InntektsmeldingMottakTjenesteTest {
         var innsendingDto = new SendInntektsmeldingRequestDto(uuid,
             new AktørIdDto("9999999999999"),
             YtelseTypeDto.FORELDREPENGER,
-            new ArbeidsgiverDto(orgnr),
+            new OrganisasjonsnummerDto(orgnr),
             new SendInntektsmeldingRequestDto.KontaktpersonRequestDto("Navn", "123"),
             nyStartDato,
             null,
@@ -283,7 +282,7 @@ class InntektsmeldingMottakTjenesteTest {
         var innsendingDto = new SendInntektsmeldingRequestDto(null,
             new AktørIdDto("9999999999999"),
             YtelseTypeDto.FORELDREPENGER,
-            new ArbeidsgiverDto(orgnr),
+            new OrganisasjonsnummerDto(orgnr),
             new SendInntektsmeldingRequestDto.KontaktpersonRequestDto("Navn", "123"),
             LocalDate.now(),
             inntekt,
@@ -343,7 +342,7 @@ class InntektsmeldingMottakTjenesteTest {
         var innsendingDto = new SendInntektsmeldingRequestDto(uuid,
             new AktørIdDto("9999999999999"),
             YtelseTypeDto.FORELDREPENGER,
-            new ArbeidsgiverDto(orgnr),
+            new OrganisasjonsnummerDto(orgnr),
             new SendInntektsmeldingRequestDto.KontaktpersonRequestDto("Navn", "123"),
             startdato,
             nyInntekt,

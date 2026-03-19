@@ -62,7 +62,7 @@ public class InntektsmeldingMottakTjeneste {
         var entitet = InntektsmeldingMapper.mapTilEntitet(mottattInntektsmeldingDto);
         var imId = lagreOgLagJournalførTask(entitet, forespørselEntitet);
         var lagretIm = inntektsmeldingRepository.hentInntektsmelding(imId);
-        var orgnummer = new OrganisasjonsnummerDto(mottattInntektsmeldingDto.arbeidsgiverIdent().ident());
+        var orgnummer = new OrganisasjonsnummerDto(mottattInntektsmeldingDto.arbeidsgiverIdent().orgnr());
         //Ferdigstiller forespørsel hvis den ikke er ferdig fra før
         if (!forespørselEntitet.getStatus().equals(ForespørselStatus.FERDIG)) {
             var aktørId = new AktørIdEntitet(mottattInntektsmeldingDto.aktorId().id());
@@ -88,7 +88,7 @@ public class InntektsmeldingMottakTjeneste {
         var aktørId = new AktørIdEntitet(sendInntektsmeldingRequestDto.aktorId().id());
         var ytelseType = KodeverkMapper.mapYtelsetype(sendInntektsmeldingRequestDto.ytelse());
         var arbeidsgiverinitiertÅrsak = KodeverkMapper.mapArbeidsgiverinitiertÅrsak(sendInntektsmeldingRequestDto.arbeidsgiverinitiertÅrsak());
-        var organisasjonsnummer = new OrganisasjonsnummerDto(sendInntektsmeldingRequestDto.arbeidsgiverIdent().ident());
+        var organisasjonsnummer = new OrganisasjonsnummerDto(sendInntektsmeldingRequestDto.arbeidsgiverIdent().orgnr());
         var finnesForespørselFraFør = sendInntektsmeldingRequestDto.foresporselUuid() != null;
         ForespørselEntitet forespørselEnitet;
         InntektsmeldingEntitet lagretInntektsmelding;

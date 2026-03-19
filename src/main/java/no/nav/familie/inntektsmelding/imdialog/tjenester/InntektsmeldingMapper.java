@@ -19,10 +19,10 @@ import no.nav.familie.inntektsmelding.imdialog.rest.SendInntektsmeldingRequestDt
 import no.nav.familie.inntektsmelding.koder.ForespørselType;
 import no.nav.familie.inntektsmelding.koder.Kildesystem;
 import no.nav.familie.inntektsmelding.typer.dto.AktørIdDto;
-import no.nav.familie.inntektsmelding.typer.dto.ArbeidsgiverDto;
 import no.nav.familie.inntektsmelding.typer.dto.ArbeidsgiverinitiertÅrsakDto;
 import no.nav.familie.inntektsmelding.typer.dto.KodeverkMapper;
 import no.nav.familie.inntektsmelding.typer.dto.NaturalytelsetypeDto;
+import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
 import no.nav.vedtak.konfig.Tid;
 
@@ -65,7 +65,7 @@ public class InntektsmeldingMapper {
     private static InntektsmeldingEntitet.Builder opprettBuilderOgSettFellesFelter(SendInntektsmeldingRequestDto dto) {
         return InntektsmeldingEntitet.builder()
             .medAktørId(new AktørIdEntitet(dto.aktorId().id()))
-            .medArbeidsgiverIdent(dto.arbeidsgiverIdent().ident())
+            .medArbeidsgiverIdent(dto.arbeidsgiverIdent().orgnr())
             .medKildesystem(Kildesystem.ARBEIDSGIVERPORTAL)
             .medStartDato(dto.startdato())
             .medYtelsetype(KodeverkMapper.mapYtelsetype(dto.ytelse()))
@@ -121,7 +121,7 @@ public class InntektsmeldingMapper {
             forespørselEntitet.getUuid(),
             new AktørIdDto(entitet.getAktørId().getAktørId()),
             KodeverkMapper.mapYtelsetype(entitet.getYtelsetype()),
-            new ArbeidsgiverDto(entitet.getArbeidsgiverIdent()),
+            new OrganisasjonsnummerDto(entitet.getArbeidsgiverIdent()),
             new SendInntektsmeldingRequestDto.KontaktpersonRequestDto(entitet.getKontaktperson().getNavn(), entitet.getKontaktperson().getTelefonnummer()),
             entitet.getStartDato(),
             entitet.getMånedInntekt(),

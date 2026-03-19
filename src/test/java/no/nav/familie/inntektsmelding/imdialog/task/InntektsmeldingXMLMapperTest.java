@@ -5,15 +5,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 
-import no.nav.familie.inntektsmelding.koder.Kildesystem;
+import no.nav.familie.inntektsmelding.imdialog.modell.KontaktpersonEntitet;
 
 import org.junit.jupiter.api.Test;
 
 import no.nav.familie.inntektsmelding.imdialog.modell.BortaltNaturalytelseEntitet;
 import no.nav.familie.inntektsmelding.imdialog.modell.InntektsmeldingEntitet;
 import no.nav.familie.inntektsmelding.integrasjoner.person.PersonIdent;
+import no.nav.familie.inntektsmelding.koder.Kildesystem;
 import no.nav.familie.inntektsmelding.koder.NaturalytelseType;
 import no.nav.familie.inntektsmelding.koder.Ytelsetype;
 import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
@@ -33,12 +33,10 @@ class InntektsmeldingXMLMapperTest {
         var forventetBeløp = BigDecimal.valueOf(1000L);
         var forventetFom = NOW.plusDays(31);
 
-        var aktøridFnrMap = Map.of(DUMMY_AKTØRID, PersonIdent.fra(DUMMY_FNR));
-
         var inntektsmelding = lagInntektsmeldingEntitet(DUMMY_AKTØRID,
             List.of(lagBortfaltNaturalytelseEntitet(NOW, forventetFom, forventetNaturalytelseType, forventetBeløp)), Kildesystem.ARBEIDSGIVERPORTAL);
 
-        var resultat = InntektsmeldingXMLMapper.map(inntektsmelding, aktøridFnrMap);
+        var resultat = InntektsmeldingXMLMapper.map(inntektsmelding, PersonIdent.fra(DUMMY_FNR));
 
         var opphoerAvNaturalytelse = resultat.getSkjemainnhold().getOpphoerAvNaturalytelseListe().getValue().getOpphoerAvNaturalytelse();
         assertThat(opphoerAvNaturalytelse).hasSize(1);
@@ -55,13 +53,12 @@ class InntektsmeldingXMLMapperTest {
         var forventetBeløp = BigDecimal.valueOf(1000L);
         var forventetFom = NOW;
 
-        var aktøridFnrMap = Map.of(DUMMY_AKTØRID, PersonIdent.fra(DUMMY_FNR));
-
         var inntektsmelding = lagInntektsmeldingEntitet(DUMMY_AKTØRID,
-            List.of(lagBortfaltNaturalytelseEntitet(forventetFom, Tid.TIDENES_ENDE, forventetNaturalytelseType, forventetBeløp)), Kildesystem.ARBEIDSGIVERPORTAL
+            List.of(lagBortfaltNaturalytelseEntitet(forventetFom, Tid.TIDENES_ENDE, forventetNaturalytelseType, forventetBeløp)),
+            Kildesystem.ARBEIDSGIVERPORTAL
         );
 
-        var resultat = InntektsmeldingXMLMapper.map(inntektsmelding, aktøridFnrMap);
+        var resultat = InntektsmeldingXMLMapper.map(inntektsmelding, PersonIdent.fra(DUMMY_FNR));
 
         var opphoerAvNaturalytelse = resultat.getSkjemainnhold().getOpphoerAvNaturalytelseListe().getValue().getOpphoerAvNaturalytelse();
         assertThat(opphoerAvNaturalytelse).hasSize(1);
@@ -72,11 +69,9 @@ class InntektsmeldingXMLMapperTest {
 
     @Test
     void test_overstyrt_inntektsmelding() {
-        var aktøridFnrMap = Map.of(DUMMY_AKTØRID, PersonIdent.fra(DUMMY_FNR));
-
         var inntektsmelding = lagInntektsmeldingEntitet(DUMMY_AKTØRID, List.of(), Kildesystem.FPSAK);
 
-        var resultat = InntektsmeldingXMLMapper.map(inntektsmelding, aktøridFnrMap);
+        var resultat = InntektsmeldingXMLMapper.map(inntektsmelding, PersonIdent.fra(DUMMY_FNR));
 
         assertThat(resultat.getSkjemainnhold().getAvsendersystem().getSystemnavn()).isEqualTo("OVERSTYRING_FPSAK");
     }
@@ -92,11 +87,13 @@ class InntektsmeldingXMLMapperTest {
     }
 
     private static InntektsmeldingEntitet lagInntektsmeldingEntitet(AktørIdEntitet aktørId,
-                                                                    List<BortaltNaturalytelseEntitet> bortfaltNaturalytelseEntitet, Kildesystem kildesystem) {
+                                                                    List<BortaltNaturalytelseEntitet> bortfaltNaturalytelseEntitet,
+                                                                    Kildesystem kildesystem) {
         return InntektsmeldingEntitet.builder()
             .medBortfaltNaturalytelser(bortfaltNaturalytelseEntitet)
             .medArbeidsgiverIdent(DUMMY_ARBEIDSGIVER_IDENT)
             .medAktørId(aktørId)
+            .medKontaktperson(new KontaktpersonEntitet("Test Testesen", "11111111"))
             .medStartDato(NOW)
             .medMånedInntekt(BigDecimal.ZERO)
             .medKildesystem(kildesystem)
