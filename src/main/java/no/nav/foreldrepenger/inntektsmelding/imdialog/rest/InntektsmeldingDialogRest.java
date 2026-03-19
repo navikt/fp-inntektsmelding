@@ -2,8 +2,6 @@ package no.nav.foreldrepenger.inntektsmelding.imdialog.rest;
 
 import static no.nav.foreldrepenger.inntektsmelding.typer.dto.KodeverkMapper.mapArbeidsgiverinitiertÅrsak;
 
-import static no.nav.familie.inntektsmelding.typer.dto.KodeverkMapper.mapArbeidsgiverinitiertÅrsak;
-
 import java.util.UUID;
 
 import jakarta.enterprise.context.RequestScoped;
