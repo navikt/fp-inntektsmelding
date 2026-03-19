@@ -2,6 +2,7 @@ package no.nav.familie.inntektsmelding.imdialog.modell;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Objects;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
@@ -41,6 +42,19 @@ public class BortaltNaturalytelseEntitet {
 
     public BortaltNaturalytelseEntitet() {
         // Hibernate
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass())
+            return false;
+        BortaltNaturalytelseEntitet that = (BortaltNaturalytelseEntitet) o;
+        return type == that.type && Objects.equals(månedBeløp, that.månedBeløp);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(type, månedBeløp);
     }
 
     public PeriodeEntitet getPeriode() {

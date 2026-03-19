@@ -6,6 +6,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
+import no.nav.familie.inntektsmelding.koder.Kildesystem;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -127,6 +129,10 @@ public class MetrikkerTjeneste {
         tags.add(new ImmutableTag("har_oppgitt_endring_i_refusjon", harOppgittEndringerIRefusjon ? JA : NEI));
         tags.add(new ImmutableTag("har_oppgitt_opphoer_av_refusjon", harOppgittOpphørAvRefusjon ? JA : NEI));
         tags.add(new ImmutableTag("har_oppgitt_naturalytelse", harOppgittNaturalytelse ? JA : NEI));
+        tags.add(new ImmutableTag("kilde",
+            inntektsmelding.getKildesystem() == Kildesystem.LØNN_OG_PERSONAL_SYSTEM ? "LPS" : inntektsmelding.getKildesystem() == Kildesystem.ARBEIDSGIVERPORTAL
+            ? "ARBEIDSGIVERPORTAL": "OVERSTYRING"));
+
         Metrics.counter(COUNTER_INNTEKTSMELDING, tags).increment();
 
         if (!inntektsmelding.getEndringsårsaker().isEmpty()) {

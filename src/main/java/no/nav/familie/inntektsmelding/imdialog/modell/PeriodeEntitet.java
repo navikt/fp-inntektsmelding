@@ -2,6 +2,7 @@ package no.nav.familie.inntektsmelding.imdialog.modell;
 
 
 import java.time.LocalDate;
+import java.util.Objects;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
@@ -46,6 +47,19 @@ public class PeriodeEntitet {
     @Override
     public String toString() {
         return "PeriodeEntitet{" + "fom=" + fom + ", tom=" + tom + '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass())
+            return false;
+        PeriodeEntitet that = (PeriodeEntitet) o;
+        return Objects.equals(fom, that.fom) && Objects.equals(tom, that.tom);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(fom, tom);
     }
 
     public boolean overlapper(PeriodeEntitet other) {

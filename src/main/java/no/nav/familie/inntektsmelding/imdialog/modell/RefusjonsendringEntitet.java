@@ -2,6 +2,7 @@ package no.nav.familie.inntektsmelding.imdialog.modell;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Objects;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -31,6 +32,19 @@ public class RefusjonsendringEntitet {
 
     public RefusjonsendringEntitet() {
         // Hibernate
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass())
+            return false;
+        RefusjonsendringEntitet that = (RefusjonsendringEntitet) o;
+        return Objects.equals(fom, that.fom) && Objects.equals(refusjonPrMnd, that.refusjonPrMnd);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(fom, refusjonPrMnd);
     }
 
     public RefusjonsendringEntitet(LocalDate fom, BigDecimal refusjonPrMnd) {

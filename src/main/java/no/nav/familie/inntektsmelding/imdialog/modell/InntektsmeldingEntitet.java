@@ -76,6 +76,12 @@ public class InntektsmeldingEntitet {
     @Column(name = "kildesystem", nullable = false, updatable = false)
     private Kildesystem kildesystem;
 
+    @Column(name = "lps_system_navn")
+    private String lpsSystemNavn;
+
+    @Column(name = "lps_system_versjon")
+    private String lpsSystemVersjon;
+
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "inntektsmelding")
     private List<RefusjonsendringEntitet> refusjonsendringer = new ArrayList<>();
 
@@ -87,6 +93,14 @@ public class InntektsmeldingEntitet {
 
     public InntektsmeldingEntitet() {
         // Hibernate
+    }
+
+    public String getLpsSystemNavn() {
+        return lpsSystemNavn;
+    }
+
+    public String getLpsSystemVersjon() {
+        return lpsSystemVersjon;
     }
 
     public Long getId() {
@@ -184,14 +198,33 @@ public class InntektsmeldingEntitet {
             return false;
         }
         InntektsmeldingEntitet entitet = (InntektsmeldingEntitet) o;
-        return Objects.equals(aktørId, entitet.aktørId) && ytelsetype == entitet.ytelsetype && Objects.equals(arbeidsgiverIdent,
-            entitet.arbeidsgiverIdent) && Objects.equals(startDato, entitet.startDato) && Objects.equals(opprettetTidspunkt,
-            entitet.opprettetTidspunkt);
+
+        return Objects.equals(aktørId, entitet.aktørId)
+            && ytelsetype == entitet.ytelsetype
+            && Objects.equals(arbeidsgiverIdent, entitet.arbeidsgiverIdent)
+            && Objects.equals(startDato, entitet.startDato)
+            && Objects.equals(månedInntekt, entitet.månedInntekt)
+            && Objects.equals(månedRefusjon, entitet.månedRefusjon)
+            && Objects.equals(opphørsdatoRefusjon, entitet.opphørsdatoRefusjon)
+            && Objects.equals(kildesystem, entitet.kildesystem)
+            && Objects.equals(lpsSystemNavn, entitet.lpsSystemNavn)
+            && Objects.equals(kontaktperson, entitet.kontaktperson);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(aktørId, ytelsetype, arbeidsgiverIdent, startDato, opprettetTidspunkt);
+        return Objects.hash(aktørId,
+            ytelsetype,
+            arbeidsgiverIdent,
+            startDato,
+            månedInntekt,
+            månedRefusjon,
+            opphørsdatoRefusjon,
+            kildesystem,
+            lpsSystemNavn,
+            lpsSystemVersjon,
+            uuid,
+            kontaktperson);
     }
 
     @Override
@@ -201,7 +234,7 @@ public class InntektsmeldingEntitet {
             + maskerId(arbeidsgiverIdent) + '\'' + ", startDato=" + startDato + ", månedInntekt=" + månedInntekt + ", opprettetTidspunkt="
             + opprettetTidspunkt
             + ", refusjonendringer=" + refusjonsendringer + ", endringAvInntektÅrsaker=" + endringsårsaker + ", bortfaltNaturalYtelser="
-            + borfalteNaturalYtelser + '}';
+            + borfalteNaturalYtelser + ", lpsSystemNavn=" + lpsSystemNavn + ", lpsSystemVersjon=" + lpsSystemVersjon + '}';
     }
 
     private String maskerId(String id) {
@@ -294,6 +327,16 @@ public class InntektsmeldingEntitet {
             return this;
         }
 
+        public Builder medLpsSystemNavn(String lpsSystemNavn) {
+            kladd.lpsSystemNavn = lpsSystemNavn;
+            return this;
+        }
+
+        public Builder medLpsSystemVersjon(String lpsSystemVersjon) {
+            kladd.lpsSystemVersjon = lpsSystemVersjon;
+            return this;
+        }
+
         public InntektsmeldingEntitet build() {
             Objects.requireNonNull(kladd.startDato, "startdato");
             Objects.requireNonNull(kladd.månedInntekt, "månedsinntekt");
@@ -340,5 +383,4 @@ public class InntektsmeldingEntitet {
         }
 
     }
-
 }

@@ -1,5 +1,6 @@
 package no.nav.familie.inntektsmelding.typer.dto;
 
+import no.nav.familie.inntektsmelding.imdialog.rest.ekstern.SendInntektsmeldingEksternRequest;
 import no.nav.familie.inntektsmelding.koder.ArbeidsgiverinitiertÅrsak;
 import no.nav.familie.inntektsmelding.koder.Endringsårsak;
 import no.nav.familie.inntektsmelding.koder.ForespørselStatus;
@@ -40,6 +41,14 @@ public class KodeverkMapper {
         return switch (dto) {
             case FORELDREPENGER -> Ytelsetype.FORELDREPENGER;
             case SVANGERSKAPSPENGER -> Ytelsetype.SVANGERSKAPSPENGER;
+        };
+    }
+
+    public static Ytelsetype mapYtelseType(SendInntektsmeldingEksternRequest.YtelseTypeRequest ytelseTypeRequest) {
+        return switch (ytelseTypeRequest) {
+            case FORELDREPENGER -> Ytelsetype.FORELDREPENGER;
+            case SVANGERSKAPSPENGER -> Ytelsetype.SVANGERSKAPSPENGER;
+            default -> throw new IllegalStateException("Unexpected value: " + ytelseTypeRequest);
         };
     }
 

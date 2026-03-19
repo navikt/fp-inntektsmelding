@@ -14,9 +14,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-import no.nav.familie.inntektsmelding.integrasjoner.fpsak.FpsakKlient;
-import no.nav.familie.inntektsmelding.integrasjoner.fpsak.FpsakTjeneste;
-
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,9 +27,10 @@ import no.nav.familie.inntektsmelding.forespørsel.tjenester.ForespørselBehandl
 import no.nav.familie.inntektsmelding.forespørsel.tjenester.LukkeÅrsak;
 import no.nav.familie.inntektsmelding.imdialog.modell.EndringsårsakEntitet;
 import no.nav.familie.inntektsmelding.imdialog.modell.InntektsmeldingEntitet;
-import no.nav.familie.inntektsmelding.imdialog.modell.InntektsmeldingRepository;
 import no.nav.familie.inntektsmelding.imdialog.modell.KontaktpersonEntitet;
 import no.nav.familie.inntektsmelding.imdialog.rest.SendInntektsmeldingRequestDto;
+import no.nav.familie.inntektsmelding.integrasjoner.fpsak.FpsakKlient;
+import no.nav.familie.inntektsmelding.integrasjoner.fpsak.FpsakTjeneste;
 import no.nav.familie.inntektsmelding.koder.ArbeidsgiverinitiertÅrsak;
 import no.nav.familie.inntektsmelding.koder.Endringsårsak;
 import no.nav.familie.inntektsmelding.koder.ForespørselStatus;
@@ -44,7 +42,6 @@ import no.nav.familie.inntektsmelding.typer.dto.EndringsårsakDto;
 import no.nav.familie.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.familie.inntektsmelding.typer.dto.YtelseTypeDto;
 import no.nav.familie.inntektsmelding.typer.entitet.AktørIdEntitet;
-import no.nav.vedtak.felles.prosesstask.api.ProsessTaskTjeneste;
 import no.nav.vedtak.konfig.Tid;
 import no.nav.vedtak.sikkerhet.kontekst.IdentType;
 import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
@@ -60,11 +57,9 @@ class InntektsmeldingMottakTjenesteTest {
     @Mock
     private ForespørselBehandlingTjeneste forespørselBehandlingTjeneste;
     @Mock
-    private InntektsmeldingRepository inntektsmeldingRepository;
-    @Mock
-    private ProsessTaskTjeneste prosessTaskTjeneste;
-    @Mock
     private FpsakTjeneste fpsakTjeneste;
+    @Mock
+    FellesMottakTjeneste fellesMottakTjeneste;
 
     private InntektsmeldingMottakTjeneste inntektsmeldingMottakTjeneste;
 
@@ -81,7 +76,7 @@ class InntektsmeldingMottakTjenesteTest {
 
     @BeforeEach
     void setUp() {
-        inntektsmeldingMottakTjeneste = new InntektsmeldingMottakTjeneste(forespørselBehandlingTjeneste, inntektsmeldingRepository, prosessTaskTjeneste, fpsakTjeneste);
+        inntektsmeldingMottakTjeneste = new InntektsmeldingMottakTjeneste(forespørselBehandlingTjeneste, fpsakTjeneste, fellesMottakTjeneste);
     }
 
 
@@ -162,8 +157,9 @@ class InntektsmeldingMottakTjenesteTest {
             List.of(),
             List.of(),
             ArbeidsgiverinitiertÅrsakDto.NYANSATT);
-        when(inntektsmeldingRepository.lagreInntektsmelding(any())).thenReturn(1L);
-        when(inntektsmeldingRepository.hentInntektsmelding(1L)).thenReturn(im);
+
+        when(fellesMottakTjeneste.lagreOgJournalførInntektsmelding(any(), any())).thenReturn(im);
+
 
         // Act
         var responseDto = inntektsmeldingMottakTjeneste.mottaArbeidsgiverinitiertInntektsmelding(innsendingDto, ArbeidsgiverinitiertÅrsak.NYANSATT);
@@ -227,8 +223,8 @@ class InntektsmeldingMottakTjenesteTest {
             List.of(),
             List.of(),
             ArbeidsgiverinitiertÅrsakDto.NYANSATT);
-        when(inntektsmeldingRepository.lagreInntektsmelding(any())).thenReturn(1L);
-        when(inntektsmeldingRepository.hentInntektsmelding(1L)).thenReturn(im);
+
+            when(fellesMottakTjeneste.lagreOgJournalførInntektsmelding(any(), any())).thenReturn(im);
 
         // Act
         var responseDto = inntektsmeldingMottakTjeneste.mottaArbeidsgiverinitiertInntektsmelding(innsendingDto, ArbeidsgiverinitiertÅrsak.NYANSATT);
@@ -290,8 +286,7 @@ class InntektsmeldingMottakTjenesteTest {
             List.of(),
             List.of(),
             ArbeidsgiverinitiertÅrsakDto.UREGISTRERT);
-        when(inntektsmeldingRepository.lagreInntektsmelding(any())).thenReturn(1L);
-        when(inntektsmeldingRepository.hentInntektsmelding(1L)).thenReturn(im);
+        when(fellesMottakTjeneste.lagreOgJournalførInntektsmelding(any(), any())).thenReturn(im);
 
         // Act
         var responseDto = inntektsmeldingMottakTjeneste.mottaArbeidsgiverinitiertInntektsmelding(innsendingDto, ArbeidsgiverinitiertÅrsak.UREGISTRERT);
@@ -351,8 +346,7 @@ class InntektsmeldingMottakTjenesteTest {
             List.of(),
             endringsårsak,
             ArbeidsgiverinitiertÅrsakDto.UREGISTRERT);
-        when(inntektsmeldingRepository.lagreInntektsmelding(any())).thenReturn(1L);
-        when(inntektsmeldingRepository.hentInntektsmelding(1L)).thenReturn(im);
+        when(fellesMottakTjeneste.lagreOgJournalførInntektsmelding(any(), any())).thenReturn(im);
 
         // Act
         var responseDto = inntektsmeldingMottakTjeneste.mottaArbeidsgiverinitiertInntektsmelding(innsendingDto, ArbeidsgiverinitiertÅrsak.UREGISTRERT);

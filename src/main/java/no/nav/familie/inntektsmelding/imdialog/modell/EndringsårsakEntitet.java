@@ -46,6 +46,19 @@ public class EndringsårsakEntitet {
         // Hibernate
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass())
+            return false;
+        EndringsårsakEntitet that = (EndringsårsakEntitet) o;
+        return årsak == that.årsak && Objects.equals(fom, that.fom) && Objects.equals(tom, that.tom) && Objects.equals(bleKjentFom, that.bleKjentFom);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(årsak, fom, tom, bleKjentFom);
+    }
+
     public Endringsårsak getÅrsak() {
         return årsak;
     }
