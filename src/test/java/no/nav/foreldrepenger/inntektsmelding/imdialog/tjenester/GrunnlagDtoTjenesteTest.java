@@ -1,0 +1,569 @@
+package no.nav.foreldrepenger.inntektsmelding.imdialog.tjenester;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+
+import org.assertj.core.api.AssertionsForClassTypes;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDtoMapper;
+import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.InntektsmeldingDialogDto;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.aareg.Arbeidsforhold;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.aareg.ArbeidsforholdTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.aareg.ArbeidstakerTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.inntektskomponent.InntektTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.inntektskomponent.Inntektsopplysninger;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.organisasjon.Organisasjon;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.organisasjon.OrganisasjonTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonInfo;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
+import no.nav.foreldrepenger.inntektsmelding.typer.dto.MånedslønnStatus;
+import no.nav.foreldrepenger.inntektsmelding.typer.dto.YtelseTypeDto;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
+import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
+import no.nav.vedtak.exception.FunksjonellException;
+import no.nav.vedtak.konfig.Tid;
+import no.nav.vedtak.sikkerhet.kontekst.IdentType;
+import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
+import no.nav.vedtak.sikkerhet.kontekst.RequestKontekst;
+import no.nav.vedtak.sikkerhet.oidc.config.OpenIDProvider;
+import no.nav.vedtak.sikkerhet.oidc.token.OpenIDToken;
+import no.nav.vedtak.sikkerhet.oidc.token.TokenString;
+
+@ExtendWith(MockitoExtension.class)
+class GrunnlagDtoTjenesteTest {
+    private static final String INNMELDER_UID = "12324312345";
+
+    @Mock
+    private ForespørselBehandlingTjeneste forespørselBehandlingTjeneste;
+    @Mock
+    private PersonTjeneste personTjeneste;
+    @Mock
+    private OrganisasjonTjeneste organisasjonTjeneste;
+    @Mock
+    private InntektTjeneste inntektTjeneste;
+    @Mock
+    private ArbeidstakerTjeneste arbeidstakerTjeneste;
+    @Mock
+    ArbeidsforholdTjeneste arbeidsforholdTjeneste;
+
+    private GrunnlagDtoTjeneste grunnlagDtoTjeneste;
+
+    @BeforeAll
+    static void beforeAll() {
+        KontekstHolder.setKontekst(RequestKontekst.forRequest(INNMELDER_UID, "kompakt", IdentType.EksternBruker,
+            new OpenIDToken(OpenIDProvider.TOKENX, new TokenString("token")), UUID.randomUUID(), Set.of()));
+    }
+
+    @AfterAll
+    static void afterAll() {
+        KontekstHolder.fjernKontekst();
+    }
+
+    @BeforeEach
+    void setUp() {
+        grunnlagDtoTjeneste = new GrunnlagDtoTjeneste(forespørselBehandlingTjeneste, personTjeneste,
+            organisasjonTjeneste, inntektTjeneste, arbeidstakerTjeneste, arbeidsforholdTjeneste);
+    }
+
+    @Test
+    void skal_lage_DialogDto() {
+        // Arrange
+        var uuid = UUID.randomUUID();
+        var orgnr = "999999999";
+        var stp = LocalDate.now();
+        var forespørsel = new ForespørselEntitet(orgnr,
+            stp,
+            new AktørIdEntitet("9999999999999"),
+            Ytelsetype.FORELDREPENGER,
+            "123",
+            stp,
+            ForespørselType.BESTILT_AV_FAGSYSTEM);
+        when(forespørselBehandlingTjeneste.hentForespørsel(uuid)).thenReturn(Optional.of(ForespørselDtoMapper.mapFraEntitet(forespørsel)));
+        when(organisasjonTjeneste.finnOrganisasjon(Arbeidsgiver.fra(forespørsel.getOrganisasjonsnummer()))).thenReturn(
+            new Organisasjon("Bedriften", forespørsel.getOrganisasjonsnummer()));
+        var personIdent = new PersonIdent("12121212122");
+        when(personTjeneste.hentPersonInfoFraAktørId(new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(forespørsel.getAktørId().getAktørId()), forespørsel.getYtelseType())).thenReturn(
+            new PersonInfo("Navn", null, "Navnesen", personIdent, new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(forespørsel.getAktørId().getAktørId()), stp, null, null));
+        var innsenderNavn = "Ine";
+        var innsenderEtternavn = "Sender";
+        var innsenderTelefonnummer = "+4711111111";
+        when(personTjeneste.hentPersonFraIdent(PersonIdent.fra(INNMELDER_UID), forespørsel.getYtelseType())).thenReturn(
+            new PersonInfo(innsenderNavn, null, innsenderEtternavn, new PersonIdent(INNMELDER_UID), null, stp, innsenderTelefonnummer, null));
+        when(arbeidsforholdTjeneste.hentArbeidsforhold(personIdent, stp))
+            .thenReturn(List.of(new Arbeidsforhold(orgnr, new Arbeidsforhold.Ansettelsesperiode(stp.minusMonths(6), stp.plusMonths(1)))));
+        var inntekt1 = new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(52000), YearMonth.of(2024, 3), MånedslønnStatus.BRUKT_I_GJENNOMSNITT);
+        var inntekt2 = new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(52000), YearMonth.of(2024, 4), MånedslønnStatus.BRUKT_I_GJENNOMSNITT);
+        var inntekt3 = new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(52000), YearMonth.of(2024, 5), MånedslønnStatus.BRUKT_I_GJENNOMSNITT);
+        when(inntektTjeneste.hentInntekt(AktørId.fra(forespørsel.getAktørId().getAktørId()), stp, stp,
+            Arbeidsgiver.fra(forespørsel.getOrganisasjonsnummer()), true)).thenReturn(new Inntektsopplysninger(BigDecimal.valueOf(52000),
+            forespørsel.getOrganisasjonsnummer(),
+            List.of(inntekt1, inntekt2, inntekt3)));
+
+        // Act
+        var imDialogDto = grunnlagDtoTjeneste.lagDialogDto(uuid);
+
+        // Assert
+        assertThat(imDialogDto.skjæringstidspunkt()).isEqualTo(forespørsel.getSkjæringstidspunkt().orElse(null));
+        assertThat(imDialogDto.ytelse()).isEqualTo(YtelseTypeDto.FORELDREPENGER);
+
+        assertThat(imDialogDto.person().aktørId()).isEqualTo(new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(forespørsel.getAktørId().getAktørId()).getAktørId());
+        assertThat(imDialogDto.person().fornavn()).isEqualTo("Navn");
+        assertThat(imDialogDto.person().etternavn()).isEqualTo("Navnesen");
+
+        assertThat(imDialogDto.arbeidsgiver().organisasjonNavn()).isEqualTo("Bedriften");
+        assertThat(imDialogDto.arbeidsgiver().organisasjonNummer()).isEqualTo(forespørsel.getOrganisasjonsnummer());
+
+        assertThat(imDialogDto.førsteUttaksdato()).isEqualTo(stp);
+
+        assertThat(imDialogDto.innsender().fornavn()).isEqualTo(innsenderNavn);
+        assertThat(imDialogDto.innsender().etternavn()).isEqualTo(innsenderEtternavn);
+        assertThat(imDialogDto.innsender().mellomnavn()).isNull();
+        assertThat(imDialogDto.innsender().telefon()).isEqualTo(innsenderTelefonnummer);
+
+        assertThat(imDialogDto.inntektsopplysninger().månedsinntekter()).hasSize(3);
+        assertThat(imDialogDto.inntektsopplysninger().gjennomsnittLønn()).isEqualByComparingTo(BigDecimal.valueOf(52_000));
+        assertThat(imDialogDto.inntektsopplysninger().månedsinntekter()).contains(
+            new InntektsmeldingDialogDto.InntektsopplysningerDto.MånedsinntektDto(LocalDate.of(2024, 3, 1),
+                LocalDate.of(2024, 3, 31),
+                BigDecimal.valueOf(52_000),
+                MånedslønnStatus.BRUKT_I_GJENNOMSNITT));
+        assertThat(imDialogDto.inntektsopplysninger().månedsinntekter()).contains(
+            new InntektsmeldingDialogDto.InntektsopplysningerDto.MånedsinntektDto(LocalDate.of(2024, 4, 1),
+                LocalDate.of(2024, 4, 30),
+                BigDecimal.valueOf(52_000),
+                MånedslønnStatus.BRUKT_I_GJENNOMSNITT));
+        assertThat(imDialogDto.inntektsopplysninger().månedsinntekter()).contains(
+            new InntektsmeldingDialogDto.InntektsopplysningerDto.MånedsinntektDto(LocalDate.of(2024, 5, 1),
+                LocalDate.of(2024, 5, 31),
+                BigDecimal.valueOf(52_000),
+                MånedslønnStatus.BRUKT_I_GJENNOMSNITT));
+        assertThat(imDialogDto.ansettelsePerioder()).isEmpty();
+    }
+
+    @Test
+    void skal_lage_dto_med_første_uttaksdato() {
+        // Arrange
+        var uuid = UUID.randomUUID();
+        var stp = LocalDate.now();
+        var orgnr = "999999999";
+        var forespørsel = new ForespørselEntitet(orgnr,
+            stp,
+            new AktørIdEntitet("9999999999999"),
+            Ytelsetype.FORELDREPENGER,
+            "123",
+            stp.plusDays(10), ForespørselType.BESTILT_AV_FAGSYSTEM);
+        when(forespørselBehandlingTjeneste.hentForespørsel(uuid)).thenReturn(Optional.of(ForespørselDtoMapper.mapFraEntitet(forespørsel)));
+        when(organisasjonTjeneste.finnOrganisasjon(Arbeidsgiver.fra(forespørsel.getOrganisasjonsnummer()))).thenReturn(
+            new Organisasjon("Bedriften", forespørsel.getOrganisasjonsnummer()));
+        var personIdent = new PersonIdent("12121212122");
+        when(personTjeneste.hentPersonInfoFraAktørId(new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(forespørsel.getAktørId().getAktørId()).getAktørId()), forespørsel.getYtelseType())).thenReturn(
+            new PersonInfo("Navn", null, "Navnesen", personIdent, new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(forespørsel.getAktørId().getAktørId()).getAktørId()), stp, null, null));
+        var innsenderNavn = "Ine";
+        var innsenderEtternavn = "Sender";
+        var innsenderTelefonnummer = "+4711111111";
+        when(personTjeneste.hentPersonFraIdent(PersonIdent.fra(INNMELDER_UID), forespørsel.getYtelseType())).thenReturn(
+            new PersonInfo(innsenderNavn, null, innsenderEtternavn, new PersonIdent(INNMELDER_UID), null, stp, innsenderTelefonnummer, null));
+        when(arbeidsforholdTjeneste.hentArbeidsforhold(personIdent, stp))
+            .thenReturn(List.of(new Arbeidsforhold(orgnr, new Arbeidsforhold.Ansettelsesperiode(stp.minusMonths(6), stp.plusMonths(1)))));
+        when(inntektTjeneste.hentInntekt(AktørId.fra(forespørsel.getAktørId().getAktørId()), stp, stp,
+            Arbeidsgiver.fra(forespørsel.getOrganisasjonsnummer()), true)).thenReturn(new Inntektsopplysninger(BigDecimal.valueOf(52000),
+            forespørsel.getOrganisasjonsnummer(),
+            List.of()));
+
+        // Act
+        var imDialogDto = grunnlagDtoTjeneste.lagDialogDto(uuid);
+
+        // Assert
+        assertThat(imDialogDto.skjæringstidspunkt()).isEqualTo(forespørsel.getSkjæringstidspunkt().orElse(null));
+        assertThat(imDialogDto.ytelse()).isEqualTo(YtelseTypeDto.FORELDREPENGER);
+
+        assertThat(imDialogDto.person().aktørId()).isEqualTo(new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(forespørsel.getAktørId().getAktørId()).getAktørId());
+        assertThat(imDialogDto.person().fornavn()).isEqualTo("Navn");
+        assertThat(imDialogDto.person().etternavn()).isEqualTo("Navnesen");
+
+        assertThat(imDialogDto.arbeidsgiver().organisasjonNavn()).isEqualTo("Bedriften");
+        assertThat(imDialogDto.arbeidsgiver().organisasjonNummer()).isEqualTo(forespørsel.getOrganisasjonsnummer());
+
+        assertThat(imDialogDto.førsteUttaksdato()).isEqualTo(stp.plusDays(10));
+
+        assertThat(imDialogDto.innsender().fornavn()).isEqualTo(innsenderNavn);
+        assertThat(imDialogDto.innsender().etternavn()).isEqualTo(innsenderEtternavn);
+        assertThat(imDialogDto.innsender().mellomnavn()).isNull();
+        assertThat(imDialogDto.innsender().telefon()).isEqualTo(innsenderTelefonnummer);
+    }
+
+    @Test
+    void skal_hente_arbeidsforhold_gitt_fnr() {
+        // Arrange
+        var fnr = new PersonIdent("11111111111");
+        var førsteFraværsdag = LocalDate.now();
+        var aktørId = new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId("9999999999999");
+        var personInfo = new PersonInfo("Navn", null, "Navnesen", fnr, aktørId, LocalDate.now(), null, null);
+        var orgnr = "999999999";
+        when(arbeidstakerTjeneste.finnSøkersArbeidsforholdSomArbeidsgiverHarTilgangTil(fnr, førsteFraværsdag)).thenReturn(List.of(new Arbeidsforhold(orgnr,
+            new Arbeidsforhold.Ansettelsesperiode(LocalDate.now().minusMonths(2), Tid.TIDENES_ENDE))));
+        when(organisasjonTjeneste.finnOrganisasjon(Arbeidsgiver.fra(orgnr))).thenReturn(new Organisasjon("Bedriften", orgnr));
+        // Act
+        var response = grunnlagDtoTjeneste.finnArbeidsforholdForFnr(personInfo, førsteFraværsdag).orElse(null);
+
+        // Assert
+        assertThat(response).isNotNull();
+        assertThat(response.fornavn()).isEqualTo("Navn");
+        assertThat(response.etternavn()).isEqualTo("Navnesen");
+        assertThat(response.arbeidsforhold()).hasSize(1);
+        assertThat(response.arbeidsforhold().stream().toList().getFirst().organisasjonsnavn()).isEqualTo("Bedriften");
+        assertThat(response.arbeidsforhold().stream().toList().getFirst().organisasjonsnummer()).isEqualTo(orgnr);
+        assertThat(response.kjønn()).isNull();
+    }
+
+    @Test
+    void skal_hente_personinfo_og_organisasjoner_arbeidsgiver_har_tilgang_til_gitt_fnr() {
+        // Arrange
+        var fnr = new PersonIdent("11111111111");
+        var aktørId = new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId("9999999999999");
+        var personInfo = new PersonInfo("Navn", null, "Navnesen", fnr, aktørId, LocalDate.now(), null, null);
+        var orgnr1 = Arbeidsgiver.fra("123456789");
+        var orgnr2 = Arbeidsgiver.fra("987654321");
+        var navn1 = "Organisasjon 1";
+        var navn2 = "Organisasjon 2";
+        when(arbeidstakerTjeneste.finnOrganisasjonerArbeidsgiverHarTilgangTil(fnr)).thenReturn(List.of(orgnr1, orgnr2));
+        when(organisasjonTjeneste.finnOrganisasjon(Arbeidsgiver.fra(orgnr1.orgnr()))).thenReturn(new Organisasjon(navn1, orgnr1.orgnr()));
+        when(organisasjonTjeneste.finnOrganisasjon(Arbeidsgiver.fra(orgnr2.orgnr()))).thenReturn(new Organisasjon(navn2, orgnr2.orgnr()));
+        // Act
+        var response = grunnlagDtoTjeneste.hentSøkerinfoOgOrganisasjonerArbeidsgiverHarTilgangTil(personInfo).orElse(null);
+
+        // Assert
+        assertThat(response).isNotNull();
+        assertThat(response.fornavn()).isEqualTo("Navn");
+        assertThat(response.etternavn()).isEqualTo("Navnesen");
+        assertThat(response.arbeidsforhold()).hasSize(2);
+        assertThat(response.arbeidsforhold().stream()).anyMatch(o -> o.organisasjonsnavn().equals(navn1));
+        assertThat(response.arbeidsforhold().stream()).anyMatch(o -> o.organisasjonsnavn().equals(navn2));
+        assertThat(response.arbeidsforhold().stream()).anyMatch(o -> o.organisasjonsnummer().equals(orgnr1.orgnr()));
+        assertThat(response.arbeidsforhold().stream()).anyMatch(o -> o.organisasjonsnummer().equals(orgnr2.orgnr()));
+        assertThat(response.kjønn()).isNull();
+    }
+
+    @Test
+    void skal_ikke_få_lov_å_sende_inn_hvis_ingen_eksisterende_forespørsler_for_personen_finnes() {
+        // Arrange
+        var ytelsetype = Ytelsetype.FORELDREPENGER;
+        var eksForespørselDato = LocalDate.now().minusYears(4);
+        var førsteFraværsdag = LocalDate.now();
+        var aktørId = AktørId.fra("9999999999999");
+        var forespørsel = new ForespørselEntitet("999999998",
+            eksForespørselDato,
+            new AktørIdEntitet(aktørId.getAktørId()),
+            ytelsetype,
+            "123",
+            eksForespørselDato, ForespørselType.BESTILT_AV_FAGSYSTEM);
+        when(forespørselBehandlingTjeneste.finnForespørslerForAktørId(aktørId, ytelsetype)).thenReturn(List.of(ForespørselDtoMapper.mapFraEntitet(forespørsel)));
+
+        var forespørsler = grunnlagDtoTjeneste.finnForespørslerSisteTreÅr(ytelsetype, førsteFraværsdag, aktørId);
+
+        assertThat(forespørsler).isEmpty();
+    }
+
+    @Test
+    void skal_ikke_få_lov_å_sende_inn_hvis_ingen_eksisterende_forespørsler_før_fraværsdato_finnes() {
+        // Arrange
+        var ytelsetype = Ytelsetype.FORELDREPENGER;
+        var eksForespørselDato = LocalDate.now().plusDays(10);
+        var førsteFraværsdag = LocalDate.now();
+        var aktørId = AktørId.fra("9999999999999");
+        var forespørsel = new ForespørselEntitet("999999998",
+            eksForespørselDato,
+            new AktørIdEntitet(aktørId.getAktørId()),
+            ytelsetype,
+            "123",
+            eksForespørselDato, ForespørselType.BESTILT_AV_FAGSYSTEM);
+        when(forespørselBehandlingTjeneste.finnForespørslerForAktørId(aktørId, ytelsetype)).thenReturn(List.of(ForespørselDtoMapper.mapFraEntitet(forespørsel)));
+
+        var forespørsler = grunnlagDtoTjeneste.finnForespørslerSisteTreÅr(ytelsetype, førsteFraværsdag, aktørId);
+
+        assertThat(forespørsler).isEmpty();
+    }
+
+    @Test
+    void skal_lage_arbeidsgiverinitiert_nyansatt_dialog_ny() {
+        // Arrange
+        var fødselsnummer = new PersonIdent("11111111111");
+        var ytelsetype = Ytelsetype.FORELDREPENGER;
+        var eksForespørselDato = LocalDate.now().minusYears(1);
+        var førsteDatoMedRefusjon = LocalDate.now();
+        var organisasjonsnummer = "999999999";
+        var aktørId = AktørId.fra("9999999999999");
+        var forespørsel = new ForespørselEntitet("999999998",
+            eksForespørselDato,
+            new AktørIdEntitet(aktørId.getAktørId()),
+            ytelsetype,
+            "123",
+            eksForespørselDato, ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var ansattfraDato1 = LocalDate.now().minusMonths(1);
+        var ansattFraDato2 = LocalDate.now().plusMonths(1);
+        var personInfo = new PersonInfo("Navn", null, "Navnesen", fødselsnummer, new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(aktørId.getAktørId()), LocalDate.now(), null, PersonInfo.Kjønn.MANN);
+
+        var forventetAnsPerioder = List.of(new InntektsmeldingDialogDto.AnsettelsePeriodeDto(ansattfraDato1, Tid.TIDENES_ENDE),
+            new InntektsmeldingDialogDto.AnsettelsePeriodeDto(ansattFraDato2, Tid.TIDENES_ENDE)) ;
+
+        when(personTjeneste.hentPersonFraIdent(fødselsnummer, ytelsetype)).thenReturn(personInfo);
+        when(personTjeneste.hentPersonFraIdent(PersonIdent.fra(INNMELDER_UID), ytelsetype)).thenReturn(
+            new PersonInfo("Ine", null, "Sender", new PersonIdent(INNMELDER_UID), null, LocalDate.now(), "+4711111111", null));
+        when(forespørselBehandlingTjeneste.finnForespørslerForAktørId(aktørId, ytelsetype)).thenReturn(List.of(ForespørselDtoMapper.mapFraEntitet(forespørsel)));
+        when(organisasjonTjeneste.finnOrganisasjon(Arbeidsgiver.fra(organisasjonsnummer))).thenReturn(
+            new Organisasjon("Bedriften", organisasjonsnummer));
+        when(arbeidsforholdTjeneste.hentArbeidsforhold(fødselsnummer, førsteDatoMedRefusjon)).thenReturn(List.of(
+            new Arbeidsforhold(organisasjonsnummer, new Arbeidsforhold.Ansettelsesperiode(ansattfraDato1, Tid.TIDENES_ENDE)),
+            new Arbeidsforhold(organisasjonsnummer, new Arbeidsforhold.Ansettelsesperiode(ansattFraDato2, Tid.TIDENES_ENDE))));
+
+        var imDialogDto = grunnlagDtoTjeneste.lagArbeidsgiverinitiertNyansattDialogDto(fødselsnummer,
+            ytelsetype,
+            førsteDatoMedRefusjon,
+            Arbeidsgiver.fra(organisasjonsnummer));
+
+        // Assert
+        assertThat(imDialogDto.person().aktørId()).isEqualTo(aktørId.getAktørId());
+        assertThat(imDialogDto.person().fornavn()).isEqualTo("Navn");
+        assertThat(imDialogDto.person().etternavn()).isEqualTo("Navnesen");
+        assertThat(imDialogDto.arbeidsgiver().organisasjonNavn()).isEqualTo("Bedriften");
+        assertThat(imDialogDto.arbeidsgiver().organisasjonNummer()).isEqualTo(organisasjonsnummer);
+        assertThat(imDialogDto.førsteUttaksdato()).isEqualTo(førsteDatoMedRefusjon);
+        assertThat(imDialogDto.forespørselUuid()).isNull();
+        assertThat(imDialogDto.inntektsopplysninger().gjennomsnittLønn()).isNull();
+        assertThat(imDialogDto.inntektsopplysninger().månedsinntekter()).isEmpty();
+        assertThat(imDialogDto.ansettelsePerioder()).isEqualTo(forventetAnsPerioder);
+    }
+
+    @Test
+    void skal_rute_til_eksisterende_forespørsel_hvis_finnes_når_arbeidsgiverinitiert_nyansatt() {
+        // Arrange
+        var personIdent = new PersonIdent("11111111111");
+        var ytelsetype = Ytelsetype.FORELDREPENGER;
+        var førsteFraværsdag = LocalDate.now();
+        var eksFpFørsteUttaksdato = LocalDate.now().minusDays(2);
+        var orgnr = "999999999";
+        var aktørId = AktørId.fra("9999999999999");
+        var forespørsel = new ForespørselEntitet("999999999", eksFpFørsteUttaksdato, new AktørIdEntitet(aktørId.getAktørId()), ytelsetype, "123", eksFpFørsteUttaksdato, ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var personInfo = new PersonInfo("Navn", null, "Navnesen", personIdent, new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(aktørId.getAktørId()), LocalDate.now(), null, null);
+
+        when(personTjeneste.hentPersonFraIdent(personIdent, ytelsetype)).thenReturn(personInfo);
+        when(personTjeneste.hentPersonInfoFraAktørId(new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(aktørId.getAktørId()), ytelsetype)).thenReturn(personInfo);
+        when(personTjeneste.hentPersonFraIdent(PersonIdent.fra(INNMELDER_UID), ytelsetype)).thenReturn(
+            new PersonInfo("Ine", null, "Sender", new PersonIdent(INNMELDER_UID), null, LocalDate.now(), "+4711111111", PersonInfo.Kjønn.MANN));
+        when(forespørselBehandlingTjeneste.finnForespørslerForAktørId(aktørId, ytelsetype)).thenReturn(List.of(ForespørselDtoMapper.mapFraEntitet(forespørsel)));
+        when(forespørselBehandlingTjeneste.hentForespørsel(forespørsel.getUuid())).thenReturn(Optional.of(ForespørselDtoMapper.mapFraEntitet(forespørsel)));
+        when(organisasjonTjeneste.finnOrganisasjon(Arbeidsgiver.fra(orgnr))).thenReturn(new Organisasjon("Bedriften",
+            orgnr));
+        when(arbeidsforholdTjeneste.hentArbeidsforhold(personIdent, eksFpFørsteUttaksdato))
+            .thenReturn(List.of(new Arbeidsforhold(orgnr, new Arbeidsforhold.Ansettelsesperiode(eksFpFørsteUttaksdato.minusMonths(6), eksFpFørsteUttaksdato.plusMonths(1)))));
+        when(inntektTjeneste.hentInntekt(aktørId,
+            eksFpFørsteUttaksdato,
+            LocalDate.now(),// Act
+            Arbeidsgiver.fra(orgnr), true)).thenReturn(new Inntektsopplysninger(BigDecimal.valueOf(52000), orgnr, List.of()));
+
+        var imDialogDto = grunnlagDtoTjeneste.lagArbeidsgiverinitiertNyansattDialogDto(personIdent, ytelsetype, førsteFraværsdag, Arbeidsgiver.fra(orgnr));
+
+        // Assert
+        assertThat(imDialogDto.person().aktørId()).isEqualTo(aktørId.getAktørId());
+        assertThat(imDialogDto.person().fornavn()).isEqualTo("Navn");
+        assertThat(imDialogDto.person().etternavn()).isEqualTo("Navnesen");
+        assertThat(imDialogDto.arbeidsgiver().organisasjonNavn()).isEqualTo("Bedriften");
+        assertThat(imDialogDto.arbeidsgiver().organisasjonNummer()).isEqualTo(orgnr);
+        assertThat(imDialogDto.førsteUttaksdato()).isEqualTo(eksFpFørsteUttaksdato);
+        assertThat(imDialogDto.forespørselUuid()).isEqualTo(forespørsel.getUuid());
+        assertThat(imDialogDto.inntektsopplysninger().gjennomsnittLønn()).isEqualByComparingTo(BigDecimal.valueOf(52000));
+        assertThat(imDialogDto.ansettelsePerioder()).isEmpty();
+    }
+
+    @Test
+    void skal_gi_eksisterende_forespørsel_med_ansettelsesperioder_hvis_finnes_for_arbeidsgiver_nyansatt() {
+        // Arrange
+        var fødselsnummer = new PersonIdent("11111111111");
+        var ytelsetype = Ytelsetype.FORELDREPENGER;
+        var førsteFraværsdag = LocalDate.now();
+        var eksFpFørsteUttaksdato = LocalDate.now().minusDays(2);
+        var organisasjonsnummer = "999999999";
+        var aktørId = AktørId.fra("9999999999999");
+        var forespørsel = new ForespørselEntitet("999999999", eksFpFørsteUttaksdato, new AktørIdEntitet(aktørId.getAktørId()), ytelsetype, "123", eksFpFørsteUttaksdato, ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT);
+        var personInfo = new PersonInfo("Navn", null, "Navnesen", fødselsnummer, new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(aktørId.getAktørId()), LocalDate.now(), null, null);
+        var ansattfraDato1 = LocalDate.now().minusYears(2);
+        var forventetAnsattPeriode = new InntektsmeldingDialogDto.AnsettelsePeriodeDto(ansattfraDato1, Tid.TIDENES_ENDE);
+
+        when(personTjeneste.hentPersonFraIdent(fødselsnummer, ytelsetype)).thenReturn(personInfo);
+        when(personTjeneste.hentPersonInfoFraAktørId(new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(aktørId.getAktørId()), ytelsetype)).thenReturn(personInfo);
+        when(personTjeneste.hentPersonFraIdent(PersonIdent.fra(INNMELDER_UID), ytelsetype)).thenReturn(
+            new PersonInfo("Ine", null, "Sender", new PersonIdent(INNMELDER_UID), null, LocalDate.now(), "+4711111111", PersonInfo.Kjønn.MANN));
+        when(forespørselBehandlingTjeneste.finnForespørslerForAktørId(aktørId, ytelsetype)).thenReturn(List.of(ForespørselDtoMapper.mapFraEntitet(forespørsel)));
+        when(forespørselBehandlingTjeneste.hentForespørsel(forespørsel.getUuid())).thenReturn(Optional.of(ForespørselDtoMapper.mapFraEntitet(forespørsel)));
+        when(organisasjonTjeneste.finnOrganisasjon(Arbeidsgiver.fra(organisasjonsnummer))).thenReturn(new Organisasjon("Bedriften",
+            organisasjonsnummer));
+        when(arbeidsforholdTjeneste.hentArbeidsforhold(any(), any())).thenReturn(List.of(
+            new Arbeidsforhold(organisasjonsnummer, new Arbeidsforhold.Ansettelsesperiode(ansattfraDato1, Tid.TIDENES_ENDE))));
+        when(inntektTjeneste.hentInntekt(aktørId,
+            eksFpFørsteUttaksdato,
+            LocalDate.now(),
+            Arbeidsgiver.fra(organisasjonsnummer), true)).thenReturn(new Inntektsopplysninger(null, null, List.of()));
+        // Act
+        var imDialogDto = grunnlagDtoTjeneste.lagArbeidsgiverinitiertNyansattDialogDto(fødselsnummer, ytelsetype, førsteFraværsdag, Arbeidsgiver.fra(organisasjonsnummer));
+
+        // Assert
+        assertThat(imDialogDto.person().aktørId()).isEqualTo(aktørId.getAktørId());
+        assertThat(imDialogDto.person().fornavn()).isEqualTo("Navn");
+        assertThat(imDialogDto.person().etternavn()).isEqualTo("Navnesen");
+        assertThat(imDialogDto.arbeidsgiver().organisasjonNavn()).isEqualTo("Bedriften");
+        assertThat(imDialogDto.arbeidsgiver().organisasjonNummer()).isEqualTo(organisasjonsnummer);
+        assertThat(imDialogDto.førsteUttaksdato()).isEqualTo(eksFpFørsteUttaksdato);
+        assertThat(imDialogDto.forespørselUuid()).isEqualTo(forespørsel.getUuid());
+        assertThat(imDialogDto.inntektsopplysninger().gjennomsnittLønn()).isNull();
+        assertThat(imDialogDto.inntektsopplysninger().månedsinntekter()).isEmpty();
+        assertThat(imDialogDto.ansettelsePerioder()).isEqualTo(List.of(forventetAnsattPeriode));
+    }
+
+    @Test
+    void skal_lage_arbeidsgiverinitiert_uregistrert_dialog_ny() {
+        // Arrange
+        var personIdent = new PersonIdent("11111111111");
+        var ytelsetype = Ytelsetype.FORELDREPENGER;
+        var eksForespørselDato = LocalDate.now().minusYears(1);
+        var førsteUttaksdato = LocalDate.of(2024, 12, 20);
+        var skjæringstidspunkt = LocalDate.of(2024, 12, 21);
+        var orgnr = "999999999";
+        var aktørId = AktørId.fra("9999999999999");
+        var forespørsel = new ForespørselEntitet("999999998",
+            eksForespørselDato,
+            new AktørIdEntitet(aktørId.getAktørId()),
+            ytelsetype,
+            "123",
+            eksForespørselDato, ForespørselType.ARBEIDSGIVERINITIERT_UREGISTRERT);
+
+        var personInfo = new PersonInfo("Navn", null, "Navnesen", personIdent, new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(aktørId.getAktørId()), LocalDate.now(), null, PersonInfo.Kjønn.MANN);
+
+        var inntekt1 = new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(35000), YearMonth.of(2025, 1), MånedslønnStatus.BRUKT_I_GJENNOMSNITT);
+        var inntekt2 = new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(35000), YearMonth.of(2025, 2), MånedslønnStatus.BRUKT_I_GJENNOMSNITT);
+        var inntekt3 = new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(35000), YearMonth.of(2025, 3), MånedslønnStatus.BRUKT_I_GJENNOMSNITT);
+        var sumInntekt = inntekt1.beløp().add(inntekt2.beløp().add(inntekt3.beløp()));
+        var gjennomsnittInntekt = sumInntekt.divide(BigDecimal.valueOf(3),2, RoundingMode.HALF_UP);
+        when(arbeidsforholdTjeneste.hentArbeidsforhold(personIdent, førsteUttaksdato))
+            .thenReturn(List.of());
+        when(inntektTjeneste.hentInntekt(aktørId, skjæringstidspunkt, LocalDate.now(),
+            Arbeidsgiver.fra(orgnr), false)).thenReturn(new Inntektsopplysninger(BigDecimal.valueOf(35000),
+            orgnr,
+            List.of(inntekt1, inntekt2, inntekt3)));
+        when(personTjeneste.hentPersonFraIdent(personIdent, ytelsetype)).thenReturn(personInfo);
+        when(personTjeneste.hentPersonFraIdent(PersonIdent.fra(INNMELDER_UID), ytelsetype)).thenReturn(
+            new PersonInfo("Ine", null, "Sender", new PersonIdent(INNMELDER_UID), null, LocalDate.now(), "+4711111111", null));
+        when(forespørselBehandlingTjeneste.finnForespørslerForAktørId(aktørId, ytelsetype)).thenReturn(List.of(ForespørselDtoMapper.mapFraEntitet(forespørsel)));
+        when(organisasjonTjeneste.finnOrganisasjon(Arbeidsgiver.fra(orgnr))).thenReturn(
+            new Organisasjon("Bedriften", orgnr));
+
+        var imDialogDto = grunnlagDtoTjeneste.lagArbeidsgiverinitiertUregistrertDialogDto(personIdent,
+            ytelsetype,
+            førsteUttaksdato,
+            Arbeidsgiver.fra(orgnr),
+            skjæringstidspunkt);
+
+        // Assert
+        assertThat(imDialogDto.person().aktørId()).isEqualTo(aktørId.getAktørId());
+        assertThat(imDialogDto.person().fornavn()).isEqualTo("Navn");
+        assertThat(imDialogDto.person().etternavn()).isEqualTo("Navnesen");
+        assertThat(imDialogDto.arbeidsgiver().organisasjonNavn()).isEqualTo("Bedriften");
+        assertThat(imDialogDto.arbeidsgiver().organisasjonNummer()).isEqualTo(orgnr);
+        assertThat(imDialogDto.førsteUttaksdato()).isEqualTo(førsteUttaksdato);
+        assertThat(imDialogDto.skjæringstidspunkt()).isEqualTo(skjæringstidspunkt);
+        assertThat(imDialogDto.forespørselUuid()).isNull();
+        assertThat(imDialogDto.inntektsopplysninger().gjennomsnittLønn()).isEqualByComparingTo(gjennomsnittInntekt);
+        assertThat(imDialogDto.inntektsopplysninger().månedsinntekter()).hasSize(3);
+        assertThat(imDialogDto.inntektsopplysninger().månedsinntekter()).anyMatch(m -> m.beløp().equals(inntekt1.beløp()));
+        assertThat(imDialogDto.inntektsopplysninger().månedsinntekter()).anyMatch(m -> m.beløp().equals(inntekt2.beløp()));
+        assertThat(imDialogDto.inntektsopplysninger().månedsinntekter()).anyMatch(m -> m.beløp().equals(inntekt3.beløp()));
+    }
+
+    @Test
+    void skal_rute_til_eksisterende_forespørsel_hvis_finnes_når_arbeidsgiverinitiert_uregistrert() {
+        // Arrange
+        var personIdent = new PersonIdent("11111111111");
+        var ytelsetype = Ytelsetype.FORELDREPENGER;
+        var førsteUttaksdato = LocalDate.now().minusMonths(1);
+        var orgnr = "999999999";
+        var aktørId = AktørId.fra("9999999999999");
+        var forespørsel = new ForespørselEntitet("999999999", førsteUttaksdato, new AktørIdEntitet(aktørId.getAktørId()), ytelsetype, "123", førsteUttaksdato, ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var personInfo = new PersonInfo("Navn", null, "Navnesen", personIdent, new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(aktørId.getAktørId()), LocalDate.now(), null, null);
+
+        when(personTjeneste.hentPersonFraIdent(personIdent, ytelsetype)).thenReturn(personInfo);
+        when(personTjeneste.hentPersonInfoFraAktørId(new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(aktørId.getAktørId()), ytelsetype)).thenReturn(personInfo);
+        when(personTjeneste.hentPersonFraIdent(PersonIdent.fra(INNMELDER_UID), ytelsetype)).thenReturn(
+            new PersonInfo("Ine", null, "Sender", new PersonIdent(INNMELDER_UID), null, LocalDate.now(), "+4711111111", PersonInfo.Kjønn.MANN));
+        when(forespørselBehandlingTjeneste.finnForespørslerForAktørId(aktørId, ytelsetype)).thenReturn(List.of(ForespørselDtoMapper.mapFraEntitet(forespørsel)));
+        when(forespørselBehandlingTjeneste.hentForespørsel(forespørsel.getUuid())).thenReturn(Optional.of(ForespørselDtoMapper.mapFraEntitet(forespørsel)));
+        when(organisasjonTjeneste.finnOrganisasjon(Arbeidsgiver.fra(orgnr))).thenReturn(new Organisasjon("Bedriften",
+            orgnr));
+        when(arbeidsforholdTjeneste.hentArbeidsforhold(personIdent, førsteUttaksdato))
+            .thenReturn(List.of(new Arbeidsforhold(orgnr, new Arbeidsforhold.Ansettelsesperiode(førsteUttaksdato.minusMonths(6), førsteUttaksdato.plusMonths(1)))));
+        when(inntektTjeneste.hentInntekt(aktørId,
+            førsteUttaksdato,
+            LocalDate.now(),// Act
+            Arbeidsgiver.fra(orgnr), true)).thenReturn(new Inntektsopplysninger(BigDecimal.valueOf(52000), orgnr, List.of()));
+
+        var imDialogDto = grunnlagDtoTjeneste.lagArbeidsgiverinitiertUregistrertDialogDto(personIdent, ytelsetype, førsteUttaksdato, Arbeidsgiver.fra(orgnr), førsteUttaksdato);
+
+        // Assert
+        assertThat(imDialogDto.person().aktørId()).isEqualTo(aktørId.getAktørId());
+        assertThat(imDialogDto.person().fornavn()).isEqualTo("Navn");
+        assertThat(imDialogDto.person().etternavn()).isEqualTo("Navnesen");
+        assertThat(imDialogDto.arbeidsgiver().organisasjonNavn()).isEqualTo("Bedriften");
+        assertThat(imDialogDto.arbeidsgiver().organisasjonNummer()).isEqualTo(orgnr);
+        assertThat(imDialogDto.førsteUttaksdato()).isEqualTo(førsteUttaksdato);
+        assertThat(imDialogDto.skjæringstidspunkt()).isEqualTo(førsteUttaksdato);
+        assertThat(imDialogDto.forespørselUuid()).isEqualTo(forespørsel.getUuid());
+        assertThat(imDialogDto.inntektsopplysninger().gjennomsnittLønn()).isEqualByComparingTo(BigDecimal.valueOf(52000));
+        assertThat(imDialogDto.ansettelsePerioder()).isEmpty();
+    }
+
+    @Test
+    void skal_kaste_exception_når_ingen_forespørsel_og_orgnummer_finnes_i_aareg_arbeidsgiverinitiert_uregistrert() {
+        // Arrange
+        var fødselsnummer = new PersonIdent("11111111111");
+        var ytelsetype = Ytelsetype.FORELDREPENGER;
+        var førsteUttaksdato = LocalDate.now().minusMonths(1);
+        var organisasjonsnummer = "999999999";
+        var aktørId = AktørId.fra("9999999999999");
+
+        var personInfo = new PersonInfo("Navn", null, "Navnesen", fødselsnummer, aktørId, LocalDate.now(), null, null);
+
+        when(personTjeneste.hentPersonFraIdent(fødselsnummer, ytelsetype)).thenReturn(personInfo);
+        when(forespørselBehandlingTjeneste.finnForespørslerForAktørId(aktørId, ytelsetype)).thenReturn(List.of());
+        when(arbeidsforholdTjeneste.hentArbeidsforhold(fødselsnummer, førsteUttaksdato)).thenReturn(List.of(new Arbeidsforhold(organisasjonsnummer, new Arbeidsforhold.Ansettelsesperiode(førsteUttaksdato.minusYears(1), Tid.TIDENES_ENDE))));
+
+        var arbeidsgiver = Arbeidsgiver.fra(organisasjonsnummer);
+        var ex = assertThrows(FunksjonellException.class, () -> grunnlagDtoTjeneste.lagArbeidsgiverinitiertUregistrertDialogDto(fødselsnummer, ytelsetype, førsteUttaksdato, arbeidsgiver, førsteUttaksdato));
+
+        // Assert
+        AssertionsForClassTypes.assertThat(ex.getMessage()).isEqualTo(
+            "FINNES_I_AAREG: Det finnes rapportering i aa-registeret på organisasjonsnummeret. Nav vil be om inntektsmelding når vi trenger det");
+    }
+}
+

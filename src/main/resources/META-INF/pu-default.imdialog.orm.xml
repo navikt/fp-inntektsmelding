@@ -4,12 +4,12 @@
                  xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence/orm
                  https://jakarta.ee/xml/ns/persistence/orm/orm_3_0.xsd">
 
-	<entity class="no.nav.familie.inntektsmelding.imdialog.modell.InntektsmeldingEntitet" />
-    <entity class="no.nav.familie.inntektsmelding.imdialog.modell.EndringsårsakEntitet" />
-    <entity class="no.nav.familie.inntektsmelding.imdialog.modell.RefusjonsendringEntitet" />
-    <entity class="no.nav.familie.inntektsmelding.imdialog.modell.BortaltNaturalytelseEntitet" />
-    <entity class="no.nav.familie.inntektsmelding.imdialog.modell.KontaktpersonEntitet" />
-    <entity class="no.nav.familie.inntektsmelding.forespørsel.modell.ForespørselEntitet" />
+	<entity class="no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.InntektsmeldingEntitet" />
+    <entity class="no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.EndringsårsakEntitet" />
+    <entity class="no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.RefusjonsendringEntitet" />
+    <entity class="no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.BortaltNaturalytelseEntitet" />
+    <entity class="no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.KontaktpersonEntitet" />
+    <entity class="no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet" />
 
 
 </entity-mappings>

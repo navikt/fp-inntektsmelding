@@ -1,6 +1,6 @@
 <included>
-    <logger name="no.nav.familie.inntektsmelding" level="TRACE"/>
+    <logger name="no.nav.foreldrepenger.inntektsmelding" level="TRACE"/>
     <logger name="no.nav.vedtak.sikkerhet" level="TRACE"/>
     <logger name="no.nav.vedtak.felles.integrasjon.rest" level="DEBUG"/>
-    <logger name="no.nav.familie.inntektsmelding.integrasjoner.altinn" level="TRACE"/>
+    <logger name="no.nav.foreldrepenger.inntektsmelding.integrasjoner.altinn" level="TRACE"/>
 </included>

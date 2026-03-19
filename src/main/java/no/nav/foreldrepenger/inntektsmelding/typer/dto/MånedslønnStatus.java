@@ -1,0 +1,9 @@
+package no.nav.foreldrepenger.inntektsmelding.typer.dto;
+
+public enum MånedslønnStatus {
+    BRUKT_I_GJENNOMSNITT,
+    NEDETID_AINNTEKT,
+    IKKE_RAPPORTERT_MEN_BRUKT_I_GJENNOMSNITT,
+    IKKE_RAPPORTERT_RAPPORTERINGSFRIST_IKKE_PASSERT,
+    IKKE_RAPPORTERT_NYANSATT
+}
