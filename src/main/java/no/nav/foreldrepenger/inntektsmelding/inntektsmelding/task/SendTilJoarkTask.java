@@ -49,13 +49,13 @@ public class SendTilJoarkTask implements ProsessTaskHandler {
         var forespørselType = Optional.ofNullable(prosessTaskData.getPropertyValue(KEY_FORESPOERSEL_TYPE))
             .map(ForespørselType::valueOf)
             .orElse(ForespørselType.BESTILT_AV_FAGSYSTEM);
-        var fagsysteSaksnummer = Saksnummer.fra(prosessTaskData.getSaksnummer());
+        var fagsysteSaksnummer = Optional.ofNullable(prosessTaskData.getSaksnummer()).map(Saksnummer::new).orElse(null);
         LOG.info("Starter task for oversending til joark for saksnummer {}", fagsysteSaksnummer);
 
         var inntektsmeldingDto = inntektsmeldingTjeneste.hentInntektsmelding(inntektsmeldingId);
         var xml = inntektsmeldingXMLTjeneste.lagXMLAvInntektsmelding(inntektsmeldingDto);
         var pdf = dokumentGeneratorTjeneste.mapDataOgGenererPdf(inntektsmeldingDto, forespørselType);
-        LOG.debug("Genererte XML: {} og pdf av inntektsmeldingen, journalfører på sak: {}", xml, fagsysteSaksnummer.saksnummer());
+        LOG.debug("Genererte XML: {} og pdf av inntektsmeldingen, journalfører på sak: {}", xml, fagsysteSaksnummer);
 
         joarkTjeneste.journalførInntektsmelding(xml, inntektsmeldingDto, pdf, fagsysteSaksnummer);
         LOG.info("Sluttfører task oversendJoark");
