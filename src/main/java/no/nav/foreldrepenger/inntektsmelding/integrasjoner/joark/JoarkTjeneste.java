@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.organisasjon.OrganisasjonTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
-import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Saksnummer;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
@@ -41,17 +40,15 @@ public class JoarkTjeneste {
 
     private DokArkiv joarkKlient;
     private OrganisasjonTjeneste organisasjonTjeneste;
-    private PersonTjeneste personTjeneste;
 
     JoarkTjeneste() {
         // CDI proxy
     }
 
     @Inject
-    public JoarkTjeneste(JoarkKlient joarkKlient, OrganisasjonTjeneste organisasjonTjeneste, PersonTjeneste personTjeneste) {
+    public JoarkTjeneste(JoarkKlient joarkKlient, OrganisasjonTjeneste organisasjonTjeneste) {
         this.joarkKlient = joarkKlient;
         this.organisasjonTjeneste = organisasjonTjeneste;
-        this.personTjeneste = personTjeneste;
     }
 
     public String journalførInntektsmelding(String xmlAvInntektsmelding,

@@ -7,8 +7,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 
@@ -23,21 +21,15 @@ import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.organisasjon.Organisasjon;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.organisasjon.OrganisasjonTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
-import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Saksnummer;
-import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.NaturalytelseType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.vedtak.felles.integrasjon.dokarkiv.dto.OpprettJournalpostRequest;
 import no.nav.vedtak.felles.integrasjon.dokarkiv.dto.OpprettJournalpostResponse;
 import no.nav.vedtak.felles.integrasjon.dokarkiv.dto.Sak;
-import no.nav.vedtak.konfig.Tid;
 
 @ExtendWith(MockitoExtension.class)
 class JoarkTjenesteTest {
-
-    @Mock
-    private PersonTjeneste personTjeneste;
 
     @Mock
     private OrganisasjonTjeneste organisasjonTjeneste;
@@ -51,7 +43,7 @@ class JoarkTjenesteTest {
 
     @BeforeEach
     void setup() {
-        joarkTjeneste = new JoarkTjeneste(klient, organisasjonTjeneste, personTjeneste);
+        joarkTjeneste = new JoarkTjeneste(klient, organisasjonTjeneste);
     }
 
     @Test
@@ -59,21 +51,12 @@ class JoarkTjenesteTest {
         // Arrange
         var aktør = "1234567891234";
         var aktørIdSøker = new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(aktør);
-        var naturalytelse = new InntektsmeldingDto.BortfaltNaturalytelse(LocalDate.of(2024, 6, 10),
-            LocalDate.of(2024, 6, 30),
-                NaturalytelseType.AKSJER_GRUNNFONDSBEVIS_TIL_UNDERKURS, BigDecimal.valueOf(2000));
         var arbeidsgiverIdent = "999999999";
         var inntektsmelding = InntektsmeldingDto.builder()
             .medArbeidsgiver(new Arbeidsgiver(arbeidsgiverIdent))
-            .medStartdato(LocalDate.of(2024, 6, 1))
             .medYtelse(Ytelsetype.FORELDREPENGER)
-            .medOpphørsdatoRefusjon(Tid.TIDENES_ENDE)
-            .medMånedRefusjon(BigDecimal.valueOf(35000))
-            .medInntekt(BigDecimal.valueOf(35000))
             .medAktørId(aktørIdSøker)
             .medInnsendtTidspunkt(LocalDateTime.now())
-            .medKontaktperson(new InntektsmeldingDto.Kontaktperson("Test Testen", "111111111"))
-            .medBortfaltNaturalytelsePerioder(Collections.singletonList(naturalytelse))
             .build();
 
         var testBedrift = new Organisasjon("Test Bedrift", arbeidsgiverIdent);
