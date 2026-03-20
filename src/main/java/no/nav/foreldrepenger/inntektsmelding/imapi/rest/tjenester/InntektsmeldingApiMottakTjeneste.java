@@ -10,45 +10,35 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.SendInntektsmeldingResponse;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.FellesMottakTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingTjeneste;
-
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.metrikker.MetrikkerTjeneste;
-import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
-import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste;
-
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-
 @ApplicationScoped
-public class EksternInntektsmeldingMottakTjeneste {
-    private static final Logger LOG = LoggerFactory.getLogger(EksternInntektsmeldingMottakTjeneste.class);
-    private static final Logger SECURE_LOG = LoggerFactory.getLogger("secureLogger");
+public class InntektsmeldingApiMottakTjeneste {
+    private static final Logger LOG = LoggerFactory.getLogger(InntektsmeldingApiMottakTjeneste.class);
     private ForespørselBehandlingTjeneste forespørselBehandlingTjeneste;
     private InntektsmeldingTjeneste inntektsmeldingTjeneste;
     private FellesMottakTjeneste fellesMottakTjeneste;
-    private PersonTjeneste personTjeneste;
 
-    EksternInntektsmeldingMottakTjeneste() {
+    InntektsmeldingApiMottakTjeneste() {
         //CDI
     }
 
     @Inject
-    public EksternInntektsmeldingMottakTjeneste(ForespørselBehandlingTjeneste forespørselBehandlingTjeneste,
-                                                InntektsmeldingTjeneste inntektsmeldingTjeneste,
-                                                FellesMottakTjeneste fellesMottakTjeneste,
-                                                PersonTjeneste personTjeneste) {
+    public InntektsmeldingApiMottakTjeneste(ForespørselBehandlingTjeneste forespørselBehandlingTjeneste,
+                                            InntektsmeldingTjeneste inntektsmeldingTjeneste,
+                                            FellesMottakTjeneste fellesMottakTjeneste) {
         this.forespørselBehandlingTjeneste = forespørselBehandlingTjeneste;
         this.inntektsmeldingTjeneste = inntektsmeldingTjeneste;
         this.fellesMottakTjeneste = fellesMottakTjeneste;
-        this.personTjeneste = personTjeneste;
     }
 
     public SendInntektsmeldingResponse mottaInntektsmelding(InntektsmeldingDto inntektsmelding, UUID forespørselUuid, String fnr) {

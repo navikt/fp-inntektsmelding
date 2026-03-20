@@ -38,14 +38,14 @@ public class FellesMottakTjeneste {
         this.forespørselBehandlingTjeneste = forespørselBehandlingTjeneste;
     }
 
-    public InntektsmeldingDto lagreOgJournalførInntektsmelding(InntektsmeldingDto imEnitet, ForespørselDto forespørselEnitet) {
-        var imId = lagreOgLagJournalførTask(imEnitet, forespørselEnitet);
+    public InntektsmeldingDto lagreOgJournalførInntektsmelding(InntektsmeldingDto inntektsmelding, ForespørselDto forespørsel) {
+        var imId = lagreOgLagJournalførTask(inntektsmelding, forespørsel);
         return inntektsmeldingTjeneste.hentInntektsmelding(imId);
     }
 
-    private Long lagreOgLagJournalførTask(InntektsmeldingDto entitet, ForespørselDto forespørsel) {
+    private Long lagreOgLagJournalførTask(InntektsmeldingDto inntektsmelding, ForespørselDto forespørsel) {
         LOG.info("Lagrer inntektsmelding for forespørsel {}", forespørsel.uuid());
-        var imId = inntektsmeldingTjeneste.lagreInntektsmelding(entitet);
+        var imId = inntektsmeldingTjeneste.lagreInntektsmelding(inntektsmelding);
         opprettTaskForSendTilJoark(imId, forespørsel);
         return imId;
     }
@@ -70,7 +70,7 @@ public class FellesMottakTjeneste {
             MetrikkerTjeneste.loggForespørselLukkIntern(ferdigstiltForespørsel);
         } else {
             //legger inn oppdatert inntektsmelding i portaler
-            forespørselBehandlingTjeneste.oppdaterPortalerMedEndretInntektsmelding(forespørsel, imId, );
+            forespørselBehandlingTjeneste.oppdaterPortalerMedEndretInntektsmelding(forespørsel, imId, orgnummer);
         }
     }
 }

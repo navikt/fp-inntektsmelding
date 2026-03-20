@@ -14,9 +14,8 @@ import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.Forespørsel
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.LukkeÅrsak;
 import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.InntektsmeldingResponseDto;
+import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.FellesMottakTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
-import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingTjeneste;
-import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.task.SendTilJoarkTask;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.fpsak.FpsakTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.metrikker.MetrikkerTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
@@ -25,16 +24,13 @@ import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Arbeidsgiverinitiert
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.vedtak.exception.TekniskException;
-import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
-import no.nav.vedtak.felles.prosesstask.api.ProsessTaskTjeneste;
 import no.nav.vedtak.konfig.Tid;
 
 @ApplicationScoped
 public class InntektsmeldingMottakTjeneste {
     private static final Logger LOG = LoggerFactory.getLogger(InntektsmeldingMottakTjeneste.class);
     private ForespørselBehandlingTjeneste forespørselBehandlingTjeneste;
-    private InntektsmeldingTjeneste inntektsmeldingTjeneste;
-    private ProsessTaskTjeneste prosessTaskTjeneste;
+    private FellesMottakTjeneste fellesMottakTjeneste;
     private FpsakTjeneste fpsakTjeneste;
 
     InntektsmeldingMottakTjeneste() {
@@ -42,12 +38,10 @@ public class InntektsmeldingMottakTjeneste {
 
     @Inject
     public InntektsmeldingMottakTjeneste(ForespørselBehandlingTjeneste forespørselBehandlingTjeneste,
-                                         InntektsmeldingTjeneste inntektsmeldingTjeneste,
-                                         ProsessTaskTjeneste prosessTaskTjeneste,
+                                         FellesMottakTjeneste fellesMottakTjeneste,
                                          FpsakTjeneste fpsakTjeneste) {
         this.forespørselBehandlingTjeneste = forespørselBehandlingTjeneste;
-        this.inntektsmeldingTjeneste = inntektsmeldingTjeneste;
-        this.prosessTaskTjeneste = prosessTaskTjeneste;
+        this.fellesMottakTjeneste = fellesMottakTjeneste;
         this.fpsakTjeneste = fpsakTjeneste;
     }
 
@@ -59,21 +53,7 @@ public class InntektsmeldingMottakTjeneste {
             throw new IllegalStateException("Kan ikke motta nye inntektsmeldinger på utgåtte forespørsler");
         }
 
-        var lagretIm = lagreOgJournalførInntektsmelding(mottattInntektsmeldingDto, forespørsel);
-        //Ferdigstiller forespørsel hvis den ikke er ferdig fra før
-
-        var arbeidsgiver = mottattInntektsmeldingDto.getArbeidsgiver();
-        if (!forespørsel.status().equals(ForespørselStatus.FERDIG)) {
-            var aktørId = AktørId.fra(mottattInntektsmeldingDto.getAktørId().getAktørId());
-            var ferdigstiltForespørsel = forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørselUuid, aktørId,
-                arbeidsgiver,
-                mottattInntektsmeldingDto.getStartdato(), LukkeÅrsak.ORDINÆR_INNSENDING, Optional.ofNullable(lagretIm.getInntektsmeldingUuid()));
-            MetrikkerTjeneste.loggForespørselLukkIntern(ferdigstiltForespørsel);
-        } else {
-            //legger inn oppdatert inntektsmelding i portaler
-            forespørselBehandlingTjeneste.oppdaterPortalerMedEndretInntektsmelding(forespørsel, Optional.ofNullable(lagretIm.getInntektsmeldingUuid()),
-                arbeidsgiver);
-        }
+        var lagretIm = fellesMottakTjeneste.lagreOgJournalførInntektsmelding(mottattInntektsmeldingDto, forespørsel);
 
         MetrikkerTjeneste.loggInnsendtInntektsmelding(lagretIm);
 
@@ -101,7 +81,7 @@ public class InntektsmeldingMottakTjeneste {
                     inntektsmeldingDto.getStartdato());
             }
 
-            lagretInntektsmelding = lagreOgJournalførInntektsmelding(inntektsmeldingDto, forespørselDto);
+            lagretInntektsmelding = fellesMottakTjeneste.lagreOgJournalførInntektsmelding(inntektsmeldingDto, forespørselDto);
             //legger inn oppdatert inntektsmelding i portaler
             forespørselBehandlingTjeneste.oppdaterPortalerMedEndretInntektsmelding(forespørselDto,
                 Optional.ofNullable(lagretInntektsmelding.getInntektsmeldingUuid()),
@@ -115,7 +95,7 @@ public class InntektsmeldingMottakTjeneste {
                 agInitiertÅrsak,
                 inntektsmeldingDto.getStartdato());
 
-            lagretInntektsmelding = lagreOgJournalførInntektsmelding(inntektsmeldingDto, forespørselDto);
+            lagretInntektsmelding = fellesMottakTjeneste.lagreOgJournalførInntektsmelding(inntektsmeldingDto, forespørselDto);
             forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørselDto.uuid(), aktørId, arbeidsgiver,
                 inntektsmeldingDto.getStartdato(), LukkeÅrsak.ORDINÆR_INNSENDING, Optional.ofNullable(lagretInntektsmelding.getInntektsmeldingUuid()));
         }
@@ -126,11 +106,6 @@ public class InntektsmeldingMottakTjeneste {
             MetrikkerTjeneste.logginnsendtArbeidsgiverinitiertUregistrertIm(lagretInntektsmelding);
         }
         return InntektsmeldingMapper.mapFraDomene(lagretInntektsmelding, forespørselDto);
-    }
-
-    private InntektsmeldingDto lagreOgJournalførInntektsmelding(InntektsmeldingDto inntektsmeldingDto, ForespørselDto forespørsel) {
-        var imId = lagreOgLagJournalførTask(inntektsmeldingDto, forespørsel);
-        return inntektsmeldingTjeneste.hentInntektsmelding(imId);
     }
 
     private ForespørselDto oppretterArbeidsgiverinitiertForespørsel(Ytelsetype ytelseType,
@@ -153,25 +128,6 @@ public class InntektsmeldingMottakTjeneste {
 
         return forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid)
             .orElseThrow(this::manglerForespørselFeil);
-    }
-
-    private Long lagreOgLagJournalførTask(InntektsmeldingDto inntektsmeldingDto, ForespørselDto forespørsel) {
-        LOG.info("Lagrer inntektsmelding for forespørsel {}", forespørsel.uuid());
-        var imId = inntektsmeldingTjeneste.lagreInntektsmelding(inntektsmeldingDto);
-        opprettTaskForSendTilJoark(imId, forespørsel);
-        return imId;
-    }
-
-    private void opprettTaskForSendTilJoark(Long imId, ForespørselDto forespørsel) {
-        var task = ProsessTaskData.forProsessTask(SendTilJoarkTask.class);
-        var saksnummer = forespørsel.fagsystemSaksnummer();
-        if (saksnummer != null) {
-            task.setSaksnummer(saksnummer.saksnummer());
-        }
-        task.setProperty(SendTilJoarkTask.KEY_INNTEKTSMELDING_ID, imId.toString());
-        task.setProperty(SendTilJoarkTask.KEY_FORESPOERSEL_TYPE, forespørsel.forespørselType().name());
-        prosessTaskTjeneste.lagre(task);
-        LOG.info("Opprettet task for oversending til joark");
     }
 
     private TekniskException manglerForespørselFeil() {

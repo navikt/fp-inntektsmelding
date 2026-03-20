@@ -1,6 +1,6 @@
 package no.nav.foreldrepenger.inntektsmelding.felles;
 
-public enum NyBeskjedResultat {
+public enum NyBeskjedResultatDto {
     FORESPØRSEL_FINNES_IKKE,
     NY_BESKJED_SENDT
 }

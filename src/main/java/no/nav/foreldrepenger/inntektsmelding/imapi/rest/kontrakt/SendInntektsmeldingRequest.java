@@ -13,7 +13,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 
 public record SendInntektsmeldingRequest(@NotNull @Valid UUID foresporselUuid,
-                                         @Pattern(regexp = "^\\d{11}$") @NotNull String fødselsnummer,
+                                         @NotNull @Valid Fødselsnummer fødselsnummer,
                                          @NotNull @Valid Arbeidsgiver organisasjonsnummer,
                                          @NotNull LocalDate startdato,
                                          @NotNull YtelseType ytelseType,
@@ -24,22 +24,4 @@ public record SendInntektsmeldingRequest(@NotNull @Valid UUID foresporselUuid,
                                          @NotNull List<@Valid BortfaltNaturalytelse> bortfaltNaturalytelsePerioder,
                                          @NotNull List<@Valid Endringsårsaker> endringAvInntektÅrsaker,
                                          @NotNull @Valid AvsenderSystem avsenderSystem) {
-
-    @Override
-    public String toString() {
-        return "SendInntektsmeldingEksternRequest{" +
-            "foresporselUuid=" + foresporselUuid +
-            ", fødselsnummer='****" + fødselsnummer.substring(7) + "'" +
-            ", organisasjonsnummer=" + organisasjonsnummer +
-            ", startdato=" + startdato +
-            ", ytelseType=" + ytelseType +
-            ", kontaktperson=" + kontaktperson +
-            ", inntekt=" + inntekt +
-            ", refusjon=" + refusjon +
-            ", bortfaltNaturalytelsePerioder=" + bortfaltNaturalytelsePerioder +
-            ", endringAvInntektÅrsaker=" + endringAvInntektÅrsaker +
-            ", avsenderSystem=" + avsenderSystem +
-            '}';
-    }
-
 }

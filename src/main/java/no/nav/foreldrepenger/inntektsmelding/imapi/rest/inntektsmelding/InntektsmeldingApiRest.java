@@ -25,8 +25,8 @@ import org.slf4j.LoggerFactory;
 import io.swagger.v3.oas.annotations.Operation;
 import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.SendInntektsmeldingRequest;
 import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.SendInntektsmeldingResponse;
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.tjenester.EksternInntektsmeldingMottakTjeneste;
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.tjenester.InntektsmeldingEksternMapper;
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.tjenester.InntektsmeldingApiMottakTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.tjenester.InntektsmeldingApiMapper;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.AutentisertMedAzure;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.Tilgangskontrollert;
@@ -44,7 +44,7 @@ public class InntektsmeldingApiRest {
     public static final String BASE_PATH = "/imapi/inntektsmelding";
     private Tilgang tilgangskontroll;
     private InntektsmeldingTjeneste inntektsmeldingTjeneste;
-    private EksternInntektsmeldingMottakTjeneste inntektsmeldingMottakTjeneste;
+    private InntektsmeldingApiMottakTjeneste inntektsmeldingMottakTjeneste;
     private PersonTjeneste personTjeneste;
 
     InntektsmeldingApiRest() {
@@ -53,7 +53,7 @@ public class InntektsmeldingApiRest {
 
     @Inject
     public InntektsmeldingApiRest(InntektsmeldingTjeneste inntektsmeldingTjeneste,
-                                  EksternInntektsmeldingMottakTjeneste inntektsmeldingMottakTjeneste,
+                                  InntektsmeldingApiMottakTjeneste inntektsmeldingMottakTjeneste,
                                   PersonTjeneste personTjeneste, Tilgang tilgangskontroll) {
         this.inntektsmeldingTjeneste = inntektsmeldingTjeneste;
         this.tilgangskontroll = tilgangskontroll;
@@ -90,7 +90,7 @@ public class InntektsmeldingApiRest {
         LOG.info("Mottatt inntektsmelding fra ekstern kilde for forespørselUuid {} ", request.foresporselUuid());
 
         var aktørId = Optional.ofNullable(request.fødselsnummer())
-            .flatMap(ident -> personTjeneste.finnAktørIdForIdent(new PersonIdent(ident)));
+            .flatMap(ident -> personTjeneste.finnAktørIdForIdent(new PersonIdent(ident.fnr())));
 
         if (aktørId.isEmpty()) {
             SECURE_LOG.error("Finner ikke aktørId for fødselsnummer {}", request.fødselsnummer());
@@ -98,7 +98,7 @@ public class InntektsmeldingApiRest {
                 "Finner ikke informasjon for fødselsnummer. Sjekk at fødselsnummer er korrekt");
         }
 
-        var mottattInntektsmelding = InntektsmeldingEksternMapper.mapTilDomene(request, aktørId.get());
-        return inntektsmeldingMottakTjeneste.mottaInntektsmelding(mottattInntektsmelding, request.foresporselUuid(), request.fødselsnummer());
+        var mottattInntektsmelding = InntektsmeldingApiMapper.mapTilDomene(request, aktørId.get());
+        return inntektsmeldingMottakTjeneste.mottaInntektsmelding(mottattInntektsmelding, request.foresporselUuid(), request.fødselsnummer().fnr());
     }
 }

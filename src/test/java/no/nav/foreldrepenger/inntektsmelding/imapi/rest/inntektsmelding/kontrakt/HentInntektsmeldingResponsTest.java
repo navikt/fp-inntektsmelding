@@ -8,6 +8,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import org.junit.jupiter.api.Test;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+
 import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.AvsenderSystem;
 import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.BortfaltNaturalytelse;
@@ -16,15 +21,10 @@ import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.Endringsårsake
 import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.HentInntektsmeldingRespons;
 import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.Innsendingstype;
 import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.Innsendingsårsak;
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.Kontaktperson;
 import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.Naturalytelsetype;
 import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.SøktRefusjon;
 import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.YtelseType;
-
-import org.junit.jupiter.api.Test;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.json.JsonMapper;
-
 import no.nav.vedtak.mapper.json.DefaultJsonMapper;
 
 class HentInntektsmeldingResponsTest {
@@ -43,7 +43,7 @@ class HentInntektsmeldingResponsTest {
             "12345678901",
             YtelseType.FORELDREPENGER,
             new Arbeidsgiver("999999999"),
-            new HentInntektsmeldingRespons.Kontaktperson("12345678", "Ola Nordmann"),
+            new Kontaktperson("Ola Nordmann", "12345678"),
             dato,
             new BigDecimal("50000"),
             innsendingsårsak,
@@ -131,7 +131,7 @@ class HentInntektsmeldingResponsTest {
             "12345678901",
             YtelseType.SVANGERSKAPSPENGER,
             new Arbeidsgiver("999999999"),
-            new HentInntektsmeldingRespons.Kontaktperson("87654321", "Kari Nordmann"),
+            new Kontaktperson("87654321", "Kari Nordmann"),
             LocalDate.now(),
             new BigDecimal("40000"),
             Innsendingsårsak.ENDRING,

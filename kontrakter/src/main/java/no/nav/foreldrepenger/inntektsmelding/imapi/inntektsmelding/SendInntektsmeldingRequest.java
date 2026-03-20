@@ -1,8 +1,7 @@
-package no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt;
+package no.nav.foreldrepenger.inntektsmelding.imapi.inntektsmelding;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -12,25 +11,27 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
 
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.EndringsårsakDto;
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.NaturalytelsetypeDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.AvsenderSystemDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.BortfaltNaturalytelseDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.EndringsårsakerDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.KontaktpersonDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.OrganisasjonsnummerDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.SøktRefusjonDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.YtelseTypeDto;
 
-public record SendInntektsmeldingEksternRequest(@NotNull @Valid UUID foresporselUuid,
-                                                @Pattern(
-                                                    regexp = "^\\d{11}$"
-                                                ) @NotNull String fødselsnummer,
-                                                @NotNull @Valid ArbeidsgiverInformasjonDto organisasjonsnummer,
-                                                @NotNull LocalDate startdato,
-                                                @NotNull YtelseTypeRequest ytelseType,
-                                                @NotNull @Valid KontaktpersonRequest kontaktperson,
-                                                //kan inntekt noen gang være 0?
-                                                @Min(0) @Max(Integer.MAX_VALUE) @Digits(integer = 20, fraction = 2) BigDecimal inntekt,
-                                                @NotNull List<@Valid RefusjonRequest> refusjon,
-                                                @NotNull List<@Valid BortfaltNaturalytelseRequest> bortfaltNaturalytelsePerioder,
-                                                @NotNull List<@Valid EndringsårsakerRequest> endringAvInntektÅrsaker,
-                                                @NotNull @Valid AvsenderSystemRequest avsenderSystem) {
+public record SendInntektsmeldingRequest(@NotNull @Valid UUID foresporselUuid,
+                                         @Pattern(regexp = "^\\d{11}$") @NotNull String fødselsnummer,
+                                         @NotNull @Valid OrganisasjonsnummerDto organisasjonsnummer,
+                                         @NotNull LocalDate startdato,
+                                         @NotNull YtelseTypeDto ytelseType,
+                                         @NotNull @Valid KontaktpersonDto kontaktperson,
+                                         //kan inntekt noen gang være 0?
+                                         @Min(0) @Max(Integer.MAX_VALUE) @Digits(integer = 20, fraction = 2) BigDecimal inntekt,
+                                         @NotNull List<@Valid SøktRefusjonDto> refusjon,
+                                         @NotNull List<@Valid BortfaltNaturalytelseDto> bortfaltNaturalytelsePerioder,
+                                         @NotNull List<@Valid EndringsårsakerDto> endringAvInntektÅrsaker,
+                                         @NotNull @Valid AvsenderSystemDto avsenderSystem) {
 
     @Override
     public String toString() {
@@ -49,32 +50,4 @@ public record SendInntektsmeldingEksternRequest(@NotNull @Valid UUID foresporsel
             '}';
     }
 
-    public enum YtelseTypeRequest {
-        FORELDREPENGER,
-        SVANGERSKAPSPENGER
-    }
-
-    public record KontaktpersonRequest(@Size(max = 200) @NotNull String navn, @NotNull @Size(max = 100) String telefonnummer) {
-    }
-
-    public record RefusjonRequest(@NotNull LocalDate fom,
-                                  @NotNull @Min(0) @Max(Integer.MAX_VALUE) @Digits(integer = 20, fraction = 2) BigDecimal beløp) {
-    }
-
-    public record BortfaltNaturalytelseRequest(@NotNull LocalDate fom,
-                                               LocalDate tom,
-                                               @NotNull NaturalytelsetypeDto naturalytelsetype,
-                                               @NotNull @Min(0) @Max(Integer.MAX_VALUE) @Digits(integer = 20, fraction = 2) BigDecimal beløp) {
-    }
-
-    public record EndringsårsakerRequest(@NotNull @Valid EndringsårsakDto årsak,
-                                         LocalDate fom,
-                                         LocalDate tom,
-                                         LocalDate bleKjentFom) {
-    }
-
-    public record AvsenderSystemRequest(@NotNull @Size(max = 200) String navn,
-                                        @NotNull @Size(max = 100) String versjon,
-                                        @NotNull LocalDateTime innsendtTidspunkt) {
-    }
 }

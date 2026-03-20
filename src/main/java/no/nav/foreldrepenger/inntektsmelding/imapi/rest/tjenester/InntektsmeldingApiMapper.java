@@ -18,8 +18,8 @@ import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.NaturalytelseType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.vedtak.konfig.Tid;
 
-public class InntektsmeldingEksternMapper {
-    private InntektsmeldingEksternMapper() {
+public class InntektsmeldingApiMapper {
+    private InntektsmeldingApiMapper() {
         // Mapper klasse, skal ikke instansieres
     }
 
@@ -87,7 +87,7 @@ public class InntektsmeldingEksternMapper {
 
     private static List<InntektsmeldingDto.Endringsårsaker> mapEndringsårsaker(
         List<no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.Endringsårsaker> endringsårsaker) {
-        return endringsårsaker.stream().map(InntektsmeldingEksternMapper::mapEndringsårsaker).toList();
+        return endringsårsaker.stream().map(InntektsmeldingApiMapper::mapEndringsårsaker).toList();
     }
 
     private static InntektsmeldingDto.Endringsårsaker mapEndringsårsaker(
