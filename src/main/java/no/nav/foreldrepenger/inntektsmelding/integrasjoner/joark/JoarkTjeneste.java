@@ -34,9 +34,9 @@ public class JoarkTjeneste {
     private static final String JOURNALFØRENDE_ENHET = "9999";
     private static final String JOURNALFØRING_TITTEL = "Inntektsmelding";
     // TODO Denne bør nok synkes med avsendersystem i XML
-    private static final String KANAL = "NAV_NO";
-    private static final String BREVKODE_IM = "4936";
-    private static final String TEMA_FOR = "FOR";
+    static final String KANAL = "NAV_NO";
+    static final String BREVKODE_IM = "4936";
+    static final String TEMA_FOR = "FOR";
 
     private DokArkiv joarkKlient;
     private OrganisasjonTjeneste organisasjonTjeneste;
@@ -54,7 +54,7 @@ public class JoarkTjeneste {
     public String journalførInntektsmelding(String xmlAvInntektsmelding,
                                             InntektsmeldingDto inntektsmelding,
                                             byte[] pdf,
-                                            Saksnummer fagsystemSaksnummer) {
+                                            @Nullable Saksnummer fagsystemSaksnummer) {
         var request = opprettRequest(inntektsmelding, xmlAvInntektsmelding, pdf, fagsystemSaksnummer);
         try {
             var response = joarkKlient.opprettJournalpost(request, false);

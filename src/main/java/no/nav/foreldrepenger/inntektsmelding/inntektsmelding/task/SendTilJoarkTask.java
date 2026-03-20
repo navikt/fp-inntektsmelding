@@ -49,7 +49,7 @@ public class SendTilJoarkTask implements ProsessTaskHandler {
         var forespørselType = Optional.ofNullable(prosessTaskData.getPropertyValue(KEY_FORESPOERSEL_TYPE))
             .map(ForespørselType::valueOf)
             .orElse(ForespørselType.BESTILT_AV_FAGSYSTEM);
-        var fagsysteSaksnummer = Optional.ofNullable(prosessTaskData.getSaksnummer()).map(Saksnummer::new).orElse(null);
+        var fagsysteSaksnummer = Saksnummer.fra(prosessTaskData.getSaksnummer());
         LOG.info("Starter task for oversending til joark for saksnummer {}", fagsysteSaksnummer);
 
         var inntektsmeldingDto = inntektsmeldingTjeneste.hentInntektsmelding(inntektsmeldingId);

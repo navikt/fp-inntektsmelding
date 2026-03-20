@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -90,11 +91,14 @@ class JoarkTjenesteTest {
         var aktørIdSøker = new AktørId(aktør);
         var arbeidsgiver = Arbeidsgiver.fra("999999999");
 
+        var inntektsmeldingUuid = UUID.randomUUID();
+        var innsendtTidspunkt = LocalDateTime.now();
         var inntektsmelding = InntektsmeldingDto.builder()
+            .medInntektsmeldingUuid(inntektsmeldingUuid)
             .medArbeidsgiver(arbeidsgiver)
             .medYtelse(Ytelsetype.FORELDREPENGER)
             .medAktørId(aktørIdSøker)
-            .medInnsendtTidspunkt(LocalDateTime.now())
+            .medInnsendtTidspunkt(innsendtTidspunkt)
             .build();
 
         var testBedrift = new Organisasjon("Test Bedrift", arbeidsgiver.toString());
@@ -114,10 +118,50 @@ class JoarkTjenesteTest {
         var opprettJournalpostRequest = argumentCaptor.getValue();
         assertThat(opprettJournalpostRequest.sak()).isNull();
         assertThat(opprettJournalpostRequest.bruker().id()).isEqualTo(aktør);
+        assertThat(opprettJournalpostRequest.datoMottatt()).isEqualTo(innsendtTidspunkt.toLocalDate().atStartOfDay());
+        assertThat(opprettJournalpostRequest.eksternReferanseId()).isNotEmpty().isEqualTo(inntektsmeldingUuid.toString());
     }
 
     @Test
     void skal_teste_at_saknummer_ikke_er_satt_om_fagsystemSaksnummer_er_empty() {
+        // Arrange
+        var aktør = "1234567891234";
+        var aktørIdSøker = new AktørId(aktør);
+        var arbeidsgiver = Arbeidsgiver.fra("999999999");
+
+        var inntektsmeldingUuid = UUID.randomUUID();
+        var inntektsmelding = InntektsmeldingDto.builder()
+            .medInntektsmeldingUuid(inntektsmeldingUuid)
+            .medArbeidsgiver(arbeidsgiver)
+            .medYtelse(Ytelsetype.FORELDREPENGER)
+            .medAktørId(aktørIdSøker)
+            .medInnsendtTidspunkt(LocalDateTime.now())
+            .build();
+
+        var testBedrift = new Organisasjon("Test Bedrift", arbeidsgiver.toString());
+        // Kan foreløpig ikke teste med spesifikk request i mock siden eksternreferanse genereres on the fly
+        when(organisasjonTjeneste.finnOrganisasjon(arbeidsgiver)).thenReturn(testBedrift);
+        when(klient.opprettJournalpost(any(), anyBoolean())).thenReturn(new OpprettJournalpostResponse("9999", false, Collections.emptyList()));
+
+        // Act
+        var journalpostId = joarkTjeneste.journalførInntektsmelding("XML", inntektsmelding, PDFSIGNATURE, Saksnummer.fra(""));
+
+        // Assert
+        assertThat(journalpostId).isEqualTo("9999");
+
+        var argumentCaptor = ArgumentCaptor.forClass(OpprettJournalpostRequest.class);
+        verify(klient).opprettJournalpost(argumentCaptor.capture(), eq(false));
+
+        var opprettJournalpostRequest = argumentCaptor.getValue();
+        assertThat(opprettJournalpostRequest.sak()).isNull();
+        assertThat(opprettJournalpostRequest.eksternReferanseId()).isNotEmpty().isEqualTo(inntektsmeldingUuid.toString());
+        assertThat(opprettJournalpostRequest.bruker().id()).isEqualTo(aktør);
+        assertThat(opprettJournalpostRequest.tema()).isEqualTo(JoarkTjeneste.TEMA_FOR);
+        assertThat(opprettJournalpostRequest.kanal()).isEqualTo(JoarkTjeneste.KANAL);
+    }
+
+    @Test
+    void skal_teste_at_eksternreferanse_blir_generert_om_den_ikke_er_satt_på_inntektsmeldingen() {
         // Arrange
         var aktør = "1234567891234";
         var aktørIdSøker = new AktørId(aktør);
@@ -145,7 +189,7 @@ class JoarkTjenesteTest {
         verify(klient).opprettJournalpost(argumentCaptor.capture(), eq(false));
 
         var opprettJournalpostRequest = argumentCaptor.getValue();
-        assertThat(opprettJournalpostRequest.sak()).isNull();
+        assertThat(opprettJournalpostRequest.eksternReferanseId()).isNotEmpty();
         assertThat(opprettJournalpostRequest.bruker().id()).isEqualTo(aktør);
     }
 }
