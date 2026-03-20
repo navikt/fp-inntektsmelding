@@ -264,15 +264,4 @@ public class InntektsmeldingDto {
         String versjon
     ) {
     }
-
-    public enum Innsendingsårsak {
-        NY,
-        ENDRING
-    }
-
-    public enum Innsendingstype {
-        FORESPURT,
-        ARBEIDSGIVER_INITIERT
-    }
-
 }
