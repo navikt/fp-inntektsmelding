@@ -6,8 +6,8 @@
     "mem": "1000Mi"
   },
   "requests": {
-    "cpu": "450m",
-    "mem": "768Mi"
+    "cpu": "200m",
+    "mem": "800Mi"
   },
   "ingresses": [
     "https://fpinntektsmelding.intern.nav.no"
