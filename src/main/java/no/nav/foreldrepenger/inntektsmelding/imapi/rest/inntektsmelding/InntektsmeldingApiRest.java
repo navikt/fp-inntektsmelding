@@ -1,5 +1,6 @@
 package no.nav.foreldrepenger.inntektsmelding.imapi.rest.inntektsmelding;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import jakarta.enterprise.context.RequestScoped;
@@ -7,16 +8,25 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
+
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.swagger.v3.oas.annotations.Operation;
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.SendInntektsmeldingRequest;
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.SendInntektsmeldingResponse;
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.tjenester.EksternInntektsmeldingMottakTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.tjenester.InntektsmeldingEksternMapper;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.AutentisertMedAzure;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.Tilgangskontrollert;
@@ -29,19 +39,26 @@ import no.nav.foreldrepenger.inntektsmelding.server.tilgangsstyring.Tilgang;
 @Path(InntektsmeldingApiRest.BASE_PATH)
 public class InntektsmeldingApiRest {
     private static final Logger LOG = LoggerFactory.getLogger(InntektsmeldingApiRest.class);
+    private static final Logger SECURE_LOG = LoggerFactory.getLogger("secureLogger");
 
     public static final String BASE_PATH = "/imapi/inntektsmelding";
     private Tilgang tilgangskontroll;
     private InntektsmeldingTjeneste inntektsmeldingTjeneste;
+    private EksternInntektsmeldingMottakTjeneste inntektsmeldingMottakTjeneste;
+    private PersonTjeneste personTjeneste;
 
     InntektsmeldingApiRest() {
         // CDI
     }
 
     @Inject
-    public InntektsmeldingApiRest(InntektsmeldingTjeneste inntektsmeldingTjeneste, Tilgang tilgangskontroll) {
+    public InntektsmeldingApiRest(InntektsmeldingTjeneste inntektsmeldingTjeneste,
+                                  EksternInntektsmeldingMottakTjeneste inntektsmeldingMottakTjeneste,
+                                  PersonTjeneste personTjeneste, Tilgang tilgangskontroll) {
         this.inntektsmeldingTjeneste = inntektsmeldingTjeneste;
         this.tilgangskontroll = tilgangskontroll;
+        this.inntektsmeldingMottakTjeneste = inntektsmeldingMottakTjeneste;
+        this.personTjeneste = personTjeneste;
     }
 
     @GET
@@ -63,5 +80,25 @@ public class InntektsmeldingApiRest {
         }
 
         return Response.ok(inntektsmelding).build();
+    }
+
+    @POST
+    @Path("/inntektsmelding")
+    @Tilgangskontrollert
+    public SendInntektsmeldingResponse sendEksternInntektsmelding(SendInntektsmeldingRequest request) {
+        tilgangskontroll.sjekkErSystembruker();
+        LOG.info("Mottatt inntektsmelding fra ekstern kilde for forespørselUuid {} ", request.foresporselUuid());
+
+        var aktørId = Optional.ofNullable(request.fødselsnummer())
+            .flatMap(ident -> personTjeneste.finnAktørIdForIdent(new PersonIdent(ident)));
+
+        if (aktørId.isEmpty()) {
+            SECURE_LOG.error("Finner ikke aktørId for fødselsnummer {}", request.fødselsnummer());
+            return new SendInntektsmeldingResponse(false, null,
+                "Finner ikke informasjon for fødselsnummer. Sjekk at fødselsnummer er korrekt");
+        }
+
+        var mottattInntektsmelding = InntektsmeldingEksternMapper.mapTilDomene(request, aktørId.get());
+        return inntektsmeldingMottakTjeneste.mottaInntektsmelding(mottattInntektsmelding, request.foresporselUuid(), request.fødselsnummer());
     }
 }

@@ -10,11 +10,10 @@ import jakarta.inject.Inject;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.ArbeidsgiverInformasjonDto;
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.ForespørselApiResponseDto;
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.Arbeidsgiver;
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.HentForespørselResponse;
 import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.YtelseType;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste;
-import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.ForespørselStatusDto;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.YtelseTypeDto;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
@@ -37,25 +36,25 @@ public class ForespørselApiTjeneste {
     }
 
 
-    public Optional<ForespørselApiResponseDto> hentForesørselDto(UUID forespørselUuid) {
+    public Optional<HentForespørselResponse> hentForesørselDto(UUID forespørselUuid) {
         return forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid).map(this::mapTilResponseDto);
     }
 
 
-    public List<ForespørselApiResponseDto> hentForespørslerDto(Arbeidsgiver arbeidsgiver,
-                                                               String fnr,
-                                                               ForespørselStatusDto status,
-                                                               YtelseTypeDto ytelseTypeDto,
-                                                               LocalDate fom,
-                                                               LocalDate tom) {
+    public List<HentForespørselResponse> hentForespørslerDto(no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver arbeidsgiver,
+                                                             String fnr,
+                                                             ForespørselStatusDto status,
+                                                             YtelseTypeDto ytelseTypeDto,
+                                                             LocalDate fom,
+                                                             LocalDate tom) {
         var resultater = forespørselBehandlingTjeneste.hentForespørsler(arbeidsgiver, fnr, status, ytelseTypeDto, fom, tom);
         return resultater.stream().map(this::mapTilResponseDto).toList();
     }
 
-    private ForespørselApiResponseDto mapTilResponseDto(ForespørselDto fp) {
+    private HentForespørselResponse mapTilResponseDto(ForespørselDto fp) {
         var fnr = personTjeneste.finnPersonIdentForAktørId(fp.aktørId()).getIdent();
-        return new ForespørselApiResponseDto(fp.uuid(),
-            new ArbeidsgiverInformasjonDto(fp.arbeidsgiver().orgnr()),
+        return new HentForespørselResponse(fp.uuid(),
+            new Arbeidsgiver(fp.arbeidsgiver().orgnr()),
             fnr,
             fp.førsteUttaksdato(),
             fp.skjæringstidspunkt(),
@@ -71,11 +70,11 @@ public class ForespørselApiTjeneste {
         };
     }
 
-    private ForespørselApiResponseDto.Status mapForespørselStatus(ForespørselStatus status) {
+    private HentForespørselResponse.Status mapForespørselStatus(ForespørselStatus status) {
         return switch (status) {
-            case UNDER_BEHANDLING -> ForespørselApiResponseDto.Status.UNDER_BEHANDLING;
-            case FERDIG -> ForespørselApiResponseDto.Status.FERDIG;
-            case UTGÅTT -> ForespørselApiResponseDto.Status.UTGÅTT;
+            case UNDER_BEHANDLING -> HentForespørselResponse.Status.UNDER_BEHANDLING;
+            case FERDIG -> HentForespørselResponse.Status.FERDIG;
+            case UTGÅTT -> HentForespørselResponse.Status.UTGÅTT;
         };
     }
 

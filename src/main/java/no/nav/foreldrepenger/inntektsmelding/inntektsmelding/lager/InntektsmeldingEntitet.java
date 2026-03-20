@@ -75,6 +75,13 @@ public class InntektsmeldingEntitet {
     @Column(name = "kildesystem", nullable = false, updatable = false)
     private Kildesystem kildesystem;
 
+    @Column(name = "lps_system_navn")
+    private String lpsSystemNavn;
+
+    @Column(name = "lps_system_versjon")
+    private String lpsSystemVersjon;
+
+
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "inntektsmelding")
     private List<RefusjonsendringEntitet> refusjonsendringer = new ArrayList<>();
 
@@ -86,6 +93,14 @@ public class InntektsmeldingEntitet {
 
     public InntektsmeldingEntitet() {
         // Hibernate
+    }
+
+    public String getLpsSystemNavn() {
+        return lpsSystemNavn;
+    }
+
+    public String getLpsSystemVersjon() {
+        return lpsSystemVersjon;
     }
 
     public Long getId() {
@@ -289,6 +304,16 @@ public class InntektsmeldingEntitet {
 
         public Builder medKildesystem(Kildesystem kildesystem) {
             kladd.kildesystem = kildesystem;
+            return this;
+        }
+
+        public Builder medLpsSystemNavn(String lpsSystemNavn) {
+            kladd.lpsSystemNavn = lpsSystemNavn;
+            return this;
+        }
+
+        public Builder medLpsSystemVersjon(String lpsSystemVersjon) {
+            kladd.lpsSystemVersjon = lpsSystemVersjon;
             return this;
         }
 

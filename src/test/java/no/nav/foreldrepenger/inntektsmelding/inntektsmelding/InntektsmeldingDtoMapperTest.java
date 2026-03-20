@@ -271,7 +271,7 @@ class InntektsmeldingDtoMapperTest {
             .medInnsendingsårsak(InntektsmeldingDto.Innsendingsårsak.NY)
             .medInnsendingstype(InntektsmeldingDto.Innsendingstype.FORESPURT)
             .medInnsendtTidspunkt(tidspunkt)
-            .medKildesystem(Kildesystem.API)
+            .medKildesystem(Kildesystem.LØNN_OG_PERSONAL_SYSTEM)
             .medMånedRefusjon(new BigDecimal("30000.00"))
             .medOpphørsdatoRefusjon(START_DATO.plusMonths(12))
             .medAvsenderSystem(new InntektsmeldingDto.AvsenderSystem("TestSystem", "1.0"))
@@ -296,7 +296,7 @@ class InntektsmeldingDtoMapperTest {
         assertThat(dto.getInnsendingsårsak()).isEqualTo(InntektsmeldingDto.Innsendingsårsak.NY);
         assertThat(dto.getInnsendingstype()).isEqualTo(InntektsmeldingDto.Innsendingstype.FORESPURT);
         assertThat(dto.getInnsendtTidspunkt()).isEqualTo(tidspunkt);
-        assertThat(dto.getKildesystem()).isEqualTo(Kildesystem.API);
+        assertThat(dto.getKildesystem()).isEqualTo(Kildesystem.LØNN_OG_PERSONAL_SYSTEM);
         assertThat(dto.getMånedRefusjon()).isEqualByComparingTo(new BigDecimal("30000.00"));
         assertThat(dto.getOpphørsdatoRefusjon()).isEqualTo(START_DATO.plusMonths(12));
         assertThat(dto.getAvsenderSystem().navn()).isEqualTo("TestSystem");
@@ -400,7 +400,7 @@ class InntektsmeldingDtoMapperTest {
             .medMånedRefusjon(new BigDecimal("25000"))
             .medOpphørsdatoRefusjon(START_DATO.plusMonths(6))
             .medOpprettetAv("bruker")
-            .medKildesystem(Kildesystem.API)
+            .medKildesystem(Kildesystem.LØNN_OG_PERSONAL_SYSTEM)
             .medSøkteRefusjonsperioder(List.of(
                 new InntektsmeldingDto.SøktRefusjon(START_DATO.plusMonths(2), new BigDecimal("20000"))))
             .medBortfaltNaturalytelsePerioder(List.of(
@@ -419,7 +419,7 @@ class InntektsmeldingDtoMapperTest {
         assertThat(entitet.getMånedRefusjon()).isEqualByComparingTo(new BigDecimal("25000"));
         assertThat(entitet.getOpphørsdatoRefusjon()).isEqualTo(START_DATO.plusMonths(6));
         assertThat(entitet.getOpprettetAv()).isEqualTo("bruker");
-        assertThat(entitet.getKildesystem()).isEqualTo(Kildesystem.API);
+        assertThat(entitet.getKildesystem()).isEqualTo(Kildesystem.LØNN_OG_PERSONAL_SYSTEM);
         assertThat(entitet.getKontaktperson().getNavn()).isEqualTo("Per Hansen");
         assertThat(entitet.getKontaktperson().getTelefonnummer()).isEqualTo("99887766");
         assertThat(entitet.getRefusjonsendringer()).hasSize(1);

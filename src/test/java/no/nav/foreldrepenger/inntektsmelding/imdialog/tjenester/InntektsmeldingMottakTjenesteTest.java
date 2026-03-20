@@ -112,7 +112,7 @@ class InntektsmeldingMottakTjenesteTest {
             null);
 
         // Act
-        var ex = assertThrows(IllegalStateException.class, () -> inntektsmeldingMottakTjeneste.mottaInntektsmelding(innsendingDto));
+        var ex = assertThrows(IllegalStateException.class, () -> inntektsmeldingMottakTjeneste.mottaInntektsmelding(innsendingDto, ));
 
         // Assert
         assertThat(ex.getMessage()).contains("Kan ikke motta nye inntektsmeldinger på utgåtte forespørsler");
@@ -170,7 +170,7 @@ class InntektsmeldingMottakTjenesteTest {
         when(inntektsmeldingTjeneste.hentInntektsmelding(1L)).thenReturn(im);
 
         // Act
-        var responseDto = inntektsmeldingMottakTjeneste.mottaArbeidsgiverinitiertInntektsmelding(innsendingDto, ArbeidsgiverinitiertÅrsak.NYANSATT);
+        var responseDto = inntektsmeldingMottakTjeneste.mottaArbeidsgiverinitiertInntektsmelding(innsendingDto, , ArbeidsgiverinitiertÅrsak.NYANSATT);
 
         // Assert
         verify(forespørselBehandlingTjeneste, times(1)).ferdigstillForespørsel(forespørsel.getUuid(), aktørId, Arbeidsgiver.fra(orgnr), startdato, LukkeÅrsak.ORDINÆR_INNSENDING,
@@ -238,7 +238,7 @@ class InntektsmeldingMottakTjenesteTest {
         when(inntektsmeldingTjeneste.hentInntektsmelding(1L)).thenReturn(im);
 
         // Act
-        var responseDto = inntektsmeldingMottakTjeneste.mottaArbeidsgiverinitiertInntektsmelding(innsendingDto, ArbeidsgiverinitiertÅrsak.NYANSATT);
+        var responseDto = inntektsmeldingMottakTjeneste.mottaArbeidsgiverinitiertInntektsmelding(innsendingDto, , ArbeidsgiverinitiertÅrsak.NYANSATT);
 
         // Assert
         verify(forespørselBehandlingTjeneste, times(0)).ferdigstillForespørsel(uuid, aktørId, Arbeidsgiver.fra(orgnr), startdato, LukkeÅrsak.ORDINÆR_INNSENDING,
@@ -304,7 +304,8 @@ class InntektsmeldingMottakTjenesteTest {
         when(inntektsmeldingTjeneste.hentInntektsmelding(1L)).thenReturn(im);
 
         // Act
-        var responseDto = inntektsmeldingMottakTjeneste.mottaArbeidsgiverinitiertInntektsmelding(innsendingDto, ArbeidsgiverinitiertÅrsak.UREGISTRERT);
+        var responseDto = inntektsmeldingMottakTjeneste.mottaArbeidsgiverinitiertInntektsmelding(innsendingDto, ,
+            ArbeidsgiverinitiertÅrsak.UREGISTRERT);
 
         // Assert
         verify(forespørselBehandlingTjeneste, times(1)).ferdigstillForespørsel(forespørsel.getUuid(), aktørId, Arbeidsgiver.fra(orgnr), startdato, LukkeÅrsak.ORDINÆR_INNSENDING,
@@ -367,7 +368,8 @@ class InntektsmeldingMottakTjenesteTest {
         when(inntektsmeldingTjeneste.hentInntektsmelding(1L)).thenReturn(im);
 
         // Act
-        var responseDto = inntektsmeldingMottakTjeneste.mottaArbeidsgiverinitiertInntektsmelding(innsendingDto, ArbeidsgiverinitiertÅrsak.UREGISTRERT);
+        var responseDto = inntektsmeldingMottakTjeneste.mottaArbeidsgiverinitiertInntektsmelding(innsendingDto, ,
+            ArbeidsgiverinitiertÅrsak.UREGISTRERT);
 
         // Assert
         verify(forespørselBehandlingTjeneste, times(0)).ferdigstillForespørsel(uuid, aktørId, Arbeidsgiver.fra(orgnr), startdato, LukkeÅrsak.ORDINÆR_INNSENDING,
