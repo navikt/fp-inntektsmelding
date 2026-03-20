@@ -10,11 +10,10 @@ import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
 
 public record SendInntektsmeldingRequest(@NotNull @Valid UUID foresporselUuid,
-                                         @NotNull @Valid Fødselsnummer fødselsnummer,
-                                         @NotNull @Valid Arbeidsgiver organisasjonsnummer,
+                                         @NotNull @Valid FødselsnummerDto fødselsnummer,
+                                         @NotNull @Valid ArbeidsgiverDto organisasjonsnummer,
                                          @NotNull LocalDate startdato,
                                          @NotNull YtelseType ytelseType,
                                          @NotNull @Valid Kontaktperson kontaktperson,

@@ -9,8 +9,6 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.HentForespørselResponse;
-
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,7 +16,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.Arbeidsgiver;
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.ArbeidsgiverDto;
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.FødselsnummerDto;
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.HentForespørselResponse;
 import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.YtelseType;
 import no.nav.foreldrepenger.inntektsmelding.server.tilgangsstyring.Tilgang;
 
@@ -39,13 +39,13 @@ class ForespørselApiRestTest {
 
     @Test
     void skal_hente_forespørsel() {
-        var orgnummer = new Arbeidsgiver(BRREG_ORGNUMMER);
+        var orgnummer = new ArbeidsgiverDto(BRREG_ORGNUMMER);
         var førsteUttaksdato = LocalDate.now();
         var skjæringstidspunkt = LocalDate.now();
         var forespørselUuid = UUID.randomUUID();
         var forventetForespørselDto = new HentForespørselResponse(forespørselUuid,
             orgnummer,
-            "11111111111",
+            new FødselsnummerDto("11111111111"),
             førsteUttaksdato,
             skjæringstidspunkt,
             HentForespørselResponse.Status.UNDER_BEHANDLING,

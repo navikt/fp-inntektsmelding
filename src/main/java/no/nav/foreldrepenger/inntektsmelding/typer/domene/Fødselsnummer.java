@@ -1,11 +1,6 @@
-package no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt;
+package no.nav.foreldrepenger.inntektsmelding.typer.domene;
 
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
-
-import com.fasterxml.jackson.annotation.JsonValue;
-
-public record Fødselsnummer(@JsonValue @NotNull @Pattern(regexp = "^\\d{11}$") String fnr) {
+public record Fødselsnummer(String fnr) {
     @Override
     public String toString() {
         return getClass().getSimpleName() + "<" + masker() + ">";

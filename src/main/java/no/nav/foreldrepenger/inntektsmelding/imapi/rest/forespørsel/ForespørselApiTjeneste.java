@@ -10,10 +10,13 @@ import jakarta.inject.Inject;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.Arbeidsgiver;
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.ArbeidsgiverDto;
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.FødselsnummerDto;
 import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.HentForespørselResponse;
 import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.YtelseType;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Fødselsnummer;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.ForespørselStatusDto;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.YtelseTypeDto;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
@@ -41,8 +44,8 @@ public class ForespørselApiTjeneste {
     }
 
 
-    public List<HentForespørselResponse> hentForespørslerDto(no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver arbeidsgiver,
-                                                             String fnr,
+    public List<HentForespørselResponse> hentForespørslerDto(Arbeidsgiver arbeidsgiver,
+                                                             Fødselsnummer fnr,
                                                              ForespørselStatusDto status,
                                                              YtelseTypeDto ytelseTypeDto,
                                                              LocalDate fom,
@@ -54,8 +57,8 @@ public class ForespørselApiTjeneste {
     private HentForespørselResponse mapTilResponseDto(ForespørselDto fp) {
         var fnr = personTjeneste.finnPersonIdentForAktørId(fp.aktørId()).getIdent();
         return new HentForespørselResponse(fp.uuid(),
-            new Arbeidsgiver(fp.arbeidsgiver().orgnr()),
-            fnr,
+            new ArbeidsgiverDto(fp.arbeidsgiver().orgnr()),
+            new FødselsnummerDto(fnr),
             fp.førsteUttaksdato(),
             fp.skjæringstidspunkt(),
             mapForespørselStatus(fp.status()),

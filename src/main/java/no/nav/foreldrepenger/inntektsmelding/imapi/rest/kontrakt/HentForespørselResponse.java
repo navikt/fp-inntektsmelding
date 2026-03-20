@@ -5,8 +5,8 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 public record HentForespørselResponse(UUID forespørselUuid,
-                                      Arbeidsgiver orgnummer,
-                                      String fødselsnummer,
+                                      ArbeidsgiverDto orgnummer,
+                                      FødselsnummerDto fødselsnummer,
                                       LocalDate førsteUttaksdato,
                                       LocalDate skjæringstidspunkt,
                                       Status status,

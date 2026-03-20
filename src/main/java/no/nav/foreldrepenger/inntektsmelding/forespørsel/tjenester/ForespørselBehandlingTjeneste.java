@@ -10,6 +10,8 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Fødselsnummer;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -519,12 +521,12 @@ public class ForespørselBehandlingTjeneste {
     }
 
     public List<ForespørselDto> hentForespørsler(Arbeidsgiver arbeidsgiver,
-                                                 String fnr,
+                                                 Fødselsnummer fødselsnummer,
                                                  ForespørselStatusDto status,
                                                  YtelseTypeDto ytelseType,
                                                  LocalDate fom,
                                                  LocalDate tom) {
-        var aktørId = fnr == null ? null : personTjeneste.finnAktørIdForIdent(new PersonIdent(fnr))
+        var aktørId = fødselsnummer == null ? null : personTjeneste.finnAktørIdForIdent(new PersonIdent(fødselsnummer.fnr()))
             .orElseThrow(() -> new IllegalStateException("Finner ikke aktørId"));
         return forespørselTjeneste.hentForespørsler(arbeidsgiver,
             aktørId,

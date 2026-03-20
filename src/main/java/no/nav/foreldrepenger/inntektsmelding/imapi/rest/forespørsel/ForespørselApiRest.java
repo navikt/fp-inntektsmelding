@@ -3,6 +3,7 @@ package no.nav.foreldrepenger.inntektsmelding.imapi.rest.forespørsel;
 import static no.nav.foreldrepenger.inntektsmelding.imapi.rest.forespørsel.ForespørselApiRest.BASE_PATH;
 
 import java.time.LocalDate;
+import java.util.Optional;
 import java.util.UUID;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -21,6 +22,8 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
+
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Fødselsnummer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,7 +81,7 @@ public class ForespørselApiRest {
         sjekkErSystemkall();
         var dtoer = forespørselApiTjeneste.hentForespørslerDto(
             Arbeidsgiver.fra(filterRequest.orgnr().orgnr()),
-            filterRequest.fnr(),
+            Optional.ofNullable(filterRequest.fnr()).map(Fødselsnummer::fnr).map(Fødselsnummer::new).orElse(null),
             filterRequest.status(),
             filterRequest.ytelseType(),
             filterRequest.fom(),
@@ -87,7 +90,7 @@ public class ForespørselApiRest {
     }
 
     protected record ForespørselFilterRequest(@NotNull @Valid OrganisasjonsnummerDto orgnr,
-                                              @Pattern(regexp = "^\\d{11}$") String fnr,
+                                              @Valid Fødselsnummer fnr,
                                               @Valid ForespørselStatusDto status,
                                               @Valid YtelseTypeDto ytelseType,
                                               LocalDate fom,

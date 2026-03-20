@@ -8,12 +8,14 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.FødselsnummerDto;
+
 import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.Arbeidsgiver;
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.ArbeidsgiverDto;
 import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.AvsenderSystem;
 import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.BortfaltNaturalytelse;
 import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.Endringsårsak;
@@ -40,9 +42,9 @@ class HentInntektsmeldingResponsTest {
         return new HentInntektsmeldingRespons(
             uuid,
             forespørselUuid,
-            "12345678901",
+            new FødselsnummerDto("12345678901"),
             YtelseType.FORELDREPENGER,
-            new Arbeidsgiver("999999999"),
+            new ArbeidsgiverDto("999999999"),
             new Kontaktperson("Ola Nordmann", "12345678"),
             dato,
             new BigDecimal("50000"),
@@ -128,9 +130,9 @@ class HentInntektsmeldingResponsTest {
         var dto = new HentInntektsmeldingRespons(
             UUID.randomUUID(),
             UUID.randomUUID(),
-            "12345678901",
+            new FødselsnummerDto("12345678901"),
             YtelseType.SVANGERSKAPSPENGER,
-            new Arbeidsgiver("999999999"),
+            new ArbeidsgiverDto("999999999"),
             new Kontaktperson("87654321", "Kari Nordmann"),
             LocalDate.now(),
             new BigDecimal("40000"),

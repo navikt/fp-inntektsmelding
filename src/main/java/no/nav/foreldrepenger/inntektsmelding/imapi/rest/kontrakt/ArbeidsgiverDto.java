@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Pattern;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public record Arbeidsgiver(@JsonValue @NotNull @Digits(integer = 13, fraction = 0) @Pattern(regexp = REGEXP) String orgnr) {
+public record ArbeidsgiverDto(@JsonValue @NotNull @Digits(integer = 13, fraction = 0) @Pattern(regexp = REGEXP) String orgnr) {
     private static final String REGEXP = "^(\\d{9}|\\d{13})$";
 
     @Override
@@ -24,9 +24,4 @@ public record Arbeidsgiver(@JsonValue @NotNull @Digits(integer = 13, fraction = 
         }
         return "*".repeat(length - 4) + orgnr.substring(length - 4);
     }
-
-    public boolean erVirksomhet() {
-        return orgnr.length() == 9;
-    }
-
 }

@@ -15,9 +15,9 @@ import jakarta.validation.constraints.NotNull;
 public record HentInntektsmeldingRespons(
     @NotNull UUID inntektsmeldingUuid,
     @NotNull @Valid UUID forespørselUuid,
-    @NotNull String fnr,
+    @NotNull FødselsnummerDto fnr,
     @NotNull @Valid YtelseType ytelseType,
-    @NotNull @Valid Arbeidsgiver arbeidsgiver,
+    @NotNull @Valid ArbeidsgiverDto arbeidsgiver,
     @NotNull @Valid Kontaktperson kontaktperson,
     @NotNull LocalDate startdato,
     @NotNull @Min(0) @Max(Integer.MAX_VALUE) @Digits(integer = 20, fraction = 2) BigDecimal inntekt,

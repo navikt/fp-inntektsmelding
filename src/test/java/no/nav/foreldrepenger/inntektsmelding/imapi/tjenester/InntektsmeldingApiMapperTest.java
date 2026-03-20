@@ -8,8 +8,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.Arbeidsgiver;
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.Fødselsnummer;
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.ArbeidsgiverDto;
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.FødselsnummerDto;
 
 import org.junit.jupiter.api.Test;
 
@@ -105,8 +105,8 @@ class InntektsmeldingApiMapperTest {
                                                                   List<SøktRefusjon> refusjoner) {
         return new SendInntektsmeldingRequest(
             UUID.randomUUID(),
-            new Fødselsnummer("12345678910"),
-            new Arbeidsgiver("999999999"),
+            new FødselsnummerDto("12345678910"),
+            new ArbeidsgiverDto("999999999"),
             startdato,
             YtelseType.FORELDREPENGER,
             new Kontaktperson("Kontakt Person", "12345678"),

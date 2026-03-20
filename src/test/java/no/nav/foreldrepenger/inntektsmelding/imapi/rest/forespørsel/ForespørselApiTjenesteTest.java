@@ -58,7 +58,7 @@ class ForespørselApiTjenesteTest {
         var dto = forespørselApiTjeneste.hentForesørselDto(forespørselUuid);
 
         assertThat(dto).isPresent();
-        assertThat(dto.get().fødselsnummer()).isEqualTo(fnr.getIdent());
+        assertThat(dto.get().fødselsnummer().fnr()).isEqualTo(fnr.getIdent());
         assertThat(dto.get().orgnummer().orgnr()).isEqualTo(orgnr);
     }
 
@@ -81,7 +81,7 @@ class ForespørselApiTjenesteTest {
         var dto = forespørselApiTjeneste.hentForespørslerDto(Arbeidsgiver.fra(orgnr), null, null, null, null, null);
 
         assertThat(dto).hasSize(1);
-        assertThat(dto.getFirst().fødselsnummer()).isEqualTo(fnr.getIdent());
+        assertThat(dto.getFirst().fødselsnummer().fnr()).isEqualTo(fnr.getIdent());
         assertThat(dto.getFirst().orgnummer().orgnr()).isEqualTo(orgnr);
     }
 
