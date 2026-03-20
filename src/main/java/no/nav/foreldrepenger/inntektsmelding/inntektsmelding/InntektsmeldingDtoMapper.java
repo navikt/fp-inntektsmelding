@@ -21,9 +21,8 @@ public class InntektsmeldingDtoMapper {
     // ---- Entitet -> Dto ----
 
     public static InntektsmeldingDto mapFraEntitet(InntektsmeldingEntitet entitet) {
-        return InntektsmeldingDto.builder()
+         var builder = InntektsmeldingDto.builder()
             .medId(entitet.getId())
-            .medInntektsmeldingUuid(entitet.getUuid().orElseThrow()) // siden vi søker med uuid, så skal denne alltid være satt
             .medAktørId(AktørId.fra(entitet.getAktørId().getAktørId()))
             .medYtelse(entitet.getYtelsetype())
             .medArbeidsgiver(new Arbeidsgiver(entitet.getArbeidsgiverIdent()))
@@ -37,8 +36,10 @@ public class InntektsmeldingDtoMapper {
             .medKildesystem(entitet.getKildesystem())
             .medSøkteRefusjonsperioder(entitet.getRefusjonsendringer().stream().map(InntektsmeldingDtoMapper::mapRefusjonsendring).toList())
             .medBortfaltNaturalytelsePerioder(entitet.getBorfalteNaturalYtelser().stream().map(InntektsmeldingDtoMapper::mapBortfaltNaturalytelse).toList())
-            .medEndringAvInntektÅrsaker(entitet.getEndringsårsaker().stream().map(InntektsmeldingDtoMapper::mapEndringsårsak).toList())
-            .build();
+            .medEndringAvInntektÅrsaker(entitet.getEndringsårsaker().stream().map(InntektsmeldingDtoMapper::mapEndringsårsak).toList());
+
+         entitet.getUuid().ifPresent(builder::medInntektsmeldingUuid);
+         return builder.build();
     }
 
     static InntektsmeldingDto.Kontaktperson mapKontaktperson(InntektsmeldingEntitet entitet) {
