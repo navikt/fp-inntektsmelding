@@ -16,9 +16,9 @@ public record FødselsnummerDto(@JsonValue @NotNull @Pattern(regexp = "^\\d{11}$
             return "";
         }
         var length = fnr.length();
-        if (length <= 4) {
+        if (length <= 6) {
             return "*".repeat(length);
         }
-        return "*".repeat(length - 4) + fnr.substring(length - 4);
+        return fnr.substring(0, 6) + "*".repeat(length - 6);
     }
 }

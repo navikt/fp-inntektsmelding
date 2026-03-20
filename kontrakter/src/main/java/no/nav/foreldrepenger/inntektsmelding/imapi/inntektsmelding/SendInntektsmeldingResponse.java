@@ -1,4 +1,4 @@
-package no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt;
+package no.nav.foreldrepenger.inntektsmelding.imapi.inntektsmelding;
 
 import java.util.UUID;
 

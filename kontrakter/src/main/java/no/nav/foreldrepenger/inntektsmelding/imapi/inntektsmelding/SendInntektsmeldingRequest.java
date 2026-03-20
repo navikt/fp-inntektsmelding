@@ -15,13 +15,14 @@ import jakarta.validation.constraints.Pattern;
 import no.nav.foreldrepenger.inntektsmelding.felles.AvsenderSystemDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.BortfaltNaturalytelseDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.EndringsårsakerDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.FødselsnummerDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.KontaktpersonDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.OrganisasjonsnummerDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.SøktRefusjonDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.YtelseTypeDto;
 
 public record SendInntektsmeldingRequest(@NotNull @Valid UUID foresporselUuid,
-                                         @Pattern(regexp = "^\\d{11}$") @NotNull String fødselsnummer,
+                                         @NotNull @Valid FødselsnummerDto fødselsnummer,
                                          @NotNull @Valid OrganisasjonsnummerDto organisasjonsnummer,
                                          @NotNull LocalDate startdato,
                                          @NotNull YtelseTypeDto ytelseType,
@@ -32,22 +33,4 @@ public record SendInntektsmeldingRequest(@NotNull @Valid UUID foresporselUuid,
                                          @NotNull List<@Valid BortfaltNaturalytelseDto> bortfaltNaturalytelsePerioder,
                                          @NotNull List<@Valid EndringsårsakerDto> endringAvInntektÅrsaker,
                                          @NotNull @Valid AvsenderSystemDto avsenderSystem) {
-
-    @Override
-    public String toString() {
-        return "SendInntektsmeldingEksternRequest{" +
-            "foresporselUuid=" + foresporselUuid +
-            ", fødselsnummer='****" + fødselsnummer.substring(7) + "'" +
-            ", organisasjonsnummer=" + organisasjonsnummer +
-            ", startdato=" + startdato +
-            ", ytelseType=" + ytelseType +
-            ", kontaktperson=" + kontaktperson +
-            ", inntekt=" + inntekt +
-            ", refusjon=" + refusjon +
-            ", bortfaltNaturalytelsePerioder=" + bortfaltNaturalytelsePerioder +
-            ", endringAvInntektÅrsaker=" + endringAvInntektÅrsaker +
-            ", avsenderSystem=" + avsenderSystem +
-            '}';
-    }
-
 }
