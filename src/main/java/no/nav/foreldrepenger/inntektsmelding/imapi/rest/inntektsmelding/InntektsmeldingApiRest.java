@@ -99,6 +99,6 @@ public class InntektsmeldingApiRest {
         }
 
         var mottattInntektsmelding = InntektsmeldingApiMapper.mapTilDomene(request, aktørId.get());
-        return inntektsmeldingMottakTjeneste.mottaInntektsmelding(mottattInntektsmelding, request.foresporselUuid(), request.fødselsnummer().fnr());
+        return inntektsmeldingMottakTjeneste.mottaInntektsmelding(mottattInntektsmelding, request.foresporselUuid());
     }
 }

@@ -41,7 +41,7 @@ public class InntektsmeldingApiMottakTjeneste {
         this.fellesMottakTjeneste = fellesMottakTjeneste;
     }
 
-    public SendInntektsmeldingResponse mottaInntektsmelding(InntektsmeldingDto inntektsmelding, UUID forespørselUuid, String fnr) {
+    public SendInntektsmeldingResponse mottaInntektsmelding(InntektsmeldingDto inntektsmelding, UUID forespørselUuid) {
         var forespørsel = forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid).orElse(null);
         if (forespørsel == null) {
             LOG.error("Finner ikke forespørsel for uuid {}", forespørselUuid);
@@ -69,7 +69,6 @@ public class InntektsmeldingApiMottakTjeneste {
         //Todo Avklaring: Hva skal vi gjøre om inntektskomponenten er nede og vi ikke får sjekket dette? La de sende inn, men sette til status forkastet med forklaring?
 
         return new SendInntektsmeldingResponse(true, lagretIm.getInntektsmeldingUuid(),"Inntektsmelding mottatt, og brukes i saksbehandling.");
-
     }
 
     private boolean inntektsmeldingerErLike(InntektsmeldingDto nyInntektsmelding, InntektsmeldingDto tidligereInntektsmelding) {

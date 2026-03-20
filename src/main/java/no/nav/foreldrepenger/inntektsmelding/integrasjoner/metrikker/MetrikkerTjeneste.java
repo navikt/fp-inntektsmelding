@@ -129,7 +129,7 @@ public class MetrikkerTjeneste {
         tags.add(new ImmutableTag("har_oppgitt_endring_i_refusjon", harOppgittEndringerIRefusjon ? JA : NEI));
         tags.add(new ImmutableTag("har_oppgitt_opphoer_av_refusjon", harOppgittOpphørAvRefusjon ? JA : NEI));
         tags.add(new ImmutableTag("har_oppgitt_naturalytelse", harOppgittNaturalytelse ? JA : NEI));
-        tags.add(new ImmutableTag("kilde", utledKildesystemLabel(inntektsmelding.getKildesystem(), tags)));
+        tags.add(new ImmutableTag("kilde", utledKildesystemLabel(inntektsmelding.getKildesystem())));
         Metrics.counter(COUNTER_INNTEKTSMELDING, tags).increment();
 
         if (!inntektsmelding.getEndringAvInntektÅrsaker().isEmpty()) {
@@ -144,7 +144,7 @@ public class MetrikkerTjeneste {
         }
     }
 
-    private static String utledKildesystemLabel(Kildesystem kildesystem, ArrayList<Tag> tags) {
+    private static String utledKildesystemLabel(Kildesystem kildesystem) {
         return switch (kildesystem) {
             case ARBEIDSGIVERPORTAL -> "ARBEIDSGIVERPORTAL";
             case FPSAK -> "OVERSTYRING";
@@ -177,6 +177,7 @@ public class MetrikkerTjeneste {
         }
     }
 
+    //TODO skal denne brukes noe sted
     public static void loggEndretArbeidsgiverinitiertNyansattIm(InntektsmeldingDto imEntitet) {
         try {
             var tags = new ArrayList<Tag>();
@@ -187,6 +188,7 @@ public class MetrikkerTjeneste {
         }
     }
 
+    //TODO skal denne brukes noe sted
     public static void loggEndretArbeidsgiverinitiertUregistrertIm(InntektsmeldingDto imEntitet) {
         try {
             var tags = new ArrayList<Tag>();

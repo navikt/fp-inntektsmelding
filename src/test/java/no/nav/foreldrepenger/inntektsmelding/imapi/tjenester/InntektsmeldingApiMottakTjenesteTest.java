@@ -63,7 +63,7 @@ class InntektsmeldingApiMottakTjenesteTest {
 
         when(forespørselBehandlingTjeneste.hentForespørsel(foresporselUuid)).thenReturn(Optional.empty());
 
-        var response = inntektsmeldingApiMottakTjeneste.mottaInntektsmelding(inputDto, foresporselUuid, FNR);
+        var response = inntektsmeldingApiMottakTjeneste.mottaInntektsmelding(inputDto, foresporselUuid);
 
         assertThat(response.success()).isFalse();
         assertThat(response.inntektsmeldingUuid()).isNull();
@@ -78,7 +78,7 @@ class InntektsmeldingApiMottakTjenesteTest {
 
         when(forespørselBehandlingTjeneste.hentForespørsel(foresporselUuid)).thenReturn(Optional.of(forespørselDto));
 
-        var response = inntektsmeldingApiMottakTjeneste.mottaInntektsmelding(lagInntektsmeldingDto(null), foresporselUuid, FNR);
+        var response = inntektsmeldingApiMottakTjeneste.mottaInntektsmelding(lagInntektsmeldingDto(null), foresporselUuid);
 
         assertThat(response.success()).isFalse();
         assertThat(response.melding()).contains("status forkastet");
@@ -97,7 +97,7 @@ class InntektsmeldingApiMottakTjenesteTest {
         when(inntektsmeldingTjeneste.hentSisteInntektsmelding(foresporselUuid)).thenReturn(null);
         when(fellesMottakTjeneste.lagreOgJournalførInntektsmelding(any(), any())).thenReturn(lagretIm);
 
-        var response = inntektsmeldingApiMottakTjeneste.mottaInntektsmelding(inputDto, foresporselUuid, FNR);
+        var response = inntektsmeldingApiMottakTjeneste.mottaInntektsmelding(inputDto, foresporselUuid);
 
         assertThat(response.success()).isTrue();
         assertThat(response.inntektsmeldingUuid()).isEqualTo(imUuid);
@@ -114,7 +114,7 @@ class InntektsmeldingApiMottakTjenesteTest {
         when(forespørselBehandlingTjeneste.hentForespørsel(foresporselUuid)).thenReturn(Optional.of(forespørselDto));
         when(inntektsmeldingTjeneste.hentSisteInntektsmelding(foresporselUuid)).thenReturn(tidligereLikIm);
 
-        var response = inntektsmeldingApiMottakTjeneste.mottaInntektsmelding(inputDto, foresporselUuid, FNR);
+        var response = inntektsmeldingApiMottakTjeneste.mottaInntektsmelding(inputDto, foresporselUuid);
 
         assertThat(response.success()).isFalse();
         assertThat(response.melding()).contains("Ingen endring på ny inntektsmelding");
@@ -135,7 +135,7 @@ class InntektsmeldingApiMottakTjenesteTest {
         when(inntektsmeldingTjeneste.hentSisteInntektsmelding(foresporselUuid)).thenReturn(forrigeInnsendteIm);
         when(fellesMottakTjeneste.lagreOgJournalførInntektsmelding(any(), any())).thenReturn(nyInnsendtIm);
 
-        var response = inntektsmeldingApiMottakTjeneste.mottaInntektsmelding(inputDto, foresporselUuid, FNR);
+        var response = inntektsmeldingApiMottakTjeneste.mottaInntektsmelding(inputDto, foresporselUuid);
 
         assertThat(response.success()).isTrue();
         assertThat(response.inntektsmeldingUuid()).isEqualTo(imUuid);
