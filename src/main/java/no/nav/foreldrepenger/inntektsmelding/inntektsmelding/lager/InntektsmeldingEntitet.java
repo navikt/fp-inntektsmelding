@@ -38,7 +38,7 @@ public class InntektsmeldingEntitet {
     private Long id;
 
     @Embedded
-    @AttributeOverrides(@AttributeOverride(name = "aktørId", column = @Column(name = "bruker_aktoer_id", nullable = false, updatable = false)))
+    @AttributeOverride(name = "aktørId", column = @Column(name = "bruker_aktoer_id", nullable = false, updatable = false))
     private AktørIdEntitet aktørId;
 
     @Enumerated(EnumType.STRING)
