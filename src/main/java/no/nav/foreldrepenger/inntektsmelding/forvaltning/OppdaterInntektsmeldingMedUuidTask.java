@@ -47,7 +47,9 @@ public class OppdaterInntektsmeldingMedUuidTask implements ProsessTaskHandler {
             LOG.info("Setter uuid for im id {}", im.getId());
             im.setUuid(UUID.randomUUID());
         });
-        entityManager.flush();
+        if (!inntektsmeldinger.isEmpty()) {
+            entityManager.flush();
+        }
         inntektsmeldinger.stream()
             .map(InntektsmeldingEntitet::getId)
             .max(Long::compareTo)
