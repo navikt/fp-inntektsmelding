@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -15,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.organisasjon.OrganisasjonTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
-import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Saksnummer;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
@@ -34,31 +34,28 @@ public class JoarkTjeneste {
     private static final String JOURNALFØRENDE_ENHET = "9999";
     private static final String JOURNALFØRING_TITTEL = "Inntektsmelding";
     // TODO Denne bør nok synkes med avsendersystem i XML
-    private static final String KANAL = "NAV_NO";
-    // TODO Dette er brevkode for altinn skjema. Trenger vi egen?
-    private static final String BREVKODE_IM = "4936";
+    static final String KANAL = "NAV_NO";
+    static final String BREVKODE_IM = "4936";
+    static final String TEMA_FOR = "FOR";
 
     private DokArkiv joarkKlient;
     private OrganisasjonTjeneste organisasjonTjeneste;
-    private PersonTjeneste personTjeneste;
 
     JoarkTjeneste() {
         // CDI proxy
     }
 
     @Inject
-    public JoarkTjeneste(JoarkKlient joarkKlient, OrganisasjonTjeneste organisasjonTjeneste, PersonTjeneste personTjeneste) {
+    public JoarkTjeneste(JoarkKlient joarkKlient, OrganisasjonTjeneste organisasjonTjeneste) {
         this.joarkKlient = joarkKlient;
         this.organisasjonTjeneste = organisasjonTjeneste;
-        this.personTjeneste = personTjeneste;
     }
-
 
     public String journalførInntektsmelding(String xmlAvInntektsmelding,
                                             InntektsmeldingDto inntektsmelding,
                                             byte[] pdf,
-                                            Saksnummer fagsystemSaksnummer) {
-        var request = opprettRequest(xmlAvInntektsmelding, inntektsmelding, pdf, fagsystemSaksnummer);
+                                            @Nullable Saksnummer fagsystemSaksnummer) {
+        var request = opprettRequest(inntektsmelding, xmlAvInntektsmelding, pdf, fagsystemSaksnummer);
         try {
             var response = joarkKlient.opprettJournalpost(request, false);
             // Kan nok fjerne loggingen etter en periode i dev, mest for feilsøking i starten.
@@ -69,27 +66,27 @@ public class JoarkTjeneste {
         }
     }
 
-    private OpprettJournalpostRequest opprettRequest(String xmlAvInntektsmelding,
-                                                     InntektsmeldingDto inntektsmeldingDto,
-                                                     byte[] pdf,
-                                                     Saksnummer fagsystemSaksnummer) {
-        var erBedrift = inntektsmeldingDto.getArbeidsgiver().orgnr().length() == 9;
-        var avsenderMottaker = erBedrift ? lagAvsenderBedrift(inntektsmeldingDto.getArbeidsgiver()) : lagAvsenderPrivatperson(inntektsmeldingDto.getArbeidsgiver(), Ytelsetype.valueOf(inntektsmeldingDto.getYtelse().name()));
+    private OpprettJournalpostRequest opprettRequest(InntektsmeldingDto inntektsmeldingDto,
+                                                     String inntektsmeldingXml,
+                                                     byte[] inntektsmeldingPdf,
+                                                     @Nullable Saksnummer saksnummer) {
         var opprettJournalpostRequestBuilder = OpprettJournalpostRequest.nyInngående()
             .medTittel(JOURNALFØRING_TITTEL)
-            .medAvsenderMottaker(avsenderMottaker)
+            .medAvsenderMottaker(lagAvsenderBedrift(inntektsmeldingDto.getArbeidsgiver()))
             .medBruker(lagBruker(inntektsmeldingDto.getAktørId()))
             .medBehandlingstema(mapBehandlingTema(inntektsmeldingDto.getYtelse()))
             .medDatoMottatt(inntektsmeldingDto.getInnsendtTidspunkt().toLocalDate())
-            .medTema("FOR")
-            .medEksternReferanseId(Optional.ofNullable(inntektsmeldingDto.getInntektsmeldingUuid()).map(UUID::toString).orElse(UUID.randomUUID().toString()))
+            .medTema(TEMA_FOR)
+            .medEksternReferanseId(Optional.ofNullable(inntektsmeldingDto.getInntektsmeldingUuid())
+                .map(UUID::toString)
+                .orElse(UUID.randomUUID().toString()))
             .medJournalfoerendeEnhet(JOURNALFØRENDE_ENHET)
             .medKanal(KANAL) //TODO: Bør settes til HR_SYSTEM_API ved maskinell innsending, vurder INNSENDT_NAV_ANSATT ved overstyring også.
-            .medDokumenter(lagDokumenter(xmlAvInntektsmelding, pdf));
+            .medDokumenter(lagDokumenter(inntektsmeldingXml, inntektsmeldingPdf));
 
-        if (fagsystemSaksnummer != null) {
+        if (saksnummer != null && saksnummer.isNotEmpty()) {
             opprettJournalpostRequestBuilder
-                .medSak(new Sak(fagsystemSaksnummer.saksnummer(), Fagsystem.FPSAK.getOffisiellKode(), Sak.Sakstype.FAGSAK));
+                .medSak(new Sak(saksnummer.saksnummer(), Fagsystem.FPSAK.getOffisiellKode(), Sak.Sakstype.FAGSAK));
         }
         return opprettJournalpostRequestBuilder.build();
     }
@@ -120,16 +117,8 @@ public class JoarkTjeneste {
         return new Bruker(aktørId.getAktørId(), Bruker.BrukerIdType.AKTOERID);
     }
 
-    private AvsenderMottaker lagAvsenderPrivatperson(Arbeidsgiver arbeidsgiver, Ytelsetype ytelsetype) {
-        var personInfo = personTjeneste.hentPersonInfoFraAktørId(new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(arbeidsgiver.orgnr()),
-            ytelsetype);
-        return new AvsenderMottaker(personInfo.fødselsnummer().getIdent(), AvsenderMottaker.AvsenderMottakerIdType.FNR, personInfo.mapNavn());
-    }
-
     private AvsenderMottaker lagAvsenderBedrift(Arbeidsgiver arbeidsgiver) {
         var org = organisasjonTjeneste.finnOrganisasjon(arbeidsgiver);
         return new AvsenderMottaker(org.orgnr(), AvsenderMottaker.AvsenderMottakerIdType.ORGNR, org.navn());
     }
-
-
 }

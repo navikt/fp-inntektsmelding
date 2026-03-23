@@ -23,7 +23,7 @@ public class InntektsmeldingDtoMapper {
     public static InntektsmeldingDto mapFraEntitet(InntektsmeldingEntitet entitet) {
         return InntektsmeldingDto.builder()
             .medId(entitet.getId())
-            .medInntektsmeldingUuid(entitet.getUuid().orElseThrow()) // siden vi søker med uuid, så skal denne alltid være satt
+            .medInntektsmeldingUuid(entitet.getUuid().orElse(null)) // siden vi søker med uuid, så skal denne alltid være satt
             .medAktørId(AktørId.fra(entitet.getAktørId().getAktørId()))
             .medYtelse(entitet.getYtelsetype())
             .medArbeidsgiver(new Arbeidsgiver(entitet.getArbeidsgiverIdent()))
