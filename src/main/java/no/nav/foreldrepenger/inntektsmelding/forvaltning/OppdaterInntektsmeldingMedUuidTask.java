@@ -1,4 +1,4 @@
-package no.nav.familie.inntektsmelding.forvaltning;
+package no.nav.foreldrepenger.inntektsmelding.forvaltning;
 
 import java.util.List;
 import java.util.Optional;
@@ -11,7 +11,7 @@ import jakarta.persistence.EntityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import no.nav.familie.inntektsmelding.imdialog.modell.InntektsmeldingEntitet;
+import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.InntektsmeldingEntitet;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTask;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskHandler;
@@ -51,7 +51,7 @@ public class OppdaterInntektsmeldingMedUuidTask implements ProsessTaskHandler {
         inntektsmeldinger.stream()
             .map(InntektsmeldingEntitet::getId)
             .max(Long::compareTo)
-            .ifPresent(nesteId -> prosessTaskTjeneste.lagre(opprettNesteTask(nesteId+1, tilOgMedId)));
+            .ifPresent(nesteId -> prosessTaskTjeneste.lagre(opprettNesteTask(nesteId + 1, tilOgMedId)));
         LOG.info("Avslutter task inntektsmelding.uuid");
     }
 
