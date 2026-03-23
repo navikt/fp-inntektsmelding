@@ -24,7 +24,9 @@ public class DialogportenRequestMapper {
                                                            LocalDate førsteUttaksdato,
                                                            Ytelsetype ytelsetype,
                                                            String inntektsmeldingSkjemaLenke,
-                                                           String inntektsmeldingApiLenke) {
+                                                           String inntektsmeldingApiLenke,
+                                                           String forespørselApiLenke,
+                                                           String dokumentasjonsLenke) {
         var party = String.format("urn:altinn:organization:identifier-no:%s", arbeidsgiver.orgnr());
         var altinnressursFP = ALTINN_RESSURS_PREFIX + AltinnRessurser.ALTINN_TRE_INNTEKTSMELDING_RESSURS;
 
@@ -41,10 +43,13 @@ public class DialogportenRequestMapper {
         var apiUrl = new DialogportenRequest.Url(inntektsmeldingApiLenke,
             DialogportenRequest.TEXT_PLAIN,
             DialogportenRequest.AttachmentUrlConsumerType.Api);
+        var forespørselApiUrl = new DialogportenRequest.Url(forespørselApiLenke + "/" + forespørselUuid,
+            DialogportenRequest.TEXT_PLAIN,
+            DialogportenRequest.AttachmentUrlConsumerType.Api);
         var attachementTransmission = new DialogportenRequest.Attachment(
             List.of(new DialogportenRequest.ContentValueItem("Innsending av inntektsmelding på min side - arbeidsgiver hos Nav",
                 DialogportenRequest.NB)),
-            List.of(guiUrl, apiUrl));
+            List.of(guiUrl, apiUrl, forespørselApiUrl));
         var transmission = new DialogportenRequest.Transmission(DialogportenRequest.TransmissionType.Request,
             DialogportenRequest.ExtendedType.INNTEKTSMELDING,
             new DialogportenRequest.Sender("ServiceOwner", null),
@@ -55,12 +60,12 @@ public class DialogportenRequestMapper {
         var apiAction = new DialogportenRequest.ApiAction(String.format("Innsending av inntektsmelding for %s med startdato %s",
             ytelsetype.name().toLowerCase(),
             førsteUttaksdato.format(DateTimeFormatter.ofPattern("dd.MM.yy"))),
-            List.of(new DialogportenRequest.Endpoint(inntektsmeldingApiLenke, DialogportenRequest.HttpMethod.POST, null)),
+            List.of(new DialogportenRequest.Endpoint(inntektsmeldingApiLenke, DialogportenRequest.HttpMethod.POST, dokumentasjonsLenke)),
             DialogportenRequest.ACTION_WRITE);
 
         return new DialogportenRequest(altinnressursFP,
             party,
-            null, // externalReference fjernet - Altinn skal hente fødselsnummer fra vårt API
+            forespørselUuid.toString(),
             DialogportenRequest.DialogStatus.RequiresAttention,
             contentDialog,
             List.of(transmission),
