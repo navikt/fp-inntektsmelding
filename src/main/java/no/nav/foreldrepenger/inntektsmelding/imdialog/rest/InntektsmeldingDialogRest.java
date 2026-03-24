@@ -110,7 +110,7 @@ public class InntektsmeldingDialogRest {
     public Response sendInntektsmelding(@NotNull @Valid SendInntektsmeldingRequestDto request) {
         var arbeidsgiverinitiertÅrsak = request.arbeidsgiverinitiertÅrsak();
 
-        if (List.of(NYANSATT, UREGISTRERT).contains(arbeidsgiverinitiertÅrsak)) {
+        if (arbeidsgiverinitiertÅrsak != null && List.of(NYANSATT, UREGISTRERT).contains(arbeidsgiverinitiertÅrsak)) {
             tilgang.sjekkAtArbeidsgiverHarTilgangTilBedrift(Arbeidsgiver.fra(request.arbeidsgiverIdent().orgnr()));
 
             var mottattInntektsmelding = NYANSATT.equals(arbeidsgiverinitiertÅrsak)

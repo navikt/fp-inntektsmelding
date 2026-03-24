@@ -24,7 +24,7 @@ public class InntektsmeldingDto {
     private final BigDecimal månedInntekt;
     private final LocalDateTime innsendtTidspunkt;
     private final Kildesystem kildesystem;
-    private final AvsenderSystem avsenderSystem; //TODO: finnes ikke i DB ennå
+    private final AvsenderSystem avsenderSystem;
     private final BigDecimal månedRefusjon;
     private final LocalDate opphørsdatoRefusjon;
     private final List<SøktRefusjon> søkteRefusjonsperioder;
@@ -87,7 +87,6 @@ public class InntektsmeldingDto {
     public BigDecimal getMånedInntekt() {
         return månedInntekt;
     }
-
 
     public LocalDateTime getInnsendtTidspunkt() {
         return innsendtTidspunkt;

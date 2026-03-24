@@ -9,6 +9,7 @@
     <entity class="no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.RefusjonsendringEntitet" />
     <entity class="no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.BortaltNaturalytelseEntitet" />
     <entity class="no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.KontaktpersonEntitet" />
+    <entity class="no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.LpsSystemInfoEntitet" />
     <entity class="no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet" />
 
 

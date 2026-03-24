@@ -8,6 +8,7 @@ import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.BortaltNatura
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.EndringsårsakEntitet;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.InntektsmeldingEntitet;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.KontaktpersonEntitet;
+import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.LpsSystemInfoEntitet;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.RefusjonsendringEntitet;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
@@ -39,6 +40,7 @@ public class InntektsmeldingDtoMapper {
             .medSøkteRefusjonsperioder(entitet.getRefusjonsendringer().stream().map(InntektsmeldingDtoMapper::mapRefusjonsendring).toList())
             .medBortfaltNaturalytelsePerioder(entitet.getBorfalteNaturalYtelser().stream().map(InntektsmeldingDtoMapper::mapBortfaltNaturalytelse).toList())
             .medEndringAvInntektÅrsaker(entitet.getEndringsårsaker().stream().map(InntektsmeldingDtoMapper::mapEndringsårsak).toList())
+            .medAvsenderSystem(entitet.getLpsSystem() != null ? new InntektsmeldingDto.AvsenderSystem(entitet.getLpsSystem().getNavn(), entitet.getLpsSystem().getVersjon()) : null)
             .build();
     }
 
@@ -80,7 +82,7 @@ public static InntektsmeldingEntitet mapTilEntitet(InntektsmeldingDto inntektsme
         .medYtelsetype(inntektsmeldingDto.getYtelse())
         .medArbeidsgiverIdent(inntektsmeldingDto.getArbeidsgiver().orgnr())
         .medStartDato(inntektsmeldingDto.getStartdato())
-        .medMånedInntekt(inntektsmeldingDto.getMånedInntekt())
+        .medMånedInntekt(inntektsmeldingDto.getMånedInntekt() != null ? inntektsmeldingDto.getMånedInntekt() : BigDecimal.ZERO)
         .medMånedRefusjon(inntektsmeldingDto.getMånedRefusjon())
         .medRefusjonOpphørsdato(inntektsmeldingDto.getOpphørsdatoRefusjon())
         .medOpprettetAv(inntektsmeldingDto.getOpprettetAv())
@@ -104,7 +106,13 @@ private static Optional<KontaktpersonEntitet> mapKontaktperson(InntektsmeldingDt
     return Optional.of(new KontaktpersonEntitet(kontaktperson.navn(), kontaktperson.telefonnummer()));
 }
 
-    private static List<RefusjonsendringEntitet> mapRefusjonsendringer(LocalDate startdato, LocalDate opphørsdato, List<InntektsmeldingDto.SøktRefusjon> refusjonsendringRequestDto) {
+    private static LpsSystemInfoEntitet mapLpsSystemInformasjon(InntektsmeldingDto.AvsenderSystem avsenderSystem) {
+        return LpsSystemInfoEntitet.builder().medNavn(avsenderSystem.navn()).medVersjon(avsenderSystem.versjon()).build();
+    }
+
+    private static List<RefusjonsendringEntitet> mapRefusjonsendringer(LocalDate startdato,
+                                                                       LocalDate opphørsdato,
+                                                                       List<InntektsmeldingDto.SøktRefusjon> refusjonsendringRequestDto) {
         // Opphør og start ligger på egne felter, så disse skal ikke mappes som endringer.
         // Merk at opphørsdato er dagen før endring som opphører refusjon, derfor må vi legge til en dag.
         return refusjonsendringRequestDto.stream()

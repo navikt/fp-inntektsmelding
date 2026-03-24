@@ -539,6 +539,31 @@ class InntektsmeldingDtoMapperTest {
     }
 
     @Test
+    void skal_mappe_lpssystem_informasjon() {
+        var aktørId = new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(AKTØR_ID);
+        var original = InntektsmeldingDto.builder()
+            .medAktørId(aktørId)
+            .medYtelse(Ytelsetype.FORELDREPENGER)
+            .medArbeidsgiver(Arbeidsgiver.fra(ARBEIDSGIVER_IDENT))
+            .medKontaktperson(new InntektsmeldingDto.Kontaktperson("12345678", "Test"))
+            .medStartdato(START_DATO)
+            .medInntekt(MÅNED_INNTEKT)
+            .medKildesystem(Kildesystem.ARBEIDSGIVERPORTAL)
+            .medSøkteRefusjonsperioder(List.of())
+            .medBortfaltNaturalytelsePerioder(List.of())
+            .medEndringAvInntektÅrsaker(List.of())
+            .medAvsenderSystem(new InntektsmeldingDto.AvsenderSystem("TestSystem", "1.0"))
+            .build();
+
+        var entitet = InntektsmeldingDtoMapper.mapTilEntitet(original);
+        var roundtripped = InntektsmeldingDtoMapper.mapFraEntitet(entitet);
+
+        assertThat(roundtripped.getAvsenderSystem()).isNotNull();
+        assertThat(roundtripped.getAvsenderSystem().navn()).isNotNull().isEqualTo("TestSystem");
+        assertThat(roundtripped.getAvsenderSystem().versjon()).isEqualTo("1.0");
+    }
+
+    @Test
     void skal_mappe_dto_til_entitet_uten_kontaktperson() {
         var aktørId = new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(AKTØR_ID);
         var dto = InntektsmeldingDto.builder()
