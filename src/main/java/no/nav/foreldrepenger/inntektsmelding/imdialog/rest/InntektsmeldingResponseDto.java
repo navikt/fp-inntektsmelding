@@ -22,6 +22,7 @@ import no.nav.foreldrepenger.inntektsmelding.typer.dto.YtelseTypeDto;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record InntektsmeldingResponseDto(
     @NotNull Long id,
+    @NotNull @Valid UUID inntektsmeldingUuid,
     @NotNull @Valid UUID foresporselUuid, @NotNull @Valid AktørIdDto aktorId,
     @NotNull @Valid YtelseTypeDto ytelse, @NotNull @Valid OrganisasjonsnummerDto arbeidsgiverIdent,
     @NotNull @Valid SendInntektsmeldingRequestDto.KontaktpersonRequestDto kontaktperson, @NotNull LocalDate startdato,

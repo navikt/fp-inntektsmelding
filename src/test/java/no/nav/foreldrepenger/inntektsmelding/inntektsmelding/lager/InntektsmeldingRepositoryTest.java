@@ -266,7 +266,7 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
             .medArbeidsgiverIdent("999999999")
             .build();
 
-        var uuid = førLagring.getUuid().orElseThrow();
+        var uuid = førLagring.getUuid();
         // Act
         inntektsmeldingRepository.lagreInntektsmelding(førLagring);
         var etterLagring = inntektsmeldingRepository.finnInntektsmelding(uuid);
