@@ -96,6 +96,14 @@ public class InntektsmeldingEntitet {
         return aktørId;
     }
 
+    // Midlertidig for å migrere gamle inntektsmeldinger uten uuid
+    public void setUuid(UUID uuid) {
+        if (getUuid().isPresent()) {
+            throw new IllegalStateException("UUID er allerede satt for denne inntektsmeldingen, kan ikke overskrives. Eksisterende UUID er " + getUuid().get());
+        }
+        this.uuid = uuid;
+    }
+
     public Ytelsetype getYtelsetype() {
         return ytelsetype;
     }
