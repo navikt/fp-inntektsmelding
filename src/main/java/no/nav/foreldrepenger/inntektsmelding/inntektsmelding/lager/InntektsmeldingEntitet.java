@@ -47,7 +47,7 @@ public class InntektsmeldingEntitet {
     @Column(name = "arbeidsgiver_ident")
     private String arbeidsgiverIdent;
 
-    @Column(name = "uuid")
+    @Column(name = "uuid", nullable = false, updatable = false)
     private UUID uuid;
 
     @OneToOne(cascade = CascadeType.ALL, mappedBy = "inntektsmelding")
@@ -94,14 +94,6 @@ public class InntektsmeldingEntitet {
 
     public AktørIdEntitet getAktørId() {
         return aktørId;
-    }
-
-    // Midlertidig for å migrere gamle inntektsmeldinger uten uuid
-    public void setUuid(UUID uuid) {
-        if (getUuid().isPresent()) {
-            throw new IllegalStateException("UUID er allerede satt for denne inntektsmeldingen, kan ikke overskrives. Eksisterende UUID er " + getUuid().get());
-        }
-        this.uuid = uuid;
     }
 
     public Ytelsetype getYtelsetype() {
@@ -156,9 +148,8 @@ public class InntektsmeldingEntitet {
         return endringsårsaker;
     }
 
-    // TODO Sett notNullable og fjern Optional. Denne er optional helt til etterpopulering av feltet er fullført
-    public Optional<UUID> getUuid() {
-        return Optional.ofNullable(uuid);
+    public UUID getUuid() {
+        return uuid;
     }
 
     private void leggTilRefusjonsendring(RefusjonsendringEntitet refusjonsendringEntitet) {

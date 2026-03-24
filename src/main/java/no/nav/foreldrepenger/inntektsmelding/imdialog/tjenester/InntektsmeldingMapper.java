@@ -141,6 +141,7 @@ public class InntektsmeldingMapper {
 
         return new InntektsmeldingResponseDto(
             dto.getId(),
+            dto.getInntektsmeldingUuid(),
             forespørsel.uuid(),
             new AktørIdDto(dto.getAktørId().getAktørId()),
             KodeverkMapper.mapYtelsetype(dto.getYtelse()),
