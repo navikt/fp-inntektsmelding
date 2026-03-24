@@ -48,7 +48,7 @@ public class AltinnTilgangTjeneste {
     }
 
     public boolean harTilgangTilBedriften(String orgnr) {
-        var altinnRessurserBrukerHarTilgangTilPerOrgnr = arbeidsgiverAltinnTilgangerKlient.hentTilganger().orgNrTilTilganger();
+        var altinnRessurserBrukerHarTilgangTilPerOrgnr = arbeidsgiverAltinnTilgangerKlient.hentTilganger(false).orgNrTilTilganger();
 
         if (altinnRessurserBrukerHarTilgangTilPerOrgnr == null || altinnRessurserBrukerHarTilgangTilPerOrgnr.isEmpty()
             || !altinnRessurserBrukerHarTilgangTilPerOrgnr.containsKey(orgnr)) {
@@ -66,6 +66,8 @@ public class AltinnTilgangTjeneste {
             LOG.info("ALTINN: Tilgangsbeslutninger er ulike for bruker! Altinn 2: {}, Altinn 3: {}.", harTilgangGjennomAltinn2, harTilgangGjennomAltinn3);
             SECURE_LOG.info("ALTINN: Brukers tilganger for orgnr {}: {}", orgnr, brukersTilgangerForOrgnr);
             Metrics.counter(COUNTER_TILGANG_BEDRIFT, List.of(Tag.of(TAG_TILGANG_LIK, "Nei"))).increment();
+            // TODO: denne her er kun for å kunne logge full response til brukeren - må fjernes etter man er ferdig med analyse.
+            arbeidsgiverAltinnTilgangerKlient.hentTilganger(true);
         } else {
             Metrics.counter(COUNTER_TILGANG_BEDRIFT, List.of(Tag.of(TAG_TILGANG_LIK, "Ja"))).increment();
         }
@@ -77,7 +79,7 @@ public class AltinnTilgangTjeneste {
     }
 
      public List<String> hentBedrifterArbeidsgiverHarTilgangTil() {
-        var orgNrBrukerHarTilgangTilPerRessurs = arbeidsgiverAltinnTilgangerKlient.hentTilganger().tilgangTilOrgNr();
+        var orgNrBrukerHarTilgangTilPerRessurs = arbeidsgiverAltinnTilgangerKlient.hentTilganger(false).tilgangTilOrgNr();
 
          //TODO Etter migrering: Her kan mye kode ryddes og forenkles.
         var orgNrMedGittTilgangIAltinn2 = hentOrgNrMedGittTilgang(orgNrBrukerHarTilgangTilPerRessurs, ALTINN_TO_TJENESTE);
@@ -88,6 +90,8 @@ public class AltinnTilgangTjeneste {
             LOG.info("ALTINN: Uoverensstemmelse i lister over bedrifter bruker har tilgang til mellom Altinn 2 og Altinn 3.");
             SECURE_LOG.info("ALTINN: Bruker har tilgang til følgende bedrifter: Altinn2: {}, Altinn3: {}", orgNrMedGittTilgangIAltinn2, orgNrMedGittTilgangIAltinn3);
             Metrics.counter(COUNTER_HENT_BEDRIFTER, List.of(Tag.of(TAG_SVAR_LIK, "Nei"))).increment();
+            // TODO: denne her er kun for å kunne logge full response til brukeren - må fjernes etter man er ferdig med analyse.
+            arbeidsgiverAltinnTilgangerKlient.hentTilganger(true);
         } else {
             Metrics.counter(COUNTER_HENT_BEDRIFTER, List.of(Tag.of(TAG_SVAR_LIK, "Ja"))).increment();
         }

@@ -44,7 +44,7 @@ class AltinnTilgangTjenesteTest {
         @DisplayName("Har tilgang via både Altinn 2 og Altinn 3 - returnerer true")
         void har_tilgang_via_begge() {
             var response = lagResponseMedTilgang(ORG_NR, List.of(ALTINN_TO_TJENESTE, ALTINN_TRE_INNTEKTSMELDING_RESSURS));
-            when(arbeidsgiverAltinnTilgangerKlient.hentTilganger()).thenReturn(response);
+            when(arbeidsgiverAltinnTilgangerKlient.hentTilganger(false)).thenReturn(response);
 
             assertThat(altinnTilgangTjeneste.harTilgangTilBedriften(ORG_NR)).isTrue();
         }
@@ -53,7 +53,7 @@ class AltinnTilgangTjenesteTest {
         @DisplayName("Har tilgang kun via Altinn 3 - returnerer true")
         void har_tilgang_kun_via_altinn3() {
             var response = lagResponseMedTilgang(ORG_NR, List.of(ALTINN_TRE_INNTEKTSMELDING_RESSURS));
-            when(arbeidsgiverAltinnTilgangerKlient.hentTilganger()).thenReturn(response);
+            when(arbeidsgiverAltinnTilgangerKlient.hentTilganger(false)).thenReturn(response);
 
             assertThat(altinnTilgangTjeneste.harTilgangTilBedriften(ORG_NR)).isTrue();
         }
@@ -62,7 +62,7 @@ class AltinnTilgangTjenesteTest {
         @DisplayName("Har tilgang kun via Altinn 2 - returnerer true")
         void har_tilgang_kun_via_altinn2() {
             var response = lagResponseMedTilgang(ORG_NR, List.of(ALTINN_TO_TJENESTE));
-            when(arbeidsgiverAltinnTilgangerKlient.hentTilganger()).thenReturn(response);
+            when(arbeidsgiverAltinnTilgangerKlient.hentTilganger(false)).thenReturn(response);
 
             assertThat(altinnTilgangTjeneste.harTilgangTilBedriften(ORG_NR)).isTrue();
         }
@@ -71,7 +71,7 @@ class AltinnTilgangTjenesteTest {
         @DisplayName("Har ingen tilgang via verken Altinn 2 eller Altinn 3 - returnerer false")
         void har_ingen_tilgang() {
             var response = lagResponseMedTilgang(ORG_NR, List.of());
-            when(arbeidsgiverAltinnTilgangerKlient.hentTilganger()).thenReturn(response);
+            when(arbeidsgiverAltinnTilgangerKlient.hentTilganger(false)).thenReturn(response);
 
             assertThat(altinnTilgangTjeneste.harTilgangTilBedriften(ORG_NR)).isFalse();
         }
@@ -80,7 +80,7 @@ class AltinnTilgangTjenesteTest {
         @DisplayName("Orgnr finnes ikke i response - returnerer false")
         void orgnr_finnes_ikke() {
             var response = lagTomResponse();
-            when(arbeidsgiverAltinnTilgangerKlient.hentTilganger()).thenReturn(response);
+            when(arbeidsgiverAltinnTilgangerKlient.hentTilganger(false)).thenReturn(response);
 
             assertThat(altinnTilgangTjeneste.harTilgangTilBedriften(ORG_NR)).isFalse();
         }
@@ -89,7 +89,7 @@ class AltinnTilgangTjenesteTest {
         @DisplayName("Response er null - returnerer false")
         void response_er_null() {
             var response = new ArbeidsgiverAltinnTilgangerResponse(false, List.of(), null, Map.of());
-            when(arbeidsgiverAltinnTilgangerKlient.hentTilganger()).thenReturn(response);
+            when(arbeidsgiverAltinnTilgangerKlient.hentTilganger(false)).thenReturn(response);
 
             assertThat(altinnTilgangTjeneste.harTilgangTilBedriften(ORG_NR)).isFalse();
         }
@@ -103,7 +103,7 @@ class AltinnTilgangTjenesteTest {
         @DisplayName("Mangler tilgang når ingen tilgang finnes - returnerer true")
         void mangler_tilgang_når_ingen_tilgang() {
             var response = lagResponseMedTilgang(ORG_NR, List.of());
-            when(arbeidsgiverAltinnTilgangerKlient.hentTilganger()).thenReturn(response);
+            when(arbeidsgiverAltinnTilgangerKlient.hentTilganger(false)).thenReturn(response);
 
             assertThat(altinnTilgangTjeneste.manglerTilgangTilBedriften(ORG_NR)).isTrue();
         }
@@ -112,7 +112,7 @@ class AltinnTilgangTjenesteTest {
         @DisplayName("Mangler ikke tilgang når tilgang finnes - returnerer false")
         void mangler_ikke_tilgang_når_tilgang_finnes() {
             var response = lagResponseMedTilgang(ORG_NR, List.of(ALTINN_TRE_INNTEKTSMELDING_RESSURS));
-            when(arbeidsgiverAltinnTilgangerKlient.hentTilganger()).thenReturn(response);
+            when(arbeidsgiverAltinnTilgangerKlient.hentTilganger(false)).thenReturn(response);
 
             assertThat(altinnTilgangTjeneste.manglerTilgangTilBedriften(ORG_NR)).isFalse();
         }
@@ -131,7 +131,7 @@ class AltinnTilgangTjenesteTest {
                     ALTINN_TO_TJENESTE, List.of(ORG_NR)
                 )
             );
-            when(arbeidsgiverAltinnTilgangerKlient.hentTilganger()).thenReturn(response);
+            when(arbeidsgiverAltinnTilgangerKlient.hentTilganger(false)).thenReturn(response);
 
             var resultat = altinnTilgangTjeneste.hentBedrifterArbeidsgiverHarTilgangTil();
 
@@ -147,7 +147,7 @@ class AltinnTilgangTjenesteTest {
                     ALTINN_TO_TJENESTE, List.of(ORG_NR_2, ORG_NR_3)
                 )
             );
-            when(arbeidsgiverAltinnTilgangerKlient.hentTilganger()).thenReturn(response);
+            when(arbeidsgiverAltinnTilgangerKlient.hentTilganger(false)).thenReturn(response);
 
             var resultat = altinnTilgangTjeneste.hentBedrifterArbeidsgiverHarTilgangTil();
 
@@ -164,7 +164,7 @@ class AltinnTilgangTjenesteTest {
                     ALTINN_TO_TJENESTE, List.of(ORG_NR, ORG_NR_2)
                 )
             );
-            when(arbeidsgiverAltinnTilgangerKlient.hentTilganger()).thenReturn(response);
+            when(arbeidsgiverAltinnTilgangerKlient.hentTilganger(false)).thenReturn(response);
 
             var resultat = altinnTilgangTjeneste.hentBedrifterArbeidsgiverHarTilgangTil();
 
@@ -179,7 +179,7 @@ class AltinnTilgangTjenesteTest {
                     ALTINN_TO_TJENESTE, List.of(ORG_NR, ORG_NR_2)
                 )
             );
-            when(arbeidsgiverAltinnTilgangerKlient.hentTilganger()).thenReturn(response);
+            when(arbeidsgiverAltinnTilgangerKlient.hentTilganger(false)).thenReturn(response);
 
             var resultat = altinnTilgangTjeneste.hentBedrifterArbeidsgiverHarTilgangTil();
 
@@ -195,7 +195,7 @@ class AltinnTilgangTjenesteTest {
                     ALTINN_TRE_INNTEKTSMELDING_RESSURS, List.of(ORG_NR, ORG_NR_2)
                 )
             );
-            when(arbeidsgiverAltinnTilgangerKlient.hentTilganger()).thenReturn(response);
+            when(arbeidsgiverAltinnTilgangerKlient.hentTilganger(false)).thenReturn(response);
 
             var resultat = altinnTilgangTjeneste.hentBedrifterArbeidsgiverHarTilgangTil();
 
@@ -206,7 +206,7 @@ class AltinnTilgangTjenesteTest {
         @DisplayName("Ingen treff fra verken Altinn 2 eller Altinn 3. Gir tom liste.")
         void ingen_treff_fra_begge() {
             var response = lagResponseMedTilgangTilOrgNr(Map.of());
-            when(arbeidsgiverAltinnTilgangerKlient.hentTilganger()).thenReturn(response);
+            when(arbeidsgiverAltinnTilgangerKlient.hentTilganger(false)).thenReturn(response);
 
             var resultat = altinnTilgangTjeneste.hentBedrifterArbeidsgiverHarTilgangTil();
 
