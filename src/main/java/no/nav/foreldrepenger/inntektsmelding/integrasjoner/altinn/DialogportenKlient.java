@@ -11,7 +11,6 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.LukkeÅrsak;
-import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.konfig.Environment;
@@ -45,7 +44,7 @@ public class DialogportenKlient {
         this.tokenKlient = AltinnExchangeTokenKlient.instance();
         this.inntektsmeldingSkjemaLenke = ENV.getProperty("inntektsmelding.skjema.lenke", "https://arbeidsgiver.nav.no/fp-im-dialog");
         this.inntektsmeldingApiLenke = ENV.getProperty("inntektsmelding.api.lenke", "https://foreldrepenger-inntektsmelding-api.ekstern.nav.no/v1/inntektsmelding/send-inn");
-        this.forespørselApiLenke = ENV.getProperty("foresporsel.api.lenke", "https://foreldrepenger-inntektsmelding-api.ekstern.nav.no/v1/foresporsel-ekstern/hent");
+        this.forespørselApiLenke = ENV.getProperty("foresporsel.api.lenke", "https://foreldrepenger-inntektsmelding-api.ekstern.nav.no/v1/forespoersel");
         this.dokumentasjonsLenke = ENV.getProperty("inntektsmelding.dokumentasjon.lenke", "https://foreldrepenger-inntektsmelding-api.ekstern.nav.no/forvaltning/api/openapi.json");
     }
 
