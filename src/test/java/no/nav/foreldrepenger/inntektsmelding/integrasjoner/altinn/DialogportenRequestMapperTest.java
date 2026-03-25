@@ -10,7 +10,6 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.LukkeÅrsak;
-import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 
@@ -19,20 +18,26 @@ class DialogportenRequestMapperTest {
     private static final Arbeidsgiver ARBEIDSGIVER = Arbeidsgiver.fra("999999999");
     private static final UUID FORESPØRSEL_UUID = UUID.randomUUID();
     private static final String INNTEKTSMELDING_SKJEMA_LENKE = "https://arbeidsgiver.nav.no/fp-im-dialog";
-    private static final LocalDate FØRSTE_UTTAKSDATO = LocalDate.now().plusWeeks(4);
+    private static final String INNTEKTSMELDING_API_LENKE = "https://foreldrepenger-inntektsmelding-api.ekstern.nav.no/v1/inntektsmelding/send-inn";
+    private final String FORESPORSEL_API_LENKE = "https://foreldrepenger-inntektsmelding-api.ekstern.nav.no/foresporsel-ekstern/hent";
+    private final String DOKUMENTASJONS_LENKE = "https://foreldrepenger-inntektsmelding-api.ekstern.nav.no/forvaltning/api/openapi.json";
+    private final LocalDate FØRSTE_UTTAKSDATO = LocalDate.now().plusWeeks(4);
 
     @Test
     void opprettDialogRequest() {
         var party = "urn:altinn:organization:identifier-no:999999999";
-        var fødselsnummer = new PersonIdent("01019100000");
 
         var opprettRequest = DialogportenRequestMapper.opprettDialogRequest(ARBEIDSGIVER,
-            FORESPØRSEL_UUID, "Sakstittel", FØRSTE_UTTAKSDATO, Ytelsetype.FORELDREPENGER, INNTEKTSMELDING_SKJEMA_LENKE, fødselsnummer);
+            FORESPØRSEL_UUID, "Sakstittel", FØRSTE_UTTAKSDATO, Ytelsetype.FORELDREPENGER,
+            INNTEKTSMELDING_SKJEMA_LENKE, INNTEKTSMELDING_API_LENKE, FORESPORSEL_API_LENKE, DOKUMENTASJONS_LENKE);
 
         var transmissionContent = opprettRequest.transmissions().getFirst().content().title().value().getFirst().value();
         var attachment = opprettRequest.transmissions().getFirst().attachments().getFirst();
         var attachmentName = attachment.displayName().getFirst().value();
-        var attachmentUrl = attachment.urls().getFirst().url();
+        var attachmentUrls = attachment.urls();
+        var guiUrl = attachmentUrls.stream().filter(u -> u.consumerType() == DialogportenRequest.AttachmentUrlConsumerType.Gui).findFirst().orElseThrow().url();
+        var apiUrl = attachmentUrls.stream().filter(u -> u.consumerType() == DialogportenRequest.AttachmentUrlConsumerType.Api).findFirst().orElseThrow().url();
+        var forespørselApiUrl = attachmentUrls.stream().filter(u -> u.consumerType() == DialogportenRequest.AttachmentUrlConsumerType.Api).skip(1).findFirst().orElseThrow().url();
         var apiActionEndpointUrl = opprettRequest.apiActions().getFirst().endpoints().getFirst().url();
 
         assertThat(opprettRequest.party()).isEqualTo(party);
@@ -40,13 +45,15 @@ class DialogportenRequestMapperTest {
         assertThat(opprettRequest.status()).isEqualTo(DialogportenRequest.DialogStatus.RequiresAttention);
         assertThat(opprettRequest.transmissions()).hasSize(1);
         assertThat(opprettRequest.apiActions()).hasSize(1);
-        assertThat(opprettRequest.externalReference()).isEqualTo(fødselsnummer.getIdent());
+        assertThat(opprettRequest.externalReference()).isEqualTo(FORESPØRSEL_UUID.toString());
         assertThat(opprettRequest.content().title().value().getFirst().value()).isEqualTo("Sakstittel");
         assertThat(attachmentName).isEqualTo("Innsending av inntektsmelding på min side - arbeidsgiver hos Nav");
-        assertThat(attachmentUrl).isEqualTo(INNTEKTSMELDING_SKJEMA_LENKE + "/" + FORESPØRSEL_UUID);
-        assertThat(apiActionEndpointUrl).isEqualTo(INNTEKTSMELDING_SKJEMA_LENKE + "/" + FORESPØRSEL_UUID);
+        assertThat(guiUrl).isEqualTo(INNTEKTSMELDING_SKJEMA_LENKE + "/" + FORESPØRSEL_UUID);
+        assertThat(apiUrl).isEqualTo(INNTEKTSMELDING_API_LENKE);
+        assertThat(forespørselApiUrl).isEqualTo(FORESPORSEL_API_LENKE + "/" + FORESPØRSEL_UUID);
+        assertThat(apiActionEndpointUrl).isEqualTo(INNTEKTSMELDING_API_LENKE);
+        assertThat(opprettRequest.apiActions().getFirst().endpoints().getFirst().documentationUrl()).isEqualTo(DOKUMENTASJONS_LENKE);
         assertThat(transmissionContent).isEqualTo("Send inn inntektsmelding");
-        assertThat(opprettRequest.toString()).contains("externalReference=***");
     }
 
     @Test

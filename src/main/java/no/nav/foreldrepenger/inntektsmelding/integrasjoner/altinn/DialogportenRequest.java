@@ -18,6 +18,7 @@ public record DialogportenRequest(@NotNull String serviceResource,
     public static final String TEXT_PLAIN = "text/plain";
     public static final String NB = "nb";
     public static final String ACTION_READ = "read";
+    public static final String ACTION_WRITE = "write";
 
     enum DialogStatus {
         InProgress,

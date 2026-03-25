@@ -21,7 +21,6 @@ import org.slf4j.LoggerFactory;
 
 import io.swagger.v3.oas.annotations.Operation;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.altinn.DialogportenKlient;
-import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.AutentisertMedAzure;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.Tilgangskontrollert;
 import no.nav.foreldrepenger.inntektsmelding.server.tilgangsstyring.Tilgang;
@@ -69,8 +68,7 @@ public class DialogportenForvaltningRestTjeneste {
             Arbeidsgiver.fra(opprettNyDialogDto.organisasjonsnummer().orgnr()),
             "Forespørsel om inntektsmelding",
             LocalDate.now(),
-            Ytelsetype.FORELDREPENGER,
-            new PersonIdent("01019100000"))).build();
+            Ytelsetype.FORELDREPENGER)).build();
     }
 
     @POST

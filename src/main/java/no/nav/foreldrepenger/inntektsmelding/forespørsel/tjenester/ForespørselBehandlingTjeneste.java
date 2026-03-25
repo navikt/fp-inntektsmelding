@@ -314,7 +314,7 @@ public class ForespørselBehandlingTjeneste {
         var saksTittelDialog = lagSaksTittelForDialogporten(person);
 
         var dialogPortenUuid = dialogportenKlient.opprettDialog(forespørselUuid,
-            arbeidsgiver, saksTittelDialog, førsteUttaksdato, ytelsetype, person.fødselsnummer());
+            arbeidsgiver, saksTittelDialog, førsteUttaksdato, ytelsetype);
 
         var vasketDialogUuid = dialogPortenUuid.replace("\"", "");
         LOG.info("Mottok UUID {} fra dialogporten", vasketDialogUuid);

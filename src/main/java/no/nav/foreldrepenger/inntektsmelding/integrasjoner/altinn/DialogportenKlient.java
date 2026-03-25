@@ -11,7 +11,6 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.LukkeÅrsak;
-import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.konfig.Environment;
@@ -31,6 +30,9 @@ public class DialogportenKlient {
     private final RestConfig restConfig;
     private final AltinnExchangeTokenKlient tokenKlient;
     private final String inntektsmeldingSkjemaLenke;
+    private final String inntektsmeldingApiLenke;
+    private final String forespørselApiLenke;
+    private final String dokumentasjonsLenke;
 
     DialogportenKlient() {
         this(RestClient.client());
@@ -41,14 +43,16 @@ public class DialogportenKlient {
         this.restConfig = RestConfig.forClient(this.getClass());
         this.tokenKlient = AltinnExchangeTokenKlient.instance();
         this.inntektsmeldingSkjemaLenke = ENV.getProperty("inntektsmelding.skjema.lenke", "https://arbeidsgiver.nav.no/fp-im-dialog");
+        this.inntektsmeldingApiLenke = ENV.getProperty("inntektsmelding.api.lenke", "https://foreldrepenger-inntektsmelding-api.ekstern.nav.no/v1/inntektsmelding/send-inn");
+        this.forespørselApiLenke = ENV.getProperty("foresporsel.api.lenke", "https://foreldrepenger-inntektsmelding-api.ekstern.nav.no/v1/forespoersel");
+        this.dokumentasjonsLenke = ENV.getProperty("inntektsmelding.dokumentasjon.lenke", "https://foreldrepenger-inntektsmelding-api.ekstern.nav.no/forvaltning/api/openapi.json");
     }
 
     public String opprettDialog(UUID forespørselUuid,
                                 Arbeidsgiver arbeidsgiver,
                                 String sakstittel,
                                 LocalDate førsteUttaksdato,
-                                Ytelsetype ytelsetype,
-                                PersonIdent fødselsnummer) {
+                                Ytelsetype ytelsetype) {
         var target = URI.create(restConfig.endpoint().toString() + "/dialogporten/api/v1/serviceowner/dialogs");
         var opprettRequest = DialogportenRequestMapper.opprettDialogRequest(arbeidsgiver,
             forespørselUuid,
@@ -56,7 +60,9 @@ public class DialogportenKlient {
             førsteUttaksdato,
             ytelsetype,
             inntektsmeldingSkjemaLenke,
-            fødselsnummer);
+            inntektsmeldingApiLenke,
+            forespørselApiLenke,
+            dokumentasjonsLenke);
         var request = RestRequest.newPOSTJson(opprettRequest, target, restConfig)
             .otherAuthorizationSupplier(() -> tokenKlient.hentAltinnToken(this.restConfig.scopes()));
 
