@@ -21,7 +21,6 @@ import org.slf4j.LoggerFactory;
 
 import io.swagger.v3.oas.annotations.Operation;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.altinn.DialogportenKlient;
-import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.AutentisertMedAzure;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.Tilgangskontrollert;
 import no.nav.foreldrepenger.inntektsmelding.server.tilgangsstyring.Tilgang;
