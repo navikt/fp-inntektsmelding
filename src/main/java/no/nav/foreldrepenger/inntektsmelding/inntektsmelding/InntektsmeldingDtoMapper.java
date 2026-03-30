@@ -78,7 +78,7 @@ public class InntektsmeldingDtoMapper {
             .medAktørId(new AktørIdEntitet(inntektsmeldingDto.getAktørId().getAktørId()))
             .medYtelsetype(inntektsmeldingDto.getYtelse())
             .medArbeidsgiverIdent(inntektsmeldingDto.getArbeidsgiver().orgnr())
-            .medKontaktperson(new KontaktpersonEntitet(inntektsmeldingDto.getKontaktperson().navn(), inntektsmeldingDto.getKontaktperson().telefonnummer()))
+            .medKontaktperson(mapKontaktperson(inntektsmeldingDto.getKontaktperson()))
             .medStartDato(inntektsmeldingDto.getStartdato())
             .medMånedInntekt(inntektsmeldingDto.getMånedInntekt())
             .medMånedRefusjon(inntektsmeldingDto.getMånedRefusjon())
@@ -89,6 +89,13 @@ public class InntektsmeldingDtoMapper {
             .medEndringsårsaker(mapEndringsårsaker(inntektsmeldingDto.getEndringAvInntektÅrsaker()))
             .medBortfaltNaturalytelser(mapBortfaltNaturalytelser(inntektsmeldingDto.getBortfaltNaturalytelsePerioder()))
             .build();
+    }
+
+    private static KontaktpersonEntitet mapKontaktperson(InntektsmeldingDto.Kontaktperson kontaktperson) {
+        if (kontaktperson == null) {
+            return null;
+        }
+        return new KontaktpersonEntitet(kontaktperson.navn(), kontaktperson.telefonnummer());
     }
 
     private static List<RefusjonsendringEntitet> mapRefusjonsendringer(LocalDate startdato, LocalDate opphørsdato, List<InntektsmeldingDto.SøktRefusjon> refusjonsendringRequestDto) {
