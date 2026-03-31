@@ -575,7 +575,7 @@ class InntektsmeldingDtoMapperTest {
             .medMånedRefusjon(new BigDecimal("25000"))
             .medOpphørsdatoRefusjon(START_DATO.plusMonths(6))
             .medOpprettetAv("bruker")
-            .medKildesystem(Kildesystem.API)
+            .medKildesystem(Kildesystem.LØNN_OG_PERSONAL_SYSTEM)
             .medSøkteRefusjonsperioder(List.of())
             .medBortfaltNaturalytelsePerioder(List.of())
             .medEndringAvInntektÅrsaker(List.of())
