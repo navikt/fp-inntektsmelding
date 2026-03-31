@@ -544,6 +544,30 @@ class InntektsmeldingDtoMapperTest {
         assertThat(roundtripped.getBortfaltNaturalytelsePerioder().get(1).naturalytelsetype()).isEqualTo(NaturalytelseType.LOSJI);
     }
 
+    @Test
+    void skal_mappe_dto_til_entitet_uten_kontaktperson() {
+        var aktørId = new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(AKTØR_ID);
+        var dto = InntektsmeldingDto.builder()
+            .medAktørId(aktørId)
+            .medYtelse(Ytelsetype.SVANGERSKAPSPENGER)
+            .medArbeidsgiver(new Arbeidsgiver(ARBEIDSGIVER_IDENT))
+            .medStartdato(START_DATO)
+            .medInntekt(new BigDecimal("55000"))
+            .medMånedRefusjon(new BigDecimal("25000"))
+            .medOpphørsdatoRefusjon(START_DATO.plusMonths(6))
+            .medOpprettetAv("bruker")
+            .medKildesystem(Kildesystem.API)
+            .medSøkteRefusjonsperioder(List.of())
+            .medBortfaltNaturalytelsePerioder(List.of())
+            .medEndringAvInntektÅrsaker(List.of())
+            .build();
+
+        var entitet = InntektsmeldingDtoMapper.mapTilEntitet(dto);
+
+        assertThat(entitet.getAktørId().getAktørId()).isEqualTo(AKTØR_ID);
+        assertThat(entitet.getKontaktperson()).isNull();
+    }
+
     private InntektsmeldingEntitet.Builder lagBasisInntektsmeldingEntitet() {
         return lagBasisInntektsmeldingEntitetMedYtelse(Ytelsetype.FORELDREPENGER);
     }

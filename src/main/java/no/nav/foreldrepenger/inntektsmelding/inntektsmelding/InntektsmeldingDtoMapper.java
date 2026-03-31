@@ -2,6 +2,7 @@ package no.nav.foreldrepenger.inntektsmelding.inntektsmelding;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.BortaltNaturalytelseEntitet;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.EndringsårsakEntitet;
@@ -73,30 +74,35 @@ public class InntektsmeldingDtoMapper {
 
     // ---- Dto -> Entitet ----
 
-    public static InntektsmeldingEntitet mapTilEntitet(InntektsmeldingDto inntektsmeldingDto) {
-        return InntektsmeldingEntitet.builder()
-            .medAktørId(new AktørIdEntitet(inntektsmeldingDto.getAktørId().getAktørId()))
-            .medYtelsetype(inntektsmeldingDto.getYtelse())
-            .medArbeidsgiverIdent(inntektsmeldingDto.getArbeidsgiver().orgnr())
-            .medKontaktperson(mapKontaktperson(inntektsmeldingDto.getKontaktperson()))
-            .medStartDato(inntektsmeldingDto.getStartdato())
-            .medMånedInntekt(inntektsmeldingDto.getMånedInntekt())
-            .medMånedRefusjon(inntektsmeldingDto.getMånedRefusjon())
-            .medRefusjonOpphørsdato(inntektsmeldingDto.getOpphørsdatoRefusjon())
-            .medOpprettetAv(inntektsmeldingDto.getOpprettetAv())
-            .medKildesystem(inntektsmeldingDto.getKildesystem())
-            .medRefusjonsendringer(mapRefusjonsendringer(inntektsmeldingDto.getStartdato(), inntektsmeldingDto.getOpphørsdatoRefusjon(), inntektsmeldingDto.getSøkteRefusjonsperioder()))
-            .medEndringsårsaker(mapEndringsårsaker(inntektsmeldingDto.getEndringAvInntektÅrsaker()))
-            .medBortfaltNaturalytelser(mapBortfaltNaturalytelser(inntektsmeldingDto.getBortfaltNaturalytelsePerioder()))
-            .build();
-    }
+public static InntektsmeldingEntitet mapTilEntitet(InntektsmeldingDto inntektsmeldingDto) {
+    var builder = InntektsmeldingEntitet.builder()
+        .medAktørId(new AktørIdEntitet(inntektsmeldingDto.getAktørId().getAktørId()))
+        .medYtelsetype(inntektsmeldingDto.getYtelse())
+        .medArbeidsgiverIdent(inntektsmeldingDto.getArbeidsgiver().orgnr())
+        .medStartDato(inntektsmeldingDto.getStartdato())
+        .medMånedInntekt(inntektsmeldingDto.getMånedInntekt())
+        .medMånedRefusjon(inntektsmeldingDto.getMånedRefusjon())
+        .medRefusjonOpphørsdato(inntektsmeldingDto.getOpphørsdatoRefusjon())
+        .medOpprettetAv(inntektsmeldingDto.getOpprettetAv())
+        .medKildesystem(inntektsmeldingDto.getKildesystem())
+        .medRefusjonsendringer(mapRefusjonsendringer(inntektsmeldingDto.getStartdato(), inntektsmeldingDto.getOpphørsdatoRefusjon(), inntektsmeldingDto.getSøkteRefusjonsperioder()))
+        .medEndringsårsaker(mapEndringsårsaker(inntektsmeldingDto.getEndringAvInntektÅrsaker()))
+        .medBortfaltNaturalytelser(mapBortfaltNaturalytelser(inntektsmeldingDto.getBortfaltNaturalytelsePerioder()));
 
-    private static KontaktpersonEntitet mapKontaktperson(InntektsmeldingDto.Kontaktperson kontaktperson) {
-        if (kontaktperson == null) {
-            return null;
-        }
-        return new KontaktpersonEntitet(kontaktperson.navn(), kontaktperson.telefonnummer());
+    mapKontaktperson(inntektsmeldingDto.getKontaktperson()).ifPresent(builder::medKontaktperson);
+
+    return builder.build();
+}
+
+private static Optional<KontaktpersonEntitet> mapKontaktperson(InntektsmeldingDto.Kontaktperson kontaktperson) {
+    if (kontaktperson == null) {
+        return Optional.empty();
     }
+    if (kontaktperson.navn() == null || kontaktperson.telefonnummer() == null) {
+        throw new IllegalArgumentException("Kontaktperson må ha både navn og telefonnummer");
+    }
+    return Optional.of(new KontaktpersonEntitet(kontaktperson.navn(), kontaktperson.telefonnummer()));
+}
 
     private static List<RefusjonsendringEntitet> mapRefusjonsendringer(LocalDate startdato, LocalDate opphørsdato, List<InntektsmeldingDto.SøktRefusjon> refusjonsendringRequestDto) {
         // Opphør og start ligger på egne felter, så disse skal ikke mappes som endringer.
