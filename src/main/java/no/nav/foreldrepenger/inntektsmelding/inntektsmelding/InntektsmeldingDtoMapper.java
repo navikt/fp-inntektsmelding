@@ -3,6 +3,7 @@ package no.nav.foreldrepenger.inntektsmelding.inntektsmelding;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.BortaltNaturalytelseEntitet;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.EndringsårsakEntitet;
@@ -92,6 +93,7 @@ public static InntektsmeldingEntitet mapTilEntitet(InntektsmeldingDto inntektsme
         .medBortfaltNaturalytelser(mapBortfaltNaturalytelser(inntektsmeldingDto.getBortfaltNaturalytelsePerioder()));
 
     mapKontaktperson(inntektsmeldingDto.getKontaktperson()).ifPresent(builder::medKontaktperson);
+    mapLpsSystemInformasjon(inntektsmeldingDto.getAvsenderSystem()).ifPresent(builder::medLpsSystemInfo);
 
     return builder.build();
 }
@@ -106,8 +108,14 @@ private static Optional<KontaktpersonEntitet> mapKontaktperson(InntektsmeldingDt
     return Optional.of(new KontaktpersonEntitet(kontaktperson.navn(), kontaktperson.telefonnummer()));
 }
 
-    private static LpsSystemInfoEntitet mapLpsSystemInformasjon(InntektsmeldingDto.AvsenderSystem avsenderSystem) {
-        return LpsSystemInfoEntitet.builder().medNavn(avsenderSystem.navn()).medVersjon(avsenderSystem.versjon()).build();
+    private static Optional<LpsSystemInfoEntitet> mapLpsSystemInformasjon(InntektsmeldingDto.AvsenderSystem avsenderSystem) {
+        if (avsenderSystem == null) {
+            return Optional.empty();
+        }
+        if (avsenderSystem.navn() == null || avsenderSystem.versjon() == null) {
+            throw new IllegalStateException("AvsenderSystem må ha både navn og versjon");
+        }
+        return Optional.of(LpsSystemInfoEntitet.builder().medNavn(avsenderSystem.navn()).medVersjon(avsenderSystem.versjon()).build());
     }
 
     private static List<RefusjonsendringEntitet> mapRefusjonsendringer(LocalDate startdato,
