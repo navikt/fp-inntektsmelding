@@ -86,12 +86,6 @@ public class InntektsmeldingApiMottakTjeneste {
     }
 
     private boolean erMånedInntektLike(BigDecimal månedInntekt, BigDecimal månedInntekt1) {
-        if (månedInntekt == null && månedInntekt1 == null) {
-            return true;
-        }
-        if (månedInntekt == null || månedInntekt1 == null) {
-            return false;
-        }
         return månedInntekt.compareTo(månedInntekt1) == 0;
     }
 
