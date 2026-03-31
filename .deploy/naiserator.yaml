@@ -36,7 +36,7 @@ spec:
     scalingStrategy:
       cpu:
         thresholdPercentage: 80
-      scaleUpStabilizationWindowSeconds: 60
+      scaleUpStabilizationWindowSeconds: 30
   resources:
     limits:
       memory: "{{limits.mem}}"
