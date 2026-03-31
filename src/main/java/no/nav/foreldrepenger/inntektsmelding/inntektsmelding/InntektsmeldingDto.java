@@ -22,8 +22,6 @@ public class InntektsmeldingDto {
     private final Kontaktperson kontaktperson;
     private final LocalDate startdato;
     private final BigDecimal månedInntekt;
-    private final Innsendingsårsak innsendingsårsak; //TODO: finnes ikke i DB ennå
-    private final Innsendingstype innsendingstype; //TODO: finnes ikke i DB ennå
     private final LocalDateTime innsendtTidspunkt;
     private final Kildesystem kildesystem;
     private final AvsenderSystem avsenderSystem; //TODO: finnes ikke i DB ennå
@@ -43,8 +41,6 @@ public class InntektsmeldingDto {
         this.kontaktperson = builder.kontaktperson;
         this.startdato = builder.startdato;
         this.månedInntekt = builder.inntekt;
-        this.innsendingsårsak = builder.innsendingsårsak;
-        this.innsendingstype = builder.innsendingstype;
         this.innsendtTidspunkt = builder.innsendtTidspunkt;
         this.kildesystem = builder.kildesystem;
         this.opprettetAv = builder.opprettetAv;
@@ -92,13 +88,6 @@ public class InntektsmeldingDto {
         return månedInntekt;
     }
 
-    public Innsendingsårsak getInnsendingsårsak() {
-        return innsendingsårsak;
-    }
-
-    public Innsendingstype getInnsendingstype() {
-        return innsendingstype;
-    }
 
     public LocalDateTime getInnsendtTidspunkt() {
         return innsendtTidspunkt;
@@ -145,8 +134,6 @@ public class InntektsmeldingDto {
         private Kontaktperson kontaktperson;
         private LocalDate startdato;
         private BigDecimal inntekt;
-        private Innsendingsårsak innsendingsårsak;
-        private Innsendingstype innsendingstype;
         private LocalDateTime innsendtTidspunkt;
         private Kildesystem kildesystem;
         private String opprettetAv;
@@ -197,16 +184,6 @@ public class InntektsmeldingDto {
 
         public Builder medInntekt(BigDecimal inntekt) {
             this.inntekt = inntekt;
-            return this;
-        }
-
-        public Builder medInnsendingsårsak(Innsendingsårsak innsendingsårsak) {
-            this.innsendingsårsak = innsendingsårsak;
-            return this;
-        }
-
-        public Builder medInnsendingstype(Innsendingstype innsendingstype) {
-            this.innsendingstype = innsendingstype;
             return this;
         }
 

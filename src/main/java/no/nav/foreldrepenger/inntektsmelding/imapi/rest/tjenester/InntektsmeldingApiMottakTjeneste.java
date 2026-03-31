@@ -44,16 +44,18 @@ public class InntektsmeldingApiMottakTjeneste {
     public SendInntektsmeldingResponse mottaInntektsmelding(InntektsmeldingDto inntektsmelding, UUID forespørselUuid) {
         var forespørsel = forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid).orElse(null);
         if (forespørsel == null) {
-            LOG.error("Finner ikke forespørsel for uuid {}", forespørselUuid);
+            LOG.info("Finner ikke forespørsel for uuid {}", forespørselUuid);
             return new SendInntektsmeldingResponse(false, null, "Finner ikke forespørsel for uuid " + forespørselUuid);
         }
 
         if (ForespørselStatus.UTGÅTT.equals(forespørsel.status())) {
+            LOG.info("Forespørsel har status utgått, og inntektsmelding kan ikke mottas. forespørselUuid: {}", forespørselUuid);
             return new SendInntektsmeldingResponse(false, null,"Kan ikke sende inn inntektsmelding når Forespørsel har status forkastet.");
         }
 
         var sisteInntektsmelding = inntektsmeldingTjeneste.hentSisteInntektsmelding(forespørsel.uuid());
         if (sisteInntektsmelding != null && inntektsmeldingerErLike(inntektsmelding, sisteInntektsmelding)) {
+            LOG.info("Inntektsmelding avvises. Ingen endring på ny inntektsmelding sammenlignet med tidligere innsendt inntektsmelding. inntektsmeldingId: {}", inntektsmelding.getId());
             return new SendInntektsmeldingResponse(false, null,
                 "Inntektsmelding avvises. Ingen endring på ny inntektsmelding sammenlignet med tidligere innsendt inntektsmelding.");
         }

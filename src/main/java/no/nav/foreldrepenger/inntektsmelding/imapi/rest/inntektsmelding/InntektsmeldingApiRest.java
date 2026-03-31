@@ -83,7 +83,7 @@ public class InntektsmeldingApiRest {
     }
 
     @POST
-    @Path("/inntektsmelding")
+    @Path("/send-inntektsmelding")
     @Tilgangskontrollert
     public SendInntektsmeldingResponse sendEksternInntektsmelding(SendInntektsmeldingRequest request) {
         tilgangskontroll.sjekkErSystembruker();
@@ -98,7 +98,7 @@ public class InntektsmeldingApiRest {
                 "Finner ikke informasjon for fødselsnummer. Sjekk at fødselsnummer er korrekt");
         }
 
-        var mottattInntektsmelding = InntektsmeldingApiMapper.mapTilDomene(request, aktørId.get());
+        var mottattInntektsmelding = InntektsmeldingApiMapper.mapTilDto(request, aktørId.get());
         return inntektsmeldingMottakTjeneste.mottaInntektsmelding(mottattInntektsmelding, request.foresporselUuid());
     }
 }

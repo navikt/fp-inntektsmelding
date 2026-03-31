@@ -23,7 +23,7 @@ public class InntektsmeldingApiMapper {
         // Mapper klasse, skal ikke instansieres
     }
 
-    public static InntektsmeldingDto mapTilDomene(SendInntektsmeldingRequest eksternRequest, AktørId aktørId) {
+    public static InntektsmeldingDto mapTilDto(SendInntektsmeldingRequest eksternRequest, AktørId aktørId) {
         // LPS sender kun inn en liste med refusjonsfra-datoer. Vi utleder startdato og opphørsdato utifra denne lista.
         var refusjonPrMnd = finnFørsteRefusjon(eksternRequest.refusjon(), eksternRequest.startdato()).orElse(null);
         var opphørsdato = refusjonPrMnd == null ? null : finnOpphørsdato(eksternRequest.refusjon(), eksternRequest.startdato()).orElse(Tid.TIDENES_ENDE);

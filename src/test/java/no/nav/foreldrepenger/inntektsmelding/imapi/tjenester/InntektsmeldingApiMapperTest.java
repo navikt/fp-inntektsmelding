@@ -43,7 +43,7 @@ class InntektsmeldingApiMapperTest {
             )
         );
 
-        var dto = InntektsmeldingApiMapper.mapTilDomene(request, new AktørId("1234567891011"));
+        var dto = InntektsmeldingApiMapper.mapTilDto(request, new AktørId("1234567891011"));
 
         assertThat(dto.getAktørId().getAktørId()).isEqualTo("1234567891011");
         assertThat(dto.getArbeidsgiver().orgnr()).isEqualTo("999999999");
@@ -78,7 +78,7 @@ class InntektsmeldingApiMapperTest {
         var startdato = LocalDate.of(2026, 2, 1);
         var request = lagEksternIMRequest(startdato, List.of());
 
-        var dto = InntektsmeldingApiMapper.mapTilDomene(request, new AktørId("1234567891011"));
+        var dto = InntektsmeldingApiMapper.mapTilDto(request, new AktørId("1234567891011"));
 
         assertThat(dto.getMånedRefusjon()).isNull();
         assertThat(dto.getOpphørsdatoRefusjon()).isNull();
@@ -96,7 +96,7 @@ class InntektsmeldingApiMapperTest {
             )
         );
 
-        assertThatThrownBy(() -> InntektsmeldingApiMapper.mapTilDomene(request, new AktørId("1234567891011")))
+        assertThatThrownBy(() -> InntektsmeldingApiMapper.mapTilDto(request, new AktørId("1234567891011")))
             .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining("Forventer kun 1 refusjon som starter på startdato");
     }
