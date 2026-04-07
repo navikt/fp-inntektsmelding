@@ -6,6 +6,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -127,6 +129,7 @@ public class MetrikkerTjeneste {
         tags.add(new ImmutableTag("har_oppgitt_endring_i_refusjon", harOppgittEndringerIRefusjon ? JA : NEI));
         tags.add(new ImmutableTag("har_oppgitt_opphoer_av_refusjon", harOppgittOpphørAvRefusjon ? JA : NEI));
         tags.add(new ImmutableTag("har_oppgitt_naturalytelse", harOppgittNaturalytelse ? JA : NEI));
+        tags.add(new ImmutableTag("kilde", utledKildesystemLabel(inntektsmelding.getKildesystem())));
         Metrics.counter(COUNTER_INNTEKTSMELDING, tags).increment();
 
         if (!inntektsmelding.getEndringAvInntektÅrsaker().isEmpty()) {
@@ -136,8 +139,17 @@ public class MetrikkerTjeneste {
                 .map(en -> en.årsak().name())
                 .sorted()
                 .collect(Collectors.joining("-"))));
+
             Metrics.counter(COUNTER_ENDRINGSÅRSAKER, endringsårsakerTags).increment();
         }
+    }
+
+    private static String utledKildesystemLabel(Kildesystem kildesystem) {
+        return switch (kildesystem) {
+            case ARBEIDSGIVERPORTAL -> "ARBEIDSGIVERPORTAL";
+            case FPSAK -> "OVERSTYRING";
+            case LØNN_OG_PERSONAL_SYSTEM -> "LPS";
+        };
     }
 
     private static void loggFeil(Exception e, String metodekall) {
@@ -165,6 +177,7 @@ public class MetrikkerTjeneste {
         }
     }
 
+    //TODO skal denne brukes noe sted
     public static void loggEndretArbeidsgiverinitiertNyansattIm(InntektsmeldingDto imEntitet) {
         try {
             var tags = new ArrayList<Tag>();
@@ -175,6 +188,7 @@ public class MetrikkerTjeneste {
         }
     }
 
+    //TODO skal denne brukes noe sted
     public static void loggEndretArbeidsgiverinitiertUregistrertIm(InntektsmeldingDto imEntitet) {
         try {
             var tags = new ArrayList<Tag>();

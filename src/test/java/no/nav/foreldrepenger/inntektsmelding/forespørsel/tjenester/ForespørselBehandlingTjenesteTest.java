@@ -34,6 +34,7 @@ import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonInfo;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Fødselsnummer;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Saksnummer;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.ForespørselResultat;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.NyBeskjedResultat;
@@ -717,7 +718,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
         clearHibernateCache();
 
-        var resultat = forespørselBehandlingTjeneste.hentForespørsler(Arbeidsgiver.fra(BRREG_ORGNUMMER), fnr, null, null, null, null);
+        var resultat = forespørselBehandlingTjeneste.hentForespørsler(Arbeidsgiver.fra(BRREG_ORGNUMMER), new Fødselsnummer(fnr), null, null, null, null);
 
         assertThat(resultat).isEmpty();
     }

@@ -14,6 +14,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.FellesMottakTjeneste;
+
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,29 +24,19 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
-import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDtoMapper;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.LukkeÅrsak;
-import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.SendInntektsmeldingRequestDto;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
-import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.fpsak.FpsakKlient;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.fpsak.FpsakTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.AktørIdDto;
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.ArbeidsgiverinitiertÅrsakDto;
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.EndringsårsakDto;
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.YtelseTypeDto;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ArbeidsgiverinitiertÅrsak;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Endringsårsak;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
-import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
-import no.nav.vedtak.felles.prosesstask.api.ProsessTaskTjeneste;
 import no.nav.vedtak.konfig.Tid;
 import no.nav.vedtak.sikkerhet.kontekst.IdentType;
 import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
@@ -60,9 +52,7 @@ class InntektsmeldingMottakTjenesteTest {
     @Mock
     private ForespørselBehandlingTjeneste forespørselBehandlingTjeneste;
     @Mock
-    private InntektsmeldingTjeneste inntektsmeldingTjeneste;
-    @Mock
-    private ProsessTaskTjeneste prosessTaskTjeneste;
+    private FellesMottakTjeneste fellesMottakTjeneste;
     @Mock
     private FpsakTjeneste fpsakTjeneste;
 
@@ -81,38 +71,38 @@ class InntektsmeldingMottakTjenesteTest {
 
     @BeforeEach
     void setUp() {
-        inntektsmeldingMottakTjeneste = new InntektsmeldingMottakTjeneste(forespørselBehandlingTjeneste,
-            inntektsmeldingTjeneste, prosessTaskTjeneste, fpsakTjeneste);
+        inntektsmeldingMottakTjeneste = new InntektsmeldingMottakTjeneste(forespørselBehandlingTjeneste, fellesMottakTjeneste, fpsakTjeneste);
     }
-
 
     @Test
     void skal_ikke_godta_im_på_utgått_forespørrsel() {
         // Arrange
         var uuid = UUID.randomUUID();
-        var forespørsel = new ForespørselEntitet("999999999",
-            LocalDate.now(),
-            new AktørIdEntitet("9999999999999"),
-            Ytelsetype.FORELDREPENGER,
-            "123",
-            LocalDate.now(),
-            ForespørselType.BESTILT_AV_FAGSYSTEM);
-        forespørsel.setStatus(ForespørselStatus.UTGÅTT);
-        when(forespørselBehandlingTjeneste.hentForespørsel(uuid)).thenReturn(Optional.of(ForespørselDtoMapper.mapFraEntitet(forespørsel)));
-        var innsendingDto = new SendInntektsmeldingRequestDto(uuid,
-            new AktørIdDto("9999999999999"),
-            YtelseTypeDto.FORELDREPENGER,
-            new OrganisasjonsnummerDto("999999999"),
-            new SendInntektsmeldingRequestDto.KontaktpersonRequestDto("Navn", "123"),
-            LocalDate.now(),
-            BigDecimal.valueOf(10000),
-            List.of(),
-            List.of(),
-            List.of(),
-            null);
+        var forespørselDto = ForespørselDto.builder()
+            .uuid(uuid)
+            .arbeidsgiver(Arbeidsgiver.fra("999999999"))
+            .aktørId(AktørId.fra("9999999999999"))
+            .ytelseType(Ytelsetype.FORELDREPENGER)
+            .status(ForespørselStatus.UTGÅTT)
+            .forespørselType(ForespørselType.BESTILT_AV_FAGSYSTEM)
+            .førsteUttaksdato(LocalDate.now())
+            .build();
+        when(forespørselBehandlingTjeneste.hentForespørsel(uuid)).thenReturn(Optional.of(forespørselDto));
+
+        var inntektsmeldingDto = InntektsmeldingDto.builder()
+            .medAktørId(AktørId.fra("9999999999999"))
+            .medYtelse(Ytelsetype.FORELDREPENGER)
+            .medArbeidsgiver(Arbeidsgiver.fra("999999999"))
+            .medKontaktperson(new InntektsmeldingDto.Kontaktperson("123", "Navn"))
+            .medStartdato(LocalDate.now())
+            .medInntekt(BigDecimal.valueOf(10000))
+            .medSøkteRefusjonsperioder(List.of())
+            .medBortfaltNaturalytelsePerioder(List.of())
+            .medEndringAvInntektÅrsaker(List.of())
+            .build();
 
         // Act
-        var ex = assertThrows(IllegalStateException.class, () -> inntektsmeldingMottakTjeneste.mottaInntektsmelding(innsendingDto));
+        var ex = assertThrows(IllegalStateException.class, () -> inntektsmeldingMottakTjeneste.mottaInntektsmelding(inntektsmeldingDto, uuid));
 
         // Assert
         assertThat(ex.getMessage()).contains("Kan ikke motta nye inntektsmeldinger på utgåtte forespørsler");
@@ -126,13 +116,15 @@ class InntektsmeldingMottakTjenesteTest {
         var aktørId = AktørId.fra("9999999999999");
         var orgnr = "999999999";
         var startdato = LocalDate.now();
-        var forespørsel = new ForespørselEntitet(orgnr,
-            startdato,
-            new AktørIdEntitet(aktørId.getAktørId()),
-            ytelse,
-            "123",
-            LocalDate.now(),
-            ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var forespørselDto = ForespørselDto.builder()
+            .uuid(uuid)
+            .arbeidsgiver(Arbeidsgiver.fra(orgnr))
+            .aktørId(aktørId)
+            .ytelseType(ytelse)
+            .status(ForespørselStatus.UNDER_BEHANDLING)
+            .forespørselType(ForespørselType.BESTILT_AV_FAGSYSTEM)
+            .førsteUttaksdato(startdato)
+            .build();
 
         var im = InntektsmeldingDto.builder()
             .medAktørId(AktørId.fra(aktørId.getAktørId()))
@@ -148,32 +140,33 @@ class InntektsmeldingMottakTjenesteTest {
             .medEndringAvInntektÅrsaker(List.of())
             .build();
 
+        var inputDto = InntektsmeldingDto.builder()
+            .medAktørId(aktørId)
+            .medYtelse(Ytelsetype.FORELDREPENGER)
+            .medArbeidsgiver(Arbeidsgiver.fra(orgnr))
+            .medKontaktperson(new InntektsmeldingDto.Kontaktperson("123", "Navn"))
+            .medStartdato(startdato)
+            .medMånedRefusjon(BigDecimal.valueOf(100))
+            .medOpphørsdatoRefusjon(Tid.TIDENES_ENDE)
+            .medSøkteRefusjonsperioder(List.of())
+            .medBortfaltNaturalytelsePerioder(List.of())
+            .medEndringAvInntektÅrsaker(List.of())
+            .build();
+
         when(forespørselBehandlingTjeneste.opprettForespørselForArbeidsgiverInitiertIm(ytelse,
             aktørId,
             Arbeidsgiver.fra(orgnr),
             startdato,
             ArbeidsgiverinitiertÅrsak.NYANSATT,
             null)).thenReturn(uuid);
-        when(forespørselBehandlingTjeneste.hentForespørsel(uuid)).thenReturn(Optional.of(ForespørselDtoMapper.mapFraEntitet(forespørsel)));
-        var innsendingDto = new SendInntektsmeldingRequestDto(null,
-            new AktørIdDto("9999999999999"),
-            YtelseTypeDto.FORELDREPENGER,
-            new OrganisasjonsnummerDto(orgnr),
-            new SendInntektsmeldingRequestDto.KontaktpersonRequestDto("Navn", "123"),
-            LocalDate.now(),
-            null,
-            List.of(new SendInntektsmeldingRequestDto.Refusjon(startdato, BigDecimal.valueOf(100))),
-            List.of(),
-            List.of(),
-            ArbeidsgiverinitiertÅrsakDto.NYANSATT);
-        when(inntektsmeldingTjeneste.lagreInntektsmelding(any())).thenReturn(1L);
-        when(inntektsmeldingTjeneste.hentInntektsmelding(1L)).thenReturn(im);
+        when(forespørselBehandlingTjeneste.hentForespørsel(uuid)).thenReturn(Optional.of(forespørselDto));
+        when(fellesMottakTjeneste.lagreOgJournalførInntektsmelding(any(), any())).thenReturn(im);
 
         // Act
-        var responseDto = inntektsmeldingMottakTjeneste.mottaArbeidsgiverinitiertInntektsmelding(innsendingDto, ArbeidsgiverinitiertÅrsak.NYANSATT);
+        var responseDto = inntektsmeldingMottakTjeneste.mottaArbeidsgiverinitiertInntektsmelding(inputDto, null, ArbeidsgiverinitiertÅrsak.NYANSATT);
 
         // Assert
-        verify(forespørselBehandlingTjeneste, times(1)).ferdigstillForespørsel(forespørsel.getUuid(), aktørId, Arbeidsgiver.fra(orgnr), startdato, LukkeÅrsak.ORDINÆR_INNSENDING,
+        verify(forespørselBehandlingTjeneste, times(1)).ferdigstillForespørsel(forespørselDto.uuid(), aktørId, Arbeidsgiver.fra(orgnr), startdato, LukkeÅrsak.ORDINÆR_INNSENDING,
                 Optional.ofNullable(im.getInntektsmeldingUuid()));
         assertThat(responseDto).isNotNull();
         assertThat(responseDto.refusjon()).hasSize(1);
@@ -187,18 +180,20 @@ class InntektsmeldingMottakTjenesteTest {
         var aktørId = AktørId.fra("9999999999999");
         var orgnr = "999999999";
         var startdato = LocalDate.now();
-        var eksisterendeForespørsel = new ForespørselEntitet(orgnr,
-            startdato,
-            new AktørIdEntitet(aktørId.getAktørId()),
-            ytelse,
-            "123",
-            LocalDate.now(),
-            ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT);
+        var eksisterendeForespørselDto = ForespørselDto.builder()
+            .uuid(uuid)
+            .arbeidsgiver(Arbeidsgiver.fra(orgnr))
+            .aktørId(aktørId)
+            .ytelseType(ytelse)
+            .status(ForespørselStatus.UNDER_BEHANDLING)
+            .forespørselType(ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT)
+            .førsteUttaksdato(startdato)
+            .build();
 
         var nyStartDato = LocalDate.now().plusWeeks(1);
 
         var im = InntektsmeldingDto.builder()
-            .medAktørId(new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(aktørId.getAktørId()))
+            .medAktørId(AktørId.fra(aktørId.getAktørId()))
             .medKontaktperson(new InntektsmeldingDto.Kontaktperson("Test", "Test"))
             .medYtelse(Ytelsetype.FORELDREPENGER)
             .medInntekt(BigDecimal.valueOf(100))
@@ -211,38 +206,39 @@ class InntektsmeldingMottakTjenesteTest {
             .medEndringAvInntektÅrsaker(List.of())
             .build();
 
+        var forespørselMedNyDatoDto = ForespørselDto.builder()
+            .uuid(uuid)
+            .arbeidsgiver(Arbeidsgiver.fra(orgnr))
+            .aktørId(aktørId)
+            .ytelseType(ytelse)
+            .status(ForespørselStatus.UNDER_BEHANDLING)
+            .forespørselType(ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT)
+            .førsteUttaksdato(nyStartDato)
+            .build();
 
-        var forespørselMedNyDato = new ForespørselEntitet(orgnr,
-            nyStartDato,
-            new AktørIdEntitet(aktørId.getAktørId()),
-            ytelse,
-            "123",
-            LocalDate.now(),
-            ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT);
+        when(forespørselBehandlingTjeneste.hentForespørsel(uuid)).thenReturn(Optional.of(eksisterendeForespørselDto));
+        when(forespørselBehandlingTjeneste.oppdaterFørsteUttaksdato(any(), any())).thenReturn(forespørselMedNyDatoDto);
 
-        when(forespørselBehandlingTjeneste.hentForespørsel(uuid)).thenReturn(Optional.of(ForespørselDtoMapper.mapFraEntitet(eksisterendeForespørsel)));
-        when(forespørselBehandlingTjeneste.oppdaterFørsteUttaksdato(any(), any())).thenReturn(ForespørselDtoMapper.mapFraEntitet(forespørselMedNyDato));
+        var inputDto = InntektsmeldingDto.builder()
+            .medAktørId(aktørId)
+            .medYtelse(Ytelsetype.FORELDREPENGER)
+            .medArbeidsgiver(Arbeidsgiver.fra(orgnr))
+            .medKontaktperson(new InntektsmeldingDto.Kontaktperson("123", "Navn"))
+            .medStartdato(nyStartDato)
+            .medMånedRefusjon(BigDecimal.valueOf(100))
+            .medOpphørsdatoRefusjon(Tid.TIDENES_ENDE)
+            .medSøkteRefusjonsperioder(List.of())
+            .medBortfaltNaturalytelsePerioder(List.of())
+            .medEndringAvInntektÅrsaker(List.of())
+            .build();
 
-        var innsendingDto = new SendInntektsmeldingRequestDto(uuid,
-            new AktørIdDto("9999999999999"),
-            YtelseTypeDto.FORELDREPENGER,
-            new OrganisasjonsnummerDto(orgnr),
-            new SendInntektsmeldingRequestDto.KontaktpersonRequestDto("Navn", "123"),
-            nyStartDato,
-            null,
-            List.of(new SendInntektsmeldingRequestDto.Refusjon(nyStartDato, BigDecimal.valueOf(100))),
-            List.of(),
-            List.of(),
-            ArbeidsgiverinitiertÅrsakDto.NYANSATT);
-        when(inntektsmeldingTjeneste.lagreInntektsmelding(any())).thenReturn(1L);
-        when(inntektsmeldingTjeneste.hentInntektsmelding(1L)).thenReturn(im);
+        when(fellesMottakTjeneste.lagreOgJournalførInntektsmelding(any(), any())).thenReturn(im);
 
         // Act
-        var responseDto = inntektsmeldingMottakTjeneste.mottaArbeidsgiverinitiertInntektsmelding(innsendingDto, ArbeidsgiverinitiertÅrsak.NYANSATT);
+        var responseDto = inntektsmeldingMottakTjeneste.mottaArbeidsgiverinitiertInntektsmelding(inputDto, uuid, ArbeidsgiverinitiertÅrsak.NYANSATT);
 
         // Assert
-        verify(forespørselBehandlingTjeneste, times(0)).ferdigstillForespørsel(uuid, aktørId, Arbeidsgiver.fra(orgnr), startdato, LukkeÅrsak.ORDINÆR_INNSENDING,
-            Optional.ofNullable(im.getInntektsmeldingUuid()));
+        verify(forespørselBehandlingTjeneste, times(0)).ferdigstillForespørsel(any(), any(), any(), any(), any(), any());
         assertThat(responseDto).isNotNull();
         assertThat(responseDto.refusjon()).hasSize(1);
         assertThat(responseDto.startdato()).isEqualTo(nyStartDato);
@@ -256,16 +252,18 @@ class InntektsmeldingMottakTjenesteTest {
         var aktørId = AktørId.fra("9999999999999");
         var orgnr = "999999999";
         var startdato = LocalDate.now();
-        var forespørsel = new ForespørselEntitet(orgnr,
-            startdato,
-            new AktørIdEntitet(aktørId.getAktørId()),
-            ytelse,
-            "123",
-            LocalDate.now(),
-            ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var forespørselDto = ForespørselDto.builder()
+            .uuid(uuid)
+            .arbeidsgiver(Arbeidsgiver.fra(orgnr))
+            .aktørId(aktørId)
+            .ytelseType(ytelse)
+            .status(ForespørselStatus.UNDER_BEHANDLING)
+            .forespørselType(ForespørselType.BESTILT_AV_FAGSYSTEM)
+            .førsteUttaksdato(startdato)
+            .build();
 
         var im = InntektsmeldingDto.builder()
-            .medAktørId(new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(aktørId.getAktørId()))
+            .medAktørId(AktørId.fra(aktørId.getAktørId()))
             .medKontaktperson(new InntektsmeldingDto.Kontaktperson("Test", "Test"))
             .medYtelse(Ytelsetype.FORELDREPENGER)
             .medInntekt(BigDecimal.valueOf(100))
@@ -279,7 +277,7 @@ class InntektsmeldingMottakTjenesteTest {
             .build();
 
         var skjæringstidspunkt = startdato.minusDays(2);
-        var infoOmSak = new FpsakKlient.InfoOmSakInntektsmeldingResponse(FpsakKlient.StatusSakInntektsmelding.ÅPEN_FOR_BEHANDLING,startdato,skjæringstidspunkt);
+        var infoOmSak = new FpsakKlient.InfoOmSakInntektsmeldingResponse(FpsakKlient.StatusSakInntektsmelding.ÅPEN_FOR_BEHANDLING, startdato, skjæringstidspunkt);
         when(fpsakTjeneste.henterInfoOmSakIFagsystem(aktørId, Ytelsetype.FORELDREPENGER)).thenReturn(infoOmSak);
         when(forespørselBehandlingTjeneste.opprettForespørselForArbeidsgiverInitiertIm(ytelse,
             aktørId,
@@ -287,27 +285,31 @@ class InntektsmeldingMottakTjenesteTest {
             startdato,
             ArbeidsgiverinitiertÅrsak.UREGISTRERT,
             skjæringstidspunkt)).thenReturn(uuid);
-        when(forespørselBehandlingTjeneste.hentForespørsel(uuid)).thenReturn(Optional.of(ForespørselDtoMapper.mapFraEntitet(forespørsel)));
+        when(forespørselBehandlingTjeneste.hentForespørsel(uuid)).thenReturn(Optional.of(forespørselDto));
+
         var inntekt = BigDecimal.valueOf(100);
-        var innsendingDto = new SendInntektsmeldingRequestDto(null,
-            new AktørIdDto("9999999999999"),
-            YtelseTypeDto.FORELDREPENGER,
-            new OrganisasjonsnummerDto(orgnr),
-            new SendInntektsmeldingRequestDto.KontaktpersonRequestDto("Navn", "123"),
-            LocalDate.now(),
-            inntekt,
-            List.of(new SendInntektsmeldingRequestDto.Refusjon(startdato, inntekt)),
-            List.of(),
-            List.of(),
-            ArbeidsgiverinitiertÅrsakDto.UREGISTRERT);
-        when(inntektsmeldingTjeneste.lagreInntektsmelding(any())).thenReturn(1L);
-        when(inntektsmeldingTjeneste.hentInntektsmelding(1L)).thenReturn(im);
+        var inputDto = InntektsmeldingDto.builder()
+            .medAktørId(aktørId)
+            .medYtelse(Ytelsetype.FORELDREPENGER)
+            .medArbeidsgiver(Arbeidsgiver.fra(orgnr))
+            .medKontaktperson(new InntektsmeldingDto.Kontaktperson("123", "Navn"))
+            .medStartdato(startdato)
+            .medInntekt(inntekt)
+            .medMånedRefusjon(inntekt)
+            .medOpphørsdatoRefusjon(Tid.TIDENES_ENDE)
+            .medSøkteRefusjonsperioder(List.of())
+            .medBortfaltNaturalytelsePerioder(List.of())
+            .medEndringAvInntektÅrsaker(List.of())
+            .build();
+
+        when(fellesMottakTjeneste.lagreOgJournalførInntektsmelding(any(), any())).thenReturn(im);
 
         // Act
-        var responseDto = inntektsmeldingMottakTjeneste.mottaArbeidsgiverinitiertInntektsmelding(innsendingDto, ArbeidsgiverinitiertÅrsak.UREGISTRERT);
+        var responseDto = inntektsmeldingMottakTjeneste.mottaArbeidsgiverinitiertInntektsmelding(inputDto, null,
+            ArbeidsgiverinitiertÅrsak.UREGISTRERT);
 
         // Assert
-        verify(forespørselBehandlingTjeneste, times(1)).ferdigstillForespørsel(forespørsel.getUuid(), aktørId, Arbeidsgiver.fra(orgnr), startdato, LukkeÅrsak.ORDINÆR_INNSENDING,
+        verify(forespørselBehandlingTjeneste, times(1)).ferdigstillForespørsel(forespørselDto.uuid(), aktørId, Arbeidsgiver.fra(orgnr), startdato, LukkeÅrsak.ORDINÆR_INNSENDING,
             Optional.ofNullable(im.getInntektsmeldingUuid()));
         assertThat(responseDto).isNotNull();
         assertThat(responseDto.refusjon()).hasSize(1);
@@ -322,19 +324,21 @@ class InntektsmeldingMottakTjenesteTest {
         var aktørId = AktørId.fra("9999999999999");
         var orgnr = "999999999";
         var startdato = LocalDate.now();
-        var eksisterendeForespørsel = new ForespørselEntitet(orgnr,
-            startdato,
-            new AktørIdEntitet(aktørId.getAktørId()),
-            ytelse,
-            "123",
-            LocalDate.now(),
-            ForespørselType.ARBEIDSGIVERINITIERT_UREGISTRERT);
+        var eksisterendeForespørselDto = ForespørselDto.builder()
+            .uuid(uuid)
+            .arbeidsgiver(Arbeidsgiver.fra(orgnr))
+            .aktørId(aktørId)
+            .ytelseType(ytelse)
+            .status(ForespørselStatus.UNDER_BEHANDLING)
+            .forespørselType(ForespørselType.ARBEIDSGIVERINITIERT_UREGISTRERT)
+            .førsteUttaksdato(startdato)
+            .build();
 
         var opphørsdato = LocalDate.now().plusMonths(5);
         var nyInntekt = BigDecimal.valueOf(200);
 
         var im = InntektsmeldingDto.builder()
-            .medAktørId(new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(aktørId.getAktørId()))
+            .medAktørId(AktørId.fra(aktørId.getAktørId()))
             .medKontaktperson(new InntektsmeldingDto.Kontaktperson("Test", "Test"))
             .medYtelse(Ytelsetype.FORELDREPENGER)
             .medInntekt(nyInntekt)
@@ -347,31 +351,32 @@ class InntektsmeldingMottakTjenesteTest {
             .medBortfaltNaturalytelsePerioder(List.of())
             .build();
 
-        when(forespørselBehandlingTjeneste.hentForespørsel(uuid)).thenReturn(Optional.of(ForespørselDtoMapper.mapFraEntitet(eksisterendeForespørsel)));
+        when(forespørselBehandlingTjeneste.hentForespørsel(uuid)).thenReturn(Optional.of(eksisterendeForespørselDto));
 
-        var endringsårsak = List.of(new SendInntektsmeldingRequestDto.EndringsårsakerRequestDto(EndringsårsakDto.VARIG_LØNNSENDRING, null, null, null));
+        var endringsårsaker = List.of(new InntektsmeldingDto.Endringsårsaker(Endringsårsak.VARIG_LØNNSENDRING, null, null, null));
 
-        var innsendingDto = new SendInntektsmeldingRequestDto(uuid,
-            new AktørIdDto("9999999999999"),
-            YtelseTypeDto.FORELDREPENGER,
-            new OrganisasjonsnummerDto(orgnr),
-            new SendInntektsmeldingRequestDto.KontaktpersonRequestDto("Navn", "123"),
-            startdato,
-            nyInntekt,
-            List.of(new SendInntektsmeldingRequestDto.Refusjon(startdato, BigDecimal.valueOf(200)),
-                new SendInntektsmeldingRequestDto.Refusjon(opphørsdato, BigDecimal.ZERO)),
-            List.of(),
-            endringsårsak,
-            ArbeidsgiverinitiertÅrsakDto.UREGISTRERT);
-        when(inntektsmeldingTjeneste.lagreInntektsmelding(any())).thenReturn(1L);
-        when(inntektsmeldingTjeneste.hentInntektsmelding(1L)).thenReturn(im);
+        var inputDto = InntektsmeldingDto.builder()
+            .medAktørId(aktørId)
+            .medYtelse(Ytelsetype.FORELDREPENGER)
+            .medArbeidsgiver(Arbeidsgiver.fra(orgnr))
+            .medKontaktperson(new InntektsmeldingDto.Kontaktperson("123", "Navn"))
+            .medStartdato(startdato)
+            .medInntekt(nyInntekt)
+            .medMånedRefusjon(BigDecimal.valueOf(200))
+            .medOpphørsdatoRefusjon(opphørsdato.minusDays(1))
+            .medSøkteRefusjonsperioder(List.of())
+            .medBortfaltNaturalytelsePerioder(List.of())
+            .medEndringAvInntektÅrsaker(endringsårsaker)
+            .build();
+
+        when(fellesMottakTjeneste.lagreOgJournalførInntektsmelding(any(), any())).thenReturn(im);
 
         // Act
-        var responseDto = inntektsmeldingMottakTjeneste.mottaArbeidsgiverinitiertInntektsmelding(innsendingDto, ArbeidsgiverinitiertÅrsak.UREGISTRERT);
+        var responseDto = inntektsmeldingMottakTjeneste.mottaArbeidsgiverinitiertInntektsmelding(inputDto, uuid,
+            ArbeidsgiverinitiertÅrsak.UREGISTRERT);
 
         // Assert
-        verify(forespørselBehandlingTjeneste, times(0)).ferdigstillForespørsel(uuid, aktørId, Arbeidsgiver.fra(orgnr), startdato, LukkeÅrsak.ORDINÆR_INNSENDING,
-            Optional.ofNullable(im.getInntektsmeldingUuid()));
+        verify(forespørselBehandlingTjeneste, times(0)).ferdigstillForespørsel(any(), any(), any(), any(), any(), any());
         assertThat(responseDto).isNotNull();
         assertThat(responseDto.refusjon()).hasSize(2);
         assertThat(responseDto.startdato()).isEqualTo(startdato);
@@ -379,6 +384,6 @@ class InntektsmeldingMottakTjenesteTest {
         assertThat(responseDto.refusjon().getFirst().beløp()).isEqualTo(BigDecimal.valueOf(200));
         assertThat(responseDto.refusjon().get(1).fom()).isEqualTo(opphørsdato);
         assertThat(responseDto.refusjon().get(1).beløp()).isEqualTo(BigDecimal.valueOf(0));
-        assertThat(responseDto.endringAvInntektÅrsaker()).isEqualTo(endringsårsak);
+        assertThat(responseDto.endringAvInntektÅrsaker()).hasSize(1);
     }
 }

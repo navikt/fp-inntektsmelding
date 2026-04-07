@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
-class ArbeidsgiverTest {
+class ArbeidsgiverDtoTest {
 
     @Test
     void skal_opprette_med_konstruktor() {

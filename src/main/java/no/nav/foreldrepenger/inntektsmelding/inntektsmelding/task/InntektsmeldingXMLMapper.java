@@ -78,11 +78,12 @@ class InntektsmeldingXMLMapper {
         return as;
     }
 
+    // TODO Vi bør ta en diskusjon på hva denne skal være
     private static Systemnavn mapTilSystem(Kildesystem kildesystem) {
         return switch (kildesystem) {
             case FPSAK -> Systemnavn.OVERSTYRING_FPSAK;
             case ARBEIDSGIVERPORTAL -> Systemnavn.NAV_NO;
-            case API -> Systemnavn.HR_SYSTEM_API;
+            case LØNN_OG_PERSONAL_SYSTEM -> Systemnavn.HR_SYSTEM_API;
         };
     }
 

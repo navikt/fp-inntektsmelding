@@ -1,6 +1,6 @@
 package no.nav.foreldrepenger.inntektsmelding.felles;
 
-public enum ForespørselAksjon {
+public enum ForespørselAksjonDto {
     OPPRETT, // Ny forespørsel
     UTGÅTT, // Forespørsel som ikke trengs/som vi ikke vil ha inn endringer på
     BEHOLD, // Forespørsel som skal være uendret. Brukes for å hindre at åpen (UNDER_BEHANDLING) forespørsel blir satt til utgått.

@@ -1,6 +1,6 @@
 package no.nav.foreldrepenger.inntektsmelding.forespørsel;
 
-import no.nav.foreldrepenger.inntektsmelding.felles.NyBeskjedResultat;
+import no.nav.foreldrepenger.inntektsmelding.felles.NyBeskjedResultatDto;
 
-public record NyBeskjedResponse(NyBeskjedResultat nyBeskjedResultat) {
+public record NyBeskjedResponse(NyBeskjedResultatDto nyBeskjedResultat) {
 }

@@ -8,42 +8,50 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.ArbeidsgiverInformasjonDto;
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.Endringsårsak;
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.InntektsmeldingApiResponsDto;
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.Naturalytelsetype;
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.YtelseType;
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.FødselsnummerDto;
 
 import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.ArbeidsgiverDto;
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.AvsenderSystem;
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.BortfaltNaturalytelse;
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.Endringsårsak;
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.Endringsårsaker;
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.HentInntektsmeldingRespons;
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.Innsendingstype;
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.Innsendingsårsak;
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.Kontaktperson;
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.Naturalytelsetype;
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.SøktRefusjon;
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.YtelseType;
 import no.nav.vedtak.mapper.json.DefaultJsonMapper;
 
-class InntektsmeldingApiResponsDtoTest {
+class HentInntektsmeldingResponsTest {
 
     private static final JsonMapper JSON_MAPPER = DefaultJsonMapper.getJsonMapper();
 
-    private InntektsmeldingApiResponsDto lagTestDto(LocalDate dato, LocalDateTime tidspunkt, UUID uuid, UUID forespørselUuid,
-                                                    InntektsmeldingApiResponsDto.Innsendingsårsak innsendingsårsak,
-                                                    InntektsmeldingApiResponsDto.Innsendingstype innsendingstype,
-                                                    List<InntektsmeldingApiResponsDto.SøktRefusjon> refusjoner,
-                                                    List<InntektsmeldingApiResponsDto.BortfaltNaturalytelse> naturalytelser,
-                                                    List<InntektsmeldingApiResponsDto.Endringsårsaker> endringsårsaker) {
-        return new InntektsmeldingApiResponsDto(
+    private HentInntektsmeldingRespons lagTestDto(LocalDate dato, LocalDateTime tidspunkt, UUID uuid, UUID forespørselUuid,
+                                                  Innsendingsårsak innsendingsårsak,
+                                                  Innsendingstype innsendingstype,
+                                                  List<SøktRefusjon> refusjoner,
+                                                  List<BortfaltNaturalytelse> naturalytelser,
+                                                  List<Endringsårsaker> endringsårsaker) {
+        return new HentInntektsmeldingRespons(
             uuid,
             forespørselUuid,
-            "12345678901",
+            new FødselsnummerDto("12345678901"),
             YtelseType.FORELDREPENGER,
-            new ArbeidsgiverInformasjonDto("999999999"),
-            new InntektsmeldingApiResponsDto.Kontaktperson("12345678", "Ola Nordmann"),
+            new ArbeidsgiverDto("999999999"),
+            new Kontaktperson("Ola Nordmann", "12345678"),
             dato,
             new BigDecimal("50000"),
             innsendingsårsak,
             innsendingstype,
             tidspunkt,
-            new InntektsmeldingApiResponsDto.AvsenderSystem("MinLønn", "1.0"),
+            new AvsenderSystem("MinLønn", "1.0"),
             refusjoner,
             naturalytelser,
             endringsårsaker
@@ -58,15 +66,15 @@ class InntektsmeldingApiResponsDtoTest {
         var forespørselUuid = UUID.fromString("4fa85f64-5717-4562-b3fc-2c963f66afa6");
 
         var dto = lagTestDto(dato, tidspunkt, uuid, forespørselUuid,
-            InntektsmeldingApiResponsDto.Innsendingsårsak.NY,
-            InntektsmeldingApiResponsDto.Innsendingstype.FORESPURT,
-            List.of(new InntektsmeldingApiResponsDto.SøktRefusjon(dato, new BigDecimal("30000"))),
-            List.of(new InntektsmeldingApiResponsDto.BortfaltNaturalytelse(dato, dato,
+            Innsendingsårsak.NY,
+            Innsendingstype.FORESPURT,
+            List.of(new SøktRefusjon(dato, new BigDecimal("30000"))),
+            List.of(new BortfaltNaturalytelse(dato, dato,
                 Naturalytelsetype.AKSJER_GRUNNFONDSBEVIS_TIL_UNDERKURS, new BigDecimal("1000"))),
             List.of(
-                new InntektsmeldingApiResponsDto.Endringsårsaker(Endringsårsak.BONUS, null, null, null),
-                new InntektsmeldingApiResponsDto.Endringsårsaker(Endringsårsak.FERIE, dato, dato, null),
-                new InntektsmeldingApiResponsDto.Endringsårsaker(Endringsårsak.TARIFFENDRING, null, null, dato)
+                new Endringsårsaker(Endringsårsak.BONUS, null, null, null),
+                new Endringsårsaker(Endringsårsak.FERIE, dato, dato, null),
+                new Endringsårsaker(Endringsårsak.TARIFFENDRING, null, null, dato)
             )
         );
 
@@ -99,12 +107,12 @@ class InntektsmeldingApiResponsDtoTest {
         var forespørselUuid = UUID.fromString("4fa85f64-5717-4562-b3fc-2c963f66afa6");
 
         var dto = lagTestDto(dato, tidspunkt, uuid, forespørselUuid,
-            InntektsmeldingApiResponsDto.Innsendingsårsak.NY,
-            InntektsmeldingApiResponsDto.Innsendingstype.FORESPURT,
-            List.of(new InntektsmeldingApiResponsDto.SøktRefusjon(dato, new BigDecimal("30000"))),
-            List.of(new InntektsmeldingApiResponsDto.BortfaltNaturalytelse(dato, null,
+            Innsendingsårsak.NY,
+            Innsendingstype.FORESPURT,
+            List.of(new SøktRefusjon(dato, new BigDecimal("30000"))),
+            List.of(new BortfaltNaturalytelse(dato, null,
                 Naturalytelsetype.ANNET, new BigDecimal("500"))),
-            List.of(new InntektsmeldingApiResponsDto.Endringsårsaker(Endringsårsak.BONUS, null, null, null))
+            List.of(new Endringsårsaker(Endringsårsak.BONUS, null, null, null))
         );
 
         var json = JSON_MAPPER.writeValueAsString(dto);
@@ -119,19 +127,19 @@ class InntektsmeldingApiResponsDtoTest {
 
     @Test
     void skal_serialisere_med_tomme_lister() throws JsonProcessingException {
-        var dto = new InntektsmeldingApiResponsDto(
+        var dto = new HentInntektsmeldingRespons(
             UUID.randomUUID(),
             UUID.randomUUID(),
-            "12345678901",
+            new FødselsnummerDto("12345678901"),
             YtelseType.SVANGERSKAPSPENGER,
-            new ArbeidsgiverInformasjonDto("999999999"),
-            new InntektsmeldingApiResponsDto.Kontaktperson("87654321", "Kari Nordmann"),
+            new ArbeidsgiverDto("999999999"),
+            new Kontaktperson("87654321", "Kari Nordmann"),
             LocalDate.now(),
             new BigDecimal("40000"),
-            InntektsmeldingApiResponsDto.Innsendingsårsak.ENDRING,
-            InntektsmeldingApiResponsDto.Innsendingstype.ARBEIDSGIVER_INITIERT,
+            Innsendingsårsak.ENDRING,
+            Innsendingstype.ARBEIDSGIVER_INITIERT,
             LocalDateTime.now(),
-            new InntektsmeldingApiResponsDto.AvsenderSystem("System", "2.0"),
+            new AvsenderSystem("System", "2.0"),
             List.of(),
             List.of(),
             List.of()
@@ -153,14 +161,14 @@ class InntektsmeldingApiResponsDtoTest {
         var forespørselUuid = UUID.fromString("4fa85f64-5717-4562-b3fc-2c963f66afa6");
 
         var dto = lagTestDto(dato, tidspunkt, uuid, forespørselUuid,
-            InntektsmeldingApiResponsDto.Innsendingsårsak.NY,
-            InntektsmeldingApiResponsDto.Innsendingstype.FORESPURT,
-            List.of(new InntektsmeldingApiResponsDto.SøktRefusjon(dato, new BigDecimal("30000"))),
-            List.of(new InntektsmeldingApiResponsDto.BortfaltNaturalytelse(dato, dato,
+            Innsendingsårsak.NY,
+            Innsendingstype.FORESPURT,
+            List.of(new SøktRefusjon(dato, new BigDecimal("30000"))),
+            List.of(new BortfaltNaturalytelse(dato, dato,
                 Naturalytelsetype.BIL, new BigDecimal("2000"))),
             List.of(
-                new InntektsmeldingApiResponsDto.Endringsårsaker(Endringsårsak.BONUS, null, null, null),
-                new InntektsmeldingApiResponsDto.Endringsårsaker(Endringsårsak.TARIFFENDRING, dato, null, dato)
+                new Endringsårsaker(Endringsårsak.BONUS, null, null, null),
+                new Endringsårsaker(Endringsårsak.TARIFFENDRING, dato, null, dato)
             )
         );
 

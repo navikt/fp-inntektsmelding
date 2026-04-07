@@ -84,6 +84,9 @@ public class InntektsmeldingEntitet {
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "inntektsmelding")
     private List<EndringsårsakEntitet> endringsårsaker = new ArrayList<>();
 
+    @OneToOne(cascade = CascadeType.ALL, mappedBy = "inntektsmelding")
+    private LpsSystemInfoEntitet lpsSystem;
+
     public InntektsmeldingEntitet() {
         // Hibernate
     }
@@ -146,6 +149,10 @@ public class InntektsmeldingEntitet {
 
     public List<EndringsårsakEntitet> getEndringsårsaker() {
         return endringsårsaker;
+    }
+
+    public LpsSystemInfoEntitet getLpsSystem() {
+        return lpsSystem;
     }
 
     public UUID getUuid() {
@@ -244,6 +251,12 @@ public class InntektsmeldingEntitet {
         public Builder medKontaktperson(KontaktpersonEntitet kontaktpersonEntitet) {
             kontaktpersonEntitet.setInntektsmelding(kladd);
             kladd.kontaktperson = kontaktpersonEntitet;
+            return this;
+        }
+
+        public Builder medLpsSystemInfo(LpsSystemInfoEntitet lpsSystemInfoEntitet) {
+            lpsSystemInfoEntitet.setInntektsmelding(kladd);
+            kladd.lpsSystem = lpsSystemInfoEntitet;
             return this;
         }
 

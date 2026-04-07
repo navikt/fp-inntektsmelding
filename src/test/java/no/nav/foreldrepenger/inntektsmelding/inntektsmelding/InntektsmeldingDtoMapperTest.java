@@ -268,10 +268,8 @@ class InntektsmeldingDtoMapperTest {
             .medKontaktperson(new InntektsmeldingDto.Kontaktperson("11111111", "Test Testesen"))
             .medStartdato(START_DATO)
             .medInntekt(MÅNED_INNTEKT)
-            .medInnsendingsårsak(InntektsmeldingDto.Innsendingsårsak.NY)
-            .medInnsendingstype(InntektsmeldingDto.Innsendingstype.FORESPURT)
             .medInnsendtTidspunkt(tidspunkt)
-            .medKildesystem(Kildesystem.API)
+            .medKildesystem(Kildesystem.LØNN_OG_PERSONAL_SYSTEM)
             .medMånedRefusjon(new BigDecimal("30000.00"))
             .medOpphørsdatoRefusjon(START_DATO.plusMonths(12))
             .medAvsenderSystem(new InntektsmeldingDto.AvsenderSystem("TestSystem", "1.0"))
@@ -293,10 +291,8 @@ class InntektsmeldingDtoMapperTest {
         assertThat(dto.getKontaktperson().telefonnummer()).isEqualTo("11111111");
         assertThat(dto.getStartdato()).isEqualTo(START_DATO);
         assertThat(dto.getMånedInntekt()).isEqualByComparingTo(MÅNED_INNTEKT);
-        assertThat(dto.getInnsendingsårsak()).isEqualTo(InntektsmeldingDto.Innsendingsårsak.NY);
-        assertThat(dto.getInnsendingstype()).isEqualTo(InntektsmeldingDto.Innsendingstype.FORESPURT);
         assertThat(dto.getInnsendtTidspunkt()).isEqualTo(tidspunkt);
-        assertThat(dto.getKildesystem()).isEqualTo(Kildesystem.API);
+        assertThat(dto.getKildesystem()).isEqualTo(Kildesystem.LØNN_OG_PERSONAL_SYSTEM);
         assertThat(dto.getMånedRefusjon()).isEqualByComparingTo(new BigDecimal("30000.00"));
         assertThat(dto.getOpphørsdatoRefusjon()).isEqualTo(START_DATO.plusMonths(12));
         assertThat(dto.getAvsenderSystem().navn()).isEqualTo("TestSystem");
@@ -319,8 +315,6 @@ class InntektsmeldingDtoMapperTest {
         assertThat(dto.getMånedInntekt()).isNull();
         assertThat(dto.getMånedRefusjon()).isNull();
         assertThat(dto.getOpphørsdatoRefusjon()).isNull();
-        assertThat(dto.getInnsendingsårsak()).isNull();
-        assertThat(dto.getInnsendingstype()).isNull();
         assertThat(dto.getInnsendtTidspunkt()).isNull();
         assertThat(dto.getAvsenderSystem()).isNull();
         assertThat(dto.getSøkteRefusjonsperioder()).isNull();
@@ -400,7 +394,7 @@ class InntektsmeldingDtoMapperTest {
             .medMånedRefusjon(new BigDecimal("25000"))
             .medOpphørsdatoRefusjon(START_DATO.plusMonths(6))
             .medOpprettetAv("bruker")
-            .medKildesystem(Kildesystem.API)
+            .medKildesystem(Kildesystem.LØNN_OG_PERSONAL_SYSTEM)
             .medSøkteRefusjonsperioder(List.of(
                 new InntektsmeldingDto.SøktRefusjon(START_DATO.plusMonths(2), new BigDecimal("20000"))))
             .medBortfaltNaturalytelsePerioder(List.of(
@@ -419,7 +413,7 @@ class InntektsmeldingDtoMapperTest {
         assertThat(entitet.getMånedRefusjon()).isEqualByComparingTo(new BigDecimal("25000"));
         assertThat(entitet.getOpphørsdatoRefusjon()).isEqualTo(START_DATO.plusMonths(6));
         assertThat(entitet.getOpprettetAv()).isEqualTo("bruker");
-        assertThat(entitet.getKildesystem()).isEqualTo(Kildesystem.API);
+        assertThat(entitet.getKildesystem()).isEqualTo(Kildesystem.LØNN_OG_PERSONAL_SYSTEM);
         assertThat(entitet.getKontaktperson().getNavn()).isEqualTo("Per Hansen");
         assertThat(entitet.getKontaktperson().getTelefonnummer()).isEqualTo("99887766");
         assertThat(entitet.getRefusjonsendringer()).hasSize(1);
@@ -545,6 +539,31 @@ class InntektsmeldingDtoMapperTest {
     }
 
     @Test
+    void skal_mappe_lpssystem_informasjon() {
+        var aktørId = new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(AKTØR_ID);
+        var original = InntektsmeldingDto.builder()
+            .medAktørId(aktørId)
+            .medYtelse(Ytelsetype.FORELDREPENGER)
+            .medArbeidsgiver(Arbeidsgiver.fra(ARBEIDSGIVER_IDENT))
+            .medKontaktperson(new InntektsmeldingDto.Kontaktperson("12345678", "Test"))
+            .medStartdato(START_DATO)
+            .medInntekt(MÅNED_INNTEKT)
+            .medKildesystem(Kildesystem.ARBEIDSGIVERPORTAL)
+            .medSøkteRefusjonsperioder(List.of())
+            .medBortfaltNaturalytelsePerioder(List.of())
+            .medEndringAvInntektÅrsaker(List.of())
+            .medAvsenderSystem(new InntektsmeldingDto.AvsenderSystem("TestSystem", "1.0"))
+            .build();
+
+        var entitet = InntektsmeldingDtoMapper.mapTilEntitet(original);
+        var roundtripped = InntektsmeldingDtoMapper.mapFraEntitet(entitet);
+
+        assertThat(roundtripped.getAvsenderSystem()).isNotNull();
+        assertThat(roundtripped.getAvsenderSystem().navn()).isNotNull().isEqualTo("TestSystem");
+        assertThat(roundtripped.getAvsenderSystem().versjon()).isEqualTo("1.0");
+    }
+
+    @Test
     void skal_mappe_dto_til_entitet_uten_kontaktperson() {
         var aktørId = new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(AKTØR_ID);
         var dto = InntektsmeldingDto.builder()
@@ -556,7 +575,7 @@ class InntektsmeldingDtoMapperTest {
             .medMånedRefusjon(new BigDecimal("25000"))
             .medOpphørsdatoRefusjon(START_DATO.plusMonths(6))
             .medOpprettetAv("bruker")
-            .medKildesystem(Kildesystem.API)
+            .medKildesystem(Kildesystem.LØNN_OG_PERSONAL_SYSTEM)
             .medSøkteRefusjonsperioder(List.of())
             .medBortfaltNaturalytelsePerioder(List.of())
             .medEndringAvInntektÅrsaker(List.of())
