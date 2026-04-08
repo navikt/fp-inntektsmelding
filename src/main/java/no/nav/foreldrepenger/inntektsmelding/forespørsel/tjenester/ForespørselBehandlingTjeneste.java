@@ -160,7 +160,7 @@ public class ForespørselBehandlingTjeneste {
                                    ? ForespørselTekster.lagBeskjedOmKvitteringFørsteInnsendingTekst()
                                    : ForespørselTekster.lagBeskjedOmOppdatertInntektsmelding();
                 String url = new StringBuilder(inntektsmeldingSkjemaLenke)
-                    .append("/server/api/")
+                    .append("/server/api")
                     .append(KvitteringRest.INNTEKTSMELDING_PATH)
                     .append("/")
                     .append(imUuid).toString();
@@ -203,7 +203,7 @@ public class ForespørselBehandlingTjeneste {
                 var merkelapp = ForespørselTekster.finnMerkelapp(forespørsel.ytelseType());
                 var beskjedTekst = ForespørselTekster.lagBeskjedOmOppdatertInntektsmelding();
                 String url = new StringBuilder(inntektsmeldingSkjemaLenke)
-                    .append("/server/api/")
+                    .append("/server/api")
                     .append(KvitteringRest.INNTEKTSMELDING_PATH)
                     .append("/")
                     .append(imUuid).toString();

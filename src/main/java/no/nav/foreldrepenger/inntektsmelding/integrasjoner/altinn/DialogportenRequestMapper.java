@@ -129,7 +129,7 @@ public class DialogportenRequestMapper {
             var innsendingTekst = førsteInnsending ? "Innsendt inntektsmelding" : "Oppdatert inntektsmelding";
             var contentAttachement = List.of(new DialogportenRequest.ContentValueItem(innsendingTekst, DialogportenRequest.NB));
             String url = new StringBuilder(inntektsmeldingSkjemaLenke)
-                .append("/server/api/")
+                .append("/server/api")
                 .append(KvitteringRest.INNTEKTSMELDING_PATH)
                 .append("/")
                 .append(imUuid).toString();
