@@ -70,7 +70,7 @@ public class InntektsmeldingApiMottakTjeneste {
         //todo avklare skal vi sjekke uansett om endringsårsak er oppgitt eller ikke?
         //Todo Avklaring: Hva skal vi gjøre om inntektskomponenten er nede og vi ikke får sjekket dette? La de sende inn, men sette til status forkastet med forklaring?
 
-        return new SendInntektsmeldingResponse(true, lagretIm.getInntektsmeldingUuid(),"Inntektsmelding mottatt, og brukes i saksbehandling.");
+        return new SendInntektsmeldingResponse(true, lagretIm.getInntektsmeldingUuid(),"Inntektsmelding mottatt");
     }
 
     private boolean inntektsmeldingerErLike(InntektsmeldingDto nyInntektsmelding, InntektsmeldingDto tidligereInntektsmelding) {
