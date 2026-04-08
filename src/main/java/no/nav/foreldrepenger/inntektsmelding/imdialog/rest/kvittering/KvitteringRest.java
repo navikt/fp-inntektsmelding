@@ -35,6 +35,7 @@ import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 @Path(KvitteringRest.BASE_PATH)
 public class KvitteringRest {
     public static final String BASE_PATH = "/bekreftelse";
+    public static final String INNTEKTSMELDING_PATH = BASE_PATH + "/inntektsmelding";
 
     private static final Logger LOG = LoggerFactory.getLogger(KvitteringRest.class);
     private static final String APPLICATION_PDF = "application/pdf";
@@ -56,7 +57,7 @@ public class KvitteringRest {
     }
 
     @GET
-    @Path("/inntektsmelding/{uuid}")
+    @Path(INNTEKTSMELDING_PATH + "/{uuid}")
     @Produces(APPLICATION_PDF)
     @Tilgangskontrollert
     public Response hentInnsendtInntektsmelding(@NotNull @Valid @PathParam("uuid") UUID inntektsmeldingUuid) {
@@ -72,7 +73,7 @@ public class KvitteringRest {
             var responseBuilder = Response.ok(pdf);
             responseBuilder.type(APPLICATION_PDF);
             responseBuilder.header(CONTENT_DISPOSITION, String.format("attachment; filename=inntektsmelding-%s-%s.pdf", ytelsetekst, siste12TegnFraUuid));
-            LOG.info("Returnerer pdf for inntektsmelding med id {}", inntektsmeldingUuid);
+                LOG.info("Returnerer pdf for inntektsmelding med id {}", inntektsmeldingUuid);
             return responseBuilder.build();
         }
     }
