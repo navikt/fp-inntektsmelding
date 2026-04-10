@@ -15,6 +15,7 @@ import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.Forespørsel
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
 import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.InntektsmeldingDialogDto;
 import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.SlåOppArbeidstakerResponseDto;
+import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.FellesGrunnlagTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.aareg.Arbeidsforhold;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.aareg.ArbeidsforholdTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.aareg.ArbeidstakerTjeneste;
@@ -43,6 +44,7 @@ public class GrunnlagDtoTjeneste {
     private InntektTjeneste inntektTjeneste;
     private ArbeidstakerTjeneste arbeidstakerTjeneste;
     private ArbeidsforholdTjeneste arbeidsforholdTjeneste;
+    private FellesGrunnlagTjeneste fellesGrunnlagTjeneste;
 
     GrunnlagDtoTjeneste() {
         // CDI
@@ -53,14 +55,15 @@ public class GrunnlagDtoTjeneste {
                                PersonTjeneste personTjeneste,
                                OrganisasjonTjeneste organisasjonTjeneste,
                                InntektTjeneste inntektTjeneste,
-                               ArbeidstakerTjeneste arbeidstakerTjeneste,
-                               ArbeidsforholdTjeneste arbeidsforholdTjeneste) {
+                               ArbeidstakerTjeneste arbeidstakerTjeneste, ArbeidsforholdTjeneste arbeidsforholdTjeneste,
+                               FellesGrunnlagTjeneste fellesGrunnlagTjeneste) {
         this.forespørselBehandlingTjeneste = forespørselBehandlingTjeneste;
         this.personTjeneste = personTjeneste;
         this.organisasjonTjeneste = organisasjonTjeneste;
         this.inntektTjeneste = inntektTjeneste;
         this.arbeidstakerTjeneste = arbeidstakerTjeneste;
         this.arbeidsforholdTjeneste = arbeidsforholdTjeneste;
+        this.fellesGrunnlagTjeneste = fellesGrunnlagTjeneste;
     }
 
     public InntektsmeldingDialogDto lagDialogDto(UUID forespørselUuid) {
@@ -222,7 +225,7 @@ public class GrunnlagDtoTjeneste {
     private InntektsmeldingDialogDto.InntektsopplysningerDto lagInntekterDto(PersonInfo personinfo,
                                                                              LocalDate skjæringstidspunkt,
                                                                              Arbeidsgiver arbeidsgiver) {
-        var harJobbetHeleBeregningsperioden = harJobbetHeleBeregningsperioden(personinfo, skjæringstidspunkt, arbeidsgiver);
+        var harJobbetHeleBeregningsperioden = fellesGrunnlagTjeneste.harJobbetHeleBeregningsperioden(personinfo, skjæringstidspunkt, arbeidsgiver);
         var inntektsopplysninger = inntektTjeneste.hentInntekt(personinfo.aktørId(), skjæringstidspunkt, LocalDate.now(),
             arbeidsgiver, harJobbetHeleBeregningsperioden);
         var inntekter = inntektsopplysninger.måneder()
@@ -233,13 +236,6 @@ public class GrunnlagDtoTjeneste {
                 i.status()))
             .toList();
         return new InntektsmeldingDialogDto.InntektsopplysningerDto(inntektsopplysninger.gjennomsnitt(), inntekter);
-    }
-
-    private boolean harJobbetHeleBeregningsperioden(PersonInfo personinfo, LocalDate skjæringstidspunkt, Arbeidsgiver arbeidsgiver) {
-        var førsteDagIBeregningsperiode = skjæringstidspunkt.minusMonths(3).withDayOfMonth(1);
-        return arbeidsforholdTjeneste.hentArbeidsforhold(personinfo.fødselsnummer(), skjæringstidspunkt).stream()
-            .filter(af -> af.organisasjonsnummer().equals(arbeidsgiver.orgnr()))
-            .anyMatch(af -> af.ansettelsesperiode().fom().isBefore(førsteDagIBeregningsperiode));
     }
 
     private InntektsmeldingDialogDto.OrganisasjonInfoResponseDto lagOrganisasjonDto(Arbeidsgiver arbeidsgiver) {
