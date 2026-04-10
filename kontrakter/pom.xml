@@ -13,7 +13,7 @@
 	<groupId>no.nav.foreldrepenger.inntektsmelding</groupId>
 	<artifactId>inntektsmelding-kontrakt</artifactId>
 	<version>1.0.0-SNAPSHOT</version>
-	<packaging>pom</packaging>
+	<packaging>jar</packaging>
 	<name>Inntektsmelding :: Kontrakt</name>
 
 	<properties>
