@@ -14,6 +14,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.FellesGrunnlagTjeneste;
+
 import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -69,6 +71,9 @@ class GrunnlagDtoTjenesteTest {
     private ArbeidstakerTjeneste arbeidstakerTjeneste;
     @Mock
     ArbeidsforholdTjeneste arbeidsforholdTjeneste;
+    @Mock
+    FellesGrunnlagTjeneste fellesGrunnlagTjeneste;
+    @Mock
 
     private GrunnlagDtoTjeneste grunnlagDtoTjeneste;
 
@@ -86,7 +91,7 @@ class GrunnlagDtoTjenesteTest {
     @BeforeEach
     void setUp() {
         grunnlagDtoTjeneste = new GrunnlagDtoTjeneste(forespørselBehandlingTjeneste, personTjeneste,
-            organisasjonTjeneste, inntektTjeneste, arbeidstakerTjeneste, arbeidsforholdTjeneste);
+            organisasjonTjeneste, inntektTjeneste, arbeidstakerTjeneste, arbeidsforholdTjeneste, fellesGrunnlagTjeneste);
     }
 
     @Test
@@ -113,11 +118,11 @@ class GrunnlagDtoTjenesteTest {
         var innsenderTelefonnummer = "+4711111111";
         when(personTjeneste.hentPersonFraIdent(PersonIdent.fra(INNMELDER_UID), forespørsel.getYtelseType())).thenReturn(
             new PersonInfo(innsenderNavn, null, innsenderEtternavn, new PersonIdent(INNMELDER_UID), null, stp, innsenderTelefonnummer, null));
-        when(arbeidsforholdTjeneste.hentArbeidsforhold(personIdent, stp))
-            .thenReturn(List.of(new Arbeidsforhold(orgnr, new Arbeidsforhold.Ansettelsesperiode(stp.minusMonths(6), stp.plusMonths(1)))));
+
         var inntekt1 = new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(52000), YearMonth.of(2024, 3), MånedslønnStatus.BRUKT_I_GJENNOMSNITT);
         var inntekt2 = new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(52000), YearMonth.of(2024, 4), MånedslønnStatus.BRUKT_I_GJENNOMSNITT);
         var inntekt3 = new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(52000), YearMonth.of(2024, 5), MånedslønnStatus.BRUKT_I_GJENNOMSNITT);
+        when(fellesGrunnlagTjeneste.harJobbetHeleBeregningsperioden(any(), any(), any())).thenReturn(true);
         when(inntektTjeneste.hentInntekt(AktørId.fra(forespørsel.getAktørId().getAktørId()), stp, stp,
             Arbeidsgiver.fra(forespørsel.getOrganisasjonsnummer()), true)).thenReturn(new Inntektsopplysninger(BigDecimal.valueOf(52000),
             forespørsel.getOrganisasjonsnummer(),
@@ -187,8 +192,7 @@ class GrunnlagDtoTjenesteTest {
         var innsenderTelefonnummer = "+4711111111";
         when(personTjeneste.hentPersonFraIdent(PersonIdent.fra(INNMELDER_UID), forespørsel.getYtelseType())).thenReturn(
             new PersonInfo(innsenderNavn, null, innsenderEtternavn, new PersonIdent(INNMELDER_UID), null, stp, innsenderTelefonnummer, null));
-        when(arbeidsforholdTjeneste.hentArbeidsforhold(personIdent, stp))
-            .thenReturn(List.of(new Arbeidsforhold(orgnr, new Arbeidsforhold.Ansettelsesperiode(stp.minusMonths(6), stp.plusMonths(1)))));
+        when(fellesGrunnlagTjeneste.harJobbetHeleBeregningsperioden(any(), any(), any())).thenReturn(true);
         when(inntektTjeneste.hentInntekt(AktørId.fra(forespørsel.getAktørId().getAktørId()), stp, stp,
             Arbeidsgiver.fra(forespørsel.getOrganisasjonsnummer()), true)).thenReturn(new Inntektsopplysninger(BigDecimal.valueOf(52000),
             forespørsel.getOrganisasjonsnummer(),
@@ -378,8 +382,7 @@ class GrunnlagDtoTjenesteTest {
         when(forespørselBehandlingTjeneste.hentForespørsel(forespørsel.getUuid())).thenReturn(Optional.of(ForespørselDtoMapper.mapFraEntitet(forespørsel)));
         when(organisasjonTjeneste.finnOrganisasjon(Arbeidsgiver.fra(orgnr))).thenReturn(new Organisasjon("Bedriften",
             orgnr));
-        when(arbeidsforholdTjeneste.hentArbeidsforhold(personIdent, eksFpFørsteUttaksdato))
-            .thenReturn(List.of(new Arbeidsforhold(orgnr, new Arbeidsforhold.Ansettelsesperiode(eksFpFørsteUttaksdato.minusMonths(6), eksFpFørsteUttaksdato.plusMonths(1)))));
+        when(fellesGrunnlagTjeneste.harJobbetHeleBeregningsperioden(any(), any(), any())).thenReturn(true);
         when(inntektTjeneste.hentInntekt(aktørId,
             eksFpFørsteUttaksdato,
             LocalDate.now(),// Act
@@ -423,6 +426,7 @@ class GrunnlagDtoTjenesteTest {
             organisasjonsnummer));
         when(arbeidsforholdTjeneste.hentArbeidsforhold(any(), any())).thenReturn(List.of(
             new Arbeidsforhold(organisasjonsnummer, new Arbeidsforhold.Ansettelsesperiode(ansattfraDato1, Tid.TIDENES_ENDE))));
+        when(fellesGrunnlagTjeneste.harJobbetHeleBeregningsperioden(any(), any(), any())).thenReturn(true);
         when(inntektTjeneste.hentInntekt(aktørId,
             eksFpFørsteUttaksdato,
             LocalDate.now(),
@@ -469,6 +473,7 @@ class GrunnlagDtoTjenesteTest {
         var gjennomsnittInntekt = sumInntekt.divide(BigDecimal.valueOf(3),2, RoundingMode.HALF_UP);
         when(arbeidsforholdTjeneste.hentArbeidsforhold(personIdent, førsteUttaksdato))
             .thenReturn(List.of());
+        when(fellesGrunnlagTjeneste.harJobbetHeleBeregningsperioden(any(), any(), any())).thenReturn(false);
         when(inntektTjeneste.hentInntekt(aktørId, skjæringstidspunkt, LocalDate.now(),
             Arbeidsgiver.fra(orgnr), false)).thenReturn(new Inntektsopplysninger(BigDecimal.valueOf(35000),
             orgnr,
@@ -521,8 +526,7 @@ class GrunnlagDtoTjenesteTest {
         when(forespørselBehandlingTjeneste.hentForespørsel(forespørsel.getUuid())).thenReturn(Optional.of(ForespørselDtoMapper.mapFraEntitet(forespørsel)));
         when(organisasjonTjeneste.finnOrganisasjon(Arbeidsgiver.fra(orgnr))).thenReturn(new Organisasjon("Bedriften",
             orgnr));
-        when(arbeidsforholdTjeneste.hentArbeidsforhold(personIdent, førsteUttaksdato))
-            .thenReturn(List.of(new Arbeidsforhold(orgnr, new Arbeidsforhold.Ansettelsesperiode(førsteUttaksdato.minusMonths(6), førsteUttaksdato.plusMonths(1)))));
+        when(fellesGrunnlagTjeneste.harJobbetHeleBeregningsperioden(any(), any(), any())).thenReturn(true);
         when(inntektTjeneste.hentInntekt(aktørId,
             førsteUttaksdato,
             LocalDate.now(),// Act
