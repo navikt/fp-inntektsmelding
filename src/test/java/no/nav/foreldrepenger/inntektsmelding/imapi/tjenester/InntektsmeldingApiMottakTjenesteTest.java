@@ -70,7 +70,7 @@ class InntektsmeldingApiMottakTjenesteTest {
     @Test
     void skal_returnere_feilrespons_når_forespørsel_ikke_finnes() {
         var foresporselUuid = UUID.randomUUID();
-        var inputDto = lagInntektsmeldingDto(null, true);
+        var inputDto = lagInntektsmeldingDto(null);
 
         when(forespørselBehandlingTjeneste.hentForespørsel(foresporselUuid)).thenReturn(Optional.empty());
 
@@ -89,7 +89,7 @@ class InntektsmeldingApiMottakTjenesteTest {
 
         when(forespørselBehandlingTjeneste.hentForespørsel(foresporselUuid)).thenReturn(Optional.of(forespørselDto));
 
-        var response = inntektsmeldingApiMottakTjeneste.mottaInntektsmelding(lagInntektsmeldingDto(null, true), foresporselUuid);
+        var response = inntektsmeldingApiMottakTjeneste.mottaInntektsmelding(lagInntektsmeldingDto(null), foresporselUuid);
 
         assertThat(response.success()).isFalse();
         assertThat(response.melding()).contains("status forkastet");
@@ -124,7 +124,7 @@ class InntektsmeldingApiMottakTjenesteTest {
     void skal_lagre_og_returnere_ok_når_inntektsmelding_er_ny() {
         var foresporselUuid = UUID.randomUUID();
         var imUuid = UUID.randomUUID();
-        var inputDto = lagInntektsmeldingDto(null, true);
+        var inputDto = lagInntektsmeldingDto(null);
         var forespørselDto = lagForespørselDto(foresporselUuid, null, ForespørselStatus.UNDER_BEHANDLING);
         var lagretIm = lagInntektsmeldingDtoMedUuid(imUuid, null, true);
         var inntektsopplysninger = new Inntektsopplysninger(BigDecimal.valueOf(45000), ORGNR, List.of(
@@ -148,7 +148,7 @@ class InntektsmeldingApiMottakTjenesteTest {
     void skal_lagre_og_returnere_ok_når_differanse_er_innenfor_grense() {
         var foresporselUuid = UUID.randomUUID();
         var imUuid = UUID.randomUUID();
-        var inputDto = lagInntektsmeldingDto(null, false);
+        var inputDto = lagInntektsmeldingDto(null);
         var forespørselDto = lagForespørselDto(foresporselUuid, null, ForespørselStatus.UNDER_BEHANDLING);
         var lagretIm = lagInntektsmeldingDtoMedUuid(imUuid, null, false);
         var inntektsopplysninger = new Inntektsopplysninger(BigDecimal.valueOf(45550), ORGNR, List.of(
@@ -171,9 +171,9 @@ class InntektsmeldingApiMottakTjenesteTest {
     @Test
     void skal_avvise_semantisk_like_inntektsmeldinger() {
         var foresporselUuid = UUID.randomUUID();
-        var inputDto = lagInntektsmeldingDto(null, true);
+        var inputDto = lagInntektsmeldingDto(null);
         var forespørselDto = lagForespørselDto(foresporselUuid, null, ForespørselStatus.UNDER_BEHANDLING);
-        var tidligereLikIm = lagInntektsmeldingDto(null, true);
+        var tidligereLikIm = lagInntektsmeldingDto(null);
 
         when(forespørselBehandlingTjeneste.hentForespørsel(foresporselUuid)).thenReturn(Optional.of(forespørselDto));
         when(inntektsmeldingTjeneste.hentSisteInntektsmelding(foresporselUuid)).thenReturn(tidligereLikIm);
@@ -190,9 +190,9 @@ class InntektsmeldingApiMottakTjenesteTest {
         var foresporselUuid = UUID.randomUUID();
         var imUuid = UUID.randomUUID();
         var nyStartdato = LocalDate.now();
-        var inputDto = lagInntektsmeldingDto(nyStartdato, true);
+        var inputDto = lagInntektsmeldingDto(nyStartdato);
         var forespørselDto = lagForespørselDto(foresporselUuid, nyStartdato, ForespørselStatus.UNDER_BEHANDLING);
-        var forrigeInnsendteIm = lagInntektsmeldingDto(null, true);
+        var forrigeInnsendteIm = lagInntektsmeldingDto(null);
         var nyInnsendtIm = lagInntektsmeldingDtoMedUuid(imUuid, nyStartdato, true);
         var inntektsopplysninger = new Inntektsopplysninger(BigDecimal.valueOf(45000), ORGNR, List.of(
             new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45000), YearMonth.of(2026, 1), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
@@ -225,7 +225,7 @@ class InntektsmeldingApiMottakTjenesteTest {
             .build();
     }
 
-    private static InntektsmeldingDto lagInntektsmeldingDto(LocalDate startdatoOverride, boolean skalHaEndringsårsak) {
+    private static InntektsmeldingDto lagInntektsmeldingDto(LocalDate startdatoOverride) {
         return lagInntektsmeldingDtoMedUuid(null, startdatoOverride, true);
     }
 
