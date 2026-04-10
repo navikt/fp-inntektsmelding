@@ -121,6 +121,30 @@ class InntektsmeldingApiMottakTjenesteTest {
     }
 
     @Test
+    void skal_avvise_inntektsmelding_når_ainntekt_har_nedetid() {
+        var foresporselUuid = UUID.randomUUID();
+        var imUuid = UUID.randomUUID();
+        var inputDto = lagInntektsmeldingDtoMedUuid(imUuid, null, false);
+        var forespørselDto = lagForespørselDto(foresporselUuid, null, ForespørselStatus.UNDER_BEHANDLING);
+        var inntektsopplysninger = new Inntektsopplysninger(BigDecimal.ZERO, ORGNR, List.of(
+            new Inntektsopplysninger.InntektMåned(BigDecimal.ZERO, YearMonth.of(2026, 1), MånedslønnStatus.NEDETID_AINNTEKT),
+            new Inntektsopplysninger.InntektMåned(BigDecimal.ZERO, YearMonth.of(2026, 2), MånedslønnStatus.NEDETID_AINNTEKT),
+            new Inntektsopplysninger.InntektMåned(BigDecimal.ZERO, YearMonth.of(2026, 3), MånedslønnStatus.NEDETID_AINNTEKT)));
+
+
+        when(forespørselBehandlingTjeneste.hentForespørsel(foresporselUuid)).thenReturn(Optional.of(forespørselDto));
+        when(inntektsmeldingTjeneste.hentSisteInntektsmelding(foresporselUuid)).thenReturn(null);
+        when(inntektTjeneste.hentInntekt(any(), any(), any(), any(), eq(false))).thenReturn(inntektsopplysninger);
+
+        var response = inntektsmeldingApiMottakTjeneste.mottaInntektsmelding(inputDto, foresporselUuid);
+
+        assertThat(response.success()).isFalse();
+        assertThat(response.inntektsmeldingUuid()).isNull();
+        assertThat(response.melding()).contains("nedetid");
+        verify(fellesMottakTjeneste, never()).lagreOgJournalførInntektsmelding(any(), any());
+    }
+
+    @Test
     void skal_lagre_og_returnere_ok_når_inntektsmelding_er_ny() {
         var foresporselUuid = UUID.randomUUID();
         var imUuid = UUID.randomUUID();
