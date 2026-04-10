@@ -12,6 +12,8 @@ import jakarta.inject.Inject;
 
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Fødselsnummer;
 
+import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.kvittering.KvitteringRest;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +40,8 @@ import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.konfig.Environment;
 import no.nav.foreldrepenger.konfig.KonfigVerdi;
 
+import static no.nav.foreldrepenger.inntektsmelding.imdialog.rest.kvittering.KvitteringRest.INNTEKTSMELDING_PATH;
+
 /**
  * Okrestreringsklasse som håndterer alle endringer på en forespørsel, og synkroniserer dette på tvers av intern database og eksterne systemer.
  */
@@ -59,12 +63,14 @@ public class ForespørselBehandlingTjeneste {
     }
 
     @Inject
-    public ForespørselBehandlingTjeneste(@KonfigVerdi(value = "inntektsmelding.skjema.lenke", defaultVerdi = "https://arbeidsgiver.nav.no/fp-im-dialog") String inntektsmeldingSkjemaLenke,
-                                         ForespørselTjeneste forespørselTjeneste,
-                                         MinSideArbeidsgiverTjeneste minSideArbeidsgiverTjeneste,
-                                         PersonTjeneste personTjeneste,
-                                         OrganisasjonTjeneste organisasjonTjeneste,
-                                         DialogportenKlient dialogportenKlient) {
+    public ForespørselBehandlingTjeneste(
+        @KonfigVerdi(value = "inntektsmelding.skjema.lenke", defaultVerdi = "https://arbeidsgiver.nav.no/fp-im-dialog")
+        String inntektsmeldingSkjemaLenke,
+        ForespørselTjeneste forespørselTjeneste,
+        MinSideArbeidsgiverTjeneste minSideArbeidsgiverTjeneste,
+        PersonTjeneste personTjeneste,
+        OrganisasjonTjeneste organisasjonTjeneste,
+        DialogportenKlient dialogportenKlient) {
         this.inntektsmeldingSkjemaLenke = inntektsmeldingSkjemaLenke;
         this.forespørselTjeneste = forespørselTjeneste;
         this.minSideArbeidsgiverTjeneste = minSideArbeidsgiverTjeneste;
@@ -150,9 +156,20 @@ public class ForespørselBehandlingTjeneste {
         if (!Environment.current().isProd()) {
             inntektsmeldingUuid.ifPresent(imUuid -> {
                 var merkelapp = ForespørselTekster.finnMerkelapp(forespørsel.ytelseType());
-                var beskjedTekst = erFørstegangsinnsending ? ForespørselTekster.lagBeskjedOmKvitteringFørsteInnsendingTekst() : ForespørselTekster.lagBeskjedOmOppdatertInntektsmelding();
-                var kvitteringUrl = URI.create(inntektsmeldingSkjemaLenke + "/server/api/ekstern/innsendt/inntektsmelding/" +  imUuid);
-                minSideArbeidsgiverTjeneste.sendNyBeskjedMedKvittering(foresporselUuid.toString(), merkelapp, foresporselUuid.toString(), arbeidsgiver.orgnr(), beskjedTekst, kvitteringUrl);
+                var beskjedTekst = erFørstegangsinnsending
+                                   ? ForespørselTekster.lagBeskjedOmKvitteringFørsteInnsendingTekst()
+                                   : ForespørselTekster.lagBeskjedOmOppdatertInntektsmelding();
+                String url = new StringBuilder(inntektsmeldingSkjemaLenke)
+                    .append("/server/api")
+                    .append(KvitteringRest.INNTEKTSMELDING_PATH)
+                    .append("/")
+                    .append(imUuid).toString();
+                minSideArbeidsgiverTjeneste.sendNyBeskjedMedKvittering(foresporselUuid.toString(),
+                    merkelapp,
+                    foresporselUuid.toString(),
+                    arbeidsgiver.orgnr(),
+                    beskjedTekst,
+                    URI.create(url));
             });
         }
         // Oppdaterer status i altinn dialogporten
@@ -185,8 +202,17 @@ public class ForespørselBehandlingTjeneste {
             inntektsmeldingUuid.ifPresent(imUuid -> {
                 var merkelapp = ForespørselTekster.finnMerkelapp(forespørsel.ytelseType());
                 var beskjedTekst = ForespørselTekster.lagBeskjedOmOppdatertInntektsmelding();
-                var kvitteringUrl = URI.create(inntektsmeldingSkjemaLenke + "/server/api/ekstern/kvittering/inntektsmelding/" +  imUuid);
-                minSideArbeidsgiverTjeneste.sendNyBeskjedMedKvittering(forespørsel.toString(), merkelapp, forespørsel.toString(), arbeidsgiver.orgnr(), beskjedTekst, kvitteringUrl);
+                String url = new StringBuilder(inntektsmeldingSkjemaLenke)
+                    .append("/server/api")
+                    .append(KvitteringRest.INNTEKTSMELDING_PATH)
+                    .append("/")
+                    .append(imUuid).toString();
+                minSideArbeidsgiverTjeneste.sendNyBeskjedMedKvittering(forespørsel.toString(),
+                    merkelapp,
+                    forespørsel.toString(),
+                    arbeidsgiver.orgnr(),
+                    beskjedTekst,
+                    URI.create(url));
             });
         }
 
@@ -216,7 +242,8 @@ public class ForespørselBehandlingTjeneste {
         LOG.info("Verdien for skalOppdatereArbeidsgiverNotifikasjon er: {}", skalOppdatereArbeidsgiverNotifikasjon);
 
         if (skalOppdatereArbeidsgiverNotifikasjon) {
-            Optional.ofNullable(eksisterendeForespørsel.oppgaveId()).ifPresent( oppgaveId -> minSideArbeidsgiverTjeneste.oppgaveUtgått(oppgaveId, OffsetDateTime.now()));
+            Optional.ofNullable(eksisterendeForespørsel.oppgaveId())
+                .ifPresent(oppgaveId -> minSideArbeidsgiverTjeneste.oppgaveUtgått(oppgaveId, OffsetDateTime.now()));
             // Oppdaterer status i arbeidsgiver-notifikasjon
             minSideArbeidsgiverTjeneste.ferdigstillSak(eksisterendeForespørsel.arbeidsgiverNotifikasjonSakId(), false);
         }
@@ -227,7 +254,8 @@ public class ForespørselBehandlingTjeneste {
         forespørselTjeneste.settForespørselTilUtgått(eksisterendeForespørsel.arbeidsgiverNotifikasjonSakId());
         //oppdaterer status til not applicable i altinn dialogporten
         Optional.ofNullable(eksisterendeForespørsel.dialogportenUuid()).ifPresent(dialogUuid ->
-            dialogportenKlient.settDialogTilUtgått(dialogUuid, lagSaksTittelForDialogporten(eksisterendeForespørsel.aktørId(), eksisterendeForespørsel.ytelseType())));
+            dialogportenKlient.settDialogTilUtgått(dialogUuid,
+                lagSaksTittelForDialogporten(eksisterendeForespørsel.aktørId(), eksisterendeForespørsel.ytelseType())));
 
         var msg = String.format("Setter forespørsel til utgått, orgnr: %s, stp: %s, saksnummer: %s, ytelse: %s",
             eksisterendeForespørsel.arbeidsgiver(),

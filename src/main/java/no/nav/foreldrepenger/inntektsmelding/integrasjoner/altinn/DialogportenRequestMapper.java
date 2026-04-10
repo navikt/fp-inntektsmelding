@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.LukkeÅrsak;
+import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.kvittering.KvitteringRest;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 
@@ -127,7 +128,11 @@ public class DialogportenRequestMapper {
         var apiActions = inntektsmeldingUuid.map(imUuid -> {
             var innsendingTekst = førsteInnsending ? "Innsendt inntektsmelding" : "Oppdatert inntektsmelding";
             var contentAttachement = List.of(new DialogportenRequest.ContentValueItem(innsendingTekst, DialogportenRequest.NB));
-            var url = inntektsmeldingSkjemaLenke + "/server/api/ekstern/innsendt/inntektsmelding/" + imUuid;
+            String url = new StringBuilder(inntektsmeldingSkjemaLenke)
+                .append("/server/api")
+                .append(KvitteringRest.INNTEKTSMELDING_PATH)
+                .append("/")
+                .append(imUuid).toString();
             var urlApi = new DialogportenRequest.Url(url, DialogportenRequest.TEXT_PLAIN, DialogportenRequest.AttachmentUrlConsumerType.Api);
             var urlGui = new DialogportenRequest.Url(url, DialogportenRequest.TEXT_PLAIN, DialogportenRequest.AttachmentUrlConsumerType.Gui);
             var attachment = new DialogportenRequest.Attachment(contentAttachement, List.of(urlApi, urlGui));
