@@ -20,7 +20,7 @@ import no.nav.foreldrepenger.inntektsmelding.felles.InnsendingstypeDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.InnsendingsårsakDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.KontaktpersonDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.OrganisasjonsnummerDto;
-import no.nav.foreldrepenger.inntektsmelding.felles.SøktRefusjonDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.RefusjonEndringDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.YtelseTypeDto;
 
 public record HentInntektsmeldingResponse(
