@@ -6,9 +6,14 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
+import no.nav.foreldrepenger.inntektsmelding.felles.EndringsårsakDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.EndringsårsakerDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.SøktRefusjonDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.YtelseTypeDto;
+import no.nav.foreldrepenger.inntektsmelding.imapi.inntektsmelding.SendInntektsmeldingRequest;
 import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.BortfaltNaturalytelse;
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.SendInntektsmeldingRequest;
 import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.SøktRefusjon;
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.YtelseType;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
@@ -45,7 +50,7 @@ public class InntektsmeldingApiMapper {
             .build();
     }
 
-    private static Optional<BigDecimal> finnFørsteRefusjon(List<SøktRefusjon> refusjonListe, LocalDate startdato) {
+    private static Optional<BigDecimal> finnFørsteRefusjon(List<SøktRefusjonDto> refusjonListe, LocalDate startdato) {
         if (refusjonListe.isEmpty()) {
             return Optional.empty();
         }
@@ -86,13 +91,12 @@ public class InntektsmeldingApiMapper {
     }
 
     private static List<InntektsmeldingDto.Endringsårsaker> mapEndringsårsaker(
-        List<no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.Endringsårsaker> endringsårsaker) {
-        return endringsårsaker.stream().map(InntektsmeldingApiMapper::mapEndringsårsaker).toList();
+        List<EndringsårsakerDto> endringsårsaker) {
+        return endringsårsaker.stream().map(InntektsmeldingApiMapper::mapEndringsårsak).toList();
     }
 
-    private static InntektsmeldingDto.Endringsårsaker mapEndringsårsaker(
-        no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.Endringsårsaker e) {
-        return new InntektsmeldingDto.Endringsårsaker(
+    private static Endringsårsak mapEndringsårsak(Endringsårsak e) {
+        return new no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.Endringsårsak(
             mapEndringsårsak(e.årsak()),
             e.fom(),
             e.tom(),
@@ -124,14 +128,14 @@ public class InntektsmeldingApiMapper {
 
     // ---- Enum-mapping fra imapi kontrakt til domene ----
 
-    private static Ytelsetype mapYtelsetype(no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.YtelseType eksternType) {
+    private static Ytelsetype mapYtelsetype(YtelseTypeDto eksternType) {
         return switch (eksternType) {
             case FORELDREPENGER -> Ytelsetype.FORELDREPENGER;
             case SVANGERSKAPSPENGER -> Ytelsetype.SVANGERSKAPSPENGER;
         };
     }
 
-    private static Endringsårsak mapEndringsårsak(no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.Endringsårsak eksternÅrsak) {
+    private static Endringsårsak mapEndringsårsak(EndringsårsakDto eksternÅrsak) {
         return switch (eksternÅrsak) {
             case PERMITTERING -> Endringsårsak.PERMITTERING;
             case NY_STILLING -> Endringsårsak.NY_STILLING;
