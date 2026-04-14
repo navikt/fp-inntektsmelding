@@ -54,6 +54,7 @@ public class InntektsmeldingMottakTjeneste {
         }
 
         var lagretIm = fellesMottakTjeneste.lagreOgJournalførInntektsmelding(mottattInntektsmeldingDto, forespørsel);
+        fellesMottakTjeneste.behandlerForespørsel(forespørsel, Optional.ofNullable(lagretIm.getInntektsmeldingUuid()));
 
         MetrikkerTjeneste.loggInnsendtInntektsmelding(lagretIm);
 
