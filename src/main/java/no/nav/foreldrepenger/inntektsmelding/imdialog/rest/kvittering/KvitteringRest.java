@@ -36,7 +36,7 @@ import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 public class KvitteringRest {
     public static final String BASE_PATH = "/bekreftelse";
     public static final String INNTEKTSMELDING_PATH = "/inntektsmelding";
-
+    public static final String INNTEKTSMELDING_FULL_PATH = BASE_PATH + INNTEKTSMELDING_PATH;
     private static final Logger LOG = LoggerFactory.getLogger(KvitteringRest.class);
     private static final String APPLICATION_PDF = "application/pdf";
     private static final String CONTENT_DISPOSITION = "Content-Disposition";

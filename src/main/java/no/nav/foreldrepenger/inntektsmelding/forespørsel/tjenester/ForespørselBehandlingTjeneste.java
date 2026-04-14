@@ -40,7 +40,6 @@ import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.konfig.Environment;
 import no.nav.foreldrepenger.konfig.KonfigVerdi;
 
-import static no.nav.foreldrepenger.inntektsmelding.imdialog.rest.kvittering.KvitteringRest.INNTEKTSMELDING_PATH;
 
 /**
  * Okrestreringsklasse som håndterer alle endringer på en forespørsel, og synkroniserer dette på tvers av intern database og eksterne systemer.
@@ -161,7 +160,7 @@ public class ForespørselBehandlingTjeneste {
                                    : ForespørselTekster.lagBeskjedOmOppdatertInntektsmelding();
                 String url = new StringBuilder(inntektsmeldingSkjemaLenke)
                     .append("/server/api")
-                    .append(KvitteringRest.INNTEKTSMELDING_PATH)
+                    .append(KvitteringRest.INNTEKTSMELDING_FULL_PATH)
                     .append("/")
                     .append(imUuid).toString();
                 minSideArbeidsgiverTjeneste.sendNyBeskjedMedKvittering(foresporselUuid.toString(),
@@ -204,7 +203,7 @@ public class ForespørselBehandlingTjeneste {
                 var beskjedTekst = ForespørselTekster.lagBeskjedOmOppdatertInntektsmelding();
                 String url = new StringBuilder(inntektsmeldingSkjemaLenke)
                     .append("/server/api")
-                    .append(KvitteringRest.INNTEKTSMELDING_PATH)
+                    .append(KvitteringRest.INNTEKTSMELDING_FULL_PATH)
                     .append("/")
                     .append(imUuid).toString();
                 minSideArbeidsgiverTjeneste.sendNyBeskjedMedKvittering(forespørsel.toString(),
