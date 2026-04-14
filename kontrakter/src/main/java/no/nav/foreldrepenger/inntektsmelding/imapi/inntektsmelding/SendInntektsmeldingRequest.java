@@ -10,7 +10,6 @@ import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
 
 import no.nav.foreldrepenger.inntektsmelding.felles.AvsenderSystemDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.BortfaltNaturalytelseDto;
@@ -18,7 +17,7 @@ import no.nav.foreldrepenger.inntektsmelding.felles.EndringsårsakerDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.FødselsnummerDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.KontaktpersonDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.OrganisasjonsnummerDto;
-import no.nav.foreldrepenger.inntektsmelding.felles.SøktRefusjonDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.RefusjonEndringDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.YtelseTypeDto;
 
 public record SendInntektsmeldingRequest(@NotNull @Valid UUID foresporselUuid,
@@ -29,7 +28,7 @@ public record SendInntektsmeldingRequest(@NotNull @Valid UUID foresporselUuid,
                                          @NotNull @Valid KontaktpersonDto kontaktperson,
                                          //kan inntekt noen gang være 0?
                                          @Min(0) @Max(Integer.MAX_VALUE) @Digits(integer = 20, fraction = 2) BigDecimal inntekt,
-                                         @NotNull List<@Valid SøktRefusjonDto> refusjon,
+                                         @NotNull List<@Valid RefusjonEndringDto> refusjon,
                                          @NotNull List<@Valid BortfaltNaturalytelseDto> bortfaltNaturalytelsePerioder,
                                          @NotNull List<@Valid EndringsårsakerDto> endringAvInntektÅrsaker,
                                          @NotNull @Valid AvsenderSystemDto avsenderSystem) {

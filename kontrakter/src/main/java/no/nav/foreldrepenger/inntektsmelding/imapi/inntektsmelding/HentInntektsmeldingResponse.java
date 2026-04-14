@@ -20,7 +20,7 @@ import no.nav.foreldrepenger.inntektsmelding.felles.InnsendingstypeDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.InnsendingsårsakDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.KontaktpersonDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.OrganisasjonsnummerDto;
-import no.nav.foreldrepenger.inntektsmelding.felles.SøktRefusjonDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.RefusjonEndringDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.YtelseTypeDto;
 
 public record HentInntektsmeldingResponse(
@@ -35,8 +35,10 @@ public record HentInntektsmeldingResponse(
     @NotNull @Valid InnsendingsårsakDto innsendingsårsak,
     @NotNull @Valid InnsendingstypeDto innsendingstype,
     @NotNull LocalDateTime innsendtTidspunkt,
+    @Min(0) @Max(Integer.MAX_VALUE) @Digits(integer = 20, fraction = 2) BigDecimal refusjonPrMnd,
+    LocalDate opphørsdatoRefusjon,
     @NotNull @Valid AvsenderSystemDto avsenderSystem,
-    @NotNull List<@Valid SøktRefusjonDto> søkteRefusjonsperioder,
+    @NotNull List<@Valid RefusjonEndringDto> refusjonsendringer,
     @NotNull List<@Valid BortfaltNaturalytelseDto> bortfaltNaturalytelsePerioder,
     @NotNull List<@Valid EndringsårsakerDto> endringAvInntektÅrsaker
 ) {
