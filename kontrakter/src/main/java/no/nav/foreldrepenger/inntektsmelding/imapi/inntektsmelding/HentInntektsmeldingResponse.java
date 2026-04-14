@@ -35,8 +35,10 @@ public record HentInntektsmeldingResponse(
     @NotNull @Valid InnsendingsårsakDto innsendingsårsak,
     @NotNull @Valid InnsendingstypeDto innsendingstype,
     @NotNull LocalDateTime innsendtTidspunkt,
+    @Min(0) @Max(Integer.MAX_VALUE) @Digits(integer = 20, fraction = 2) BigDecimal refusjonPrMnd,
+    LocalDate opphørsdatoRefusjon,
     @NotNull @Valid AvsenderSystemDto avsenderSystem,
-    @NotNull List<@Valid SøktRefusjonDto> søkteRefusjonsperioder,
+    @NotNull List<@Valid SøktRefusjonDto> refusjonsendringer,
     @NotNull List<@Valid BortfaltNaturalytelseDto> bortfaltNaturalytelsePerioder,
     @NotNull List<@Valid EndringsårsakerDto> endringAvInntektÅrsaker
 ) {

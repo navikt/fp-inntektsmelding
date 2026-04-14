@@ -10,7 +10,6 @@ import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
 
 import no.nav.foreldrepenger.inntektsmelding.felles.AvsenderSystemDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.BortfaltNaturalytelseDto;
