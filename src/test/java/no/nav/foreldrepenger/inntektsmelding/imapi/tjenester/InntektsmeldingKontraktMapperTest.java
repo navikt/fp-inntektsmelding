@@ -68,8 +68,6 @@ class InntektsmeldingKontraktMapperTest {
             .thenReturn(List.of(lagForespørselDto(forespørselUuid, STARTDATO)));
         when(personTjeneste.finnPersonIdentForAktørId(any()))
             .thenReturn(new PersonIdent(FNR));
-        when(inntektsmeldingTjeneste.hentInntektsmeldinger(forespørselUuid))
-            .thenReturn(List.of(inntektsmelding));
 
         var resultat = mapper.mapTilKontrakt(inntektsmelding);
 
@@ -94,72 +92,24 @@ class InntektsmeldingKontraktMapperTest {
             .thenReturn(List.of(lagForespørselDto(forespørselUuid, STARTDATO)));
         when(personTjeneste.finnPersonIdentForAktørId(any()))
             .thenReturn(new PersonIdent(FNR));
-        when(inntektsmeldingTjeneste.hentInntektsmeldinger(forespørselUuid))
-            .thenReturn(List.of(inntektsmelding));
-
         var resultat = mapper.mapTilKontrakt(inntektsmelding);
 
         assertThat(resultat.innsendingsårsak()).isEqualTo(InnsendingsårsakDto.NY);
-    }
-
-    @Test
-    void skal_sette_innsendingsårsak_endring_når_flere_inntektsmeldinger_og_ikke_eldste() {
-        var imUuid = UUID.randomUUID();
-        var eldsteImUuid = UUID.randomUUID();
-        var forespørselUuid = UUID.randomUUID();
-        var inntektsmelding = lagInntektsmeldingDto(imUuid, STARTDATO, Kildesystem.FPSAK);
-        var eldsteInntektsmelding = lagInntektsmeldingDto(eldsteImUuid, STARTDATO, Kildesystem.FPSAK);
-
-        when(forespørselTjeneste.finnForespørsler(any(), any(), eq(ORGNR)))
-            .thenReturn(List.of(lagForespørselDto(forespørselUuid, STARTDATO)));
-        when(personTjeneste.finnPersonIdentForAktørId(any()))
-            .thenReturn(new PersonIdent(FNR));
-        // Sortert nyeste først, eldste sist
-        when(inntektsmeldingTjeneste.hentInntektsmeldinger(forespørselUuid))
-            .thenReturn(List.of(inntektsmelding, eldsteInntektsmelding));
-
-        var resultat = mapper.mapTilKontrakt(inntektsmelding);
-
-        assertThat(resultat.innsendingsårsak()).isEqualTo(InnsendingsårsakDto.ENDRING);
     }
 
     @Test
     void skal_sette_innsendingsårsak_ny_når_flere_inntektsmeldinger_og_er_eldste() {
         var eldsteImUuid = UUID.randomUUID();
-        var nyereImUuid = UUID.randomUUID();
         var forespørselUuid = UUID.randomUUID();
         var eldsteInntektsmelding = lagInntektsmeldingDto(eldsteImUuid, STARTDATO, Kildesystem.FPSAK);
-        var nyereInntektsmelding = lagInntektsmeldingDto(nyereImUuid, STARTDATO, Kildesystem.FPSAK);
 
         when(forespørselTjeneste.finnForespørsler(any(), any(), eq(ORGNR)))
             .thenReturn(List.of(lagForespørselDto(forespørselUuid, STARTDATO)));
         when(personTjeneste.finnPersonIdentForAktørId(any()))
             .thenReturn(new PersonIdent(FNR));
-        // Sortert nyeste først, eldste sist
-        when(inntektsmeldingTjeneste.hentInntektsmeldinger(forespørselUuid))
-            .thenReturn(List.of(nyereInntektsmelding, eldsteInntektsmelding));
-
         var resultat = mapper.mapTilKontrakt(eldsteInntektsmelding);
 
         assertThat(resultat.innsendingsårsak()).isEqualTo(InnsendingsårsakDto.NY);
-    }
-
-    @Test
-    void skal_sette_innsendingstype_arbeidsgiver_initiert_for_lps() {
-        var imUuid = UUID.randomUUID();
-        var forespørselUuid = UUID.randomUUID();
-        var inntektsmelding = lagInntektsmeldingDto(imUuid, STARTDATO, Kildesystem.LØNN_OG_PERSONAL_SYSTEM);
-
-        when(forespørselTjeneste.finnForespørsler(any(), any(), eq(ORGNR)))
-            .thenReturn(List.of(lagForespørselDto(forespørselUuid, STARTDATO)));
-        when(personTjeneste.finnPersonIdentForAktørId(any()))
-            .thenReturn(new PersonIdent(FNR));
-        when(inntektsmeldingTjeneste.hentInntektsmeldinger(forespørselUuid))
-            .thenReturn(List.of(inntektsmelding));
-
-        var resultat = mapper.mapTilKontrakt(inntektsmelding);
-
-        assertThat(resultat.innsendingstype()).isEqualTo(InnsendingstypeDto.ARBEIDSGIVER_INITIERT);
     }
 
     @Test
@@ -172,28 +122,10 @@ class InntektsmeldingKontraktMapperTest {
             .thenReturn(List.of(lagForespørselDto(forespørselUuid, STARTDATO)));
         when(personTjeneste.finnPersonIdentForAktørId(any()))
             .thenReturn(new PersonIdent(FNR));
-        when(inntektsmeldingTjeneste.hentInntektsmeldinger(forespørselUuid))
-            .thenReturn(List.of(inntektsmelding));
 
         var resultat = mapper.mapTilKontrakt(inntektsmelding);
 
         assertThat(resultat.innsendingstype()).isEqualTo(InnsendingstypeDto.FORESPURT);
-    }
-
-    @Test
-    void skal_sette_forespørselUuid_null_når_ingen_forespørsel_finnes() {
-        var imUuid = UUID.randomUUID();
-        var inntektsmelding = lagInntektsmeldingDto(imUuid, STARTDATO, Kildesystem.FPSAK);
-
-        when(forespørselTjeneste.finnForespørsler(any(), any(), eq(ORGNR)))
-            .thenReturn(List.of());
-        when(personTjeneste.finnPersonIdentForAktørId(any()))
-            .thenReturn(new PersonIdent(FNR));
-
-        var resultat = mapper.mapTilKontrakt(inntektsmelding);
-
-        assertThat(resultat.forespørselUuid()).isNull();
-        assertThat(resultat.innsendingsårsak()).isEqualTo(InnsendingsårsakDto.NY);
     }
 
     @Test
@@ -202,7 +134,7 @@ class InntektsmeldingKontraktMapperTest {
         var inntektsmelding = lagInntektsmeldingDto(imUuid, STARTDATO, Kildesystem.FPSAK);
 
         when(forespørselTjeneste.finnForespørsler(any(), any(), eq(ORGNR)))
-            .thenReturn(List.of());
+            .thenReturn(List.of(lagForespørselDto(UUID.randomUUID(), STARTDATO)));
         when(personTjeneste.finnPersonIdentForAktørId(any()))
             .thenReturn(new PersonIdent(FNR));
 
@@ -221,7 +153,7 @@ class InntektsmeldingKontraktMapperTest {
         var inntektsmelding = lagInntektsmeldingDto(imUuid, STARTDATO, Kildesystem.FPSAK);
 
         when(forespørselTjeneste.finnForespørsler(any(), any(), eq(ORGNR)))
-            .thenReturn(List.of());
+            .thenReturn(List.of(lagForespørselDto(UUID.randomUUID(), STARTDATO)));
         when(personTjeneste.finnPersonIdentForAktørId(any()))
             .thenReturn(new PersonIdent(FNR));
 
@@ -240,7 +172,7 @@ class InntektsmeldingKontraktMapperTest {
         var inntektsmelding = lagInntektsmeldingDto(imUuid, STARTDATO, Kildesystem.FPSAK);
 
         when(forespørselTjeneste.finnForespørsler(any(), any(), eq(ORGNR)))
-            .thenReturn(List.of());
+            .thenReturn(List.of(lagForespørselDto(UUID.randomUUID(), STARTDATO)));
         when(personTjeneste.finnPersonIdentForAktørId(any()))
             .thenReturn(new PersonIdent(FNR));
 
@@ -258,7 +190,7 @@ class InntektsmeldingKontraktMapperTest {
         var inntektsmelding = lagInntektsmeldingDto(imUuid, STARTDATO, Kildesystem.FPSAK);
 
         when(forespørselTjeneste.finnForespørsler(any(), any(), eq(ORGNR)))
-            .thenReturn(List.of());
+            .thenReturn(List.of(lagForespørselDto(UUID.randomUUID(), STARTDATO)));
         when(personTjeneste.finnPersonIdentForAktørId(any()))
             .thenReturn(new PersonIdent(FNR));
 
@@ -275,7 +207,7 @@ class InntektsmeldingKontraktMapperTest {
         var inntektsmelding = lagInntektsmeldingDtoUtenAvsenderSystem(imUuid);
 
         when(forespørselTjeneste.finnForespørsler(any(), any(), eq(ORGNR)))
-            .thenReturn(List.of());
+            .thenReturn(List.of(lagForespørselDto(UUID.randomUUID(), STARTDATO)));
         when(personTjeneste.finnPersonIdentForAktørId(any()))
             .thenReturn(new PersonIdent(FNR));
 

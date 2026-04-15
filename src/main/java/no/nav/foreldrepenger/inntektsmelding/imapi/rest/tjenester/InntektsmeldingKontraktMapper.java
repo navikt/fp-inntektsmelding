@@ -3,6 +3,9 @@ package no.nav.foreldrepenger.inntektsmelding.imapi.rest.tjenester;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+
 import no.nav.foreldrepenger.inntektsmelding.felles.AvsenderSystemDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.BortfaltNaturalytelseDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.EndringsårsakDto;
@@ -21,6 +24,7 @@ import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 
 @ApplicationScoped
 public class InntektsmeldingKontraktMapper {
@@ -54,34 +58,19 @@ public class InntektsmeldingKontraktMapper {
             .stream()
             .filter(f -> inntektsmelding.getStartdato().equals(f.førsteUttaksdato()))
             .findFirst();
-        var forespørselUuid = forespørselOpt.map(f -> f.uuid()).orElse(null);
+        var forespørselUuid = forespørselOpt.orElseThrow().uuid();
 
         // Slå opp fødselsnummer fra aktørId
         var fnr = personTjeneste.finnPersonIdentForAktørId(inntektsmelding.getAktørId());
 
-        // Utled innsendingsårsak: NY om dette er den første (eldste) inntektsmeldingen for forespørselen
-        var innsendingsårsak = InnsendingsårsakDto.NY;
-        if (forespørselUuid != null) {
-            var alleInntektsmeldinger = inntektsmeldingTjeneste.hentInntektsmeldinger(forespørselUuid);
-            if (alleInntektsmeldinger.size() > 1) {
-                // Sortering er nyeste først, så den eldste er sist i listen
-                var eldste = alleInntektsmeldinger.getLast();
-                innsendingsårsak = eldste.getInntektsmeldingUuid().equals(inntektsmelding.getInntektsmeldingUuid())
-                    ? InnsendingsårsakDto.NY
-                    : InnsendingsårsakDto.ENDRING;
-            }
-        }
-
-        // Utled innsendingstype fra kildesystem
-        var innsendingstype = inntektsmelding.getKildesystem() == Kildesystem.LØNN_OG_PERSONAL_SYSTEM
-            ? InnsendingstypeDto.ARBEIDSGIVER_INITIERT
-            : InnsendingstypeDto.FORESPURT;
+        var innsendingsårsak = InnsendingsårsakDto.NY; // TODO trenger vi noe annet her?
+        var innsendingstype = InnsendingstypeDto.FORESPURT;
 
         return new HentInntektsmeldingResponse(
             inntektsmelding.getInntektsmeldingUuid(),
             forespørselUuid,
             new FødselsnummerDto(fnr.getIdent()),
-            YtelseTypeDto.valueOf(inntektsmelding.getYtelse().name()),
+            mapKodeverk(inntektsmelding.getYtelse()),
             new OrganisasjonsnummerDto(inntektsmelding.getArbeidsgiver().orgnr()),
             new KontaktpersonDto(inntektsmelding.getKontaktperson().navn(), inntektsmelding.getKontaktperson().telefonnummer()),
             inntektsmelding.getStartdato(),
@@ -104,5 +93,12 @@ public class InntektsmeldingKontraktMapper {
                 .map(e -> new EndringsårsakerDto(EndringsårsakDto.valueOf(e.årsak().name()), e.fom(), e.tom(), e.bleKjentFom()))
                 .toList()
         );
+    }
+
+    private YtelseTypeDto mapKodeverk(Ytelsetype ytelse) {
+        return switch (ytelse) {
+            case FORELDREPENGER -> YtelseTypeDto.FORELDREPENGER;
+            case SVANGERSKAPSPENGER -> YtelseTypeDto.SVANGERSKAPSPENGER;
+        };
     }
 }
