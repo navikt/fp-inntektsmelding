@@ -220,7 +220,6 @@ class InntektsmeldingMottakTjenesteTest {
     void skal_kunne_motta_endring_av_arbeidsgiverinitert_uregistrert_inntektsmelding() {
         // Arrange
         var uuid = UUID.randomUUID();
-        var ytelse = Ytelsetype.FORELDREPENGER;
         var aktørId = AktørId.fra("9999999999999");
         var orgnr = "999999999";
         var startdato = LocalDate.now();
@@ -228,8 +227,6 @@ class InntektsmeldingMottakTjenesteTest {
 
         var opphørsdato = LocalDate.now().plusMonths(5);
         var nyInntekt = BigDecimal.valueOf(200);
-
-        var im = lagInntektsmeldingDto(aktørId,Arbeidsgiver.fra(orgnr), startdato, nyInntekt,List.of(), List.of(), List.of(), nyInntekt,opphørsdato.minusDays(1));
 
         when(forespørselBehandlingTjeneste.hentForespørsel(uuid)).thenReturn(Optional.of(eksisterendeForespørselDto));
 
