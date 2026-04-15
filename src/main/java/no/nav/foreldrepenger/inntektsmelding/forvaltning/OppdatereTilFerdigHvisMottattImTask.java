@@ -8,6 +8,8 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -96,7 +98,7 @@ public class OppdatereTilFerdigHvisMottattImTask implements ProsessTaskHandler {
         query.setParameter("fom", fom);
         query.setParameter("tom", tom);
         query.setParameter("dato", LocalDate.of(2026, 4, 6).atStartOfDay());
-        query.setParameter("status", "UNDER_BEHANDLING");
+        query.setParameter("status", ForespørselStatus.UNDER_BEHANDLING);
 
         query.setMaxResults(50);
         return query.getResultList();
