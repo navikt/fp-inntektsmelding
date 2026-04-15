@@ -31,22 +31,12 @@ public class InntektsmeldingKontraktMapper {
 
     private final ForespørselTjeneste forespørselTjeneste;
     private final PersonTjeneste personTjeneste;
-    private final InntektsmeldingTjeneste inntektsmeldingTjeneste;
-
-    InntektsmeldingKontraktMapper() {
-        // CDI
-        this.forespørselTjeneste = null;
-        this.personTjeneste = null;
-        this.inntektsmeldingTjeneste = null;
-    }
 
     @Inject
     public InntektsmeldingKontraktMapper(ForespørselTjeneste forespørselTjeneste,
-                                     PersonTjeneste personTjeneste,
-                                     InntektsmeldingTjeneste inntektsmeldingTjeneste) {
+                                     PersonTjeneste personTjeneste) {
         this.forespørselTjeneste = forespørselTjeneste;
         this.personTjeneste = personTjeneste;
-        this.inntektsmeldingTjeneste = inntektsmeldingTjeneste;
     }
 
     public HentInntektsmeldingResponse mapTilKontrakt(InntektsmeldingDto inntektsmelding) {

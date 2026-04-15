@@ -23,7 +23,6 @@ import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.Forespørsel
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.imapi.rest.tjenester.InntektsmeldingKontraktMapper;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
-import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste;
@@ -48,14 +47,12 @@ class InntektsmeldingKontraktMapperTest {
     private ForespørselTjeneste forespørselTjeneste;
     @Mock
     private PersonTjeneste personTjeneste;
-    @Mock
-    private InntektsmeldingTjeneste inntektsmeldingTjeneste;
 
     private InntektsmeldingKontraktMapper mapper;
 
     @BeforeEach
     void setup() {
-        mapper = new InntektsmeldingKontraktMapper(forespørselTjeneste, personTjeneste, inntektsmeldingTjeneste);
+        mapper = new InntektsmeldingKontraktMapper(forespørselTjeneste, personTjeneste);
     }
 
     @Test
