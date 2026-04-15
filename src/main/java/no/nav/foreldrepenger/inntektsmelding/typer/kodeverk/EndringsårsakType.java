@@ -5,7 +5,7 @@ import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.lager.DatabaseKode;
 /**
  * Hvorfor inntekt i inntektsmeldingen er endret fra snittet de siste tre måneder
  */
-public enum Endringsårsak implements DatabaseKode {
+public enum EndringsårsakType implements DatabaseKode {
     PERMITTERING("Permittert"),
     NY_STILLING("Ny stilling"),
     NY_STILLINGSPROSENT("Ny stillingsprosent"),
@@ -23,7 +23,7 @@ public enum Endringsårsak implements DatabaseKode {
 
     private final String beskrivelse;
 
-    Endringsårsak(String beskrivelse) {
+    EndringsårsakType(String beskrivelse) {
         this.beskrivelse = beskrivelse;
     }
 

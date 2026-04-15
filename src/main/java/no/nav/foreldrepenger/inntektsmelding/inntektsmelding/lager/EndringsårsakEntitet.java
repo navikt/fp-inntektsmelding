@@ -15,7 +15,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
-import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Endringsårsak;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.EndringsårsakType;
 
 @Entity(name = "EndringsårsakEntitet")
 @Table(name = "ENDRINGSAARSAK")
@@ -31,7 +31,7 @@ public class EndringsårsakEntitet {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "aarsak", nullable = false)
-    private Endringsårsak årsak;
+    private EndringsårsakType årsak;
 
     @Column(name = "fom")
     private LocalDate fom;
@@ -46,7 +46,7 @@ public class EndringsårsakEntitet {
         // Hibernate
     }
 
-    public Endringsårsak getÅrsak() {
+    public EndringsårsakType getÅrsak() {
         return årsak;
     }
 
@@ -83,7 +83,7 @@ public class EndringsårsakEntitet {
     public static class Builder {
         private final EndringsårsakEntitet kladd = new EndringsårsakEntitet();
 
-        public Builder medÅrsak(Endringsårsak årsak) {
+        public Builder medÅrsak(EndringsårsakType årsak) {
             kladd.årsak = årsak;
             return this;
         }
@@ -104,7 +104,7 @@ public class EndringsårsakEntitet {
         }
 
         public EndringsårsakEntitet build() {
-            Objects.requireNonNull(kladd.årsak, "Endringsårsak");
+            Objects.requireNonNull(kladd.årsak, "EndringsårsakType");
             return kladd;
         }
     }

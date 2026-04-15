@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.EndringsårsakType;
 import org.junit.jupiter.api.Test;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
@@ -24,7 +25,6 @@ import no.nav.foreldrepenger.inntektsmelding.typer.dto.KodeverkMapper;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.NaturalytelsetypeDto;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.YtelseTypeDto;
-import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Endringsårsak;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.NaturalytelseType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
@@ -163,7 +163,7 @@ class InntektsmeldingMapperTest {
         assertThat(dto.getKontaktperson().telefonnummer()).isEqualTo(request.kontaktperson().telefonnummer());
 
         assertThat(dto.getEndringAvInntektÅrsaker()).hasSize(1);
-        assertThat(dto.getEndringAvInntektÅrsaker().get(0).årsak()).isEqualTo(Endringsårsak.TARIFFENDRING);
+        assertThat(dto.getEndringAvInntektÅrsaker().get(0).årsak()).isEqualTo(EndringsårsakType.TARIFFENDRING);
         assertThat(dto.getEndringAvInntektÅrsaker().get(0).bleKjentFom()).isEqualTo(LocalDate.now());
 
         assertThat(dto.getBortfaltNaturalytelsePerioder()).hasSize(1);
@@ -201,8 +201,8 @@ class InntektsmeldingMapperTest {
                 new InntektsmeldingDto.BortfaltNaturalytelse(LocalDate.now(), LocalDate.now().plusMonths(1), NaturalytelseType.BIL, new BigDecimal(77))
             ))
             .medEndringAvInntektÅrsaker(List.of(
-                new InntektsmeldingDto.Endringsårsaker(Endringsårsak.FERIE, LocalDate.now(), LocalDate.now().plusDays(10), null),
-                new InntektsmeldingDto.Endringsårsaker(Endringsårsak.TARIFFENDRING, null, null, LocalDate.now())
+                new InntektsmeldingDto.Endringsårsak(EndringsårsakType.FERIE, LocalDate.now(), LocalDate.now().plusDays(10), null),
+                new InntektsmeldingDto.Endringsårsak(EndringsårsakType.TARIFFENDRING, null, null, LocalDate.now())
             ))
             .medSøkteRefusjonsperioder(List.of())
             .build();
@@ -261,8 +261,8 @@ class InntektsmeldingMapperTest {
                 new InntektsmeldingDto.BortfaltNaturalytelse(LocalDate.now(), LocalDate.now().plusMonths(1), NaturalytelseType.BIL, new BigDecimal(77))
             ))
             .medEndringAvInntektÅrsaker(List.of(
-                new InntektsmeldingDto.Endringsårsaker(Endringsårsak.FERIE, LocalDate.now(), LocalDate.now().plusDays(10), null),
-                new InntektsmeldingDto.Endringsårsaker(Endringsårsak.TARIFFENDRING, null, null, LocalDate.now())
+                new InntektsmeldingDto.Endringsårsak(EndringsårsakType.FERIE, LocalDate.now(), LocalDate.now().plusDays(10), null),
+                new InntektsmeldingDto.Endringsårsak(EndringsårsakType.TARIFFENDRING, null, null, LocalDate.now())
             ))
             .build();
 
@@ -322,8 +322,8 @@ class InntektsmeldingMapperTest {
                 new InntektsmeldingDto.BortfaltNaturalytelse(LocalDate.now(), LocalDate.now().plusMonths(1), NaturalytelseType.BIL, new BigDecimal(77))
             ))
             .medEndringAvInntektÅrsaker(List.of(
-                new InntektsmeldingDto.Endringsårsaker(Endringsårsak.FERIE, LocalDate.now(), LocalDate.now().plusDays(10), null),
-                new InntektsmeldingDto.Endringsårsaker(Endringsårsak.TARIFFENDRING, null, null, LocalDate.now())
+                new InntektsmeldingDto.Endringsårsak(EndringsårsakType.FERIE, LocalDate.now(), LocalDate.now().plusDays(10), null),
+                new InntektsmeldingDto.Endringsårsak(EndringsårsakType.TARIFFENDRING, null, null, LocalDate.now())
             ))
             .build();
 

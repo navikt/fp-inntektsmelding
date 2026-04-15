@@ -3,11 +3,11 @@ package no.nav.foreldrepenger.inntektsmelding.typer.dto;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.EndringsårsakType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
-import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Endringsårsak;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.NaturalytelseType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
@@ -54,8 +54,8 @@ class KodeverkMapperTest {
     }
 
     @ParameterizedTest
-    @EnumSource(Endringsårsak.class)
-    void skal_mappe_endringsårsak_domene_til_dto(Endringsårsak domene) {
+    @EnumSource(EndringsårsakType.class)
+    void skal_mappe_endringsårsak_domene_til_dto(EndringsårsakType domene) {
         var resultat = KodeverkMapper.mapEndringsårsak(domene);
         assertThat(resultat).isNotNull();
         assertThat(resultat.name()).isEqualTo(domene.name());

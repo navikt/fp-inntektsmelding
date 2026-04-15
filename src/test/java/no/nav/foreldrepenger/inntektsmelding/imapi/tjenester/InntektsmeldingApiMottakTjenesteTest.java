@@ -26,7 +26,7 @@ import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
-import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Endringsårsak;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.EndringsårsakType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
@@ -36,8 +36,6 @@ import no.nav.vedtak.konfig.Tid;
 
 @ExtendWith(MockitoExtension.class)
 class InntektsmeldingApiMottakTjenesteTest {
-
-    private static final String FNR = "12345678901";
     private static final String ORGNR = "999999999";
     private static final String AKTØR_ID = "1234567891011";
 
@@ -175,7 +173,7 @@ class InntektsmeldingApiMottakTjenesteTest {
                 new InntektsmeldingDto.BortfaltNaturalytelse(startdato.plusDays(2), Tid.TIDENES_ENDE, NaturalytelseType.BIL, BigDecimal.valueOf(1200))
             ))
             .medEndringAvInntektÅrsaker(List.of(
-                new InntektsmeldingDto.Endringsårsaker(Endringsårsak.TARIFFENDRING, null, null, startdato.plusDays(1))
+                new InntektsmeldingDto.Endringsårsak(EndringsårsakType.TARIFFENDRING, null, null, startdato.plusDays(1))
             ))
             .medKildesystem(Kildesystem.LØNN_OG_PERSONAL_SYSTEM)
             .medAvsenderSystem(new InntektsmeldingDto.AvsenderSystem("test-lps", "1.0.0"));
