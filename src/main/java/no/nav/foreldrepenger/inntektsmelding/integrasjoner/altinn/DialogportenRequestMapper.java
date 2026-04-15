@@ -130,7 +130,7 @@ public class DialogportenRequestMapper {
             var contentAttachement = List.of(new DialogportenRequest.ContentValueItem(innsendingTekst, DialogportenRequest.NB));
             String url = new StringBuilder(inntektsmeldingSkjemaLenke)
                 .append("/server/api")
-                .append(KvitteringRest.INNTEKTSMELDING_PATH)
+                .append(KvitteringRest.INNTEKTSMELDING_FULL_PATH)
                 .append("/")
                 .append(imUuid).toString();
             var urlApi = new DialogportenRequest.Url(url, DialogportenRequest.TEXT_PLAIN, DialogportenRequest.AttachmentUrlConsumerType.Api);
