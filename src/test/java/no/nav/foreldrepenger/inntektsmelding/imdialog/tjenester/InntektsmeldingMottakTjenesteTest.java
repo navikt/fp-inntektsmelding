@@ -268,7 +268,7 @@ class InntektsmeldingMottakTjenesteTest {
     private static InntektsmeldingDto lagInntektsmeldingDto(AktørId aktørId, Arbeidsgiver arbeidsgiver, LocalDate startdato, BigDecimal inntekt,
                                                             List<InntektsmeldingDto.SøktRefusjon> søkteRefusjonsperioder,
                                                             List<InntektsmeldingDto.BortfaltNaturalytelse> bortfaltNaturalytelsePerioder,
-                                                            List<InntektsmeldingDto.Endringsårsaker> endringAvInntektÅrsaker,
+                                                            List<InntektsmeldingDto.Endringsårsak> endringAvInntektÅrsaker,
                                                             BigDecimal månedRefusjon, LocalDate opphørsdatoRefusjon) {
         var builder = InntektsmeldingDto.builder()
             .medAktørId(aktørId)
