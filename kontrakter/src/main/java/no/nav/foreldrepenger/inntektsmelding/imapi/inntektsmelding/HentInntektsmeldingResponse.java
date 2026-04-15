@@ -32,8 +32,6 @@ public record HentInntektsmeldingResponse(
     @NotNull @Valid KontaktpersonDto kontaktperson,
     @NotNull LocalDate startdato,
     @NotNull @Min(0) @Max(Integer.MAX_VALUE) @Digits(integer = 20, fraction = 2) BigDecimal inntekt,
-    @NotNull @Valid InnsendingsårsakDto innsendingsårsak,
-    @NotNull @Valid InnsendingstypeDto innsendingstype,
     @NotNull LocalDateTime innsendtTidspunkt,
     @Min(0) @Max(Integer.MAX_VALUE) @Digits(integer = 20, fraction = 2) BigDecimal refusjonPrMnd,
     LocalDate opphørsdatoRefusjon,
