@@ -82,7 +82,7 @@ class OppdatereTilFerdigHvisMottattImTaskTest {
         when(query.setParameter("fom", 1L)).thenReturn(query);
         when(query.setParameter("tom", 10L)).thenReturn(query);
         when(query.setParameter("dato", LocalDate.of(2026, 4, 6).atStartOfDay())).thenReturn(query);
-        when(query.setParameter("status", "UNDER_BEHANDLING")).thenReturn(query);
+        when(query.setParameter("status", ForespørselStatus.UNDER_BEHANDLING)).thenReturn(query);
         when(query.setMaxResults(50)).thenReturn(query);
         when(query.getResultList()).thenReturn(List.of(forespørsel));
 
@@ -127,7 +127,7 @@ class OppdatereTilFerdigHvisMottattImTaskTest {
         when(query.setParameter("fom", 1L)).thenReturn(query);
         when(query.setParameter("tom", 10L)).thenReturn(query);
         when(query.setParameter("dato", LocalDate.of(2026, 4, 6).atStartOfDay())).thenReturn(query);
-        when(query.setParameter("status", "UNDER_BEHANDLING")).thenReturn(query);
+        when(query.setParameter("status", ForespørselStatus.UNDER_BEHANDLING)).thenReturn(query);
         when(query.setMaxResults(50)).thenReturn(query);
         when(query.getResultList()).thenReturn(List.of(forespørsel));
 
@@ -160,7 +160,7 @@ class OppdatereTilFerdigHvisMottattImTaskTest {
         when(query.setParameter("fom", 1L)).thenReturn(query);
         when(query.setParameter("tom", 10L)).thenReturn(query);
         when(query.setParameter("dato", LocalDate.of(2026, 4, 6).atStartOfDay())).thenReturn(query);
-        when(query.setParameter("status", "UNDER_BEHANDLING")).thenReturn(query);
+        when(query.setParameter("status", ForespørselStatus.UNDER_BEHANDLING)).thenReturn(query);
         when(query.setMaxResults(50)).thenReturn(query);
         when(query.getResultList()).thenReturn(List.of(forespørsel));
 
@@ -202,7 +202,7 @@ class OppdatereTilFerdigHvisMottattImTaskTest {
         when(query.setParameter("fom", 1L)).thenReturn(query);
         when(query.setParameter("tom", 10L)).thenReturn(query);
         when(query.setParameter("dato", LocalDate.of(2026, 4, 6).atStartOfDay())).thenReturn(query);
-        when(query.setParameter("status", "UNDER_BEHANDLING")).thenReturn(query);
+        when(query.setParameter("status", ForespørselStatus.UNDER_BEHANDLING)).thenReturn(query);
         when(query.setMaxResults(50)).thenReturn(query);
         when(query.getResultList()).thenReturn(List.of(forespørsel1, forespørsel2));
 
@@ -237,7 +237,7 @@ class OppdatereTilFerdigHvisMottattImTaskTest {
         when(query.setParameter("fom", 1L)).thenReturn(query);
         when(query.setParameter("tom", 10L)).thenReturn(query);
         when(query.setParameter("dato", LocalDate.of(2026, 4, 6).atStartOfDay())).thenReturn(query);
-        when(query.setParameter("status", "UNDER_BEHANDLING")).thenReturn(query);
+        when(query.setParameter("status", ForespørselStatus.UNDER_BEHANDLING)).thenReturn(query);
         when(query.setMaxResults(50)).thenReturn(query);
         when(query.getResultList()).thenReturn(Collections.emptyList());
 
@@ -264,7 +264,7 @@ class OppdatereTilFerdigHvisMottattImTaskTest {
         when(query.setParameter("fom", 1L)).thenReturn(query);
         when(query.setParameter("tom", 10L)).thenReturn(query);
         when(query.setParameter("dato", LocalDate.of(2026, 4, 6).atStartOfDay())).thenReturn(query);
-        when(query.setParameter("status", "UNDER_BEHANDLING")).thenReturn(query);
+        when(query.setParameter("status", ForespørselStatus.UNDER_BEHANDLING)).thenReturn(query);
         when(query.setMaxResults(50)).thenReturn(query);
         when(query.getResultList()).thenReturn(Collections.emptyList());
 
@@ -297,7 +297,7 @@ class OppdatereTilFerdigHvisMottattImTaskTest {
         when(query.setParameter("fom", 100L)).thenReturn(query);
         when(query.setParameter("tom", 200L)).thenReturn(query);
         when(query.setParameter("dato", LocalDate.of(2026, 4, 6).atStartOfDay())).thenReturn(query);
-        when(query.setParameter("status", "UNDER_BEHANDLING")).thenReturn(query);
+        when(query.setParameter("status", ForespørselStatus.UNDER_BEHANDLING)).thenReturn(query);
         when(query.setMaxResults(50)).thenReturn(query);
         when(query.getResultList()).thenReturn(List.of(forespørsel));
 
