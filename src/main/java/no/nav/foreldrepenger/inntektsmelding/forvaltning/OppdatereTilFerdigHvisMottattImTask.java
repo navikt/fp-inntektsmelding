@@ -95,7 +95,7 @@ public class OppdatereTilFerdigHvisMottattImTask implements ProsessTaskHandler {
             + " and status = :status order by id", ForespørselEntitet.class);
         query.setParameter("fom", fom);
         query.setParameter("tom", tom);
-        query.setParameter("dato", LocalDate.of(2026, 4, 6));
+        query.setParameter("dato", LocalDate.of(2026, 4, 6).atStartOfDay());
         query.setParameter("status", "UNDER_BEHANDLING");
 
         query.setMaxResults(50);
