@@ -8,22 +8,22 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.ArbeidsgiverDto;
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.FødselsnummerDto;
-
 import org.junit.jupiter.api.Test;
 
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.AvsenderSystem;
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.BortfaltNaturalytelse;
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.Endringsårsaker;
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.Kontaktperson;
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.Naturalytelsetype;
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.SendInntektsmeldingRequest;
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.SøktRefusjon;
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.YtelseType;
+import no.nav.foreldrepenger.inntektsmelding.felles.AvsenderSystemDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.BortfaltNaturalytelseDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.EndringsårsakDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.EndringsårsakerDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.FødselsnummerDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.KontaktpersonDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.NaturalytelsetypeDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.OrganisasjonsnummerDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.SøktRefusjonDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.YtelseTypeDto;
+import no.nav.foreldrepenger.inntektsmelding.imapi.inntektsmelding.SendInntektsmeldingRequest;
 import no.nav.foreldrepenger.inntektsmelding.imapi.rest.tjenester.InntektsmeldingApiMapper;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
-import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Endringsårsak;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.EndringsårsakType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.NaturalytelseType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
@@ -37,9 +37,9 @@ class InntektsmeldingApiMapperTest {
         var request = lagEksternIMRequest(
             startdato,
             List.of(
-                new SøktRefusjon(startdato, BigDecimal.valueOf(10000)),
-                new SøktRefusjon(startdato.plusDays(5), BigDecimal.valueOf(9000)),
-                new SøktRefusjon(startdato.plusDays(10), BigDecimal.ZERO)
+                new SøktRefusjonDto(startdato, BigDecimal.valueOf(10000)),
+                new SøktRefusjonDto(startdato.plusDays(5), BigDecimal.valueOf(9000)),
+                new SøktRefusjonDto(startdato.plusDays(10), BigDecimal.ZERO)
             )
         );
 
@@ -67,7 +67,7 @@ class InntektsmeldingApiMapperTest {
         assertThat(dto.getBortfaltNaturalytelsePerioder().getFirst().tom()).isEqualTo(Tid.TIDENES_ENDE);
 
         assertThat(dto.getEndringAvInntektÅrsaker()).hasSize(1);
-        assertThat(dto.getEndringAvInntektÅrsaker().getFirst().årsak()).isEqualTo(Endringsårsak.TARIFFENDRING);
+        assertThat(dto.getEndringAvInntektÅrsaker().getFirst().årsak()).isEqualTo(EndringsårsakType.TARIFFENDRING);
         assertThat(dto.getEndringAvInntektÅrsaker().getFirst().bleKjentFom()).isEqualTo(startdato.plusDays(1));
         assertThat(dto.getKontaktperson().navn()).isEqualTo("Kontakt Person");
         assertThat(dto.getKontaktperson().telefonnummer()).isEqualTo("12345678");
@@ -91,8 +91,8 @@ class InntektsmeldingApiMapperTest {
         var request = lagEksternIMRequest(
             startdato,
             List.of(
-                new SøktRefusjon(startdato, BigDecimal.valueOf(10000)),
-                new SøktRefusjon(startdato, BigDecimal.valueOf(9000))
+                new SøktRefusjonDto(startdato, BigDecimal.valueOf(10000)),
+                new SøktRefusjonDto(startdato, BigDecimal.valueOf(9000))
             )
         );
 
@@ -102,29 +102,29 @@ class InntektsmeldingApiMapperTest {
     }
 
     private static SendInntektsmeldingRequest lagEksternIMRequest(LocalDate startdato,
-                                                                  List<SøktRefusjon> refusjoner) {
+                                                                  List<SøktRefusjonDto> refusjoner) {
         return new SendInntektsmeldingRequest(
             UUID.randomUUID(),
             new FødselsnummerDto("12345678910"),
-            new ArbeidsgiverDto("999999999"),
+            new OrganisasjonsnummerDto("999999999"),
             startdato,
-            YtelseType.FORELDREPENGER,
-            new Kontaktperson("Kontakt Person", "12345678"),
+            YtelseTypeDto.FORELDREPENGER,
+            new KontaktpersonDto("Kontakt Person", "12345678"),
             BigDecimal.valueOf(45000),
             refusjoner,
-            List.of(new BortfaltNaturalytelse(
+            List.of(new BortfaltNaturalytelseDto(
                 startdato.plusDays(2),
                 null,
-                Naturalytelsetype.BIL,
+                NaturalytelsetypeDto.BIL,
                 BigDecimal.valueOf(1200)
             )),
-            List.of(new Endringsårsaker(
-                no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.Endringsårsak.TARIFFENDRING,
+            List.of(new EndringsårsakerDto(
+                EndringsårsakDto.TARIFFENDRING,
                 null,
                 null,
                 startdato.plusDays(1)
             )),
-            new AvsenderSystem("test-lps", "1.0.0")
+            new AvsenderSystemDto("test-lps", "1.0.0")
         );
     }
 }

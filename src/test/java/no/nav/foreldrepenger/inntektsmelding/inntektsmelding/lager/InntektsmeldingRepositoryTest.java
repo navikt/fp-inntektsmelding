@@ -7,12 +7,12 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.EndringsårsakType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import no.nav.foreldrepenger.inntektsmelding.database.JpaExtension;
-import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Endringsårsak;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
 import no.nav.vedtak.felles.testutilities.db.EntityManagerAwareTest;
@@ -99,7 +99,7 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
     void skal_lagre_inntektsmelding_med_endringsårsaker() {
         // Arrange
         var endring = EndringsårsakEntitet.builder()
-            .medÅrsak(Endringsårsak.TARIFFENDRING)
+            .medÅrsak(EndringsårsakType.TARIFFENDRING)
             .medFom(LocalDate.now())
             .medBleKjentFra(LocalDate.now().plusDays(10))
             .build();
@@ -132,7 +132,7 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
         assertThat(etterLagring.get().getOpphørsdatoRefusjon()).isEqualTo(førLagring.getOpphørsdatoRefusjon());
         assertThat(etterLagring.get().getMånedRefusjon()).isEqualByComparingTo(førLagring.getMånedRefusjon());
         assertThat(etterLagring.get().getEndringsårsaker()).hasSize(1);
-        assertThat(etterLagring.get().getEndringsårsaker().getFirst().getÅrsak()).isEqualTo(Endringsårsak.TARIFFENDRING);
+        assertThat(etterLagring.get().getEndringsårsaker().getFirst().getÅrsak()).isEqualTo(EndringsårsakType.TARIFFENDRING);
         assertThat(etterLagring.get().getEndringsårsaker().getFirst().getFom().orElse(null)).isEqualTo(LocalDate.now());
         assertThat(etterLagring.get().getEndringsårsaker().getFirst().getBleKjentFom().orElse(null)).isEqualTo(LocalDate.now().plusDays(10));
     }

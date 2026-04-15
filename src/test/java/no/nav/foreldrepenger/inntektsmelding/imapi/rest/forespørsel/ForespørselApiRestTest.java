@@ -16,10 +16,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.ArbeidsgiverDto;
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.FødselsnummerDto;
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.HentForespørselResponse;
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.YtelseType;
+import no.nav.foreldrepenger.inntektsmelding.felles.ForespørselStatusDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.FødselsnummerDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.OrganisasjonsnummerDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.YtelseTypeDto;
+import no.nav.foreldrepenger.inntektsmelding.imapi.forespørsel.ForespørselResponse;
 import no.nav.foreldrepenger.inntektsmelding.server.tilgangsstyring.Tilgang;
 
 @ExtendWith(MockitoExtension.class)
@@ -39,17 +40,17 @@ class ForespørselApiRestTest {
 
     @Test
     void skal_hente_forespørsel() {
-        var orgnummer = new ArbeidsgiverDto(BRREG_ORGNUMMER);
+        var orgnummer = new OrganisasjonsnummerDto(BRREG_ORGNUMMER);
         var førsteUttaksdato = LocalDate.now();
         var skjæringstidspunkt = LocalDate.now();
         var forespørselUuid = UUID.randomUUID();
-        var forventetForespørselDto = new HentForespørselResponse(forespørselUuid,
+        var forventetForespørselDto = new ForespørselResponse(forespørselUuid,
             orgnummer,
             new FødselsnummerDto("11111111111"),
             førsteUttaksdato,
             skjæringstidspunkt,
-            HentForespørselResponse.Status.UNDER_BEHANDLING,
-            YtelseType.FORELDREPENGER,
+            ForespørselStatusDto.UNDER_BEHANDLING,
+            YtelseTypeDto.FORELDREPENGER,
             LocalDateTime.now());
 
         when(forespørselApiTjeneste.hentForesørselDto(forespørselUuid)).thenReturn(Optional.of(forventetForespørselDto));

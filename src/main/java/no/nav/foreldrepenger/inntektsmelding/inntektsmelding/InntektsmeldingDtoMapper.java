@@ -66,8 +66,8 @@ public class InntektsmeldingDtoMapper {
         );
     }
 
-    static InntektsmeldingDto.Endringsårsaker mapEndringsårsak(EndringsårsakEntitet endringsårsak) {
-        return new InntektsmeldingDto.Endringsårsaker(
+    static InntektsmeldingDto.Endringsårsak mapEndringsårsak(EndringsårsakEntitet endringsårsak) {
+        return new InntektsmeldingDto.Endringsårsak(
             endringsårsak.getÅrsak(),
             endringsårsak.getFom().orElse(null),
             endringsårsak.getTom().orElse(null),
@@ -130,7 +130,7 @@ private static Optional<KontaktpersonEntitet> mapKontaktperson(InntektsmeldingDt
             .toList();
     }
 
-    private static List<EndringsårsakEntitet> mapEndringsårsaker(List<InntektsmeldingDto.Endringsårsaker> endringsårsaker) {
+    private static List<EndringsårsakEntitet> mapEndringsårsaker(List<InntektsmeldingDto.Endringsårsak> endringsårsaker) {
         return endringsårsaker.stream()
             .map(e -> EndringsårsakEntitet.builder()
                 .medÅrsak(e.årsak())

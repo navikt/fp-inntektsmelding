@@ -62,7 +62,7 @@ class InntektsmeldingPdfDataMapper {
         return imDokumentdataBuilder.build();
     }
 
-    private static List<Endringsarsak> mapEndringsårsaker(List<InntektsmeldingDto.Endringsårsaker> endringsårsaker) {
+    private static List<Endringsarsak> mapEndringsårsaker(List<InntektsmeldingDto.Endringsårsak> endringsårsaker) {
         return endringsårsaker.stream()
             .map(årsak -> new Endringsarsak(
                 årsak.årsak().getBeskrivelse(),

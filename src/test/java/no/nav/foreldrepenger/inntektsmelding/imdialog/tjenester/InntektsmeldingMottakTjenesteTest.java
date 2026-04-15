@@ -16,6 +16,8 @@ import java.util.UUID;
 
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.FellesMottakTjeneste;
 
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.EndringsårsakType;
+
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,7 +35,6 @@ import no.nav.foreldrepenger.inntektsmelding.integrasjoner.fpsak.FpsakTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ArbeidsgiverinitiertÅrsak;
-import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Endringsårsak;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
@@ -230,7 +231,7 @@ class InntektsmeldingMottakTjenesteTest {
 
         when(forespørselBehandlingTjeneste.hentForespørsel(uuid)).thenReturn(Optional.of(eksisterendeForespørselDto));
 
-        var endringsårsaker = List.of(new InntektsmeldingDto.Endringsårsaker(Endringsårsak.VARIG_LØNNSENDRING, null, null, null));
+        var endringsårsaker = List.of(new InntektsmeldingDto.Endringsårsak(EndringsårsakType.VARIG_LØNNSENDRING, null, null, null));
 
         var nyIm = lagInntektsmeldingDto(aktørId, Arbeidsgiver.fra(orgnr), startdato, nyInntekt, List.of(), List.of(), endringsårsaker, nyInntekt, opphørsdato.minusDays(1));
 
