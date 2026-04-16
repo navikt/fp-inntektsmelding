@@ -15,6 +15,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.tjenester.InntektsmeldingKontraktMapper;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
 
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste;
@@ -46,6 +47,7 @@ public class InntektsmeldingApiRest {
     private InntektsmeldingTjeneste inntektsmeldingTjeneste;
     private InntektsmeldingApiMottakTjeneste inntektsmeldingMottakTjeneste;
     private PersonTjeneste personTjeneste;
+    private InntektsmeldingKontraktMapper inntektsmeldingKontraktMapper;
 
     InntektsmeldingApiRest() {
         // CDI
@@ -54,11 +56,13 @@ public class InntektsmeldingApiRest {
     @Inject
     public InntektsmeldingApiRest(InntektsmeldingTjeneste inntektsmeldingTjeneste,
                                   InntektsmeldingApiMottakTjeneste inntektsmeldingMottakTjeneste,
-                                  PersonTjeneste personTjeneste, Tilgang tilgangskontroll) {
+                                  PersonTjeneste personTjeneste, Tilgang tilgangskontroll,
+                                  InntektsmeldingKontraktMapper inntektsmeldingKontraktMapper) {
         this.inntektsmeldingTjeneste = inntektsmeldingTjeneste;
         this.tilgangskontroll = tilgangskontroll;
         this.inntektsmeldingMottakTjeneste = inntektsmeldingMottakTjeneste;
         this.personTjeneste = personTjeneste;
+        this.inntektsmeldingKontraktMapper = inntektsmeldingKontraktMapper;
     }
 
     @GET
@@ -66,7 +70,7 @@ public class InntektsmeldingApiRest {
     @Produces(MediaType.APPLICATION_JSON + ";charset=utf-8")
     @Operation(description = "Henter en tidligere innsendt inntektsmelding", tags = "ekstern-api")
     @Tilgangskontrollert
-    public Response sendInntektsmelding(@Valid @PathParam("inntektsmeldingUuid") UUID inntektsmeldingUuid) {
+    public Response hentInntektsmelding(@Valid @PathParam("inntektsmeldingUuid") UUID inntektsmeldingUuid) {
         tilgangskontroll.sjekkErSystembruker();
         LOG.trace("Henter inntektsmelding med UUID: {}", inntektsmeldingUuid);
         var inntektsmelding = inntektsmeldingTjeneste.hentInntektsmelding(inntektsmeldingUuid);
@@ -79,8 +83,8 @@ public class InntektsmeldingApiRest {
                 .build();
         }
 
-        return Response.ok(inntektsmelding).build();
-    }
+        var kontrakt = inntektsmeldingKontraktMapper.mapTilKontrakt(inntektsmelding);
+        return Response.ok(kontrakt).build();    }
 
     @POST
     @Path("/send-inntektsmelding")
