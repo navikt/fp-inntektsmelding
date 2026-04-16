@@ -8,6 +8,7 @@ import java.util.Set;
 import jakarta.ws.rs.ApplicationPath;
 
 import no.nav.foreldrepenger.inntektsmelding.imapi.rest.forespørsel.ForespørselApiRest;
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.inntektsmelding.InntektsmeldingApiRest;
 import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.aginitiert.ArbeidsgiverinitiertDialogRest;
 
 import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.kvittering.PdfDokumentRest;
@@ -61,7 +62,8 @@ public class ApiConfig extends ResourceConfig {
             InntektsmeldingFpsakRest.class,
             ArbeidsgiverinitiertDialogRest.class,
             PdfDokumentRest.class,
-            ForespørselApiRest.class);
+            ForespørselApiRest.class,
+            InntektsmeldingApiRest.class);
     }
 
     private Map<String, Object> getApplicationProperties() {
