@@ -7,6 +7,7 @@ import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -70,7 +71,7 @@ public class InntektsmeldingApiRest {
     @Produces(MediaType.APPLICATION_JSON + ";charset=utf-8")
     @Operation(description = "Henter en tidligere innsendt inntektsmelding", tags = "ekstern-api")
     @Tilgangskontrollert
-    public Response hentInntektsmelding(@Valid @PathParam("inntektsmeldingUuid") UUID inntektsmeldingUuid) {
+    public Response hentInntektsmelding(@NotNull @Valid @PathParam("inntektsmeldingUuid") UUID inntektsmeldingUuid) {
         tilgangskontroll.sjekkErSystembruker();
         LOG.trace("Henter inntektsmelding med UUID: {}", inntektsmeldingUuid);
         var inntektsmelding = inntektsmeldingTjeneste.hentInntektsmelding(inntektsmeldingUuid);
@@ -89,7 +90,7 @@ public class InntektsmeldingApiRest {
     @POST
     @Path("/send-inntektsmelding")
     @Tilgangskontrollert
-    public SendInntektsmeldingResponse sendEksternInntektsmelding(SendInntektsmeldingRequest request) {
+    public SendInntektsmeldingResponse sendEksternInntektsmelding(@NotNull @Valid SendInntektsmeldingRequest request) {
         tilgangskontroll.sjekkErSystembruker();
         LOG.info("Mottatt inntektsmelding fra ekstern kilde for forespørselUuid {} ", request.foresporselUuid());
 

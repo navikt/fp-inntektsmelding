@@ -12,7 +12,7 @@ import jakarta.inject.Inject;
 
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Fødselsnummer;
 
-import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.kvittering.KvitteringRest;
+import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.kvittering.PdfDokumentRest;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -160,7 +160,7 @@ public class ForespørselBehandlingTjeneste {
                                    : ForespørselTekster.lagBeskjedOmOppdatertInntektsmelding();
                 String url = new StringBuilder(inntektsmeldingSkjemaLenke)
                     .append("/server/api")
-                    .append(KvitteringRest.INNTEKTSMELDING_FULL_PATH)
+                    .append(PdfDokumentRest.INNTEKTSMELDING_FULL_PATH)
                     .append("/")
                     .append(imUuid).toString();
                 minSideArbeidsgiverTjeneste.sendNyBeskjedMedKvittering(foresporselUuid.toString(),
@@ -203,7 +203,7 @@ public class ForespørselBehandlingTjeneste {
                 var beskjedTekst = ForespørselTekster.lagBeskjedOmOppdatertInntektsmelding();
                 String url = new StringBuilder(inntektsmeldingSkjemaLenke)
                     .append("/server/api")
-                    .append(KvitteringRest.INNTEKTSMELDING_FULL_PATH)
+                    .append(PdfDokumentRest.INNTEKTSMELDING_FULL_PATH)
                     .append("/")
                     .append(imUuid).toString();
                 minSideArbeidsgiverTjeneste.sendNyBeskjedMedKvittering(forespørsel.toString(),

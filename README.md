@@ -21,7 +21,7 @@ Oppdatert `schema.graphql` kan hentes [herfra](https://github.com/navikt/arbeids
 **REST Layer (11 endpoints):**
 - `InntektsmeldingDialogRest` — Main employer dialog (TokenX) `/imdialog`
 - `ArbeidsgiverinitiertDialogRest` — Employer-initiated flows (TokenX) `/arbeidsgiverinitiert`
-- `KvitteringRest` — PDF receipt downloads (TokenX) `/bekreftelse`
+- `PdfDokumentRest` — PDF receipt downloads (TokenX) `/pdf`
 - `ForespørselRest` — Forespørsel management from fpsak (Azure) `/foresporsel`
 - `ForespørselApiRest` — External forespørsel queries (Azure) `/imapi/foresporsel`
 - `InntektsmeldingApiRest` — Fetch inntektsmelding by UUID (Azure) `/imapi/inntektsmelding`
