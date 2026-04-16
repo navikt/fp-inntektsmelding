@@ -60,7 +60,7 @@ public class InntektsmeldingKontraktMapper {
             inntektsmelding.getOpphørsdatoRefusjon(),
             inntektsmelding.getAvsenderSystem() != null
             ? new AvsenderSystemDto(inntektsmelding.getAvsenderSystem().navn(), inntektsmelding.getAvsenderSystem().versjon())
-            : null,
+            : new AvsenderSystemDto("NAV_NO", "1.0"),
             inntektsmelding.getSøkteRefusjonsperioder().stream()
                 .map(r -> new SøktRefusjonDto(r.fom(), r.beløp()))
                 .toList(),

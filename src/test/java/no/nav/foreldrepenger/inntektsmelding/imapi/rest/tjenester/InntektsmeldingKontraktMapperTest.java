@@ -161,7 +161,7 @@ class InntektsmeldingKontraktMapperTest {
 
         var resultat = mapper.mapTilKontrakt(inntektsmelding);
 
-        assertThat(resultat.avsenderSystem()).isNull();
+        assertThat(resultat.avsenderSystem().systemNavn()).isEqualTo("NAV_NO");
     }
 
     private static ForespørselDto lagForespørselDto(UUID uuid, LocalDate startdato) {
