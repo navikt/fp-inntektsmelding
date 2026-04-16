@@ -8,8 +8,6 @@ import no.nav.foreldrepenger.inntektsmelding.felles.BortfaltNaturalytelseDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.EndringsårsakDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.EndringsårsakerDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.FødselsnummerDto;
-import no.nav.foreldrepenger.inntektsmelding.felles.InnsendingstypeDto;
-import no.nav.foreldrepenger.inntektsmelding.felles.InnsendingsårsakDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.KontaktpersonDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.NaturalytelsetypeDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.OrganisasjonsnummerDto;
@@ -48,9 +46,6 @@ public class InntektsmeldingKontraktMapper {
         // Slå opp fødselsnummer fra aktørId
         var fnr = personTjeneste.finnPersonIdentForAktørId(inntektsmelding.getAktørId());
 
-        var innsendingsårsak = InnsendingsårsakDto.NY; // TODO trenger vi noe annet her?
-        var innsendingstype = InnsendingstypeDto.FORESPURT;
-
         return new HentInntektsmeldingResponse(
             inntektsmelding.getInntektsmeldingUuid(),
             forespørselUuid,
@@ -60,8 +55,6 @@ public class InntektsmeldingKontraktMapper {
             new KontaktpersonDto(inntektsmelding.getKontaktperson().navn(), inntektsmelding.getKontaktperson().telefonnummer()),
             inntektsmelding.getStartdato(),
             inntektsmelding.getMånedInntekt(),
-            innsendingsårsak,
-            innsendingstype,
             inntektsmelding.getInnsendtTidspunkt(),
             inntektsmelding.getMånedRefusjon(),
             inntektsmelding.getOpphørsdatoRefusjon(),
