@@ -7,7 +7,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.LukkeÅrsak;
-import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.kvittering.KvitteringRest;
+import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.kvittering.PdfDokumentRest;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 
@@ -130,7 +130,7 @@ public class DialogportenRequestMapper {
             var contentAttachement = List.of(new DialogportenRequest.ContentValueItem(innsendingTekst, DialogportenRequest.NB));
             String url = new StringBuilder(inntektsmeldingSkjemaLenke)
                 .append("/server/api")
-                .append(KvitteringRest.INNTEKTSMELDING_FULL_PATH)
+                .append(PdfDokumentRest.INNTEKTSMELDING_FULL_PATH)
                 .append("/")
                 .append(imUuid).toString();
             var urlApi = new DialogportenRequest.Url(url, DialogportenRequest.TEXT_PLAIN, DialogportenRequest.AttachmentUrlConsumerType.Api);

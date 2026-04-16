@@ -32,12 +32,12 @@ import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 @RequestScoped
 @Transactional
 @Consumes(MediaType.APPLICATION_JSON)
-@Path(KvitteringRest.BASE_PATH)
-public class KvitteringRest {
-    public static final String BASE_PATH = "/bekreftelse";
+@Path(PdfDokumentRest.BASE_PATH)
+public class PdfDokumentRest {
+    public static final String BASE_PATH = "/pdf";
     public static final String INNTEKTSMELDING_PATH = "/inntektsmelding";
     public static final String INNTEKTSMELDING_FULL_PATH = BASE_PATH + INNTEKTSMELDING_PATH;
-    private static final Logger LOG = LoggerFactory.getLogger(KvitteringRest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PdfDokumentRest.class);
     private static final String APPLICATION_PDF = "application/pdf";
     private static final String CONTENT_DISPOSITION = "Content-Disposition";
 
@@ -45,12 +45,12 @@ public class KvitteringRest {
     private InntektsmeldingTjeneste inntektsmeldingTjeneste;
     private KvitteringTjeneste kvitteringTjeneste;
 
-    KvitteringRest() {
+    PdfDokumentRest() {
         // CDI
     }
 
     @Inject
-    public KvitteringRest(Tilgang tilgang, InntektsmeldingTjeneste inntektsmeldingTjeneste, KvitteringTjeneste kvitteringTjeneste) {
+    public PdfDokumentRest(Tilgang tilgang, InntektsmeldingTjeneste inntektsmeldingTjeneste, KvitteringTjeneste kvitteringTjeneste) {
         this.tilgang = tilgang;
         this.inntektsmeldingTjeneste = inntektsmeldingTjeneste;
         this.kvitteringTjeneste = kvitteringTjeneste;

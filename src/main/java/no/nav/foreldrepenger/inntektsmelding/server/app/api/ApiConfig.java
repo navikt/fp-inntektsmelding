@@ -10,7 +10,7 @@ import jakarta.ws.rs.ApplicationPath;
 import no.nav.foreldrepenger.inntektsmelding.imapi.rest.forespørsel.ForespørselApiRest;
 import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.aginitiert.ArbeidsgiverinitiertDialogRest;
 
-import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.kvittering.KvitteringRest;
+import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.kvittering.PdfDokumentRest;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
@@ -60,7 +60,7 @@ public class ApiConfig extends ResourceConfig {
             InntektsmeldingDialogRest.class,
             InntektsmeldingFpsakRest.class,
             ArbeidsgiverinitiertDialogRest.class,
-            KvitteringRest.class,
+            PdfDokumentRest.class,
             ForespørselApiRest.class);
     }
 

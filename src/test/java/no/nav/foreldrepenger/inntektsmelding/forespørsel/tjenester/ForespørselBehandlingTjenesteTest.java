@@ -533,7 +533,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             SKJÆRINGSTIDSPUNKT, ForespørselType.BESTILT_AV_FAGSYSTEM);
         var imUuid = UUID.randomUUID();
         forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, SAK_ID);
-        var uri = URI.create("%s/server/api/bekreftelse/inntektsmelding/%s".formatted(KVITTERING_BASE_URL, imUuid));
+        var uri = URI.create("%s/server/api/pdf/inntektsmelding/%s".formatted(KVITTERING_BASE_URL, imUuid));
 
         when(minSideArbeidsgiverTjeneste.sendNyBeskjedMedKvittering(forespørselUuid.toString(),
             Merkelapp.INNTEKTSMELDING_FP,
@@ -572,7 +572,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, SAK_ID);
         forespørselRepository.ferdigstillForespørsel(SAK_ID);
 
-        var uri = URI.create("%s/server/api/bekreftelse/inntektsmelding/%s".formatted(KVITTERING_BASE_URL, imUuid));
+        var uri = URI.create("%s/server/api/pdf/inntektsmelding/%s".formatted(KVITTERING_BASE_URL, imUuid));
 
         when(minSideArbeidsgiverTjeneste.sendNyBeskjedMedKvittering(forespørselUuid.toString(),
             Merkelapp.INNTEKTSMELDING_FP,
