@@ -14,7 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.SendInntektsmeldingResponse;
+import no.nav.foreldrepenger.inntektsmelding.imapi.inntektsmelding.SendInntektsmeldingResponse;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.FellesMottakTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingTjeneste;
@@ -100,8 +100,8 @@ public class InntektsmeldingApiMottakTjeneste {
         return Objects.equals(new HashSet<>(nyListe), new HashSet<>(tidligereListe));
     }
 
-    private boolean endringsårsakerErLike(List<InntektsmeldingDto.Endringsårsaker> nyListe,
-                                          List<InntektsmeldingDto.Endringsårsaker> tidligereListe) {
+    private boolean endringsårsakerErLike(List<InntektsmeldingDto.Endringsårsak> nyListe,
+                                          List<InntektsmeldingDto.Endringsårsak> tidligereListe) {
         return Objects.equals(new HashSet<>(nyListe), new HashSet<>(tidligereListe));
     }
 }

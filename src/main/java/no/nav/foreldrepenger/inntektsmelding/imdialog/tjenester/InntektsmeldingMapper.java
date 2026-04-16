@@ -72,12 +72,12 @@ public class InntektsmeldingMapper {
             .medKontaktperson(new InntektsmeldingDto.Kontaktperson(dto.kontaktperson().telefonnummer(), dto.kontaktperson().navn()));
     }
 
-    private static List<InntektsmeldingDto.Endringsårsaker> mapEndringsårsakerTilDto(List<SendInntektsmeldingRequestDto.EndringsårsakerRequestDto> endringsårsaker) {
+    private static List<InntektsmeldingDto.Endringsårsak> mapEndringsårsakerTilDto(List<SendInntektsmeldingRequestDto.EndringsårsakerRequestDto> endringsårsaker) {
         return endringsårsaker.stream().map(InntektsmeldingMapper::mapEndringsårsakTilDto).toList();
     }
 
-    private static InntektsmeldingDto.Endringsårsaker mapEndringsårsakTilDto(SendInntektsmeldingRequestDto.EndringsårsakerRequestDto e) {
-        return new InntektsmeldingDto.Endringsårsaker(
+    private static InntektsmeldingDto.Endringsårsak mapEndringsårsakTilDto(SendInntektsmeldingRequestDto.EndringsårsakerRequestDto e) {
+        return new InntektsmeldingDto.Endringsårsak(
             KodeverkMapper.mapEndringsårsak(e.årsak()),
             e.fom(),
             e.tom(),

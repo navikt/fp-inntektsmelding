@@ -8,7 +8,7 @@ import java.util.UUID;
 
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
-import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Endringsårsak;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.EndringsårsakType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.NaturalytelseType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
@@ -29,7 +29,7 @@ public class InntektsmeldingDto {
     private final LocalDate opphørsdatoRefusjon;
     private final List<SøktRefusjon> søkteRefusjonsperioder;
     private final List<BortfaltNaturalytelse> bortfaltNaturalytelsePerioder;
-    private final List<Endringsårsaker> endringAvInntektÅrsaker;
+    private final List<Endringsårsak> endringAvInntektÅrsaker;
     private final String opprettetAv;
 
     private InntektsmeldingDto(Builder builder) {
@@ -120,7 +120,7 @@ public class InntektsmeldingDto {
         return bortfaltNaturalytelsePerioder;
     }
 
-    public List<Endringsårsaker> getEndringAvInntektÅrsaker() {
+    public List<Endringsårsak> getEndringAvInntektÅrsaker() {
         return endringAvInntektÅrsaker;
     }
 
@@ -141,7 +141,7 @@ public class InntektsmeldingDto {
         private LocalDate opphørsdatoRefusjon;
         private List<SøktRefusjon> søkteRefusjonsperioder;
         private List<BortfaltNaturalytelse> bortfaltNaturalytelsePerioder;
-        private List<Endringsårsaker> endringAvInntektÅrsaker;
+        private List<Endringsårsak> endringAvInntektÅrsaker;
 
         private Builder() {
         }
@@ -226,7 +226,7 @@ public class InntektsmeldingDto {
             return this;
         }
 
-        public Builder medEndringAvInntektÅrsaker(List<Endringsårsaker> endringAvInntektÅrsaker) {
+        public Builder medEndringAvInntektÅrsaker(List<Endringsårsak> endringAvInntektÅrsaker) {
             this.endringAvInntektÅrsaker = endringAvInntektÅrsaker;
             return this;
         }
@@ -246,10 +246,10 @@ public class InntektsmeldingDto {
                                         BigDecimal beløp) {
     }
 
-    public record Endringsårsaker(Endringsårsak årsak,
-                                  LocalDate fom,
-                                  LocalDate tom,
-                                  LocalDate bleKjentFom) {
+    public record Endringsårsak(EndringsårsakType årsak,
+                                LocalDate fom,
+                                LocalDate tom,
+                                LocalDate bleKjentFom) {
     }
 
     public record Kontaktperson(

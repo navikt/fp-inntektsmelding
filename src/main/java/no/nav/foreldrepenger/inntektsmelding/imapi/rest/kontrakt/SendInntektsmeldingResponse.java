@@ -1,6 +1,0 @@
-package no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt;
-
-import java.util.UUID;
-
-public record SendInntektsmeldingResponse(boolean success, UUID inntektsmeldingUuid, String melding) {
-}

@@ -6,13 +6,17 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.BortfaltNaturalytelse;
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.SendInntektsmeldingRequest;
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.SøktRefusjon;
+import no.nav.foreldrepenger.inntektsmelding.felles.BortfaltNaturalytelseDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.EndringsårsakDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.EndringsårsakerDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.NaturalytelsetypeDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.SøktRefusjonDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.YtelseTypeDto;
+import no.nav.foreldrepenger.inntektsmelding.imapi.inntektsmelding.SendInntektsmeldingRequest;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
-import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Endringsårsak;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.EndringsårsakType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.NaturalytelseType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
@@ -45,7 +49,7 @@ public class InntektsmeldingApiMapper {
             .build();
     }
 
-    private static Optional<BigDecimal> finnFørsteRefusjon(List<SøktRefusjon> refusjonListe, LocalDate startdato) {
+    private static Optional<BigDecimal> finnFørsteRefusjon(List<SøktRefusjonDto> refusjonListe, LocalDate startdato) {
         if (refusjonListe.isEmpty()) {
             return Optional.empty();
         }
@@ -56,7 +60,7 @@ public class InntektsmeldingApiMapper {
         return Optional.of(refusjonPåStartdato.getFirst().beløp());
     }
 
-    private static Optional<LocalDate> finnOpphørsdato(List<SøktRefusjon> refusjonListe,
+    private static Optional<LocalDate> finnOpphørsdato(List<SøktRefusjonDto> refusjonListe,
                                                        LocalDate startdato) {
         var sisteEndring = finnSisteEndring(refusjonListe, startdato);
         // Hvis siste endring setter refusjon til 0 er det å regne som opphør av refusjon,
@@ -64,11 +68,11 @@ public class InntektsmeldingApiMapper {
         return sisteEndring.filter(en -> en.beløp().compareTo(BigDecimal.ZERO) == 0).map(sr -> sr.fom().minusDays(1));
     }
 
-    private static Optional<SøktRefusjon> finnSisteEndring(List<SøktRefusjon> refusjonListe,
+    private static Optional<SøktRefusjonDto> finnSisteEndring(List<SøktRefusjonDto> refusjonListe,
                                                            LocalDate startdato) {
         return refusjonListe.stream()
             .filter(r -> !r.fom().equals(startdato))
-            .max(Comparator.comparing(SøktRefusjon::fom));
+            .max(Comparator.comparing(SøktRefusjonDto::fom));
     }
 
     private static InntektsmeldingDto.Kontaktperson mapKontaktperson(SendInntektsmeldingRequest eksternRequest) {
@@ -85,22 +89,37 @@ public class InntektsmeldingApiMapper {
         );
     }
 
-    private static List<InntektsmeldingDto.Endringsårsaker> mapEndringsårsaker(
-        List<no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.Endringsårsaker> endringsårsaker) {
-        return endringsårsaker.stream().map(InntektsmeldingApiMapper::mapEndringsårsaker).toList();
+    private static List<InntektsmeldingDto.Endringsårsak> mapEndringsårsaker(List<EndringsårsakerDto> endringsårsaker) {
+        return endringsårsaker.stream().map(InntektsmeldingApiMapper::mapEndringsårsak).toList();
     }
 
-    private static InntektsmeldingDto.Endringsårsaker mapEndringsårsaker(
-        no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.Endringsårsaker e) {
-        return new InntektsmeldingDto.Endringsårsaker(
-            mapEndringsårsak(e.årsak()),
+    private static InntektsmeldingDto.Endringsårsak mapEndringsårsak(EndringsårsakerDto e) {
+        return new InntektsmeldingDto.Endringsårsak(mapÅrsakType(e.årsak()),
             e.fom(),
             e.tom(),
             e.bleKjentFom()
         );
     }
 
-    private static List<InntektsmeldingDto.BortfaltNaturalytelse> mapBortfalteNaturalytelser(List<BortfaltNaturalytelse> bortfalteNaturalytelser) {
+    private static EndringsårsakType mapÅrsakType(EndringsårsakDto eksternÅrsak) {
+        return switch (eksternÅrsak) {
+            case PERMITTERING -> EndringsårsakType.PERMITTERING;
+            case NY_STILLING -> EndringsårsakType.NY_STILLING;
+            case NY_STILLINGSPROSENT -> EndringsårsakType.NY_STILLINGSPROSENT;
+            case SYKEFRAVÆR -> EndringsårsakType.SYKEFRAVÆR;
+            case BONUS -> EndringsårsakType.BONUS;
+            case FERIETREKK_ELLER_UTBETALING_AV_FERIEPENGER -> EndringsårsakType.FERIETREKK_ELLER_UTBETALING_AV_FERIEPENGER;
+            case NYANSATT -> EndringsårsakType.NYANSATT;
+            case MANGELFULL_RAPPORTERING_AORDNING -> EndringsårsakType.MANGELFULL_RAPPORTERING_AORDNING;
+            case INNTEKT_IKKE_RAPPORTERT_ENDA_AORDNING -> EndringsårsakType.INNTEKT_IKKE_RAPPORTERT_ENDA_AORDNING;
+            case TARIFFENDRING -> EndringsårsakType.TARIFFENDRING;
+            case FERIE -> EndringsårsakType.FERIE;
+            case VARIG_LØNNSENDRING -> EndringsårsakType.VARIG_LØNNSENDRING;
+            case PERMISJON -> EndringsårsakType.PERMISJON;
+        };
+    }
+
+    private static List<InntektsmeldingDto.BortfaltNaturalytelse> mapBortfalteNaturalytelser(List<BortfaltNaturalytelseDto> bortfalteNaturalytelser) {
         return bortfalteNaturalytelser.stream()
             .map(d -> new InntektsmeldingDto.BortfaltNaturalytelse(
                 d.fom(),
@@ -112,7 +131,7 @@ public class InntektsmeldingApiMapper {
 
     private static List<InntektsmeldingDto.SøktRefusjon> mapRefusjonsendringer(LocalDate startdato,
                                                                                LocalDate opphørsdato,
-                                                                               List<SøktRefusjon> refusjonListe) {
+                                                                               List<SøktRefusjonDto> refusjonListe) {
         // Opphør og start er allerede mappet til egne felter, så de må utelukkes her
         // Merk at opphørsdato er dagen før endring som opphører refusjon, derfor må vi legge til en dag.
         return refusjonListe.stream()
@@ -124,32 +143,14 @@ public class InntektsmeldingApiMapper {
 
     // ---- Enum-mapping fra imapi kontrakt til domene ----
 
-    private static Ytelsetype mapYtelsetype(no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.YtelseType eksternType) {
+    private static Ytelsetype mapYtelsetype(YtelseTypeDto eksternType) {
         return switch (eksternType) {
             case FORELDREPENGER -> Ytelsetype.FORELDREPENGER;
             case SVANGERSKAPSPENGER -> Ytelsetype.SVANGERSKAPSPENGER;
         };
     }
 
-    private static Endringsårsak mapEndringsårsak(no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.Endringsårsak eksternÅrsak) {
-        return switch (eksternÅrsak) {
-            case PERMITTERING -> Endringsårsak.PERMITTERING;
-            case NY_STILLING -> Endringsårsak.NY_STILLING;
-            case NY_STILLINGSPROSENT -> Endringsårsak.NY_STILLINGSPROSENT;
-            case SYKEFRAVÆR -> Endringsårsak.SYKEFRAVÆR;
-            case BONUS -> Endringsårsak.BONUS;
-            case FERIETREKK_ELLER_UTBETALING_AV_FERIEPENGER -> Endringsårsak.FERIETREKK_ELLER_UTBETALING_AV_FERIEPENGER;
-            case NYANSATT -> Endringsårsak.NYANSATT;
-            case MANGELFULL_RAPPORTERING_AORDNING -> Endringsårsak.MANGELFULL_RAPPORTERING_AORDNING;
-            case INNTEKT_IKKE_RAPPORTERT_ENDA_AORDNING -> Endringsårsak.INNTEKT_IKKE_RAPPORTERT_ENDA_AORDNING;
-            case TARIFFENDRING -> Endringsårsak.TARIFFENDRING;
-            case FERIE -> Endringsårsak.FERIE;
-            case VARIG_LØNNSENDRING -> Endringsårsak.VARIG_LØNNSENDRING;
-            case PERMISJON -> Endringsårsak.PERMISJON;
-        };
-    }
-
-    private static NaturalytelseType mapNaturalytelse(no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.Naturalytelsetype eksternType) {
+    private static NaturalytelseType mapNaturalytelse(NaturalytelsetypeDto eksternType) {
         return switch (eksternType) {
             case ELEKTRISK_KOMMUNIKASJON -> NaturalytelseType.ELEKTRISK_KOMMUNIKASJON;
             case AKSJER_GRUNNFONDSBEVIS_TIL_UNDERKURS -> NaturalytelseType.AKSJER_GRUNNFONDSBEVIS_TIL_UNDERKURS;

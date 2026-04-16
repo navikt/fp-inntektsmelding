@@ -1,7 +1,7 @@
 package no.nav.foreldrepenger.inntektsmelding.typer.dto;
 
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ArbeidsgiverinitiertÅrsak;
-import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Endringsårsak;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.EndringsårsakType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.NaturalytelseType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
@@ -50,25 +50,25 @@ public class KodeverkMapper {
         };
     }
 
-    public static Endringsårsak mapEndringsårsak(EndringsårsakDto årsak) {
+    public static EndringsårsakType mapEndringsårsak(EndringsårsakDto årsak) {
         return switch (årsak) {
-            case PERMITTERING -> Endringsårsak.PERMITTERING;
-            case NY_STILLING -> Endringsårsak.NY_STILLING;
-            case NY_STILLINGSPROSENT -> Endringsårsak.NY_STILLINGSPROSENT;
-            case SYKEFRAVÆR -> Endringsårsak.SYKEFRAVÆR;
-            case BONUS -> Endringsårsak.BONUS;
-            case FERIETREKK_ELLER_UTBETALING_AV_FERIEPENGER -> Endringsårsak.FERIETREKK_ELLER_UTBETALING_AV_FERIEPENGER;
-            case NYANSATT -> Endringsårsak.NYANSATT;
-            case MANGELFULL_RAPPORTERING_AORDNING -> Endringsårsak.MANGELFULL_RAPPORTERING_AORDNING;
-            case INNTEKT_IKKE_RAPPORTERT_ENDA_AORDNING -> Endringsårsak.INNTEKT_IKKE_RAPPORTERT_ENDA_AORDNING;
-            case TARIFFENDRING -> Endringsårsak.TARIFFENDRING;
-            case FERIE -> Endringsårsak.FERIE;
-            case VARIG_LØNNSENDRING -> Endringsårsak.VARIG_LØNNSENDRING;
-            case PERMISJON -> Endringsårsak.PERMISJON;
+            case PERMITTERING -> EndringsårsakType.PERMITTERING;
+            case NY_STILLING -> EndringsårsakType.NY_STILLING;
+            case NY_STILLINGSPROSENT -> EndringsårsakType.NY_STILLINGSPROSENT;
+            case SYKEFRAVÆR -> EndringsårsakType.SYKEFRAVÆR;
+            case BONUS -> EndringsårsakType.BONUS;
+            case FERIETREKK_ELLER_UTBETALING_AV_FERIEPENGER -> EndringsårsakType.FERIETREKK_ELLER_UTBETALING_AV_FERIEPENGER;
+            case NYANSATT -> EndringsårsakType.NYANSATT;
+            case MANGELFULL_RAPPORTERING_AORDNING -> EndringsårsakType.MANGELFULL_RAPPORTERING_AORDNING;
+            case INNTEKT_IKKE_RAPPORTERT_ENDA_AORDNING -> EndringsårsakType.INNTEKT_IKKE_RAPPORTERT_ENDA_AORDNING;
+            case TARIFFENDRING -> EndringsårsakType.TARIFFENDRING;
+            case FERIE -> EndringsårsakType.FERIE;
+            case VARIG_LØNNSENDRING -> EndringsårsakType.VARIG_LØNNSENDRING;
+            case PERMISJON -> EndringsårsakType.PERMISJON;
         };
     }
 
-    public static EndringsårsakDto mapEndringsårsak(Endringsårsak årsak) {
+    public static EndringsårsakDto mapEndringsårsak(EndringsårsakType årsak) {
         return switch (årsak) {
             case PERMITTERING -> EndringsårsakDto.PERMITTERING;
             case NY_STILLING -> EndringsårsakDto.NY_STILLING;

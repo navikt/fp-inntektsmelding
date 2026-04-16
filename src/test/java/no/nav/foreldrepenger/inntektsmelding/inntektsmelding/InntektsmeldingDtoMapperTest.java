@@ -9,6 +9,7 @@ import java.util.List;
 
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.EndringsårsakType;
 import org.junit.jupiter.api.Test;
 
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.BortaltNaturalytelseEntitet;
@@ -16,7 +17,6 @@ import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.Endringsårsa
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.InntektsmeldingEntitet;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.KontaktpersonEntitet;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.RefusjonsendringEntitet;
-import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Endringsårsak;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.NaturalytelseType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
@@ -78,7 +78,7 @@ class InntektsmeldingDtoMapperTest {
     @Test
     void skal_mappe_endringsårsak_med_alle_felter() {
         var endringsårsak = EndringsårsakEntitet.builder()
-            .medÅrsak(Endringsårsak.TARIFFENDRING)
+            .medÅrsak(EndringsårsakType.TARIFFENDRING)
             .medFom(START_DATO)
             .medTom(START_DATO.plusMonths(1))
             .medBleKjentFra(START_DATO.minusDays(5))
@@ -86,7 +86,7 @@ class InntektsmeldingDtoMapperTest {
 
         var resultat = InntektsmeldingDtoMapper.mapEndringsårsak(endringsårsak);
 
-        assertThat(resultat.årsak()).isEqualTo(Endringsårsak.TARIFFENDRING);
+        assertThat(resultat.årsak()).isEqualTo(EndringsårsakType.TARIFFENDRING);
         assertThat(resultat.fom()).isEqualTo(START_DATO);
         assertThat(resultat.tom()).isEqualTo(START_DATO.plusMonths(1));
         assertThat(resultat.bleKjentFom()).isEqualTo(START_DATO.minusDays(5));
@@ -95,12 +95,12 @@ class InntektsmeldingDtoMapperTest {
     @Test
     void skal_mappe_endringsårsak_med_kun_årsak() {
         var endringsårsak = EndringsårsakEntitet.builder()
-            .medÅrsak(Endringsårsak.BONUS)
+            .medÅrsak(EndringsårsakType.BONUS)
             .build();
 
         var resultat = InntektsmeldingDtoMapper.mapEndringsårsak(endringsårsak);
 
-        assertThat(resultat.årsak()).isEqualTo(Endringsårsak.BONUS);
+        assertThat(resultat.årsak()).isEqualTo(EndringsårsakType.BONUS);
         assertThat(resultat.fom()).isNull();
         assertThat(resultat.tom()).isNull();
         assertThat(resultat.bleKjentFom()).isNull();
@@ -108,7 +108,7 @@ class InntektsmeldingDtoMapperTest {
 
     @Test
     void skal_mappe_alle_endringsårsaker_korrekt() {
-        for (var kodeÅrsak : Endringsårsak.values()) {
+        for (var kodeÅrsak : EndringsårsakType.values()) {
             var entitet = EndringsårsakEntitet.builder().medÅrsak(kodeÅrsak).build();
             var resultat = InntektsmeldingDtoMapper.mapEndringsårsak(entitet);
             assertThat(resultat.årsak().name()).isEqualTo(kodeÅrsak.name());
@@ -148,8 +148,8 @@ class InntektsmeldingDtoMapperTest {
                     .build()
             ))
             .medEndringsårsaker(List.of(
-                EndringsårsakEntitet.builder().medÅrsak(Endringsårsak.FERIE).medFom(START_DATO).medTom(START_DATO.plusWeeks(2)).build(),
-                EndringsårsakEntitet.builder().medÅrsak(Endringsårsak.BONUS).build()
+                EndringsårsakEntitet.builder().medÅrsak(EndringsårsakType.FERIE).medFom(START_DATO).medTom(START_DATO.plusWeeks(2)).build(),
+                EndringsårsakEntitet.builder().medÅrsak(EndringsårsakType.BONUS).build()
             ))
             .medOpprettetTidspunkt(opprettetTidspunkt)
             .build();
@@ -183,9 +183,9 @@ class InntektsmeldingDtoMapperTest {
             .map(InntektsmeldingDtoMapper::mapEndringsårsak)
             .toList();
         assertThat(endringsårsaker).hasSize(2);
-        assertThat(endringsårsaker.getFirst().årsak()).isEqualTo(Endringsårsak.FERIE);
+        assertThat(endringsårsaker.getFirst().årsak()).isEqualTo(EndringsårsakType.FERIE);
         assertThat(endringsårsaker.getFirst().fom()).isEqualTo(START_DATO);
-        assertThat(endringsårsaker.get(1).årsak()).isEqualTo(Endringsårsak.BONUS);
+        assertThat(endringsårsaker.get(1).årsak()).isEqualTo(EndringsårsakType.BONUS);
         assertThat(endringsårsaker.get(1).fom()).isNull();
     }
 
@@ -278,8 +278,8 @@ class InntektsmeldingDtoMapperTest {
                 new InntektsmeldingDto.BortfaltNaturalytelse(START_DATO, START_DATO.plusMonths(1),
                     NaturalytelseType.LOSJI, new BigDecimal("1000"))))
             .medEndringAvInntektÅrsaker(List.of(
-                new InntektsmeldingDto.Endringsårsaker(
-                    Endringsårsak.NYANSATT,
+                new InntektsmeldingDto.Endringsårsak(
+                    EndringsårsakType.NYANSATT,
                     null, null, null)))
             .build();
 
@@ -340,7 +340,7 @@ class InntektsmeldingDtoMapperTest {
                     .medMånedBeløp(new BigDecimal("3000.00"))
                     .build()))
             .medEndringsårsaker(List.of(
-                EndringsårsakEntitet.builder().medÅrsak(Endringsårsak.FERIE).medFom(START_DATO).medTom(START_DATO.plusWeeks(2)).build()))
+                EndringsårsakEntitet.builder().medÅrsak(EndringsårsakType.FERIE).medFom(START_DATO).medTom(START_DATO.plusWeeks(2)).build()))
             .medOpprettetTidspunkt(opprettetTidspunkt)
             .build();
 
@@ -364,7 +364,7 @@ class InntektsmeldingDtoMapperTest {
         assertThat(dto.getBortfaltNaturalytelsePerioder()).hasSize(1);
         assertThat(dto.getBortfaltNaturalytelsePerioder().getFirst().naturalytelsetype()).isEqualTo(NaturalytelseType.BIL);
         assertThat(dto.getEndringAvInntektÅrsaker()).hasSize(1);
-        assertThat(dto.getEndringAvInntektÅrsaker().getFirst().årsak()).isEqualTo(Endringsårsak.FERIE);
+        assertThat(dto.getEndringAvInntektÅrsaker().getFirst().årsak()).isEqualTo(EndringsårsakType.FERIE);
     }
 
     @Test
@@ -400,7 +400,7 @@ class InntektsmeldingDtoMapperTest {
             .medBortfaltNaturalytelsePerioder(List.of(
                 new InntektsmeldingDto.BortfaltNaturalytelse(START_DATO, START_DATO.plusMonths(3), NaturalytelseType.LOSJI, new BigDecimal("2000"))))
             .medEndringAvInntektÅrsaker(List.of(
-                new InntektsmeldingDto.Endringsårsaker(Endringsårsak.VARIG_LØNNSENDRING, START_DATO.minusMonths(1), null, START_DATO.minusWeeks(2))))
+                new InntektsmeldingDto.Endringsårsak(EndringsårsakType.VARIG_LØNNSENDRING, START_DATO.minusMonths(1), null, START_DATO.minusWeeks(2))))
             .build();
 
         var entitet = InntektsmeldingDtoMapper.mapTilEntitet(dto);
@@ -495,19 +495,19 @@ class InntektsmeldingDtoMapperTest {
             .medSøkteRefusjonsperioder(List.of())
             .medBortfaltNaturalytelsePerioder(List.of())
             .medEndringAvInntektÅrsaker(List.of(
-                new InntektsmeldingDto.Endringsårsaker(Endringsårsak.TARIFFENDRING, START_DATO, START_DATO.plusMonths(1), START_DATO.minusDays(5)),
-                new InntektsmeldingDto.Endringsårsaker(Endringsårsak.BONUS, null, null, null)))
+                new InntektsmeldingDto.Endringsårsak(EndringsårsakType.TARIFFENDRING, START_DATO, START_DATO.plusMonths(1), START_DATO.minusDays(5)),
+                new InntektsmeldingDto.Endringsårsak(EndringsårsakType.BONUS, null, null, null)))
             .build();
 
         var entitet = InntektsmeldingDtoMapper.mapTilEntitet(original);
         var roundtripped = InntektsmeldingDtoMapper.mapFraEntitet(entitet);
 
         assertThat(roundtripped.getEndringAvInntektÅrsaker()).hasSize(2);
-        assertThat(roundtripped.getEndringAvInntektÅrsaker().getFirst().årsak()).isEqualTo(Endringsårsak.TARIFFENDRING);
+        assertThat(roundtripped.getEndringAvInntektÅrsaker().getFirst().årsak()).isEqualTo(EndringsårsakType.TARIFFENDRING);
         assertThat(roundtripped.getEndringAvInntektÅrsaker().getFirst().fom()).isEqualTo(START_DATO);
         assertThat(roundtripped.getEndringAvInntektÅrsaker().getFirst().tom()).isEqualTo(START_DATO.plusMonths(1));
         assertThat(roundtripped.getEndringAvInntektÅrsaker().getFirst().bleKjentFom()).isEqualTo(START_DATO.minusDays(5));
-        assertThat(roundtripped.getEndringAvInntektÅrsaker().get(1).årsak()).isEqualTo(Endringsårsak.BONUS);
+        assertThat(roundtripped.getEndringAvInntektÅrsaker().get(1).årsak()).isEqualTo(EndringsårsakType.BONUS);
         assertThat(roundtripped.getEndringAvInntektÅrsaker().get(1).fom()).isNull();
     }
 

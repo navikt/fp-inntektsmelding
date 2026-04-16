@@ -8,17 +8,16 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import no.nav.foreldrepenger.inntektsmelding.felles.ForespørselStatusDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.FødselsnummerDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.OrganisasjonsnummerDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.YtelseTypeDto;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.ArbeidsgiverDto;
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.FødselsnummerDto;
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.HentForespørselResponse;
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.kontrakt.YtelseType;
+import no.nav.foreldrepenger.inntektsmelding.imapi.forespørsel.ForespørselResponse;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Fødselsnummer;
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.ForespørselStatusDto;
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.YtelseTypeDto;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 
@@ -39,25 +38,25 @@ public class ForespørselApiTjeneste {
     }
 
 
-    public Optional<HentForespørselResponse> hentForesørselDto(UUID forespørselUuid) {
+    public Optional<ForespørselResponse> hentForesørselDto(UUID forespørselUuid) {
         return forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid).map(this::mapTilResponseDto);
     }
 
 
-    public List<HentForespørselResponse> hentForespørslerDto(Arbeidsgiver arbeidsgiver,
+    public List<ForespørselResponse> hentForespørslerDto(Arbeidsgiver arbeidsgiver,
                                                              Fødselsnummer fnr,
-                                                             ForespørselStatusDto status,
-                                                             YtelseTypeDto ytelseTypeDto,
+                                                             no.nav.foreldrepenger.inntektsmelding.typer.dto.ForespørselStatusDto status,
+                                                             no.nav.foreldrepenger.inntektsmelding.typer.dto.YtelseTypeDto ytelseTypeDto,
                                                              LocalDate fom,
                                                              LocalDate tom) {
         var resultater = forespørselBehandlingTjeneste.hentForespørsler(arbeidsgiver, fnr, status, ytelseTypeDto, fom, tom);
         return resultater.stream().map(this::mapTilResponseDto).toList();
     }
 
-    private HentForespørselResponse mapTilResponseDto(ForespørselDto fp) {
+    private ForespørselResponse mapTilResponseDto(ForespørselDto fp) {
         var fnr = personTjeneste.finnPersonIdentForAktørId(fp.aktørId()).getIdent();
-        return new HentForespørselResponse(fp.uuid(),
-            new ArbeidsgiverDto(fp.arbeidsgiver().orgnr()),
+        return new ForespørselResponse(fp.uuid(),
+            new OrganisasjonsnummerDto(fp.arbeidsgiver().orgnr()),
             new FødselsnummerDto(fnr),
             fp.førsteUttaksdato(),
             fp.skjæringstidspunkt(),
@@ -66,18 +65,18 @@ public class ForespørselApiTjeneste {
             fp.opprettetTidspunkt());
     }
 
-    private YtelseType mapYtelsetype(Ytelsetype ytelseType) {
+    private YtelseTypeDto mapYtelsetype(Ytelsetype ytelseType) {
         return switch (ytelseType) {
-            case FORELDREPENGER -> YtelseType.FORELDREPENGER;
-            case SVANGERSKAPSPENGER -> YtelseType.SVANGERSKAPSPENGER;
+            case FORELDREPENGER -> YtelseTypeDto.FORELDREPENGER;
+            case SVANGERSKAPSPENGER -> YtelseTypeDto.SVANGERSKAPSPENGER;
         };
     }
 
-    private HentForespørselResponse.Status mapForespørselStatus(ForespørselStatus status) {
+    private ForespørselStatusDto mapForespørselStatus(ForespørselStatus status) {
         return switch (status) {
-            case UNDER_BEHANDLING -> HentForespørselResponse.Status.UNDER_BEHANDLING;
-            case FERDIG -> HentForespørselResponse.Status.FERDIG;
-            case UTGÅTT -> HentForespørselResponse.Status.UTGÅTT;
+            case UNDER_BEHANDLING -> ForespørselStatusDto.UNDER_BEHANDLING;
+            case FERDIG -> ForespørselStatusDto.FERDIG;
+            case UTGÅTT -> ForespørselStatusDto.UTGÅTT;
         };
     }
 
