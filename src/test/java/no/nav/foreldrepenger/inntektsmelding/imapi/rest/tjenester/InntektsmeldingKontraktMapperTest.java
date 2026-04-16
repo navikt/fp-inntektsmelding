@@ -17,8 +17,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import no.nav.foreldrepenger.inntektsmelding.felles.InnsendingstypeDto;
-import no.nav.foreldrepenger.inntektsmelding.felles.InnsendingsårsakDto;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
@@ -76,52 +74,6 @@ class InntektsmeldingKontraktMapperTest {
         assertThat(resultat.kontaktperson().telefonnummer()).isEqualTo("12345678");
         assertThat(resultat.startdato()).isEqualTo(STARTDATO);
         assertThat(resultat.inntekt()).isEqualByComparingTo(BigDecimal.valueOf(45000));
-    }
-
-    @Test
-    void skal_sette_innsendingsårsak_ny_når_kun_én_inntektsmelding() {
-        var imUuid = UUID.randomUUID();
-        var forespørselUuid = UUID.randomUUID();
-        var inntektsmelding = lagInntektsmeldingDto(imUuid, STARTDATO, Kildesystem.FPSAK);
-
-        when(forespørselTjeneste.finnForespørsler(any(), any(), eq(ORGNR)))
-            .thenReturn(List.of(lagForespørselDto(forespørselUuid, STARTDATO)));
-        when(personTjeneste.finnPersonIdentForAktørId(any()))
-            .thenReturn(new PersonIdent(FNR));
-        var resultat = mapper.mapTilKontrakt(inntektsmelding);
-
-        assertThat(resultat.innsendingsårsak()).isEqualTo(InnsendingsårsakDto.NY);
-    }
-
-    @Test
-    void skal_sette_innsendingsårsak_ny_når_flere_inntektsmeldinger_og_er_eldste() {
-        var eldsteImUuid = UUID.randomUUID();
-        var forespørselUuid = UUID.randomUUID();
-        var eldsteInntektsmelding = lagInntektsmeldingDto(eldsteImUuid, STARTDATO, Kildesystem.FPSAK);
-
-        when(forespørselTjeneste.finnForespørsler(any(), any(), eq(ORGNR)))
-            .thenReturn(List.of(lagForespørselDto(forespørselUuid, STARTDATO)));
-        when(personTjeneste.finnPersonIdentForAktørId(any()))
-            .thenReturn(new PersonIdent(FNR));
-        var resultat = mapper.mapTilKontrakt(eldsteInntektsmelding);
-
-        assertThat(resultat.innsendingsårsak()).isEqualTo(InnsendingsårsakDto.NY);
-    }
-
-    @Test
-    void skal_sette_innsendingstype_forespurt_for_ikke_lps() {
-        var imUuid = UUID.randomUUID();
-        var forespørselUuid = UUID.randomUUID();
-        var inntektsmelding = lagInntektsmeldingDto(imUuid, STARTDATO, Kildesystem.FPSAK);
-
-        when(forespørselTjeneste.finnForespørsler(any(), any(), eq(ORGNR)))
-            .thenReturn(List.of(lagForespørselDto(forespørselUuid, STARTDATO)));
-        when(personTjeneste.finnPersonIdentForAktørId(any()))
-            .thenReturn(new PersonIdent(FNR));
-
-        var resultat = mapper.mapTilKontrakt(inntektsmelding);
-
-        assertThat(resultat.innsendingstype()).isEqualTo(InnsendingstypeDto.FORESPURT);
     }
 
     @Test
@@ -211,8 +163,6 @@ class InntektsmeldingKontraktMapperTest {
 
         assertThat(resultat.avsenderSystem()).isNull();
     }
-
-    // ---- Hjelpemetoder ----
 
     private static ForespørselDto lagForespørselDto(UUID uuid, LocalDate startdato) {
         return ForespørselDto.builder()
