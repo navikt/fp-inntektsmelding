@@ -22,8 +22,12 @@ import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 @ApplicationScoped
 public class InntektsmeldingKontraktMapper {
 
-    private final ForespørselTjeneste forespørselTjeneste;
-    private final PersonTjeneste personTjeneste;
+    private ForespørselTjeneste forespørselTjeneste;
+    private PersonTjeneste personTjeneste;
+
+    public InntektsmeldingKontraktMapper() {
+        // CDI
+    }
 
     @Inject
     public InntektsmeldingKontraktMapper(ForespørselTjeneste forespørselTjeneste,
