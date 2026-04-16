@@ -86,11 +86,6 @@
             <artifactId>ereg-klient</artifactId>
         </dependency>
         <dependency>
-            <groupId>no.nav.foreldrepenger.inntektsmelding</groupId>
-            <artifactId>inntektsmelding-kontrakt</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
             <groupId>no.nav.foreldrepenger.kontrakter</groupId>
             <artifactId>inntektsmelding-v1</artifactId>
             <version>${fp-kontrakter.version}</version>

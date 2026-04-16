@@ -11,6 +11,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.EndringsårsakType;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,7 +26,6 @@ import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
-import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Endringsårsak;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
@@ -193,7 +194,7 @@ class InntektsmeldingKontraktMapperTest {
                 new InntektsmeldingDto.BortfaltNaturalytelse(startdato.plusDays(2), Tid.TIDENES_ENDE, NaturalytelseType.BIL, BigDecimal.valueOf(1200))
             ))
             .medEndringAvInntektÅrsaker(List.of(
-                new InntektsmeldingDto.Endringsårsaker(Endringsårsak.TARIFFENDRING, null, null, startdato.plusDays(1))
+                new InntektsmeldingDto.Endringsårsak(EndringsårsakType.TARIFFENDRING, null, null, startdato.plusDays(1))
             ))
             .medKildesystem(kildesystem)
             .medAvsenderSystem(new InntektsmeldingDto.AvsenderSystem("test-lps", "1.0.0"))
