@@ -57,10 +57,10 @@ class InntektsmeldingKontraktMapperTest {
     void skal_mappe_grunnleggende_felter() {
         var imUuid = UUID.randomUUID();
         var forespørselUuid = UUID.randomUUID();
-        var inntektsmelding = lagInntektsmeldingDto(imUuid, STARTDATO, Kildesystem.FPSAK);
+        var inntektsmelding = lagInntektsmeldingDto(imUuid);
 
         when(forespørselTjeneste.finnForespørsler(any(), any(), eq(ORGNR)))
-            .thenReturn(List.of(lagForespørselDto(forespørselUuid, STARTDATO)));
+            .thenReturn(List.of(lagForespørselDto(forespørselUuid)));
         when(personTjeneste.finnPersonIdentForAktørId(any()))
             .thenReturn(new PersonIdent(FNR));
 
@@ -80,10 +80,10 @@ class InntektsmeldingKontraktMapperTest {
     @Test
     void skal_mappe_refusjonsfelter() {
         var imUuid = UUID.randomUUID();
-        var inntektsmelding = lagInntektsmeldingDto(imUuid, STARTDATO, Kildesystem.FPSAK);
+        var inntektsmelding = lagInntektsmeldingDto(imUuid);
 
         when(forespørselTjeneste.finnForespørsler(any(), any(), eq(ORGNR)))
-            .thenReturn(List.of(lagForespørselDto(UUID.randomUUID(), STARTDATO)));
+            .thenReturn(List.of(lagForespørselDto(UUID.randomUUID())));
         when(personTjeneste.finnPersonIdentForAktørId(any()))
             .thenReturn(new PersonIdent(FNR));
 
@@ -99,10 +99,10 @@ class InntektsmeldingKontraktMapperTest {
     @Test
     void skal_mappe_bortfalt_naturalytelse() {
         var imUuid = UUID.randomUUID();
-        var inntektsmelding = lagInntektsmeldingDto(imUuid, STARTDATO, Kildesystem.FPSAK);
+        var inntektsmelding = lagInntektsmeldingDto(imUuid);
 
         when(forespørselTjeneste.finnForespørsler(any(), any(), eq(ORGNR)))
-            .thenReturn(List.of(lagForespørselDto(UUID.randomUUID(), STARTDATO)));
+            .thenReturn(List.of(lagForespørselDto(UUID.randomUUID())));
         when(personTjeneste.finnPersonIdentForAktørId(any()))
             .thenReturn(new PersonIdent(FNR));
 
@@ -118,10 +118,10 @@ class InntektsmeldingKontraktMapperTest {
     @Test
     void skal_mappe_endringsårsaker() {
         var imUuid = UUID.randomUUID();
-        var inntektsmelding = lagInntektsmeldingDto(imUuid, STARTDATO, Kildesystem.FPSAK);
+        var inntektsmelding = lagInntektsmeldingDto(imUuid);
 
         when(forespørselTjeneste.finnForespørsler(any(), any(), eq(ORGNR)))
-            .thenReturn(List.of(lagForespørselDto(UUID.randomUUID(), STARTDATO)));
+            .thenReturn(List.of(lagForespørselDto(UUID.randomUUID())));
         when(personTjeneste.finnPersonIdentForAktørId(any()))
             .thenReturn(new PersonIdent(FNR));
 
@@ -136,10 +136,10 @@ class InntektsmeldingKontraktMapperTest {
     @Test
     void skal_mappe_avsendersystem() {
         var imUuid = UUID.randomUUID();
-        var inntektsmelding = lagInntektsmeldingDto(imUuid, STARTDATO, Kildesystem.FPSAK);
+        var inntektsmelding = lagInntektsmeldingDto(imUuid);
 
         when(forespørselTjeneste.finnForespørsler(any(), any(), eq(ORGNR)))
-            .thenReturn(List.of(lagForespørselDto(UUID.randomUUID(), STARTDATO)));
+            .thenReturn(List.of(lagForespørselDto(UUID.randomUUID())));
         when(personTjeneste.finnPersonIdentForAktørId(any()))
             .thenReturn(new PersonIdent(FNR));
 
@@ -156,7 +156,7 @@ class InntektsmeldingKontraktMapperTest {
         var inntektsmelding = lagInntektsmeldingDtoUtenAvsenderSystem(imUuid);
 
         when(forespørselTjeneste.finnForespørsler(any(), any(), eq(ORGNR)))
-            .thenReturn(List.of(lagForespørselDto(UUID.randomUUID(), STARTDATO)));
+            .thenReturn(List.of(lagForespørselDto(UUID.randomUUID())));
         when(personTjeneste.finnPersonIdentForAktørId(any()))
             .thenReturn(new PersonIdent(FNR));
 
@@ -165,7 +165,7 @@ class InntektsmeldingKontraktMapperTest {
         assertThat(resultat.avsenderSystem().systemNavn()).isEqualTo("NAV_NO");
     }
 
-    private static ForespørselDto lagForespørselDto(UUID uuid, LocalDate startdato) {
+    private static ForespørselDto lagForespørselDto(UUID uuid) {
         return ForespørselDto.builder()
             .uuid(uuid)
             .arbeidsgiver(Arbeidsgiver.fra(ORGNR))
@@ -173,30 +173,30 @@ class InntektsmeldingKontraktMapperTest {
             .ytelseType(Ytelsetype.FORELDREPENGER)
             .status(ForespørselStatus.UNDER_BEHANDLING)
             .forespørselType(ForespørselType.BESTILT_AV_FAGSYSTEM)
-            .førsteUttaksdato(startdato)
+            .førsteUttaksdato(STARTDATO)
             .build();
     }
 
-    private static InntektsmeldingDto lagInntektsmeldingDto(UUID imUuid, LocalDate startdato, Kildesystem kildesystem) {
+    private static InntektsmeldingDto lagInntektsmeldingDto(UUID imUuid) {
         return InntektsmeldingDto.builder()
             .medInntektsmeldingUuid(imUuid)
             .medAktørId(AktørId.fra(AKTØR_ID))
             .medArbeidsgiver(Arbeidsgiver.fra(ORGNR))
-            .medStartdato(startdato)
+            .medStartdato(STARTDATO)
             .medYtelse(Ytelsetype.FORELDREPENGER)
             .medKontaktperson(new InntektsmeldingDto.Kontaktperson("12345678", "Kontakt Person"))
             .medInntekt(BigDecimal.valueOf(45000))
             .medMånedRefusjon(BigDecimal.valueOf(10000))
-            .medOpphørsdatoRefusjon(startdato.plusDays(9))
+            .medOpphørsdatoRefusjon(STARTDATO.plusDays(9))
             .medInnsendtTidspunkt(LocalDateTime.of(2026, 1, 10, 12, 0))
-            .medSøkteRefusjonsperioder(List.of(new InntektsmeldingDto.SøktRefusjon(startdato.plusDays(5), BigDecimal.valueOf(9000))))
+            .medSøkteRefusjonsperioder(List.of(new InntektsmeldingDto.SøktRefusjon(STARTDATO.plusDays(5), BigDecimal.valueOf(9000))))
             .medBortfaltNaturalytelsePerioder(List.of(
-                new InntektsmeldingDto.BortfaltNaturalytelse(startdato.plusDays(2), Tid.TIDENES_ENDE, NaturalytelseType.BIL, BigDecimal.valueOf(1200))
+                new InntektsmeldingDto.BortfaltNaturalytelse(STARTDATO.plusDays(2), Tid.TIDENES_ENDE, NaturalytelseType.BIL, BigDecimal.valueOf(1200))
             ))
             .medEndringAvInntektÅrsaker(List.of(
-                new InntektsmeldingDto.Endringsårsak(EndringsårsakType.TARIFFENDRING, null, null, startdato.plusDays(1))
+                new InntektsmeldingDto.Endringsårsak(EndringsårsakType.TARIFFENDRING, null, null, STARTDATO.plusDays(1))
             ))
-            .medKildesystem(kildesystem)
+            .medKildesystem(Kildesystem.FPSAK)
             .medAvsenderSystem(new InntektsmeldingDto.AvsenderSystem("test-lps", "1.0.0"))
             .build();
     }
