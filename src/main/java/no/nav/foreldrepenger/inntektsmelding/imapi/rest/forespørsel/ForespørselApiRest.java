@@ -19,6 +19,8 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import no.nav.foreldrepenger.inntektsmelding.felles.FødselsnummerDto;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,12 +79,27 @@ public class ForespørselApiRest {
         sjekkErSystemkall();
         var dtoer = forespørselApiTjeneste.hentForespørslerDto(
             Arbeidsgiver.fra(filterRequest.orgnr().orgnr()),
-            Optional.ofNullable(filterRequest.fnr()).map(f -> f.fnr()).map(Fødselsnummer::new).orElse(null),
-            Optional.ofNullable(filterRequest.status()).map(s -> ForespørselStatusDto.valueOf(s.name())).orElse(null),
-            Optional.ofNullable(filterRequest.ytelseType()).map(y -> YtelseTypeDto.valueOf(y.name())).orElse(null),
+            Optional.ofNullable(filterRequest.fnr()).map(FødselsnummerDto::fnr).map(Fødselsnummer::new).orElse(null),
+            Optional.ofNullable(filterRequest.status()).map(ForespørselApiRest::mapStatus).orElse(null),
+            Optional.ofNullable(filterRequest.ytelseType()).map(ForespørselApiRest::mapYtelseType).orElse(null),
             filterRequest.fom(),
             filterRequest.tom());
         return Response.ok(dtoer).build();
+    }
+
+    private static ForespørselStatusDto mapStatus(no.nav.foreldrepenger.inntektsmelding.felles.ForespørselStatusDto status) {
+        return switch (status) {
+            case UNDER_BEHANDLING -> ForespørselStatusDto.UNDER_BEHANDLING;
+            case FERDIG -> ForespørselStatusDto.FERDIG;
+            case UTGÅTT -> ForespørselStatusDto.UTGÅTT;
+        };
+    }
+
+    private static YtelseTypeDto mapYtelseType(no.nav.foreldrepenger.inntektsmelding.felles.YtelseTypeDto ytelseType) {
+        return switch (ytelseType) {
+            case FORELDREPENGER -> YtelseTypeDto.FORELDREPENGER;
+            case SVANGERSKAPSPENGER -> YtelseTypeDto.SVANGERSKAPSPENGER;
+        };
     }
 
     private void sjekkErSystemkall() {
