@@ -2,7 +2,6 @@ package no.nav.foreldrepenger.inntektsmelding.imapi.rest.forespørsel;
 
 import static no.nav.foreldrepenger.inntektsmelding.imapi.rest.forespørsel.ForespørselApiRest.BASE_PATH;
 
-import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -11,7 +10,6 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -21,18 +19,18 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
-
-import no.nav.foreldrepenger.inntektsmelding.typer.domene.Fødselsnummer;
+import no.nav.foreldrepenger.inntektsmelding.felles.FødselsnummerDto;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import no.nav.foreldrepenger.inntektsmelding.imapi.forespørsel.ForespørselFilterRequest;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.AutentisertMedAzure;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.Tilgangskontrollert;
 import no.nav.foreldrepenger.inntektsmelding.server.tilgangsstyring.Tilgang;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Fødselsnummer;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.ForespørselStatusDto;
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.YtelseTypeDto;
 
 @AutentisertMedAzure
@@ -81,20 +79,28 @@ public class ForespørselApiRest {
         sjekkErSystemkall();
         var dtoer = forespørselApiTjeneste.hentForespørslerDto(
             Arbeidsgiver.fra(filterRequest.orgnr().orgnr()),
-            Optional.ofNullable(filterRequest.fnr()).map(Fødselsnummer::fnr).map(Fødselsnummer::new).orElse(null),
-            filterRequest.status(),
-            filterRequest.ytelseType(),
+            Optional.ofNullable(filterRequest.fnr()).map(FødselsnummerDto::fnr).map(Fødselsnummer::new).orElse(null),
+            Optional.ofNullable(filterRequest.status()).map(ForespørselApiRest::mapStatus).orElse(null),
+            Optional.ofNullable(filterRequest.ytelseType()).map(ForespørselApiRest::mapYtelseType).orElse(null),
             filterRequest.fom(),
             filterRequest.tom());
         return Response.ok(dtoer).build();
     }
 
-    protected record ForespørselFilterRequest(@NotNull @Valid OrganisasjonsnummerDto orgnr,
-                                              @Valid Fødselsnummer fnr,
-                                              @Valid ForespørselStatusDto status,
-                                              @Valid YtelseTypeDto ytelseType,
-                                              LocalDate fom,
-                                              LocalDate tom) {}
+    private static ForespørselStatusDto mapStatus(no.nav.foreldrepenger.inntektsmelding.felles.ForespørselStatusDto status) {
+        return switch (status) {
+            case UNDER_BEHANDLING -> ForespørselStatusDto.UNDER_BEHANDLING;
+            case FERDIG -> ForespørselStatusDto.FERDIG;
+            case UTGÅTT -> ForespørselStatusDto.UTGÅTT;
+        };
+    }
+
+    private static YtelseTypeDto mapYtelseType(no.nav.foreldrepenger.inntektsmelding.felles.YtelseTypeDto ytelseType) {
+        return switch (ytelseType) {
+            case FORELDREPENGER -> YtelseTypeDto.FORELDREPENGER;
+            case SVANGERSKAPSPENGER -> YtelseTypeDto.SVANGERSKAPSPENGER;
+        };
+    }
 
     private void sjekkErSystemkall() {
         tilgang.sjekkErSystembruker();
