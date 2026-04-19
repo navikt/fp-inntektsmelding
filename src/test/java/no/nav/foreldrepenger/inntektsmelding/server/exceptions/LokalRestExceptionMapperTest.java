@@ -2,8 +2,6 @@ package no.nav.foreldrepenger.inntektsmelding.server.exceptions;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import no.nav.vedtak.log.mdc.MDCOperations;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,18 +12,22 @@ import ch.qos.logback.classic.Level;
 import no.nav.vedtak.exception.FunksjonellException;
 import no.nav.vedtak.exception.ManglerTilgangException;
 import no.nav.vedtak.exception.TekniskException;
+import no.nav.vedtak.feil.FeilDto;
+import no.nav.vedtak.feil.Feilkode;
+import no.nav.vedtak.log.mdc.MDCOperations;
 import no.nav.vedtak.log.util.MemoryAppender;
+import no.nav.vedtak.server.rest.FeilUtils;
 
 @Execution(ExecutionMode.SAME_THREAD)
-class GeneralRestExceptionMapperTest {
+class LokalRestExceptionMapperTest {
 
     private static MemoryAppender logSniffer;
 
-    private final GeneralRestExceptionMapper exceptionMapper = new GeneralRestExceptionMapper();
+    private final LokalRestExceptionMapper exceptionMapper = new LokalRestExceptionMapper();
 
     @BeforeEach
     void setUp() {
-        logSniffer = MemoryAppender.sniff(GeneralRestExceptionMapper.class);
+        logSniffer = MemoryAppender.sniff(FeilUtils.class);
     }
 
     @AfterEach
@@ -43,7 +45,7 @@ class GeneralRestExceptionMapperTest {
             assertThat(response.getEntity()).isInstanceOf(FeilDto.class);
             var feilDto = (FeilDto) response.getEntity();
 
-            assertThat(feilDto.type()).isEqualTo(FeilType.MANGLER_TILGANG_FEIL);
+            assertThat(feilDto.type()).isEqualTo(Feilkode.IKKE_TILGANG.name());
             assertThat(feilDto.callId()).isEqualTo(callId);
             assertThat(feilDto.feilmelding()).isEqualTo("Mangler tilgang");
             assertThat(logSniffer.search("ManglerTilgangFeilmeldingKode", Level.WARN)).isEmpty();
@@ -73,10 +75,10 @@ class GeneralRestExceptionMapperTest {
             assertThat(response.getEntity()).isInstanceOf(FeilDto.class);
             var feilDto = (FeilDto) response.getEntity();
 
-            assertThat(feilDto.type()).isEqualTo(FeilType.INGEN_SAK_FUNNET);
+            assertThat(feilDto.type()).isEqualTo(InntektsmeldingException.LokalFeilKode.INGEN_SAK_FUNNET.name());
             assertThat(feilDto.callId()).isEqualTo(callId);
             assertThat(feilDto.feilmelding()).isEqualTo("Ingen sak funnet");
-            assertThat(logSniffer.search("Ingen sak funnet feil", Level.INFO)).hasSize(1);
+            assertThat(logSniffer.search(InntektsmeldingException.LokalFeilKode.INGEN_SAK_FUNNET.getFeiltekst(), Level.INFO)).hasSize(1);
         }
     }
 
@@ -89,10 +91,10 @@ class GeneralRestExceptionMapperTest {
             assertThat(response.getEntity()).isInstanceOf(FeilDto.class);
             var feilDto = (FeilDto) response.getEntity();
 
-            assertThat(feilDto.type()).isEqualTo(FeilType.SENDT_FOR_TIDLIG);
+            assertThat(feilDto.type()).isEqualTo(InntektsmeldingException.LokalFeilKode.SENDT_FOR_TIDLIG.name());
             assertThat(feilDto.callId()).isEqualTo(callId);
             assertThat(feilDto.feilmelding()).isEqualTo("Sendt inntektsmelding for tidlig");
-            assertThat(logSniffer.search("Inntektsmelding sendt for tidlig feil", Level.INFO)).hasSize(1);
+            assertThat(logSniffer.search(InntektsmeldingException.LokalFeilKode.SENDT_FOR_TIDLIG.getFeiltekst(), Level.INFO)).hasSize(1);
         }
     }
 
@@ -105,10 +107,10 @@ class GeneralRestExceptionMapperTest {
             assertThat(response.getEntity()).isInstanceOf(FeilDto.class);
             var feilDto = (FeilDto) response.getEntity();
 
-            assertThat(feilDto.type()).isEqualTo(FeilType.FINNES_I_AAREG);
+            assertThat(feilDto.type()).isEqualTo(InntektsmeldingException.LokalFeilKode.FINNES_I_AAREG.name());
             assertThat(feilDto.callId()).isEqualTo(callId);
             assertThat(feilDto.feilmelding()).isEqualTo("Organisasjonsnummer er rapportert i Aa-reg");
-            assertThat(logSniffer.search("Organisasjonsnummer har rapportering i aa-reg feil", Level.INFO)).hasSize(1);
+            assertThat(logSniffer.search(InntektsmeldingException.LokalFeilKode.FINNES_I_AAREG.getFeiltekst(), Level.INFO)).hasSize(1);
         }
     }
 
@@ -191,14 +193,14 @@ class GeneralRestExceptionMapperTest {
     }
 
     private static FunksjonellException funksjonellFeilSakIkkeFunnet() {
-        return new FunksjonellException("INGEN_SAK_FUNNET", "en egen funksjonell melding", null);
+        return new InntektsmeldingException(InntektsmeldingException.LokalFeilKode.INGEN_SAK_FUNNET);
     }
 
     private static FunksjonellException funksjonellFeilSendtForTidlig() {
-        return new FunksjonellException("SENDT_FOR_TIDLIG", "en egen funksjonell melding", null);
+        return new InntektsmeldingException(InntektsmeldingException.LokalFeilKode.SENDT_FOR_TIDLIG);
     }
     private static FunksjonellException funksjonellFeilFinnesIAaReg() {
-        return new FunksjonellException("FINNES_I_AAREG", "en egen funksjonell melding", null);
+        return new InntektsmeldingException(InntektsmeldingException.LokalFeilKode.FINNES_I_AAREG);
     }
 
 }

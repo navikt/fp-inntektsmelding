@@ -6,7 +6,7 @@
     <parent>
         <groupId>no.nav.foreldrepenger.felles</groupId>
         <artifactId>fp-parent-app</artifactId>
-        <version>5.3.1</version>
+        <version>5.3.2</version>
     </parent>
 
     <groupId>no.nav.foreldrepenger.inntektsmelding</groupId>
@@ -18,7 +18,7 @@
         <sonar.projectName>fp-inntektsmelding</sonar.projectName>
         <sonar.projectKey>navikt_fp-inntektsmelding</sonar.projectKey>
 
-        <felles.version>7.7.2</felles.version>
+        <felles.version>7.8.0</felles.version>
         <prosesstask.version>5.2.5</prosesstask.version>
         <fp-kontrakter.version>9.4.31</fp-kontrakter.version>
     </properties>
@@ -121,16 +121,6 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- SWAGGER -->
-        <dependency>
-            <groupId>io.swagger.core.v3</groupId>
-            <artifactId>swagger-core-jakarta</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.swagger.core.v3</groupId>
-            <artifactId>swagger-jaxrs2-jakarta</artifactId>
-        </dependency>
-
         <dependency>
             <groupId>org.hibernate.orm</groupId>
             <artifactId>hibernate-core</artifactId>
@@ -198,12 +188,12 @@
             <artifactId>logstash-logback-encoder</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.glassfish.jersey.media</groupId>
-            <artifactId>jersey-media-json-jackson</artifactId>
+            <groupId>no.nav.foreldrepenger.felles</groupId>
+            <artifactId>felles-db</artifactId>
         </dependency>
         <dependency>
             <groupId>no.nav.foreldrepenger.felles</groupId>
-            <artifactId>felles-db</artifactId>
+            <artifactId>felles-openapi</artifactId>
         </dependency>
         <dependency>
             <groupId>no.nav.foreldrepenger.felles</groupId>

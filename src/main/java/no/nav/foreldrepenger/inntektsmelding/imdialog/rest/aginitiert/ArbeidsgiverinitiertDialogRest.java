@@ -12,8 +12,6 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,12 +19,12 @@ import no.nav.foreldrepenger.inntektsmelding.imdialog.tjenester.GrunnlagDtoTjene
 import no.nav.foreldrepenger.inntektsmelding.imdialog.tjenester.UregistrertValiderer;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.fpsak.FpsakKlient;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.fpsak.FpsakTjeneste;
-import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.AutentisertMedTokenX;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.Tilgangskontrollert;
+import no.nav.foreldrepenger.inntektsmelding.server.exceptions.InntektsmeldingException;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
-import no.nav.vedtak.exception.FunksjonellException;
 
 @AutentisertMedTokenX
 @RequestScoped
@@ -76,10 +74,9 @@ public class ArbeidsgiverinitiertDialogRest {
             var finnesYtelseIFpsak = FpsakKlient.StatusSakInntektsmelding.ÅPEN_FOR_BEHANDLING.equals(infoOmSakRespons.statusInntektsmelding());
 
             if (!finnesYtelseIFpsak) {
-                var tekst = String.format("Du kan ikke sende inn inntektsmelding på %s for denne personen med aktør id %s",
-                    request.ytelseType(),
-                    aktørId);
-                throw new FunksjonellException("INGEN_SAK_FUNNET", tekst, null, null);
+                LOG.info("{}: kan ikke sende inn inntektsmelding for {} for person med aktørId {}",
+                    InntektsmeldingException.LokalFeilKode.INGEN_SAK_FUNNET, request.ytelseType(), aktørId);
+                throw new InntektsmeldingException(InntektsmeldingException.LokalFeilKode.INGEN_SAK_FUNNET);
             }
         }
         var dto = grunnlagDtoTjeneste.finnArbeidsforholdForFnr(personInfo, request.førsteFraværsdag());
