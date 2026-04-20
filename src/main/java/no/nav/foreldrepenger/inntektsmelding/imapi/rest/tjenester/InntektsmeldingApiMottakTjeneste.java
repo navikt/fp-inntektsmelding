@@ -39,6 +39,7 @@ public class InntektsmeldingApiMottakTjeneste {
     private FellesGrunnlagTjeneste fellesGrunnlagTjeneste;
     private InntektTjeneste inntektTjeneste;
     private PersonTjeneste  personTjeneste;
+    private static final BigDecimal AKSEPTERT_AVVIK = new BigDecimal("50");
 
     InntektsmeldingApiMottakTjeneste() {
         //CDI
@@ -122,13 +123,13 @@ public class InntektsmeldingApiMottakTjeneste {
             return new SendInntektsmeldingResponse(false, null, "Inntektskomponenten har nedetid, og vi kan ikke verifisere inntekt i inntektsmeldingen mot A-inntekt. Prøv igjen om litt.");
         }
 
-        var ulikInntektUtenÅrsak =
-            inntektFraAInntekt.gjennomsnitt().subtract(inntektsmelding.getMånedInntekt()).abs().compareTo(new BigDecimal("50")) > 0
+        var inntektErUlikOgIngenÅrsakOppgitt =
+            inntektFraAInntekt.gjennomsnitt().subtract(inntektsmelding.getMånedInntekt()).abs().compareTo(AKSEPTERT_AVVIK) > 0
                 && (inntektsmelding.getEndringAvInntektÅrsaker() == null || inntektsmelding.getEndringAvInntektÅrsaker().isEmpty());
 
-        if (ulikInntektUtenÅrsak) {
+        if (inntektErUlikOgIngenÅrsakOppgitt) {
             var feilmelding = String.format(
-                "Inntekt i inntektsmelding er ulik inntekt fra A-inntekt, og ingen endringsårsak er oppgitt. Gjennomsnittlig inntekt fra A-inntekt: %s", inntektFraAInntekt.gjennomsnitt());
+                "Inntekt i inntektsmelding er ulik inntekt fra A-inntekt, og ingen endringsårsak er oppgitt. Gjennomsnittlig inntekt fra A-inntekt: %s, oppgitt inntekt i inntektsmelding: %s", inntektFraAInntekt.gjennomsnitt(), inntektsmelding.getMånedInntekt());
             return new SendInntektsmeldingResponse(false, null, feilmelding);
         }
 
@@ -145,13 +146,14 @@ public class InntektsmeldingApiMottakTjeneste {
             LOG.info("LIK_INNTEKT_OG_ÅRSAK: inntekt oppgitt av arbeidsgiver: {} er helt lik gjennomsnittlig inntekt fra a-inntekt. {}, og årsak(er) er oppgitt {}", inntektsmelding.getMånedInntekt(), gjennomsnittligInntekt, inntektsmelding.getEndringAvInntektÅrsaker());
         } else {
             var likInntektMedDifferanseOgÅrsak =
-                gjennomsnittligInntekt.subtract(inntektFraIm).abs().compareTo(new BigDecimal("50")) > 0
+                gjennomsnittligInntekt.subtract(inntektFraIm).abs().compareTo(AKSEPTERT_AVVIK) > 0
                     && inntektsmelding.getEndringAvInntektÅrsaker() != null && !inntektsmelding.getEndringAvInntektÅrsaker().isEmpty();
             if (likInntektMedDifferanseOgÅrsak) {
                 LOG.info(
-                    "LIK_INNTEKT_INNENFOR_DIFFERANSE: inntekt oppgitt av arbeidsgiver: {} er lik gjennomsnittlig inntekt fra a-inntekt. {} med en margin på 50 kroner. Endringsårsak(er) oppgitt: {}",
+                    "LIK_INNTEKT_INNENFOR_DIFFERANSE: inntekt oppgitt av arbeidsgiver: {} er lik gjennomsnittlig inntekt fra a-inntekt. {} med en margin på {} kroner. Endringsårsak(er) oppgitt: {}",
                     inntektsmelding.getMånedInntekt(),
                     gjennomsnittligInntekt,
+                    AKSEPTERT_AVVIK,
                     inntektsmelding.getEndringAvInntektÅrsaker());
             }
         }
