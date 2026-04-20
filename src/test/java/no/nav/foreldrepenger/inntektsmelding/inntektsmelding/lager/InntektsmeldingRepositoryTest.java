@@ -303,13 +303,11 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
     @Test
     void skal_filtrere_på_orgnr_og_aktørId() {
         var orgnr = "999999999";
-        var aktørId1 = new AktørIdEntitet("9999999999999");
-        var aktørId2 = new AktørIdEntitet("8888888888888");
         lagreInntektsmelding("9999999999999", orgnr, Ytelsetype.FORELDREPENGER);
         lagreInntektsmelding("8888888888888", orgnr, Ytelsetype.FORELDREPENGER);
         lagreInntektsmelding("8888888888888", orgnr, Ytelsetype.SVANGERSKAPSPENGER);
 
-        var resultat = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, aktørId2, null, null, null);
+        var resultat = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, new AktørIdEntitet("8888888888888"), null, null, null);
 
         assertThat(resultat).hasSize(2);
     }
