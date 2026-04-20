@@ -4,9 +4,7 @@ package no.nav.foreldrepenger.inntektsmelding.server.app.forvaltning;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import jakarta.ws.rs.ApplicationPath;
 
@@ -15,25 +13,16 @@ import org.glassfish.jersey.server.ServerProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.swagger.v3.oas.integration.GenericOpenApiContextBuilder;
-import io.swagger.v3.oas.integration.OpenApiConfigurationException;
-import io.swagger.v3.oas.integration.SwaggerConfiguration;
-import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.info.Info;
-import io.swagger.v3.oas.models.servers.Server;
 import no.nav.foreldrepenger.inntektsmelding.forvaltning.DialogportenForvaltningRestTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.forvaltning.OppgaverForvaltningRestTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.forvaltning.ProsessTaskRestTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.forvaltning.rest.ForespørselVtpRest;
-import no.nav.foreldrepenger.inntektsmelding.server.auth.AutentiseringFilter;
-import no.nav.foreldrepenger.inntektsmelding.server.exceptions.ConstraintViolationMapper;
-import no.nav.foreldrepenger.inntektsmelding.server.exceptions.GeneralRestExceptionMapper;
-import no.nav.foreldrepenger.inntektsmelding.server.exceptions.JsonMappingExceptionMapper;
-import no.nav.foreldrepenger.inntektsmelding.server.exceptions.JsonParseExceptionMapper;
-import no.nav.foreldrepenger.inntektsmelding.server.jackson.JacksonJsonConfig;
+import no.nav.foreldrepenger.inntektsmelding.server.auth.AutentiseringAnnoteringFilter;
 import no.nav.foreldrepenger.inntektsmelding.server.openapi.OpenApiRest;
 import no.nav.foreldrepenger.konfig.Environment;
-import no.nav.vedtak.exception.TekniskException;
+import no.nav.vedtak.openapi.OpenApiUtils;
+import no.nav.vedtak.server.rest.ForvaltningAuthorizationFilter;
+import no.nav.vedtak.server.rest.FpRestJackson2Feature;
 
 @ApplicationPath(ForvaltningApiConfig.API_URI)
 public class ForvaltningApiConfig extends ResourceConfig {
@@ -44,44 +33,22 @@ public class ForvaltningApiConfig extends ResourceConfig {
 
     public ForvaltningApiConfig() {
         LOG.info("Initialiserer: {}", API_URI);
-        // Sikkerhet
-        register(AutentiseringFilter.class);
+        register(FpRestJackson2Feature.class);
+        // Sikkerhet - lokal autentisering - kan antagelig saneres gitt import av abac/BeskyttetRessurs
+        register(AutentiseringAnnoteringFilter.class);
         register(ForvaltningAuthorizationFilter.class);
         registerOpenApi();
 
         // REST
         registerClasses(getApplicationClasses());
 
-        registerExceptionMappers();
-        register(JacksonJsonConfig.class);
-
         setProperties(getApplicationProperties());
         LOG.info("Ferdig med initialisering av {}", API_URI);
     }
 
-    void registerExceptionMappers() {
-        register(GeneralRestExceptionMapper.class);
-        register(ConstraintViolationMapper.class);
-        register(JsonMappingExceptionMapper.class);
-        register(JsonParseExceptionMapper.class);
-    }
-
     private void registerOpenApi() {
-        var oas = new OpenAPI();
-        var info = new Info().title(ENV.getNaisAppName())
-            .version(Optional.ofNullable(ENV.imageName()).orElse("1.0"))
-            .description("REST grensesnitt for fp-inntektsmelding.");
-
-        oas.info(info).addServersItem(new Server().url(ENV.getProperty("context.path", "/fpinntektsmelding")));
-        var oasConfig = new SwaggerConfiguration().openAPI(oas)
-            .prettyPrint(true)
-            .resourceClasses(getApplicationClasses().stream().map(Class::getName).collect(Collectors.toSet()));
-        try {
-            new GenericOpenApiContextBuilder<>().openApiConfiguration(oasConfig).buildContext(true).read();
-        } catch (OpenApiConfigurationException e) {
-            throw new TekniskException("OPEN-API", e.getMessage(), e);
-        }
-
+        var contextPath = ENV.getProperty("context.path", "/fpinntektsmelding");
+        OpenApiUtils.setupOpenApi("FP-inntektsmelding - Forvaltning", contextPath, getApplicationClasses(), this);
         register(OpenApiRest.class);
     }
 

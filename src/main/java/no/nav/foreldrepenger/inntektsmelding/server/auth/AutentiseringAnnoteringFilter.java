@@ -12,8 +12,6 @@ import jakarta.ws.rs.Priorities;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerRequestFilter;
-import jakarta.ws.rs.container.ContainerResponseContext;
-import jakarta.ws.rs.container.ContainerResponseFilter;
 import jakarta.ws.rs.container.ResourceInfo;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Response;
@@ -21,20 +19,18 @@ import jakarta.ws.rs.ext.Provider;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.AutentisertMedAzure;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.AutentisertMedTokenX;
-import no.nav.vedtak.sikkerhet.jaxrs.AuthenticationFilterDelegate;
 import no.nav.vedtak.sikkerhet.jaxrs.UtenAutentisering;
 import no.nav.vedtak.sikkerhet.kontekst.IdentType;
 import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
 
 @Provider
-@Priority(Priorities.AUTHENTICATION)
-public class AutentiseringFilter implements ContainerRequestFilter, ContainerResponseFilter {
+@Priority(Priorities.AUTHENTICATION + 1) // Etter felles filter
+public class AutentiseringAnnoteringFilter implements ContainerRequestFilter {
 
-    private static final Logger LOG = LoggerFactory.getLogger(AutentiseringFilter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AutentiseringAnnoteringFilter.class);
     private static final List<Class<? extends Annotation>> GYLDIGE_ANNOTERINGER = List.of(AutentisertMedAzure.class,
         AutentisertMedTokenX.class,
         UtenAutentisering.class);
@@ -42,13 +38,8 @@ public class AutentiseringFilter implements ContainerRequestFilter, ContainerRes
     @Context
     private ResourceInfo resourceinfo;
 
-    public AutentiseringFilter() {
+    public AutentiseringAnnoteringFilter() {
         // Ingenting
-    }
-
-    @Override
-    public void filter(ContainerRequestContext req, ContainerResponseContext res) {
-        AuthenticationFilterDelegate.fjernKontekst();
     }
 
     @Override
@@ -59,8 +50,6 @@ public class AutentiseringFilter implements ContainerRequestFilter, ContainerRes
     void assertValidRequest(ContainerRequestContext req) {
         var method = getResourceinfo().getResourceMethod();
         LOG.trace("{} i klasse {}", method.getName(), method.getDeclaringClass());
-        fjernKontekstHvisFinnes();
-        AuthenticationFilterDelegate.validerSettKontekst(getResourceinfo(), req);
         assertValidAnnotation(method, req);
     }
 
@@ -119,14 +108,6 @@ public class AutentiseringFilter implements ContainerRequestFilter, ContainerRes
         var kontekst = KontekstHolder.getKontekst();
         if (!kontekst.harKontekst() || !IdentType.EksternBruker.equals(kontekst.getIdentType())) {
             throw new WebApplicationException("Mangler gyldig borger kontekst", Response.Status.UNAUTHORIZED);
-        }
-    }
-
-    private void fjernKontekstHvisFinnes() {
-        if (KontekstHolder.harKontekst()) {
-            LOG.info("Kall til {} hadde kontekst {}", getResourceinfo().getResourceMethod().getName(), KontekstHolder.getKontekst().getKompaktUid());
-            KontekstHolder.fjernKontekst();
-            MDC.clear();
         }
     }
 

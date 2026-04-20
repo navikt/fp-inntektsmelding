@@ -38,13 +38,13 @@ import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonInfo;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.server.exceptions.InntektsmeldingException;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.MånedslønnStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.YtelseTypeDto;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
-import no.nav.vedtak.exception.FunksjonellException;
 import no.nav.vedtak.konfig.Tid;
 import no.nav.vedtak.sikkerhet.kontekst.IdentType;
 import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
@@ -559,11 +559,10 @@ class GrunnlagDtoTjenesteTest {
         when(arbeidsforholdTjeneste.hentArbeidsforhold(fødselsnummer, førsteUttaksdato)).thenReturn(List.of(new Arbeidsforhold(organisasjonsnummer, new Arbeidsforhold.Ansettelsesperiode(førsteUttaksdato.minusYears(1), Tid.TIDENES_ENDE))));
 
         var arbeidsgiver = Arbeidsgiver.fra(organisasjonsnummer);
-        var ex = assertThrows(FunksjonellException.class, () -> grunnlagDtoTjeneste.lagArbeidsgiverinitiertUregistrertDialogDto(fødselsnummer, ytelsetype, førsteUttaksdato, arbeidsgiver, førsteUttaksdato));
+        var ex = assertThrows(InntektsmeldingException.class, () -> grunnlagDtoTjeneste.lagArbeidsgiverinitiertUregistrertDialogDto(fødselsnummer, ytelsetype, førsteUttaksdato, arbeidsgiver, førsteUttaksdato));
 
         // Assert
-        AssertionsForClassTypes.assertThat(ex.getMessage()).isEqualTo(
-            "FINNES_I_AAREG: Det finnes rapportering i aa-registeret på organisasjonsnummeret. Nav vil be om inntektsmelding når vi trenger det");
+        AssertionsForClassTypes.assertThat(ex.getFeilkode()).isEqualTo(InntektsmeldingException.LokalFeilKode.FINNES_I_AAREG.name());
     }
 }
 

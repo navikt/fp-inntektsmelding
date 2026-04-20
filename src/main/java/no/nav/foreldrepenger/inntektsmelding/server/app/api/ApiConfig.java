@@ -7,26 +7,23 @@ import java.util.Set;
 
 import jakarta.ws.rs.ApplicationPath;
 
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.forespørsel.ForespørselApiRest;
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.inntektsmelding.InntektsmeldingApiRest;
-import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.aginitiert.ArbeidsgiverinitiertDialogRest;
-
-import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.kvittering.PdfDokumentRest;
-
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.rest.ForespørselRest;
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.forespørsel.ForespørselApiRest;
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.inntektsmelding.InntektsmeldingApiRest;
 import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.InntektsmeldingDialogRest;
+import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.aginitiert.ArbeidsgiverinitiertDialogRest;
+import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.kvittering.PdfDokumentRest;
 import no.nav.foreldrepenger.inntektsmelding.overstyring.rest.InntektsmeldingFpsakRest;
-import no.nav.foreldrepenger.inntektsmelding.server.auth.AutentiseringFilter;
-import no.nav.foreldrepenger.inntektsmelding.server.exceptions.ConstraintViolationMapper;
-import no.nav.foreldrepenger.inntektsmelding.server.exceptions.GeneralRestExceptionMapper;
-import no.nav.foreldrepenger.inntektsmelding.server.exceptions.JsonMappingExceptionMapper;
-import no.nav.foreldrepenger.inntektsmelding.server.exceptions.JsonParseExceptionMapper;
-import no.nav.foreldrepenger.inntektsmelding.server.jackson.JacksonJsonConfig;
+import no.nav.foreldrepenger.inntektsmelding.server.auth.AutentiseringAnnoteringFilter;
+import no.nav.foreldrepenger.inntektsmelding.server.exceptions.LokalRestExceptionMapper;
+import no.nav.vedtak.server.rest.AuthenticationFilter;
+import no.nav.vedtak.server.rest.ValidationExceptionMapper;
+import no.nav.vedtak.server.rest.jackson.Jackson2MapperFeature;
 
 @ApplicationPath(ApiConfig.API_URI)
 public class ApiConfig extends ResourceConfig {
@@ -36,24 +33,19 @@ public class ApiConfig extends ResourceConfig {
 
     public ApiConfig() {
         LOG.info("Initialiserer: {}", API_URI);
-        // Sikkerhet
-        register(AutentiseringFilter.class);
+        // TODO gjennomgå behov for LokalRestExceptionMapper - frontend bruker ikke feilmelding.
+        register(AuthenticationFilter.class);
+        register(Jackson2MapperFeature.class);
+        register(ValidationExceptionMapper.class);
+        register(LokalRestExceptionMapper.class);
+        // Sikkerhet - lokal "tilleggsautentisering" sjekker match IdentType og Annotering
+        register(AutentiseringAnnoteringFilter.class);
 
         // REST
         registerClasses(getApplicationClasses());
 
-        registerExceptionMappers();
-        register(JacksonJsonConfig.class);
-
         setProperties(getApplicationProperties());
         LOG.info("Ferdig med initialisering av {}", API_URI);
-    }
-
-    void registerExceptionMappers() {
-        register(GeneralRestExceptionMapper.class);
-        register(ConstraintViolationMapper.class);
-        register(JsonMappingExceptionMapper.class);
-        register(JsonParseExceptionMapper.class);
     }
 
     private Set<Class<?>> getApplicationClasses() {

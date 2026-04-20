@@ -1,19 +1,19 @@
 package no.nav.foreldrepenger.inntektsmelding.imdialog.tjenester;
 
-import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.LocalDate;
 
+import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.jupiter.api.Test;
 
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.fpsak.FpsakKlient;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonInfo;
+import no.nav.foreldrepenger.inntektsmelding.server.exceptions.InntektsmeldingException;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
-import no.nav.vedtak.exception.FunksjonellException;
 import no.nav.vedtak.konfig.Tid;
 
 class UregistrertValidererTest {
@@ -34,12 +34,11 @@ class UregistrertValidererTest {
             Tid.TIDENES_ENDE,
             Tid.TIDENES_ENDE);
 
-        var ex = assertThrows(FunksjonellException.class, () -> UregistrertValiderer.validerOmUregistrertKanOpprettes(infoOmSak,
+        var ex = assertThrows(InntektsmeldingException.class, () -> UregistrertValiderer.validerOmUregistrertKanOpprettes(infoOmSak,
             Ytelsetype.FORELDREPENGER,
             PERSON_INFO));
 
-        assertThat(ex.getMessage()).isEqualTo(
-            "INGEN_SAK_FUNNET: Du kan ikke sende inn inntektsmelding på FORELDREPENGER for denne personen med aktør id AktørIdEntitet{aktørId='*********1234'}");
+        AssertionsForClassTypes.assertThat(ex.getFeilkode()).isEqualTo(InntektsmeldingException.LokalFeilKode.INGEN_SAK_FUNNET.name());
     }
 
     @Test
@@ -48,12 +47,11 @@ class UregistrertValidererTest {
             FØRSTE_UTTAKSDATO,
             FØRSTE_UTTAKSDATO);
 
-        var ex = assertThrows(FunksjonellException.class, () -> UregistrertValiderer.validerOmUregistrertKanOpprettes(infoOmSak,
+        var ex = assertThrows(InntektsmeldingException.class, () -> UregistrertValiderer.validerOmUregistrertKanOpprettes(infoOmSak,
             Ytelsetype.FORELDREPENGER,
             PERSON_INFO));
 
-        assertThat(ex.getMessage()).isEqualTo(
-            "SENDT_FOR_TIDLIG: Du kan ikke sende inn inntektsmelding før fire uker før personen med aktør id AktørIdEntitet{aktørId='*********1234'} starter foreldrepenger");
+        AssertionsForClassTypes.assertThat(ex.getFeilkode()).isEqualTo(InntektsmeldingException.LokalFeilKode.SENDT_FOR_TIDLIG.name());
     }
 
     @Test
@@ -63,12 +61,11 @@ class UregistrertValidererTest {
             førsteUttaksdatoForTidlig,
             FØRSTE_UTTAKSDATO.plusMonths(5).minusDays(2));
 
-        var ex = assertThrows(FunksjonellException.class, () -> UregistrertValiderer.validerOmUregistrertKanOpprettes(infoOmSak,
+        var ex = assertThrows(InntektsmeldingException.class, () -> UregistrertValiderer.validerOmUregistrertKanOpprettes(infoOmSak,
             Ytelsetype.FORELDREPENGER,
             PERSON_INFO));
 
-        assertThat(ex.getMessage()).isEqualTo(
-            "SENDT_FOR_TIDLIG: Du kan ikke sende inn inntektsmelding før fire uker før personen med aktør id AktørIdEntitet{aktørId='*********1234'} starter foreldrepenger");
+        AssertionsForClassTypes.assertThat(ex.getFeilkode()).isEqualTo(InntektsmeldingException.LokalFeilKode.SENDT_FOR_TIDLIG.name());
     }
 
     @Test
