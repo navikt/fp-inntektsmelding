@@ -73,7 +73,7 @@ public class PdfDokumentRest {
             var responseBuilder = Response.ok(pdf);
             responseBuilder.type(APPLICATION_PDF);
             responseBuilder.header(CONTENT_DISPOSITION, String.format("attachment; filename=inntektsmelding-%s-%s.pdf", ytelsetekst, siste12TegnFraUuid));
-                LOG.info("Returnerer pdf for inntektsmelding med id {}", inntektsmeldingUuid);
+            LOG.info("Returnerer pdf for inntektsmelding med id {}", inntektsmeldingUuid);
             return responseBuilder.build();
         }
     }
