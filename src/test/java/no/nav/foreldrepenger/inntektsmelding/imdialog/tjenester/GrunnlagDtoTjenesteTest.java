@@ -14,6 +14,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.FellesGrunnlagTjeneste;
+
 import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -69,6 +71,9 @@ class GrunnlagDtoTjenesteTest {
     private ArbeidstakerTjeneste arbeidstakerTjeneste;
     @Mock
     ArbeidsforholdTjeneste arbeidsforholdTjeneste;
+    @Mock
+    FellesGrunnlagTjeneste fellesGrunnlagTjeneste;
+    @Mock
 
     private GrunnlagDtoTjeneste grunnlagDtoTjeneste;
 
@@ -86,7 +91,7 @@ class GrunnlagDtoTjenesteTest {
     @BeforeEach
     void setUp() {
         grunnlagDtoTjeneste = new GrunnlagDtoTjeneste(forespørselBehandlingTjeneste, personTjeneste,
-            organisasjonTjeneste, inntektTjeneste, arbeidstakerTjeneste, arbeidsforholdTjeneste);
+            organisasjonTjeneste, inntektTjeneste, arbeidstakerTjeneste, arbeidsforholdTjeneste, fellesGrunnlagTjeneste);
     }
 
     @Test
