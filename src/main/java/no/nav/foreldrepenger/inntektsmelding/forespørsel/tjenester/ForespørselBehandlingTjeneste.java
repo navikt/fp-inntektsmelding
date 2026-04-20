@@ -228,7 +228,6 @@ public class ForespørselBehandlingTjeneste {
         return forespørselTjeneste.hentForespørsel(forespørselUUID);
     }
 
-    //TODO: kun test som bruker - fjern?
     public List<ForespørselDto> finnForespørsler(AktørId aktørId, Ytelsetype ytelsetype, String orgnr) {
         return forespørselTjeneste.finnForespørsler(aktørId, ytelsetype, orgnr);
     }
