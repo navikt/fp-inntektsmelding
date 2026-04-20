@@ -127,11 +127,13 @@ public class InntektsmeldingDialogRest {
         }
     }
 
+    @Deprecated
     @GET
     @Path(LAST_NED_PDF)
     @Produces("application/pdf")
     @Tilgangskontrollert
     public Response lastNedPDF(@NotNull @Valid @QueryParam("id") long inntektsmeldingId) {
+        LOG.info("IM_PDF_DEPRECATED: Kall på deprekert endepunkt for å hente inntektsmeldingpdf");
         tilgang.sjekkAtArbeidsgiverHarTilgangTilBedrift(inntektsmeldingId);
         var pdf = kvitteringTjeneste.hentPDF(inntektsmeldingId);
         var responseBuilder = Response.ok(pdf);
