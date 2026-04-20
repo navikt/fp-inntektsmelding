@@ -213,7 +213,7 @@ class InntektsmeldingApiRestTest {
         var dto = lagInntektsmeldingDto();
         var response = lagHentResponse(UUID.randomUUID());
         when(inntektsmeldingTjeneste.hentInntektsmeldingerFraFilter(
-            eq(ORGNR), eq(new AktørIdEntitet(AKTØR_ID)), eq(Ytelsetype.FORELDREPENGER), eq(fom), eq(tom)))
+            ORGNR, new AktørIdEntitet(AKTØR_ID), Ytelsetype.FORELDREPENGER, fom, tom))
             .thenReturn(List.of(dto));
         when(inntektsmeldingKontraktMapper.mapTilKontrakt(dto)).thenReturn(response);
 
