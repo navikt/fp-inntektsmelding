@@ -275,4 +275,113 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
         assertThat(etterLagring).isPresent();
     }
 
+    @Test
+    void skal_filtrere_kun_på_orgnr() {
+        var orgnr = "999999999";
+        var annetOrgnr = "888888888";
+        lagreInntektsmelding("9999999999999", orgnr, Ytelsetype.FORELDREPENGER);
+        lagreInntektsmelding("9999999999999", orgnr, Ytelsetype.SVANGERSKAPSPENGER);
+        lagreInntektsmelding("9999999999999", annetOrgnr, Ytelsetype.FORELDREPENGER);
+
+        var resultat = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null, null, null);
+
+        assertThat(resultat).hasSize(2);
+    }
+
+    @Test
+    void skal_filtrere_på_orgnr_og_ytelsetype() {
+        var orgnr = "999999999";
+        lagreInntektsmelding("9999999999999", orgnr, Ytelsetype.FORELDREPENGER);
+        lagreInntektsmelding("9999999999999", orgnr, Ytelsetype.SVANGERSKAPSPENGER);
+
+        var resultat = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, Ytelsetype.SVANGERSKAPSPENGER, null, null);
+
+        assertThat(resultat).hasSize(1);
+        assertThat(resultat.getFirst().getYtelsetype()).isEqualTo(Ytelsetype.SVANGERSKAPSPENGER);
+    }
+
+    @Test
+    void skal_filtrere_på_orgnr_og_aktørId() {
+        var orgnr = "999999999";
+        lagreInntektsmelding("9999999999999", orgnr, Ytelsetype.FORELDREPENGER);
+        lagreInntektsmelding("8888888888888", orgnr, Ytelsetype.FORELDREPENGER);
+        lagreInntektsmelding("8888888888888", orgnr, Ytelsetype.SVANGERSKAPSPENGER);
+
+        var resultat = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, new AktørIdEntitet("8888888888888"), null, null, null);
+
+        assertThat(resultat).hasSize(2);
+    }
+
+    @Test
+    void skal_filtrere_på_datointerval() {
+        var orgnr = "999999999";
+        lagreInntektsmelding("9999999999999", orgnr, Ytelsetype.FORELDREPENGER);
+        lagreInntektsmelding("9999999999999", orgnr, Ytelsetype.SVANGERSKAPSPENGER);
+
+        var resultat = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null,
+            Tid.TIDENES_BEGYNNELSE, Tid.TIDENES_ENDE);
+
+        assertThat(resultat).hasSize(2);
+    }
+
+    @Test
+    void skal_returnere_tomt_når_datointerval_ikke_treffer() {
+        var orgnr = "999999999";
+        lagreInntektsmelding("9999999999999", orgnr, Ytelsetype.FORELDREPENGER);
+
+        var resultat = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null,
+            LocalDate.now().plusDays(7), Tid.TIDENES_ENDE);
+
+        assertThat(resultat).isEmpty();
+    }
+
+    @Test
+    void skal_filtrere_med_kun_fom_dato() {
+        var orgnr = "999999999";
+        lagreInntektsmelding("9999999999999", orgnr, Ytelsetype.FORELDREPENGER);
+
+        var resultat = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null,
+            Tid.TIDENES_BEGYNNELSE, null);
+
+        assertThat(resultat).hasSize(1);
+    }
+
+    @Test
+    void skal_sortere_nyeste_først() {
+        var orgnr = "999999999";
+        var im1 = lagInntektsmeldingEntitet("9999999999999", orgnr, Ytelsetype.FORELDREPENGER, LocalDateTime.now().minusDays(2));
+        var im2 = lagInntektsmeldingEntitet("9999999999999", orgnr, Ytelsetype.FORELDREPENGER, LocalDateTime.now());
+        inntektsmeldingRepository.lagreInntektsmelding(im1);
+        inntektsmeldingRepository.lagreInntektsmelding(im2);
+
+        var resultat = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null, null, null);
+
+        assertThat(resultat).hasSize(2);
+        assertThat(resultat.getFirst().getOpprettetTidspunkt()).isAfter(resultat.getLast().getOpprettetTidspunkt());
+    }
+
+    private void lagreInntektsmelding(String aktørId, String orgnr, Ytelsetype ytelsetype) {
+        var entitet = InntektsmeldingEntitet.builder()
+            .medAktørId(new AktørIdEntitet(aktørId))
+            .medKontaktperson(new KontaktpersonEntitet("Test", "999999999"))
+            .medYtelsetype(ytelsetype)
+            .medMånedInntekt(BigDecimal.valueOf(4000))
+            .medStartDato(LocalDate.now())
+            .medArbeidsgiverIdent(orgnr)
+            .build();
+        inntektsmeldingRepository.lagreInntektsmelding(entitet);
+    }
+
+    private InntektsmeldingEntitet lagInntektsmeldingEntitet(String aktørId, String orgnr, Ytelsetype ytelsetype, LocalDateTime opprettetTidspunkt) {
+        return InntektsmeldingEntitet.builder()
+            .medAktørId(new AktørIdEntitet(aktørId))
+            .medKontaktperson(new KontaktpersonEntitet("Test", "999999999"))
+            .medYtelsetype(ytelsetype)
+            .medMånedInntekt(BigDecimal.valueOf(4000))
+            .medStartDato(LocalDate.now())
+            .medArbeidsgiverIdent(orgnr)
+            .medOpprettetTidspunkt(opprettetTidspunkt)
+            .build();
+    }
+
 }

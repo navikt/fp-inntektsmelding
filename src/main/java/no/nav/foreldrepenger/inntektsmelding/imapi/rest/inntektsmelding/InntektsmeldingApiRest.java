@@ -1,5 +1,6 @@
 package no.nav.foreldrepenger.inntektsmelding.imapi.rest.inntektsmelding;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -8,6 +9,7 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -16,18 +18,25 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import no.nav.foreldrepenger.inntektsmelding.felles.YtelseTypeDto;
+import no.nav.foreldrepenger.inntektsmelding.imapi.inntektsmelding.HentInntektsmeldingResponse;
+import no.nav.foreldrepenger.inntektsmelding.imapi.inntektsmelding.InntektsmeldingFilterRequest;
+import no.nav.foreldrepenger.inntektsmelding.imapi.inntektsmelding.SendInntektsmeldingRequest;
+import no.nav.foreldrepenger.inntektsmelding.imapi.inntektsmelding.SendInntektsmeldingResponse;
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.tjenester.InntektsmeldingKontraktMapper;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
+
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
+import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.swagger.v3.oas.annotations.Operation;
-import no.nav.foreldrepenger.inntektsmelding.imapi.inntektsmelding.SendInntektsmeldingRequest;
-import no.nav.foreldrepenger.inntektsmelding.imapi.inntektsmelding.SendInntektsmeldingResponse;
 import no.nav.foreldrepenger.inntektsmelding.imapi.rest.tjenester.InntektsmeldingApiMapper;
 import no.nav.foreldrepenger.inntektsmelding.imapi.rest.tjenester.InntektsmeldingApiMottakTjeneste;
-import no.nav.foreldrepenger.inntektsmelding.imapi.rest.tjenester.InntektsmeldingKontraktMapper;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingTjeneste;
-import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
-import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.AutentisertMedAzure;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.Tilgangskontrollert;
 import no.nav.foreldrepenger.inntektsmelding.server.tilgangsstyring.Tilgang;
@@ -101,5 +110,50 @@ public class InntektsmeldingApiRest {
 
         var mottattInntektsmelding = InntektsmeldingApiMapper.mapTilDto(request, aktørId.get());
         return inntektsmeldingMottakTjeneste.mottaInntektsmelding(mottattInntektsmelding, request.foresporselUuid());
+    }
+
+    @POST
+    @Path("/hent/inntektsmeldinger")
+    @Produces(MediaType.APPLICATION_JSON + ";charset=utf-8")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Operation(description = "Henter inntektsmeldinger basert på filter", tags = "ekstern-api")
+    @Tilgangskontrollert
+    public Response hentInntektsmeldinger(@Valid @NotNull InntektsmeldingFilterRequest filterRequest) {
+        tilgangskontroll.sjekkErSystembruker();
+
+        List<HentInntektsmeldingResponse> responsListe;
+
+        if (filterRequest.forespørselUuid() != null) {
+            responsListe = inntektsmeldingTjeneste.hentInntektsmeldinger(filterRequest.forespørselUuid()).stream()
+                .map(inntektsmeldingKontraktMapper::mapTilKontrakt)
+                .toList();
+        } else {
+            var aktørId = Optional.ofNullable(filterRequest.fnr())
+                .flatMap(fnr -> personTjeneste.finnAktørIdForIdent(new PersonIdent(fnr.fnr())))
+                .map(a -> new AktørIdEntitet(a.getAktørId()))
+                .orElse(null);
+
+            var ytelseType = Optional.ofNullable(filterRequest.ytelseType())
+                .map(InntektsmeldingApiRest::mapYtelseType)
+                .orElse(null);
+
+            responsListe = inntektsmeldingTjeneste.hentInntektsmeldingerFraFilter(
+                    filterRequest.orgnr().orgnr(),
+                    aktørId,
+                    ytelseType,
+                    filterRequest.fom(),
+                    filterRequest.tom()).stream()
+                .map(inntektsmeldingKontraktMapper::mapTilKontrakt)
+                .toList();
+        }
+
+        return Response.ok(responsListe).build();
+    }
+
+    private static Ytelsetype mapYtelseType(YtelseTypeDto ytelseType) {
+        return switch (ytelseType) {
+            case FORELDREPENGER -> Ytelsetype.FORELDREPENGER;
+            case SVANGERSKAPSPENGER -> Ytelsetype.SVANGERSKAPSPENGER;
+        };
     }
 }
