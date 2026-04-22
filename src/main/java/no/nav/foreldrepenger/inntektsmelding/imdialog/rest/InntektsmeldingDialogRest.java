@@ -28,7 +28,6 @@ import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.Forespørsel
 import no.nav.foreldrepenger.inntektsmelding.imdialog.tjenester.GrunnlagDtoTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.imdialog.tjenester.InntektsmeldingMapper;
 import no.nav.foreldrepenger.inntektsmelding.imdialog.tjenester.InntektsmeldingMottakTjeneste;
-import no.nav.foreldrepenger.inntektsmelding.imdialog.tjenester.KvitteringTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.AutentisertMedTokenX;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.Tilgangskontrollert;
@@ -48,9 +47,7 @@ public class InntektsmeldingDialogRest {
     private static final String HENT_OPPLYSNINGER = "/opplysninger";
     private static final String HENT_INNTEKTSMELDINGER_FOR_OPPGAVE = "/inntektsmeldinger";
     private static final String SEND_INNTEKTSMELDING = "/send-inntektsmelding";
-    private static final String LAST_NED_PDF = "/last-ned-pdf";
 
-    private KvitteringTjeneste kvitteringTjeneste;
     private GrunnlagDtoTjeneste grunnlagDtoTjeneste;
     private InntektsmeldingMottakTjeneste inntektsmeldingMottakTjeneste;
     private ForespørselBehandlingTjeneste forespørselTjeneste;
@@ -62,12 +59,10 @@ public class InntektsmeldingDialogRest {
     }
 
     @Inject
-    public InntektsmeldingDialogRest(KvitteringTjeneste kvitteringTjeneste,
-                                     GrunnlagDtoTjeneste grunnlagDtoTjeneste,
+    public InntektsmeldingDialogRest(GrunnlagDtoTjeneste grunnlagDtoTjeneste,
                                      InntektsmeldingMottakTjeneste inntektsmeldingMottakTjeneste,
                                      ForespørselBehandlingTjeneste forespørselTjeneste,
                                      Tilgang tilgang, InntektsmeldingTjeneste inntektsmeldingTjeneste) {
-        this.kvitteringTjeneste = kvitteringTjeneste;
         this.grunnlagDtoTjeneste = grunnlagDtoTjeneste;
         this.inntektsmeldingMottakTjeneste = inntektsmeldingMottakTjeneste;
         this.forespørselTjeneste = forespørselTjeneste;
@@ -81,11 +76,9 @@ public class InntektsmeldingDialogRest {
     @Tilgangskontrollert
     public Response hentOpplysninger(@Valid @NotNull @QueryParam("foresporselUuid") UUID forespørselUuid) {
         tilgang.sjekkAtArbeidsgiverHarTilgangTilBedrift(forespørselUuid);
-
         LOG.info("Henter forespørsel med uuid {}", forespørselUuid);
         var dto = grunnlagDtoTjeneste.lagDialogDto(forespørselUuid);
         return Response.ok(dto).build();
-
     }
 
     @GET
@@ -126,20 +119,4 @@ public class InntektsmeldingDialogRest {
             return Response.ok(inntektsmeldingMottakTjeneste.mottaInntektsmelding(InntektsmeldingMapper.mapTilDto(request), request.foresporselUuid())).build();
         }
     }
-
-    @Deprecated
-    @GET
-    @Path(LAST_NED_PDF)
-    @Produces("application/pdf")
-    @Tilgangskontrollert
-    public Response lastNedPDF(@NotNull @Valid @QueryParam("id") long inntektsmeldingId) {
-        LOG.info("IM_PDF_DEPRECATED: Kall på deprekert endepunkt for å hente inntektsmeldingpdf");
-        tilgang.sjekkAtArbeidsgiverHarTilgangTilBedrift(inntektsmeldingId);
-        var pdf = kvitteringTjeneste.hentPDF(inntektsmeldingId);
-        var responseBuilder = Response.ok(pdf);
-        responseBuilder.type("application/pdf");
-        responseBuilder.header("Content-Disposition", "attachment; filename=inntektsmelding.pdf");
-        return responseBuilder.build();
-    }
-
 }

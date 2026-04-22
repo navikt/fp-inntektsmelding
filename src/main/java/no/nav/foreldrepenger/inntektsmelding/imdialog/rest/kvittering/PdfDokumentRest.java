@@ -67,7 +67,7 @@ public class PdfDokumentRest {
             LOG.info("Finner ikke inntektsmelding med uuid {}", inntektsmeldingUuid);
             return Response.status(Response.Status.NO_CONTENT).build();
         } else {
-            var pdf = kvitteringTjeneste.hentPDF(im.getId());
+            var pdf = kvitteringTjeneste.hentPDF(im);
             var ytelsetekst = im.getYtelse().equals(Ytelsetype.FORELDREPENGER) ? "foreldrepenger" : "svangerskapspenger";
             var siste12TegnFraUuid = inntektsmeldingUuid.toString().substring(inntektsmeldingUuid.toString().length() - 12);
             var responseBuilder = Response.ok(pdf);
