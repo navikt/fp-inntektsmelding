@@ -78,7 +78,7 @@ class InntektsmeldingApiMottakTjenesteTest {
 
         assertThat(response.success()).isFalse();
         assertThat(response.inntektsmeldingUuid()).isNull();
-        assertThat(response.melding()).contains("Finner ikke forespørsel for uuid");
+        assertThat(response.feilinformasjon().feilmelding()).contains("Finner ikke forespørsel for uuid");
         verify(fellesMottakTjeneste, never()).lagreOgJournalførInntektsmelding(any(), any());
     }
 
@@ -92,7 +92,7 @@ class InntektsmeldingApiMottakTjenesteTest {
         var response = inntektsmeldingApiMottakTjeneste.mottaInntektsmelding(lagInntektsmeldingDto(null), foresporselUuid);
 
         assertThat(response.success()).isFalse();
-        assertThat(response.melding()).contains("status forkastet");
+        assertThat(response.feilinformasjon().feilmelding()).contains("forkastet forespørsel");
         verify(fellesMottakTjeneste, never()).lagreOgJournalførInntektsmelding(any(), any());
     }
 
@@ -116,7 +116,7 @@ class InntektsmeldingApiMottakTjenesteTest {
 
         assertThat(response.success()).isFalse();
         assertThat(response.inntektsmeldingUuid()).isNull();
-        assertThat(response.melding()).contains("Inntekt i inntektsmelding er ulik inntekt fra A-inntekt, og ingen endringsårsak er oppgitt");
+        assertThat(response.feilinformasjon().feilmelding()).contains("Inntekt i inntektsmelding er ulik inntekt fra A-inntekt, og ingen endringsårsak er oppgitt");
         verify(fellesMottakTjeneste, never()).lagreOgJournalførInntektsmelding(any(), any());
     }
 
@@ -140,7 +140,7 @@ class InntektsmeldingApiMottakTjenesteTest {
 
         assertThat(response.success()).isFalse();
         assertThat(response.inntektsmeldingUuid()).isNull();
-        assertThat(response.melding()).contains("nedetid");
+        assertThat(response.feilinformasjon().feilmelding()).contains("nedetid");
         verify(fellesMottakTjeneste, never()).lagreOgJournalførInntektsmelding(any(), any());
     }
 
@@ -205,7 +205,7 @@ class InntektsmeldingApiMottakTjenesteTest {
         var response = inntektsmeldingApiMottakTjeneste.mottaInntektsmelding(inputDto, foresporselUuid);
 
         assertThat(response.success()).isFalse();
-        assertThat(response.melding()).contains("Ingen endring på ny inntektsmelding");
+        assertThat(response.feilinformasjon().feilmelding()).contains("Ingen endring på ny inntektsmelding");
         verify(fellesMottakTjeneste, never()).lagreOgJournalførInntektsmelding(any(), any());
     }
 

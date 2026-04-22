@@ -18,6 +18,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import no.nav.foreldrepenger.inntektsmelding.felles.FeilkodeDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.YtelseTypeDto;
 import no.nav.foreldrepenger.inntektsmelding.imapi.inntektsmelding.HentInntektsmeldingResponse;
 import no.nav.foreldrepenger.inntektsmelding.imapi.inntektsmelding.InntektsmeldingFilterRequest;
@@ -29,6 +30,8 @@ import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
+
+import no.nav.vedtak.log.mdc.MDCOperations;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,7 +108,8 @@ public class InntektsmeldingApiRest {
         if (aktørId.isEmpty()) {
             SECURE_LOG.error("Finner ikke aktørId for fødselsnummer {}", request.fødselsnummer());
             return new SendInntektsmeldingResponse(false, null,
-                "Finner ikke informasjon for fødselsnummer. Sjekk at fødselsnummer er korrekt");
+                new SendInntektsmeldingResponse.FeilInfo( FeilkodeDto.INGEN_AKTØR_ID, "Finner ikke informasjon for fødselsnummer. Sjekk at fødselsnummer er korrekt",
+                    MDCOperations.getCallId()));
         }
 
         var mottattInntektsmelding = InntektsmeldingApiMapper.mapTilDto(request, aktørId.get());
