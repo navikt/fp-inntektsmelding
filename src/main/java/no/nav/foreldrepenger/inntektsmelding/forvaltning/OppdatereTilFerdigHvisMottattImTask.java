@@ -1,6 +1,5 @@
 package no.nav.foreldrepenger.inntektsmelding.forvaltning;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -93,11 +92,10 @@ public class OppdatereTilFerdigHvisMottattImTask implements ProsessTaskHandler {
 
 
     private List<ForespørselEntitet> hentForespørsler(Long fom, Long tom) {
-        var query = entityManager.createQuery("from ForespørselEntitet where id >= :fom and id <= :tom and opprettetTidspunkt >= :dato"
+        var query = entityManager.createQuery("from ForespørselEntitet where id >= :fom and id <= :tom"
             + " and status = :status order by id", ForespørselEntitet.class);
         query.setParameter("fom", fom);
         query.setParameter("tom", tom);
-        query.setParameter("dato", LocalDate.of(2026, 2, 1).atStartOfDay());
         query.setParameter("status", ForespørselStatus.UNDER_BEHANDLING);
 
         query.setMaxResults(50);
