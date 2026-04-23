@@ -72,7 +72,7 @@ public class InntektsmeldingApiMottakTjeneste {
             return new SendInntektsmeldingResponse(false, null,"Kan ikke sende inn inntektsmelding når Forespørsel har status forkastet.");
         }
 
-        var sisteInntektsmelding = inntektsmeldingTjeneste.hentSisteInntektsmelding(forespørsel.uuid());
+        var sisteInntektsmelding = inntektsmeldingTjeneste.hentSisteInntektsmeldingForForespørsel(forespørsel.uuid());
         if (sisteInntektsmelding != null && inntektsmeldingerErLike(inntektsmelding, sisteInntektsmelding)) {
             LOG.info("Inntektsmelding avvises. Ingen endring på ny inntektsmelding sammenlignet med tidligere innsendt inntektsmelding. inntektsmeldingId: {}", inntektsmelding.getId());
             return new SendInntektsmeldingResponse(false, null,
