@@ -1,5 +1,6 @@
 package no.nav.foreldrepenger.inntektsmelding.inntektsmelding;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -9,6 +10,7 @@ import jakarta.inject.Inject;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.InntektsmeldingRepository;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
 
 @Dependent
@@ -55,6 +57,17 @@ public class InntektsmeldingTjeneste {
 
     public Long lagreInntektsmelding(InntektsmeldingDto inntektsmeldingDto) {
         return inntektsmeldingRepository.lagreInntektsmelding(InntektsmeldingDtoMapper.mapTilEntitet(inntektsmeldingDto));
+    }
+
+    public List<InntektsmeldingDto> hentInntektsmeldingerFraFilter(String orgnr,
+                                                                    AktørIdEntitet aktørId,
+                                                                    Ytelsetype ytelseType,
+                                                                    LocalDate fom,
+                                                                    LocalDate tom) {
+        return inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, aktørId, ytelseType, fom, tom)
+            .stream()
+            .map(InntektsmeldingDtoMapper::mapFraEntitet)
+            .toList();
     }
 
 }

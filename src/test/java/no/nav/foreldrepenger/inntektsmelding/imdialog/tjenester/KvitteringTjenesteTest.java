@@ -66,13 +66,12 @@ class KvitteringTjenesteTest {
 
     @BeforeEach
     void setUp() {
-        kvitteringTjeneste = new KvitteringTjeneste(forespørselBehandlingTjeneste, inntektsmeldingTjeneste, dokumentGeneratorTjeneste);
+        kvitteringTjeneste = new KvitteringTjeneste(forespørselBehandlingTjeneste, dokumentGeneratorTjeneste);
     }
 
     @Test
     void skal_teste_at_pdf_genereres() {
         // Arrange
-        var imId = 1L;
         var im = InntektsmeldingDto.builder()
             .medInntekt(BigDecimal.ZERO)
             .medStartdato(START_DATO)
@@ -80,13 +79,12 @@ class KvitteringTjenesteTest {
             .medArbeidsgiver(new Arbeidsgiver(ARBEIDSGIVER_IDENT))
             .medYtelse(Ytelsetype.FORELDREPENGER)
             .build();
-        when(inntektsmeldingTjeneste.hentInntektsmelding(imId)).thenReturn(im);
         var forespørsel = new ForespørselEntitet(ARBEIDSGIVER_IDENT, LocalDate.now(),
             new AktørIdEntitet(SØKER_AKTØR_ID.getAktørId()), Ytelsetype.FORELDREPENGER, "123", START_DATO, ForespørselType.BESTILT_AV_FAGSYSTEM);
         when(forespørselBehandlingTjeneste.finnForespørsler(SØKER_AKTØR_ID, Ytelsetype.FORELDREPENGER, ARBEIDSGIVER_IDENT)).thenReturn(List.of(ForespørselDtoMapper.mapFraEntitet(forespørsel)));
 
         // Act
-        kvitteringTjeneste.hentPDF(imId);
+        kvitteringTjeneste.hentPDF(im);
 
         // Assert
         verify(dokumentGeneratorTjeneste, times(1)).mapDataOgGenererPdf(im, ForespørselType.BESTILT_AV_FAGSYSTEM);

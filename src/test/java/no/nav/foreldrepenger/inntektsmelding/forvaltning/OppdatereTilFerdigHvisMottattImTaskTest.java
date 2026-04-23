@@ -76,12 +76,11 @@ class OppdatereTilFerdigHvisMottattImTaskTest {
         var inntektsmelding = opprettInntektsmelding(inntektsmeldingUuid);
 
         when(entityManager.createQuery(
-            "from ForespørselEntitet where id >= :fom and id <= :tom and opprettetTidspunkt >= :dato"
+            "from ForespørselEntitet where id >= :fom and id <= :tom"
                 + " and status = :status order by id",
             ForespørselEntitet.class)).thenReturn(query);
         when(query.setParameter("fom", 1L)).thenReturn(query);
         when(query.setParameter("tom", 10L)).thenReturn(query);
-        when(query.setParameter("dato", LocalDate.of(2026, 2, 1).atStartOfDay())).thenReturn(query);
         when(query.setParameter("status", ForespørselStatus.UNDER_BEHANDLING)).thenReturn(query);
         when(query.setMaxResults(50)).thenReturn(query);
         when(query.getResultList()).thenReturn(List.of(forespørsel));
@@ -121,12 +120,11 @@ class OppdatereTilFerdigHvisMottattImTaskTest {
         var inntektsmelding = opprettInntektsmelding(inntektsmeldingUuid);
 
         when(entityManager.createQuery(
-            "from ForespørselEntitet where id >= :fom and id <= :tom and opprettetTidspunkt >= :dato"
+            "from ForespørselEntitet where id >= :fom and id <= :tom"
                 + " and status = :status order by id",
             ForespørselEntitet.class)).thenReturn(query);
         when(query.setParameter("fom", 1L)).thenReturn(query);
         when(query.setParameter("tom", 10L)).thenReturn(query);
-        when(query.setParameter("dato", LocalDate.of(2026, 2, 1).atStartOfDay())).thenReturn(query);
         when(query.setParameter("status", ForespørselStatus.UNDER_BEHANDLING)).thenReturn(query);
         when(query.setMaxResults(50)).thenReturn(query);
         when(query.getResultList()).thenReturn(List.of(forespørsel));
@@ -154,12 +152,11 @@ class OppdatereTilFerdigHvisMottattImTaskTest {
         var forespørsel = opprettForespørsel(forespørselId, forespørselUuid);
 
         when(entityManager.createQuery(
-            "from ForespørselEntitet where id >= :fom and id <= :tom and opprettetTidspunkt >= :dato"
+            "from ForespørselEntitet where id >= :fom and id <= :tom"
                 + " and status = :status order by id",
             ForespørselEntitet.class)).thenReturn(query);
         when(query.setParameter("fom", 1L)).thenReturn(query);
         when(query.setParameter("tom", 10L)).thenReturn(query);
-        when(query.setParameter("dato", LocalDate.of(2026, 2, 1).atStartOfDay())).thenReturn(query);
         when(query.setParameter("status", ForespørselStatus.UNDER_BEHANDLING)).thenReturn(query);
         when(query.setMaxResults(50)).thenReturn(query);
         when(query.getResultList()).thenReturn(List.of(forespørsel));
@@ -196,12 +193,11 @@ class OppdatereTilFerdigHvisMottattImTaskTest {
         var inntektsmelding2 = opprettInntektsmelding(inntektsmeldingUuid2);
 
         when(entityManager.createQuery(
-            "from ForespørselEntitet where id >= :fom and id <= :tom and opprettetTidspunkt >= :dato"
+            "from ForespørselEntitet where id >= :fom and id <= :tom"
                 + " and status = :status order by id",
             ForespørselEntitet.class)).thenReturn(query);
         when(query.setParameter("fom", 1L)).thenReturn(query);
         when(query.setParameter("tom", 10L)).thenReturn(query);
-        when(query.setParameter("dato", LocalDate.of(2026, 2, 1).atStartOfDay())).thenReturn(query);
         when(query.setParameter("status", ForespørselStatus.UNDER_BEHANDLING)).thenReturn(query);
         when(query.setMaxResults(50)).thenReturn(query);
         when(query.getResultList()).thenReturn(List.of(forespørsel1, forespørsel2));
@@ -231,12 +227,11 @@ class OppdatereTilFerdigHvisMottattImTaskTest {
     void skal_håndtere_tom_liste() {
         // Arrange
         when(entityManager.createQuery(
-            "from ForespørselEntitet where id >= :fom and id <= :tom and opprettetTidspunkt >= :dato"
+            "from ForespørselEntitet where id >= :fom and id <= :tom"
                 + " and status = :status order by id",
             ForespørselEntitet.class)).thenReturn(query);
         when(query.setParameter("fom", 1L)).thenReturn(query);
         when(query.setParameter("tom", 10L)).thenReturn(query);
-        when(query.setParameter("dato", LocalDate.of(2026, 2, 1).atStartOfDay())).thenReturn(query);
         when(query.setParameter("status", ForespørselStatus.UNDER_BEHANDLING)).thenReturn(query);
         when(query.setMaxResults(50)).thenReturn(query);
         when(query.getResultList()).thenReturn(Collections.emptyList());
@@ -258,12 +253,11 @@ class OppdatereTilFerdigHvisMottattImTaskTest {
     void skal_default_dry_run_til_true() {
         // Arrange
         when(entityManager.createQuery(
-            "from ForespørselEntitet where id >= :fom and id <= :tom and opprettetTidspunkt >= :dato"
+            "from ForespørselEntitet where id >= :fom and id <= :tom"
                 + " and status = :status order by id",
             ForespørselEntitet.class)).thenReturn(query);
         when(query.setParameter("fom", 1L)).thenReturn(query);
         when(query.setParameter("tom", 10L)).thenReturn(query);
-        when(query.setParameter("dato", LocalDate.of(2026, 2, 1).atStartOfDay())).thenReturn(query);
         when(query.setParameter("status", ForespørselStatus.UNDER_BEHANDLING)).thenReturn(query);
         when(query.setMaxResults(50)).thenReturn(query);
         when(query.getResultList()).thenReturn(Collections.emptyList());
@@ -291,12 +285,11 @@ class OppdatereTilFerdigHvisMottattImTaskTest {
         var inntektsmelding = opprettInntektsmelding(inntektsmeldingUuid);
 
         when(entityManager.createQuery(
-            "from ForespørselEntitet where id >= :fom and id <= :tom and opprettetTidspunkt >= :dato"
+            "from ForespørselEntitet where id >= :fom and id <= :tom"
                 + " and status = :status order by id",
             ForespørselEntitet.class)).thenReturn(query);
         when(query.setParameter("fom", 100L)).thenReturn(query);
         when(query.setParameter("tom", 200L)).thenReturn(query);
-        when(query.setParameter("dato", LocalDate.of(2026, 2, 1).atStartOfDay())).thenReturn(query);
         when(query.setParameter("status", ForespørselStatus.UNDER_BEHANDLING)).thenReturn(query);
         when(query.setMaxResults(50)).thenReturn(query);
         when(query.getResultList()).thenReturn(List.of(forespørsel));
