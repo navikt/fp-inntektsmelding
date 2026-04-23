@@ -109,7 +109,7 @@ public class InntektsmeldingApiMottakTjeneste {
             LOG.warn(
                 "InntektTjenteste har ikke returnert inntekt, og vi kan ikke verifisere inntekt i inntektsmeldingen mot A-inntekt. inntektsmeldingId: {}",
                 inntektsmelding.getId());
-            throw new IllegalStateException("InntektsmeldingApiMottakTjeneste: utviklerfeil - får tom inntekt fra ainntekt");
+            throw new IllegalStateException("InntektsmeldingApiMottakTjeneste: utviklerfeil - får tom inntekt fra A-inntekt");
         }
 
         var nedetidAInntekt = inntektFraAInntekt.måneder() != null && inntektFraAInntekt.måneder()
