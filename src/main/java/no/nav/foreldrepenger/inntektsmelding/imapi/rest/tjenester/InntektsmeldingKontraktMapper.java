@@ -45,7 +45,7 @@ public class InntektsmeldingKontraktMapper {
             .stream()
             .filter(f -> inntektsmelding.getStartdato().equals(f.førsteUttaksdato()))
             .findFirst();
-        var forespørselUuid = forespørselOpt.orElseThrow().uuid();
+        var forespørselUuid = forespørselOpt.orElseThrow(() -> new IllegalStateException("Fant ikke forespørsel for inntektsmelding med uuid " + inntektsmelding.getInntektsmeldingUuid())).uuid();
 
         // Slå opp fødselsnummer fra aktørId
         var fnr = personTjeneste.finnPersonIdentForAktørId(inntektsmelding.getAktørId());
