@@ -19,10 +19,13 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
@@ -86,6 +89,10 @@ public class InntektsmeldingEntitet {
 
     @OneToOne(cascade = CascadeType.ALL, mappedBy = "inntektsmelding")
     private LpsSystemInfoEntitet lpsSystem;
+
+    @ManyToOne
+    @JoinColumn(name = "forespoersel_id")
+    private ForespørselEntitet forespørsel;
 
     public InntektsmeldingEntitet() {
         // Hibernate
@@ -157,6 +164,10 @@ public class InntektsmeldingEntitet {
 
     public UUID getUuid() {
         return uuid;
+    }
+
+    public Optional<ForespørselEntitet> getForespørsel() {
+        return Optional.ofNullable(forespørsel);
     }
 
     private void leggTilRefusjonsendring(RefusjonsendringEntitet refusjonsendringEntitet) {
@@ -302,6 +313,11 @@ public class InntektsmeldingEntitet {
 
         public Builder medKildesystem(Kildesystem kildesystem) {
             kladd.kildesystem = kildesystem;
+            return this;
+        }
+
+        public Builder medForespørsel(ForespørselEntitet forespørsel) {
+            kladd.forespørsel = forespørsel;
             return this;
         }
 
