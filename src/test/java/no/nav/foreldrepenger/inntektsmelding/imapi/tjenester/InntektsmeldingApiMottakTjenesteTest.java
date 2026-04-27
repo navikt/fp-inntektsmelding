@@ -79,6 +79,7 @@ class InntektsmeldingApiMottakTjenesteTest {
         assertThat(response.success()).isFalse();
         assertThat(response.inntektsmeldingUuid()).isNull();
         assertThat(response.feilinformasjon().feilmelding()).contains("Finner ikke forespørsel for uuid");
+        assertThat(response.feilinformasjon().referanseId()).isEqualTo(foresporselUuid.toString());
         verify(fellesMottakTjeneste, never()).lagreOgJournalførInntektsmelding(any(), any());
     }
 
@@ -93,6 +94,7 @@ class InntektsmeldingApiMottakTjenesteTest {
 
         assertThat(response.success()).isFalse();
         assertThat(response.feilinformasjon().feilmelding()).contains("forkastet forespørsel");
+        assertThat(response.feilinformasjon().referanseId()).isEqualTo(foresporselUuid.toString());
         verify(fellesMottakTjeneste, never()).lagreOgJournalførInntektsmelding(any(), any());
     }
 
@@ -117,6 +119,7 @@ class InntektsmeldingApiMottakTjenesteTest {
         assertThat(response.success()).isFalse();
         assertThat(response.inntektsmeldingUuid()).isNull();
         assertThat(response.feilinformasjon().feilmelding()).contains("Inntekt i inntektsmelding er ulik inntekt fra A-inntekt, og ingen endringsårsak er oppgitt");
+        assertThat(response.feilinformasjon().referanseId()).isEqualTo(foresporselUuid.toString());
         verify(fellesMottakTjeneste, never()).lagreOgJournalførInntektsmelding(any(), any());
     }
 
@@ -141,6 +144,7 @@ class InntektsmeldingApiMottakTjenesteTest {
         assertThat(response.success()).isFalse();
         assertThat(response.inntektsmeldingUuid()).isNull();
         assertThat(response.feilinformasjon().feilmelding()).contains("nedetid");
+        assertThat(response.feilinformasjon().referanseId()).isEqualTo(foresporselUuid.toString());
         verify(fellesMottakTjeneste, never()).lagreOgJournalførInntektsmelding(any(), any());
     }
 
@@ -207,6 +211,7 @@ class InntektsmeldingApiMottakTjenesteTest {
 
         assertThat(response.success()).isFalse();
         assertThat(response.feilinformasjon().feilmelding()).contains("Ingen endring på ny inntektsmelding");
+        assertThat(response.feilinformasjon().referanseId()).isEqualTo(tidligereLikIm.getInntektsmeldingUuid().toString());
         verify(fellesMottakTjeneste, never()).lagreOgJournalførInntektsmelding(any(), any());
     }
 
