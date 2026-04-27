@@ -15,34 +15,24 @@ import org.slf4j.LoggerFactory;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.rest.ForespørselRest;
 import no.nav.foreldrepenger.inntektsmelding.imapi.rest.forespørsel.ForespørselApiRest;
 import no.nav.foreldrepenger.inntektsmelding.imapi.rest.inntektsmelding.InntektsmeldingApiRest;
-import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.InntektsmeldingDialogRest;
-import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.aginitiert.ArbeidsgiverinitiertDialogRest;
-import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.kvittering.PdfDokumentRest;
 import no.nav.foreldrepenger.inntektsmelding.overstyring.rest.InntektsmeldingFpsakRest;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.AutentiseringAnnoteringFilter;
-import no.nav.foreldrepenger.inntektsmelding.server.exceptions.LokalRestExceptionMapper;
-import no.nav.vedtak.server.rest.AuthenticationFilter;
-import no.nav.vedtak.server.rest.ValidationExceptionMapper;
-import no.nav.vedtak.server.rest.jackson.Jackson2MapperFeature;
+import no.nav.vedtak.server.rest.FpRestJackson2Feature;
 
 /**
- * For kall fra fp-inntektsmelding-frontend med kontekst EksternBruker og TokenX
- * TODO: Skille rest-klassene fra de som brukes fra backend-api etter omlegging
+ * For kall fra fpsak, fp-inntektsmelding-api, mv med kontekst systembruker eller internbruker
+ * TODO: Skille rest-klassene fra frontend-api og legge på BeskyttetRessurs.
  */
-@ApplicationPath(ApiConfig.API_URI)
-public class ApiConfig extends ResourceConfig {
+@ApplicationPath(BackendApiConfig.API_URI)
+public class BackendApiConfig extends ResourceConfig {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ApiConfig.class);
-    public static final String API_URI = "/api";
+    private static final Logger LOG = LoggerFactory.getLogger(BackendApiConfig.class);
+    public static final String API_URI = "/backend/api";
 
-    public ApiConfig() {
+    public BackendApiConfig() {
         LOG.info("Initialiserer: {}", API_URI);
-        // TODO gjennomgå behov for LokalRestExceptionMapper - frontend bruker ikke feilmelding.
-        register(AuthenticationFilter.class);
-        register(Jackson2MapperFeature.class);
-        register(ValidationExceptionMapper.class);
-        register(LokalRestExceptionMapper.class);
-        // Sikkerhet - lokal "tilleggsautentisering" sjekker match IdentType og Annotering
+        register(FpRestJackson2Feature.class);
+        // Sikkerhet - lokal autentisering - kan antagelig saneres gitt import av abac/BeskyttetRessurs
         register(AutentiseringAnnoteringFilter.class);
 
         // REST
@@ -54,10 +44,7 @@ public class ApiConfig extends ResourceConfig {
 
     private Set<Class<?>> getApplicationClasses() {
         return Set.of(ForespørselRest.class,
-            InntektsmeldingDialogRest.class,
             InntektsmeldingFpsakRest.class,
-            ArbeidsgiverinitiertDialogRest.class,
-            PdfDokumentRest.class,
             ForespørselApiRest.class,
             InntektsmeldingApiRest.class);
     }
