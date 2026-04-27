@@ -42,8 +42,7 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
 
         // Act
         inntektsmeldingRepository.lagreInntektsmelding(førLagring);
-        var etterLagring = inntektsmeldingRepository.hentSisteInntektsmelding(førLagring.getAktørId(), førLagring.getArbeidsgiverIdent(),
-            førLagring.getStartDato(), førLagring.getYtelsetype());
+        var etterLagring = inntektsmeldingRepository.finnInntektsmelding(førLagring.getUuid());
 
         // Assert
         assertThat(etterLagring).isPresent();
@@ -74,8 +73,7 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
 
         // Act
         inntektsmeldingRepository.lagreInntektsmelding(førLagring);
-        var etterLagring = inntektsmeldingRepository.hentSisteInntektsmelding(førLagring.getAktørId(), førLagring.getArbeidsgiverIdent(),
-            førLagring.getStartDato(), førLagring.getYtelsetype());
+        var etterLagring = inntektsmeldingRepository.finnInntektsmelding(førLagring.getUuid());
 
         // Assert
         assertThat(etterLagring).isPresent();
@@ -117,8 +115,7 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
 
         // Act
         inntektsmeldingRepository.lagreInntektsmelding(førLagring);
-        var etterLagring = inntektsmeldingRepository.hentSisteInntektsmelding(førLagring.getAktørId(), førLagring.getArbeidsgiverIdent(),
-            førLagring.getStartDato(), førLagring.getYtelsetype());
+        var etterLagring = inntektsmeldingRepository.finnInntektsmelding(førLagring.getUuid());
 
         // Assert
         assertThat(etterLagring).isPresent();
@@ -174,11 +171,11 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
         inntektsmeldingRepository.lagreInntektsmelding(im1);
         inntektsmeldingRepository.lagreInntektsmelding(im2);
 
-        var etterLagring = inntektsmeldingRepository.hentSisteInntektsmelding(aktørId, arbeidsgiverIdent, startDato, Ytelsetype.FORELDREPENGER);
+        var etterLagring = inntektsmeldingRepository.hentInntektsmeldingerSortertNyesteFørst(aktørId, arbeidsgiverIdent, startDato, Ytelsetype.FORELDREPENGER).getFirst();
 
         // Assert
-        assertThat(etterLagring).isPresent();
-        assertThat(etterLagring.get().getKontaktperson().getNavn()).isEqualTo(im2.getKontaktperson().getNavn());
+        assertThat(etterLagring).isNotNull();
+        assertThat(etterLagring.getKontaktperson().getNavn()).isEqualTo(im2.getKontaktperson().getNavn());
     }
 
     @Test
