@@ -38,7 +38,7 @@ public class InntektsmeldingTjeneste {
         return inntektsmeldingRepository.finnInntektsmelding(inntektsmeldingUuid).map(InntektsmeldingDtoMapper::mapFraEntitet).orElse(null);
     }
 
-    public InntektsmeldingDto hentSisteInntektsmelding(UUID forespørselUuid) {
+    public InntektsmeldingDto hentSisteInntektsmeldingForForespørsel(UUID forespørselUuid) {
         var inntekstmeldinger = hentInntektsmeldinger(forespørselUuid);
         return inntekstmeldinger.isEmpty() ? null : inntekstmeldinger.getFirst();
     }

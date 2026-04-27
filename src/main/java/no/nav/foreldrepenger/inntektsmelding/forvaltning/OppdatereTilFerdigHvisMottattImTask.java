@@ -61,7 +61,7 @@ public class OppdatereTilFerdigHvisMottattImTask implements ProsessTaskHandler {
             forespørsler.size());
 
         forespørsler.forEach(forespørsel -> {
-            var innteksmelding = inntektsmeldingTjeneste.hentSisteInntektsmelding(forespørsel.getUuid());
+            var innteksmelding = inntektsmeldingTjeneste.hentSisteInntektsmeldingForForespørsel(forespørsel.getUuid());
             if (innteksmelding != null) {
                 LOG.info("FEILAKTIGE_FORESPØRSLER: Fant innsendt inntektsmelding med id {} for forespørselId {}",
                     innteksmelding.getId(),

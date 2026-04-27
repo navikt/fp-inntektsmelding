@@ -85,7 +85,7 @@ class OppdatereTilFerdigHvisMottattImTaskTest {
         when(query.setMaxResults(50)).thenReturn(query);
         when(query.getResultList()).thenReturn(List.of(forespørsel));
 
-        when(inntektsmeldingTjeneste.hentSisteInntektsmelding(forespørselUuid)).thenReturn(inntektsmelding);
+        when(inntektsmeldingTjeneste.hentSisteInntektsmeldingForForespørsel(forespørselUuid)).thenReturn(inntektsmelding);
 
         var prosessTaskData = ProsessTaskData.forProsessTask(OppdatereTilFerdigHvisMottattImTask.class);
         prosessTaskData.setProperty("fom", "1");
@@ -129,7 +129,7 @@ class OppdatereTilFerdigHvisMottattImTaskTest {
         when(query.setMaxResults(50)).thenReturn(query);
         when(query.getResultList()).thenReturn(List.of(forespørsel));
 
-        when(inntektsmeldingTjeneste.hentSisteInntektsmelding(forespørselUuid)).thenReturn(inntektsmelding);
+        when(inntektsmeldingTjeneste.hentSisteInntektsmeldingForForespørsel(forespørselUuid)).thenReturn(inntektsmelding);
 
         var prosessTaskData = ProsessTaskData.forProsessTask(OppdatereTilFerdigHvisMottattImTask.class);
         prosessTaskData.setProperty("fom", "1");
@@ -161,7 +161,7 @@ class OppdatereTilFerdigHvisMottattImTaskTest {
         when(query.setMaxResults(50)).thenReturn(query);
         when(query.getResultList()).thenReturn(List.of(forespørsel));
 
-        when(inntektsmeldingTjeneste.hentSisteInntektsmelding(forespørselUuid)).thenReturn(null);
+        when(inntektsmeldingTjeneste.hentSisteInntektsmeldingForForespørsel(forespørselUuid)).thenReturn(null);
 
         var prosessTaskData = ProsessTaskData.forProsessTask(OppdatereTilFerdigHvisMottattImTask.class);
         prosessTaskData.setProperty("fom", "1");
@@ -202,8 +202,8 @@ class OppdatereTilFerdigHvisMottattImTaskTest {
         when(query.setMaxResults(50)).thenReturn(query);
         when(query.getResultList()).thenReturn(List.of(forespørsel1, forespørsel2));
 
-        when(inntektsmeldingTjeneste.hentSisteInntektsmelding(forespørselUuid1)).thenReturn(inntektsmelding1);
-        when(inntektsmeldingTjeneste.hentSisteInntektsmelding(forespørselUuid2)).thenReturn(inntektsmelding2);
+        when(inntektsmeldingTjeneste.hentSisteInntektsmeldingForForespørsel(forespørselUuid1)).thenReturn(inntektsmelding1);
+        when(inntektsmeldingTjeneste.hentSisteInntektsmeldingForForespørsel(forespørselUuid2)).thenReturn(inntektsmelding2);
 
         var prosessTaskData = ProsessTaskData.forProsessTask(OppdatereTilFerdigHvisMottattImTask.class);
         prosessTaskData.setProperty("fom", "1");
@@ -294,7 +294,7 @@ class OppdatereTilFerdigHvisMottattImTaskTest {
         when(query.setMaxResults(50)).thenReturn(query);
         when(query.getResultList()).thenReturn(List.of(forespørsel));
 
-        when(inntektsmeldingTjeneste.hentSisteInntektsmelding(forespørselUuid)).thenReturn(inntektsmelding);
+        when(inntektsmeldingTjeneste.hentSisteInntektsmeldingForForespørsel(forespørselUuid)).thenReturn(inntektsmelding);
 
         var prosessTaskData = ProsessTaskData.forProsessTask(OppdatereTilFerdigHvisMottattImTask.class);
         prosessTaskData.setProperty("fom", "100");

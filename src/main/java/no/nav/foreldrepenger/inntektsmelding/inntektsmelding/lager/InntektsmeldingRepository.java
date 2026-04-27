@@ -40,11 +40,6 @@ public class InntektsmeldingRepository {
         return inntektsmeldingEntitet.getId();
     }
 
-    //TODO: Denne brukes kun til test - vurder fjerning
-    public Optional<InntektsmeldingEntitet> hentSisteInntektsmelding(AktørIdEntitet aktørId, String arbeidsgiverIdent, LocalDate startDato, Ytelsetype ytelsetype) {
-        return hentInntektsmeldingerSortertNyesteFørst(aktørId, arbeidsgiverIdent,  startDato, ytelsetype).stream().findFirst();
-    }
-
     public List<InntektsmeldingEntitet> hentInntektsmeldingerSortertNyesteFørst(AktørIdEntitet aktørId, String arbeidsgiverIdent, LocalDate startDato, Ytelsetype ytelsetype) {
         var query = entityManager.createQuery(
                 "FROM InntektsmeldingEntitet where aktørId = :brukerAktørId and ytelsetype = :ytelsetype and arbeidsgiverIdent = :arbeidsgiverIdent and startDato = :startDato order by opprettetTidspunkt desc",
