@@ -27,7 +27,6 @@ import no.nav.foreldrepenger.inntektsmelding.integrasjoner.metrikker.MetrikkerTj
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.MånedslønnStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
-import no.nav.vedtak.log.mdc.MDCOperations;
 
 @ApplicationScoped
 public class InntektsmeldingApiMottakTjeneste {
@@ -65,8 +64,8 @@ public class InntektsmeldingApiMottakTjeneste {
             LOG.info("Finner ikke forespørsel for uuid {}", forespørselUuid);
             return new SendInntektsmeldingResponse(false,
                 null,
-                new SendInntektsmeldingResponse.FeilInfo(FeilkodeDto.TOM_FORESPOERRSEL, "Finner ikke forespørsel for uuid " + forespørselUuid,
-                    MDCOperations.getCallId()));
+                new SendInntektsmeldingResponse.FeilInfo(FeilkodeDto.TOM_FORESPOERSEL, "Finner ikke forespørsel for uuid " + forespørselUuid,
+                    forespørselUuid.toString()));
         }
 
         if (ForespørselStatus.UTGÅTT.equals(forespørsel.status())) {
@@ -75,7 +74,7 @@ public class InntektsmeldingApiMottakTjeneste {
                 null,
                 new SendInntektsmeldingResponse.FeilInfo(FeilkodeDto.UGYLDIG_FORESPOERSEL,
                     "Det er ikke tillatt å sende inn en inntektsmelding på en forkastet forespørsel",
-                    MDCOperations.getCallId()));
+                    forespørselUuid.toString()));
         }
 
         var sisteInntektsmelding = inntektsmeldingTjeneste.hentSisteInntektsmeldingForForespørsel(forespørsel.uuid());
@@ -87,7 +86,7 @@ public class InntektsmeldingApiMottakTjeneste {
                 new SendInntektsmeldingResponse.FeilInfo(FeilkodeDto.DUPLIKAT,
                     "Inntektsmelding avvises. Ingen endring på ny inntektsmelding sammenlignet med tidligere innsendt inntektsmelding med id: "
                         + sisteInntektsmelding.getInntektsmeldingUuid(),
-                    MDCOperations.getCallId()));
+                    sisteInntektsmelding.getInntektsmeldingUuid().toString()));
         }
 
         //Todo Avklaring: Hva skal vi gjøre om inntektskomponenten er nede og vi ikke får sjekket dette? La de sende inn, men sette til status forkastet med forklaring?
@@ -101,7 +100,7 @@ public class InntektsmeldingApiMottakTjeneste {
 
         MetrikkerTjeneste.loggInnsendtInntektsmelding(lagretIm);
 
-        return new SendInntektsmeldingResponse(true, lagretIm.getInntektsmeldingUuid(),null);
+        return new SendInntektsmeldingResponse(true, lagretIm.getInntektsmeldingUuid(), null);
     }
 
     private SendInntektsmeldingResponse sjekkMånedInntektMotRapportertInntekt(ForespørselDto forespørsel, InntektsmeldingDto inntektsmelding) {
@@ -135,7 +134,7 @@ public class InntektsmeldingApiMottakTjeneste {
                 null,
                 new SendInntektsmeldingResponse.FeilInfo(FeilkodeDto.NEDETID_AINNTEKT,
                     "Inntektskomponenten har nedetid, og vi kan ikke verifisere inntekt i inntektsmeldingen mot A-inntekt. Prøv igjen om litt.",
-                    MDCOperations.getCallId()));
+                    forespørsel.uuid().toString()));
         }
 
         var inntektErUlikOgIngenÅrsakOppgitt =
@@ -149,7 +148,7 @@ public class InntektsmeldingApiMottakTjeneste {
                 inntektsmelding.getMånedInntekt());
             return new SendInntektsmeldingResponse(false,
                 null,
-                new SendInntektsmeldingResponse.FeilInfo(FeilkodeDto.ULIK_INNTEKT, feilmelding, MDCOperations.getCallId()));
+                new SendInntektsmeldingResponse.FeilInfo(FeilkodeDto.ULIK_INNTEKT, feilmelding, forespørsel.uuid().toString()));
         }
 
         loggTilfellerMedLikInntektOgHarÅrsak(inntektsmelding, inntektFraAInntekt.gjennomsnitt());

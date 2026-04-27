@@ -32,8 +32,8 @@ import no.nav.foreldrepenger.inntektsmelding.integrasjoner.inntektskomponent.Inn
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
-import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.EndringsårsakType;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.MånedslønnStatus;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.EndringsårsakType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
@@ -195,9 +195,10 @@ class InntektsmeldingApiMottakTjenesteTest {
     @Test
     void skal_avvise_semantisk_like_inntektsmeldinger() {
         var foresporselUuid = UUID.randomUUID();
+        var inntektsmeldingUUid = UUID.randomUUID();
         var inputDto = lagInntektsmeldingDto(null);
         var forespørselDto = lagForespørselDto(foresporselUuid, null, ForespørselStatus.UNDER_BEHANDLING);
-        var tidligereLikIm = lagInntektsmeldingDto(null);
+        var tidligereLikIm = lagInntektsmeldingDtoMedUuid(inntektsmeldingUUid, null, true);
 
         when(forespørselBehandlingTjeneste.hentForespørsel(foresporselUuid)).thenReturn(Optional.of(forespørselDto));
         when(inntektsmeldingTjeneste.hentSisteInntektsmeldingForForespørsel(foresporselUuid)).thenReturn(tidligereLikIm);
