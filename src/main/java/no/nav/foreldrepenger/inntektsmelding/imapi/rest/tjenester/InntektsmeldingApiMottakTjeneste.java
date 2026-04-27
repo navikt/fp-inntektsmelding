@@ -11,23 +11,21 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
-import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.FellesGrunnlagTjeneste;
-import no.nav.foreldrepenger.inntektsmelding.integrasjoner.inntektskomponent.InntektTjeneste;
-
-import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste;
-
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.MånedslønnStatus;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import no.nav.foreldrepenger.inntektsmelding.felles.FeilkodeDto;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
 import no.nav.foreldrepenger.inntektsmelding.imapi.inntektsmelding.SendInntektsmeldingResponse;
+import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.FellesGrunnlagTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.FellesMottakTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.inntektskomponent.InntektTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.metrikker.MetrikkerTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.typer.dto.MånedslønnStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 
 @ApplicationScoped
@@ -64,19 +62,31 @@ public class InntektsmeldingApiMottakTjeneste {
         var forespørsel = forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid).orElse(null);
         if (forespørsel == null) {
             LOG.info("Finner ikke forespørsel for uuid {}", forespørselUuid);
-            return new SendInntektsmeldingResponse(false, null, "Finner ikke forespørsel for uuid " + forespørselUuid);
+            return new SendInntektsmeldingResponse(false,
+                null,
+                new SendInntektsmeldingResponse.FeilInfo(FeilkodeDto.TOM_FORESPOERSEL, "Finner ikke forespørsel for uuid " + forespørselUuid,
+                    forespørselUuid.toString()));
         }
 
         if (ForespørselStatus.UTGÅTT.equals(forespørsel.status())) {
             LOG.info("Forespørsel har status utgått. Inntektsmelding kan ikke mottas. forespørselUuid: {}", forespørselUuid);
-            return new SendInntektsmeldingResponse(false, null,"Kan ikke sende inn inntektsmelding når Forespørsel har status forkastet.");
+            return new SendInntektsmeldingResponse(false,
+                null,
+                new SendInntektsmeldingResponse.FeilInfo(FeilkodeDto.UGYLDIG_FORESPOERSEL,
+                    "Det er ikke tillatt å sende inn en inntektsmelding på en forkastet forespørsel",
+                    forespørselUuid.toString()));
         }
 
         var sisteInntektsmelding = inntektsmeldingTjeneste.hentSisteInntektsmeldingForForespørsel(forespørsel.uuid());
         if (sisteInntektsmelding != null && inntektsmeldingerErLike(inntektsmelding, sisteInntektsmelding)) {
-            LOG.info("Inntektsmelding avvises. Ingen endring på ny inntektsmelding sammenlignet med tidligere innsendt inntektsmelding. inntektsmeldingId: {}", inntektsmelding.getId());
+            LOG.info(
+                "Inntektsmelding avvises. Ingen endring på ny inntektsmelding sammenlignet med tidligere innsendt inntektsmelding. inntektsmeldingId: {}",
+                inntektsmelding.getId());
             return new SendInntektsmeldingResponse(false, null,
-                "Inntektsmelding avvises. Ingen endring på ny inntektsmelding sammenlignet med tidligere innsendt inntektsmelding.");
+                new SendInntektsmeldingResponse.FeilInfo(FeilkodeDto.DUPLIKAT,
+                    "Inntektsmelding avvises. Ingen endring på ny inntektsmelding sammenlignet med tidligere innsendt inntektsmelding med id: "
+                        + sisteInntektsmelding.getInntektsmeldingUuid(),
+                    sisteInntektsmelding.getInntektsmeldingUuid().toString()));
         }
 
         //Todo Avklaring: Hva skal vi gjøre om inntektskomponenten er nede og vi ikke får sjekket dette? La de sende inn, men sette til status forkastet med forklaring?
@@ -90,7 +100,7 @@ public class InntektsmeldingApiMottakTjeneste {
 
         MetrikkerTjeneste.loggInnsendtInntektsmelding(lagretIm);
 
-        return new SendInntektsmeldingResponse(true, lagretIm.getInntektsmeldingUuid(),"Inntektsmelding mottatt");
+        return new SendInntektsmeldingResponse(true, lagretIm.getInntektsmeldingUuid(), null);
     }
 
     private SendInntektsmeldingResponse sjekkMånedInntektMotRapportertInntekt(ForespørselDto forespørsel, InntektsmeldingDto inntektsmelding) {
@@ -120,7 +130,11 @@ public class InntektsmeldingApiMottakTjeneste {
             LOG.warn(
                 "Inntektskomponenten har nedetid, og vi kan ikke verifisere inntekt i inntektsmeldingen mot A-inntekt. inntektsmeldingId: {}",
                 inntektsmelding.getId());
-            return new SendInntektsmeldingResponse(false, null, "Inntektskomponenten har nedetid, og vi kan ikke verifisere inntekt i inntektsmeldingen mot A-inntekt. Prøv igjen om litt.");
+            return new SendInntektsmeldingResponse(false,
+                null,
+                new SendInntektsmeldingResponse.FeilInfo(FeilkodeDto.NEDETID_AINNTEKT,
+                    "Inntektskomponenten har nedetid, og vi kan ikke verifisere inntekt i inntektsmeldingen mot A-inntekt. Prøv igjen om litt.",
+                    forespørsel.uuid().toString()));
         }
 
         var inntektErUlikOgIngenÅrsakOppgitt =
@@ -129,13 +143,17 @@ public class InntektsmeldingApiMottakTjeneste {
 
         if (inntektErUlikOgIngenÅrsakOppgitt) {
             var feilmelding = String.format(
-                "Inntekt i inntektsmelding er ulik inntekt fra A-inntekt, og ingen endringsårsak er oppgitt. Gjennomsnittlig inntekt fra A-inntekt: %s, oppgitt inntekt i inntektsmelding: %s", inntektFraAInntekt.gjennomsnitt(), inntektsmelding.getMånedInntekt());
-            return new SendInntektsmeldingResponse(false, null, feilmelding);
+                "Inntekt i inntektsmelding er ulik inntekt fra A-inntekt, og ingen endringsårsak er oppgitt. Gjennomsnittlig inntekt fra A-inntekt: %s, oppgitt inntekt i inntektsmelding: %s",
+                inntektFraAInntekt.gjennomsnitt(),
+                inntektsmelding.getMånedInntekt());
+            return new SendInntektsmeldingResponse(false,
+                null,
+                new SendInntektsmeldingResponse.FeilInfo(FeilkodeDto.ULIK_INNTEKT, feilmelding, forespørsel.uuid().toString()));
         }
 
         loggTilfellerMedLikInntektOgHarÅrsak(inntektsmelding, inntektFraAInntekt.gjennomsnitt());
 
-        return new SendInntektsmeldingResponse(true, null, "inntektsmelding godkjent");
+        return new SendInntektsmeldingResponse(true, inntektsmelding.getInntektsmeldingUuid(), null);
     }
 
     private void loggTilfellerMedLikInntektOgHarÅrsak(InntektsmeldingDto inntektsmelding, BigDecimal gjennomsnittligInntekt) {
