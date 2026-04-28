@@ -2,6 +2,8 @@ package no.nav.foreldrepenger.inntektsmelding.forespørsel.lager;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -12,13 +14,16 @@ import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 
+import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.InntektsmeldingEntitet;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
@@ -78,6 +83,9 @@ public class ForespørselEntitet {
 
     @Column(name = "dialogporten_uuid")
     private UUID dialogportenUuid;
+
+    @OneToMany(mappedBy = "forespørsel", fetch = FetchType.LAZY)
+    private List<InntektsmeldingEntitet> inntektsmeldinger = new ArrayList<>();
 
     public ForespørselEntitet(String organisasjonsnummer,
                               LocalDate skjæringstidspunkt,
@@ -184,6 +192,10 @@ public class ForespørselEntitet {
 
     public Optional<UUID> getDialogportenUuid() {
         return Optional.ofNullable(dialogportenUuid);
+    }
+
+    public List<InntektsmeldingEntitet> getInntektsmeldinger() {
+        return inntektsmeldinger;
     }
 
     @Override
