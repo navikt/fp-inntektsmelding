@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -15,6 +16,7 @@ import no.nav.foreldrepenger.inntektsmelding.felles.YtelseTypeDto;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
 import no.nav.foreldrepenger.inntektsmelding.imapi.forespørsel.ForespørselResponse;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Fødselsnummer;
@@ -39,7 +41,10 @@ public class ForespørselApiTjeneste {
 
 
     public Optional<ForespørselResponse> hentForesørselDto(UUID forespørselUuid) {
-        return forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid).map(this::mapTilResponseDto);
+        return forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid).map(fp ->{
+            var fnr = personTjeneste.finnPersonIdentForAktørId(fp.aktørId());
+            return mapTilResponseDto(fp, fnr);
+        });
     }
 
 
@@ -50,14 +55,18 @@ public class ForespørselApiTjeneste {
                                                              LocalDate fom,
                                                              LocalDate tom) {
         var resultater = forespørselBehandlingTjeneste.hentForespørsler(arbeidsgiver, fnr, status, ytelseTypeDto, fom, tom);
-        return resultater.stream().map(this::mapTilResponseDto).toList();
+        var aktørIder = resultater.stream().map(ForespørselDto::aktørId).collect(Collectors.toSet());
+        var aktørIdPersonIdentMap = personTjeneste.finnPersonIdentForAktørIdBolk(aktørIder);
+        return resultater.stream().map(f -> mapTilResponseDto(f, aktørIdPersonIdentMap.get(f.aktørId()))).toList();
     }
 
-    private ForespørselResponse mapTilResponseDto(ForespørselDto fp) {
-        var fnr = personTjeneste.finnPersonIdentForAktørId(fp.aktørId()).getIdent();
+    private ForespørselResponse mapTilResponseDto(ForespørselDto fp, PersonIdent personIdent) {
+        if (personIdent == null) {
+            throw new IllegalArgumentException("Finner ikke fødselsnummer for aktørId " + fp.aktørId());
+        }
         return new ForespørselResponse(fp.uuid(),
             new OrganisasjonsnummerDto(fp.arbeidsgiver().orgnr()),
-            new FødselsnummerDto(fnr),
+            new FødselsnummerDto(personIdent.getIdent()),
             fp.førsteUttaksdato(),
             fp.skjæringstidspunkt(),
             mapForespørselStatus(fp.status()),

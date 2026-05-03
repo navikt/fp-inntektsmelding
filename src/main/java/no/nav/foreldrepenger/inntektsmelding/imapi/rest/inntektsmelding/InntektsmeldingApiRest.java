@@ -3,6 +3,7 @@ package no.nav.foreldrepenger.inntektsmelding.imapi.rest.inntektsmelding;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
@@ -25,6 +26,7 @@ import no.nav.foreldrepenger.inntektsmelding.imapi.inntektsmelding.Inntektsmeldi
 import no.nav.foreldrepenger.inntektsmelding.imapi.inntektsmelding.SendInntektsmeldingRequest;
 import no.nav.foreldrepenger.inntektsmelding.imapi.inntektsmelding.SendInntektsmeldingResponse;
 import no.nav.foreldrepenger.inntektsmelding.imapi.rest.tjenester.InntektsmeldingKontraktMapper;
+import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
 
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste;
@@ -90,7 +92,7 @@ public class InntektsmeldingApiRest {
             return FeilUtils.responseFra(Response.Status.NOT_FOUND, Feilkode.IKKE_FUNNET, "Inntektsmelding med %s id finnes ikke.".formatted(inntektsmeldingUuid));
         }
 
-        var kontrakt = inntektsmeldingKontraktMapper.mapTilKontrakt(inntektsmelding);
+        var kontrakt = inntektsmeldingKontraktMapper.mapTilKontrakt(inntektsmelding, personTjeneste.finnPersonIdentForAktørId(inntektsmelding.getAktørId()));
         return Response.ok(kontrakt).build();    }
 
     @POST
@@ -127,7 +129,7 @@ public class InntektsmeldingApiRest {
 
         if (filterRequest.forespørselUuid() != null) {
             responsListe = inntektsmeldingTjeneste.hentInntektsmeldinger(filterRequest.forespørselUuid()).stream()
-                .map(inntektsmeldingKontraktMapper::mapTilKontrakt)
+                .map(inntektsmelding -> inntektsmeldingKontraktMapper.mapTilKontrakt(inntektsmelding, personTjeneste.finnPersonIdentForAktørId(inntektsmelding.getAktørId())))
                 .toList();
         } else {
             var aktørId = Optional.ofNullable(filterRequest.fnr())
@@ -139,13 +141,16 @@ public class InntektsmeldingApiRest {
                 .map(InntektsmeldingApiRest::mapYtelseType)
                 .orElse(null);
 
-            responsListe = inntektsmeldingTjeneste.hentInntektsmeldingerFraFilter(
-                    filterRequest.orgnr().orgnr(),
-                    aktørId,
-                    ytelseType,
-                    filterRequest.fom(),
-                    filterRequest.tom()).stream()
-                .map(inntektsmeldingKontraktMapper::mapTilKontrakt)
+            var inntektsmeldinger = inntektsmeldingTjeneste.hentInntektsmeldingerFraFilter(
+                filterRequest.orgnr().orgnr(),
+                aktørId,
+                ytelseType,
+                filterRequest.fom(),
+                filterRequest.tom());
+            var aktørIder = inntektsmeldinger.stream().map(InntektsmeldingDto::getAktørId).collect(Collectors.toSet());
+            var aktørIdPersonIdentMap = personTjeneste.finnPersonIdentForAktørIdBolk(aktørIder);
+            responsListe = inntektsmeldinger.stream()
+                .map(im -> inntektsmeldingKontraktMapper.mapTilKontrakt(im, aktørIdPersonIdentMap.get(im.getAktørId())))
                 .toList();
         }
 

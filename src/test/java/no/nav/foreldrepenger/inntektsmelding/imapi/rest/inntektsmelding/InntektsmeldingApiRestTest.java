@@ -13,7 +13,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import org.eclipse.jetty.http.HttpStatus;
@@ -46,6 +48,8 @@ class InntektsmeldingApiRestTest {
     private static final String ORGNR = "974760673";
     private static final String FNR = "11111111111";
     private static final String AKTØR_ID = "1234567890123";
+    private static final AktørId AKTØR_ID_OBJ = new AktørId(AKTØR_ID);
+    private static final PersonIdent PERSON_IDENT = new PersonIdent(FNR);
 
     private InntektsmeldingApiRest inntektsmeldingApiRest;
 
@@ -78,7 +82,8 @@ class InntektsmeldingApiRestTest {
         var response = lagHentResponse(uuid);
 
         when(inntektsmeldingTjeneste.hentInntektsmelding(uuid)).thenReturn(dto);
-        when(inntektsmeldingKontraktMapper.mapTilKontrakt(dto)).thenReturn(response);
+        when(personTjeneste.finnPersonIdentForAktørId(AKTØR_ID_OBJ)).thenReturn(PERSON_IDENT);
+        when(inntektsmeldingKontraktMapper.mapTilKontrakt(dto, PERSON_IDENT)).thenReturn(response);
 
         var resultat = inntektsmeldingApiRest.hentInntektsmelding(uuid);
 
@@ -98,7 +103,8 @@ class InntektsmeldingApiRestTest {
         var response = lagHentResponse(UUID.randomUUID());
 
         when(inntektsmeldingTjeneste.hentInntektsmeldinger(forespørselUuid)).thenReturn(List.of(dto));
-        when(inntektsmeldingKontraktMapper.mapTilKontrakt(dto)).thenReturn(response);
+        when(personTjeneste.finnPersonIdentForAktørId(AKTØR_ID_OBJ)).thenReturn(PERSON_IDENT);
+        when(inntektsmeldingKontraktMapper.mapTilKontrakt(dto, PERSON_IDENT)).thenReturn(response);
 
         var resultat = inntektsmeldingApiRest.hentInntektsmeldinger(filter);
 
@@ -107,7 +113,6 @@ class InntektsmeldingApiRestTest {
         var liste = (List<HentInntektsmeldingResponse>) resultat.getEntity();
         assertThat(liste).hasSize(1).containsExactly(response);
         verify(inntektsmeldingTjeneste).hentInntektsmeldinger(forespørselUuid);
-        verifyNoInteractions(personTjeneste);
     }
 
     @Test
@@ -141,7 +146,9 @@ class InntektsmeldingApiRestTest {
         when(inntektsmeldingTjeneste.hentInntektsmeldingerFraFilter(
             eq(ORGNR), eq(new AktørIdEntitet(AKTØR_ID)), isNull(), isNull(), isNull()))
             .thenReturn(List.of(dto));
-        when(inntektsmeldingKontraktMapper.mapTilKontrakt(dto)).thenReturn(response);
+        when(personTjeneste.finnPersonIdentForAktørIdBolk(Set.of(AKTØR_ID_OBJ)))
+            .thenReturn(Map.of(AKTØR_ID_OBJ, PERSON_IDENT));
+        when(inntektsmeldingKontraktMapper.mapTilKontrakt(dto, PERSON_IDENT)).thenReturn(response);
 
         var resultat = inntektsmeldingApiRest.hentInntektsmeldinger(filter);
 
@@ -215,7 +222,9 @@ class InntektsmeldingApiRestTest {
         when(inntektsmeldingTjeneste.hentInntektsmeldingerFraFilter(
             ORGNR, new AktørIdEntitet(AKTØR_ID), Ytelsetype.FORELDREPENGER, fom, tom))
             .thenReturn(List.of(dto));
-        when(inntektsmeldingKontraktMapper.mapTilKontrakt(dto)).thenReturn(response);
+        when(personTjeneste.finnPersonIdentForAktørIdBolk(Set.of(AKTØR_ID_OBJ)))
+            .thenReturn(Map.of(AKTØR_ID_OBJ, PERSON_IDENT));
+        when(inntektsmeldingKontraktMapper.mapTilKontrakt(dto, PERSON_IDENT)).thenReturn(response);
 
         var resultat = inntektsmeldingApiRest.hentInntektsmeldinger(filter);
 
@@ -262,6 +271,7 @@ class InntektsmeldingApiRestTest {
     private InntektsmeldingDto lagInntektsmeldingDto() {
         return InntektsmeldingDto.builder()
             .medInntektsmeldingUuid(UUID.randomUUID())
+            .medAktørId(AKTØR_ID_OBJ)
             .medArbeidsgiver(new Arbeidsgiver(ORGNR))
             .medStartdato(LocalDate.now())
             .medInntekt(BigDecimal.valueOf(50000))
