@@ -31,8 +31,6 @@ import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
 
-import no.nav.vedtak.log.mdc.MDCOperations;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

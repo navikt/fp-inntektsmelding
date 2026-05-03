@@ -7,9 +7,6 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.LukkeÅrsak;
@@ -28,7 +25,6 @@ import no.nav.vedtak.konfig.Tid;
 
 @ApplicationScoped
 public class InntektsmeldingMottakTjeneste {
-    private static final Logger LOG = LoggerFactory.getLogger(InntektsmeldingMottakTjeneste.class);
     private ForespørselBehandlingTjeneste forespørselBehandlingTjeneste;
     private FellesMottakTjeneste fellesMottakTjeneste;
     private FpsakTjeneste fpsakTjeneste;
