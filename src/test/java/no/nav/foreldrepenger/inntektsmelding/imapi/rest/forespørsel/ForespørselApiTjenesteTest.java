@@ -5,8 +5,12 @@ import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -64,17 +68,19 @@ class ForespørselApiTjenesteTest {
 
     @Test
     void skal_filtrere_forespørsel_på_orgnr() {
-        var aktørId = new AktørIdEntitet("9999999999999");
+        var aktørIdDom = new AktørIdEntitet("9999999999999");
         var fnr = new PersonIdent("11111111111");
         var orgnr = "999999999";
         var forespørsel = new ForespørselEntitet(orgnr,
             LocalDate.now(),
-            aktørId,
+            aktørIdDom,
             Ytelsetype.FORELDREPENGER,
             "123",
             LocalDate.now(),
             ForespørselType.BESTILT_AV_FAGSYSTEM);
-        when(personTjeneste.finnPersonIdentForAktørId(new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(aktørId.getAktørId()))).thenReturn(fnr);
+        var aktørId = new AktørId(aktørIdDom.getAktørId());
+        when(personTjeneste.finnPersonIdentForAktørIdBolk(Set.of(aktørId))).thenReturn(
+            Map.of(aktørId, fnr));
         when(forespørselBehandlingTjeneste.hentForespørsler(Arbeidsgiver.fra(orgnr), null, null, null, null, null)).thenReturn(List.of(
             ForespørselDtoMapper.mapFraEntitet(forespørsel)));
 
