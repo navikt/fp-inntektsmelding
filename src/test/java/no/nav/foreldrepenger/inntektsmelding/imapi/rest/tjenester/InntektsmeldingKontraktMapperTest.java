@@ -43,14 +43,12 @@ class InntektsmeldingKontraktMapperTest {
 
     @Mock
     private ForespørselTjeneste forespørselTjeneste;
-    @Mock
-    private PersonTjeneste personTjeneste;
 
     private InntektsmeldingKontraktMapper mapper;
 
     @BeforeEach
     void setup() {
-        mapper = new InntektsmeldingKontraktMapper(forespørselTjeneste, personTjeneste);
+        mapper = new InntektsmeldingKontraktMapper(forespørselTjeneste);
     }
 
     @Test
@@ -61,10 +59,7 @@ class InntektsmeldingKontraktMapperTest {
 
         when(forespørselTjeneste.finnForespørsler(any(), any(), eq(ORGNR)))
             .thenReturn(List.of(lagForespørselDto(forespørselUuid)));
-        when(personTjeneste.finnPersonIdentForAktørId(any()))
-            .thenReturn(new PersonIdent(FNR));
-
-        var resultat = mapper.mapTilKontrakt(inntektsmelding);
+        var resultat = mapper.mapTilKontrakt(inntektsmelding, new PersonIdent(FNR));
 
         assertThat(resultat.inntektsmeldingUuid()).isEqualTo(imUuid);
         assertThat(resultat.forespørselUuid()).isEqualTo(forespørselUuid);
@@ -84,10 +79,7 @@ class InntektsmeldingKontraktMapperTest {
 
         when(forespørselTjeneste.finnForespørsler(any(), any(), eq(ORGNR)))
             .thenReturn(List.of(lagForespørselDto(UUID.randomUUID())));
-        when(personTjeneste.finnPersonIdentForAktørId(any()))
-            .thenReturn(new PersonIdent(FNR));
-
-        var resultat = mapper.mapTilKontrakt(inntektsmelding);
+        var resultat = mapper.mapTilKontrakt(inntektsmelding, new PersonIdent(FNR));
 
         assertThat(resultat.refusjonPrMnd()).isEqualByComparingTo(BigDecimal.valueOf(10000));
         assertThat(resultat.opphørsdatoRefusjon()).isEqualTo(STARTDATO.plusDays(9));
@@ -103,10 +95,7 @@ class InntektsmeldingKontraktMapperTest {
 
         when(forespørselTjeneste.finnForespørsler(any(), any(), eq(ORGNR)))
             .thenReturn(List.of(lagForespørselDto(UUID.randomUUID())));
-        when(personTjeneste.finnPersonIdentForAktørId(any()))
-            .thenReturn(new PersonIdent(FNR));
-
-        var resultat = mapper.mapTilKontrakt(inntektsmelding);
+        var resultat = mapper.mapTilKontrakt(inntektsmelding, new PersonIdent(FNR));
 
         assertThat(resultat.bortfaltNaturalytelsePerioder()).hasSize(1);
         var bortfalt = resultat.bortfaltNaturalytelsePerioder().getFirst();
@@ -122,10 +111,7 @@ class InntektsmeldingKontraktMapperTest {
 
         when(forespørselTjeneste.finnForespørsler(any(), any(), eq(ORGNR)))
             .thenReturn(List.of(lagForespørselDto(UUID.randomUUID())));
-        when(personTjeneste.finnPersonIdentForAktørId(any()))
-            .thenReturn(new PersonIdent(FNR));
-
-        var resultat = mapper.mapTilKontrakt(inntektsmelding);
+        var resultat = mapper.mapTilKontrakt(inntektsmelding, new PersonIdent(FNR));
 
         assertThat(resultat.endringAvInntektÅrsaker()).hasSize(1);
         var endring = resultat.endringAvInntektÅrsaker().getFirst();
@@ -140,10 +126,7 @@ class InntektsmeldingKontraktMapperTest {
 
         when(forespørselTjeneste.finnForespørsler(any(), any(), eq(ORGNR)))
             .thenReturn(List.of(lagForespørselDto(UUID.randomUUID())));
-        when(personTjeneste.finnPersonIdentForAktørId(any()))
-            .thenReturn(new PersonIdent(FNR));
-
-        var resultat = mapper.mapTilKontrakt(inntektsmelding);
+        var resultat = mapper.mapTilKontrakt(inntektsmelding, new PersonIdent(FNR));
 
         assertThat(resultat.avsenderSystem()).isNotNull();
         assertThat(resultat.avsenderSystem().systemNavn()).isEqualTo("test-lps");
@@ -157,10 +140,7 @@ class InntektsmeldingKontraktMapperTest {
 
         when(forespørselTjeneste.finnForespørsler(any(), any(), eq(ORGNR)))
             .thenReturn(List.of(lagForespørselDto(UUID.randomUUID())));
-        when(personTjeneste.finnPersonIdentForAktørId(any()))
-            .thenReturn(new PersonIdent(FNR));
-
-        var resultat = mapper.mapTilKontrakt(inntektsmelding);
+        var resultat = mapper.mapTilKontrakt(inntektsmelding, new PersonIdent(FNR));
 
         assertThat(resultat.avsenderSystem().systemNavn()).isEqualTo("NAV_NO");
     }

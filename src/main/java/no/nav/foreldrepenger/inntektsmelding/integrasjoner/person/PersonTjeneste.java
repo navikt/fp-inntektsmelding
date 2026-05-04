@@ -2,12 +2,22 @@ package no.nav.foreldrepenger.inntektsmelding.integrasjoner.person;
 
 import java.net.SocketTimeoutException;
 import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.ProcessingException;
+
+import no.nav.pdl.HentIdenterBolkQueryRequest;
+import no.nav.pdl.HentIdenterBolkResultResponseProjection;
+
+import no.nav.vedtak.util.LRUCache;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +47,10 @@ import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
 @ApplicationScoped
 public class PersonTjeneste {
     private static final Logger LOG = LoggerFactory.getLogger(PersonTjeneste.class);
+    private static final int DEFAULT_CACHE_SIZE = 3000;
+    private static final long DEFAULT_CACHE_TIMEOUT = TimeUnit.MILLISECONDS.convert(1, TimeUnit.HOURS);
+
+    private static final LRUCache<AktørId, PersonIdent> CACHE_AKTØR_ID_TIL_IDENT = new LRUCache<>(DEFAULT_CACHE_SIZE, DEFAULT_CACHE_TIMEOUT);
 
     private PdlKlient pdlKlient;
 
@@ -66,6 +80,10 @@ public class PersonTjeneste {
         if (PersonMappers.manglerIdentifikator(person)) {
             LOG.warn("Person uten aktiv Folkeregisteridentifikator - sjekk om falsk eller utgått identitet. AktørId: {}", aktørId.getAktørId());
             throw new IllegalStateException("Person uten aktiv Folkeregisteridentifikator" + aktørId);
+        }
+
+        if (CACHE_AKTØR_ID_TIL_IDENT.get(aktørId) == null) {
+            CACHE_AKTØR_ID_TIL_IDENT.put(aktørId, personIdent);
         }
 
         var navn = person.getNavn().getFirst();
@@ -112,9 +130,33 @@ public class PersonTjeneste {
         return pdlKlient.hentAktørIdForPersonIdent(personIdent.getIdent(), true).map(AktørId::new);
     }
 
-    public PersonIdent finnPersonIdentForAktørId(AktørId aktørIdEntitet) {
-        return hentPersonidentForAktørId(aktørIdEntitet).orElseThrow(
-            () -> new IllegalStateException("Finner ikke personnummer for id " + aktørIdEntitet));
+    public PersonIdent finnPersonIdentForAktørId(AktørId aktørId) {
+        var cachetFnr = CACHE_AKTØR_ID_TIL_IDENT.get(aktørId);
+        if (cachetFnr != null){
+            return cachetFnr;
+        } else {
+            var hentetFnr = hentPersonidentForAktørId(aktørId).orElseThrow(
+                () -> new IllegalStateException("Finner ikke personnummer for id " + aktørId));
+            CACHE_AKTØR_ID_TIL_IDENT.put(aktørId, hentetFnr);
+            return hentetFnr;
+        }
+    }
+
+    public Map<AktørId, PersonIdent> finnPersonIdentForAktørIdBolk(Set<AktørId> aktørIder) {
+        Set<AktørId> manglendeAktørIder = new HashSet<>();
+        Map<AktørId, PersonIdent> aktørIdentMap = new HashMap<>();
+        aktørIder.forEach(aktør -> {
+            var cachetFnr = CACHE_AKTØR_ID_TIL_IDENT.get(aktør);
+            if (cachetFnr == null) {
+                 manglendeAktørIder.add(aktør);
+            }     else {
+                aktørIdentMap.put(aktør, cachetFnr);
+            }
+        });
+        var hentedeIdenter = hentPersonidentForAktørIdBolk(manglendeAktørIder);
+        hentedeIdenter.forEach(CACHE_AKTØR_ID_TIL_IDENT::put);
+        aktørIdentMap.putAll(hentedeIdenter);
+        return aktørIdentMap;
     }
 
     // TODO: Er denne nødvendig? Brukes kun i tester nå. Fjern om mulig.
@@ -136,6 +178,40 @@ public class PersonTjeneste {
             .findFirst()
             .map(telefonnummer -> telefonnummer.getLandskode() + telefonnummer.getNummer())
             .orElse(null);
+    }
+
+    private Map<AktørId, PersonIdent> hentPersonidentForAktørIdBolk(Set<AktørId> aktørIder) {
+        var request = new HentIdenterBolkQueryRequest();
+        var aktørIdStrenger = aktørIder.stream().map(AktørId::getAktørId).toList();
+        request.setIdenter(aktørIdStrenger);
+        request.setGrupper(List.of(IdentGruppe.FOLKEREGISTERIDENT));
+        request.setHistorikk(Boolean.FALSE);
+        var projection = new HentIdenterBolkResultResponseProjection()
+            .ident()
+            .identer(new IdentInformasjonResponseProjection().ident().gruppe())
+            .code();
+        try {
+            LOG.info("Henter personidenter for {} aktørIder", aktørIdStrenger.size());
+            var identBolkResponse = pdlKlient.hentIdenterBolkResults(request, projection);
+            Map<AktørId, PersonIdent> resultatMap = new HashMap<>();
+            for (var result : identBolkResponse) {
+                if (result.getIdenter() != null && !result.getIdenter().isEmpty()) {
+                    result.getIdenter().stream()
+                        .filter(id -> id.getGruppe() == IdentGruppe.FOLKEREGISTERIDENT)
+                        .findFirst()
+                        .ifPresent(id -> resultatMap.put(new AktørId(result.getIdent()), new PersonIdent(id.getIdent())));
+                }
+            }
+            return resultatMap;
+        } catch (VLException v) {
+            if (Persondata.PDL_KLIENT_NOT_FOUND_KODE.equals(v.getKode())) {
+                LOG.warn("Finner ikke person i PDL, returnerer tomt map. Gjelder aktørIder {}", aktørIdStrenger);
+                return Map.of();
+            }
+            throw v;
+        } catch (ProcessingException e) {
+            throw e.getCause() instanceof SocketTimeoutException ? new IntegrasjonException("FT-723618", "PDL timeout") : e;
+        }
     }
 
     private Optional<PersonIdent> hentPersonidentForAktørId(AktørId aktørId) {

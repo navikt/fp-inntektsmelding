@@ -16,6 +16,7 @@ import no.nav.foreldrepenger.inntektsmelding.felles.YtelseTypeDto;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.imapi.inntektsmelding.HentInntektsmeldingResponse;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 
@@ -23,20 +24,17 @@ import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 public class InntektsmeldingKontraktMapper {
 
     private ForespørselTjeneste forespørselTjeneste;
-    private PersonTjeneste personTjeneste;
 
     public InntektsmeldingKontraktMapper() {
         // CDI
     }
 
     @Inject
-    public InntektsmeldingKontraktMapper(ForespørselTjeneste forespørselTjeneste,
-                                         PersonTjeneste personTjeneste) {
+    public InntektsmeldingKontraktMapper(ForespørselTjeneste forespørselTjeneste) {
         this.forespørselTjeneste = forespørselTjeneste;
-        this.personTjeneste = personTjeneste;
     }
 
-    public HentInntektsmeldingResponse mapTilKontrakt(InntektsmeldingDto inntektsmelding) {
+    public HentInntektsmeldingResponse mapTilKontrakt(InntektsmeldingDto inntektsmelding, PersonIdent personIdent) {
         // Slå opp forespørsel basert på inntektsmeldingen's egenskaper
         var forespørselOpt = forespørselTjeneste.finnForespørsler(
                 inntektsmelding.getAktørId(),
@@ -47,13 +45,10 @@ public class InntektsmeldingKontraktMapper {
             .findFirst();
         var forespørselUuid = forespørselOpt.orElseThrow(() -> new IllegalStateException("Fant ikke forespørsel for inntektsmelding med uuid " + inntektsmelding.getInntektsmeldingUuid())).uuid();
 
-        // Slå opp fødselsnummer fra aktørId
-        var fnr = personTjeneste.finnPersonIdentForAktørId(inntektsmelding.getAktørId());
-
         return new HentInntektsmeldingResponse(
             inntektsmelding.getInntektsmeldingUuid(),
             forespørselUuid,
-            new FødselsnummerDto(fnr.getIdent()),
+            new FødselsnummerDto(personIdent.getIdent()),
             mapKodeverk(inntektsmelding.getYtelse()),
             new OrganisasjonsnummerDto(inntektsmelding.getArbeidsgiver().orgnr()),
             new KontaktpersonDto(inntektsmelding.getKontaktperson().navn(), inntektsmelding.getKontaktperson().telefonnummer()),

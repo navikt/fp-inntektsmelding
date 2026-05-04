@@ -3,7 +3,7 @@ package no.nav.foreldrepenger.inntektsmelding.integrasjoner.person;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
-public class AktørId {
+public class AktørId implements Comparable<AktørId> {
 
     private static final Pattern VALID = Pattern.compile("^\\d{13}");
 
@@ -56,5 +56,10 @@ public class AktørId {
     @Override
     public int hashCode() {
         return Objects.hash(aktørId);
+    }
+
+    @Override
+    public int compareTo(AktørId o) {
+        return aktørId.compareTo(o.aktørId);
     }
 }
