@@ -41,8 +41,6 @@ import no.nav.vedtak.exception.IntegrasjonException;
 import no.nav.vedtak.exception.VLException;
 import no.nav.vedtak.felles.integrasjon.person.PersonMappers;
 import no.nav.vedtak.felles.integrasjon.person.Persondata;
-import no.nav.vedtak.sikkerhet.kontekst.IdentType;
-import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
 
 @ApplicationScoped
 public class PersonTjeneste {

@@ -1,13 +1,11 @@
 package no.nav.foreldrepenger.inntektsmelding.integrasjoner.person;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -19,18 +17,10 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
-import no.nav.pdl.Foedselsdato;
-import no.nav.pdl.Folkeregisteridentifikator;
 import no.nav.pdl.HentIdenterBolkResult;
 import no.nav.pdl.IdentGruppe;
 import no.nav.pdl.IdentInformasjon;
-import no.nav.pdl.Navn;
-import no.nav.pdl.Person;
-import no.nav.pdl.Telefonnummer;
-import no.nav.vedtak.sikkerhet.kontekst.IdentType;
 import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
-import no.nav.vedtak.sikkerhet.kontekst.RequestKontekst;
 
 @ExtendWith(MockitoExtension.class)
 class PersonTjenesteTest {
