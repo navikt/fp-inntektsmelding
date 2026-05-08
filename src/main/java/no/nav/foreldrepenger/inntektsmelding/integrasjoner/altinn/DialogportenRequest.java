@@ -70,8 +70,6 @@ public record DialogportenRequest(@NotNull String serviceResource,
     }
 
     enum ExtendedType {
-        SYKMELDING,
-        SYKEPENGESOEKNAD,
         INNTEKTSMELDING,
     }
 

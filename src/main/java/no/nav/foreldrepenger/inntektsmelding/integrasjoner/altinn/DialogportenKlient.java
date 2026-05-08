@@ -29,10 +29,10 @@ public class DialogportenKlient {
     private final RestClient restClient;
     private final RestConfig restConfig;
     private final AltinnExchangeTokenKlient tokenKlient;
-    private final String inntektsmeldingSkjemaLenke;
-    private final String inntektsmeldingApiLenke;
-    private final String forespørselApiLenke;
-    private final String dokumentasjonsLenke;
+    private final String arbeidsgiverportalSkjemaLenke;
+    private final String sendInntektsmeldingApiLenke;
+    private final String hentForespørselApiLenke;
+    private final String apiDokumentasjonLenke;
 
     DialogportenKlient() {
         this(RestClient.client());
@@ -42,10 +42,10 @@ public class DialogportenKlient {
         this.restClient = restClient;
         this.restConfig = RestConfig.forClient(this.getClass());
         this.tokenKlient = AltinnExchangeTokenKlient.instance();
-        this.inntektsmeldingSkjemaLenke = ENV.getProperty("inntektsmelding.skjema.lenke", "https://arbeidsgiver.nav.no/fp-im-dialog");
-        this.inntektsmeldingApiLenke = ENV.getProperty("inntektsmelding.api.lenke", "https://foreldrepenger-inntektsmelding-api.ekstern.nav.no/v1/inntektsmelding/send-inn");
-        this.forespørselApiLenke = ENV.getProperty("foresporsel.api.lenke", "https://foreldrepenger-inntektsmelding-api.ekstern.nav.no/v1/forespoersel");
-        this.dokumentasjonsLenke = ENV.getProperty("inntektsmelding.dokumentasjon.lenke", "https://foreldrepenger-inntektsmelding-api.ekstern.nav.no/forvaltning/api/openapi.json");
+        this.arbeidsgiverportalSkjemaLenke = ENV.getProperty("inntektsmelding.skjema.lenke", "https://arbeidsgiver.nav.no/fp-im-dialog");
+        this.sendInntektsmeldingApiLenke = ENV.getProperty("inntektsmelding.api.lenke", "https://foreldrepenger-inntektsmelding-api.ekstern.nav.no/v1/inntektsmelding/send-inn");
+        this.hentForespørselApiLenke = ENV.getProperty("foresporsel.api.lenke", "https://foreldrepenger-inntektsmelding-api.ekstern.nav.no/v1/forespoersel");
+        this.apiDokumentasjonLenke = ENV.getProperty("inntektsmelding.dokumentasjon.lenke", "https://foreldrepenger-inntektsmelding-api.ekstern.dev.nav.no/swagger/");
     }
 
     public String opprettDialog(UUID forespørselUuid,
@@ -59,10 +59,10 @@ public class DialogportenKlient {
             sakstittel,
             førsteUttaksdato,
             ytelsetype,
-            inntektsmeldingSkjemaLenke,
-            inntektsmeldingApiLenke,
-            forespørselApiLenke,
-            dokumentasjonsLenke);
+            arbeidsgiverportalSkjemaLenke,
+            sendInntektsmeldingApiLenke,
+            hentForespørselApiLenke,
+            apiDokumentasjonLenke);
         var request = RestRequest.newPOSTJson(opprettRequest, target, restConfig)
             .otherAuthorizationSupplier(() -> tokenKlient.hentAltinnToken(this.restConfig.scopes()));
 
@@ -83,7 +83,7 @@ public class DialogportenKlient {
             førsteUttaksdato,
             inntektsmeldingUuid,
             lukkeÅrsak,
-            inntektsmeldingSkjemaLenke);
+            arbeidsgiverportalSkjemaLenke);
         sendPatchRequest(dialogUuid, patchRequestFerdig);
     }
 
@@ -93,7 +93,7 @@ public class DialogportenKlient {
         var patchRequestInnsendt = DialogportenRequestMapper.opprettInnsendtInntektsmeldingPatchRequest(
             arbeidsgiver,
             inntektsmeldingUuid,
-            inntektsmeldingSkjemaLenke);
+            arbeidsgiverportalSkjemaLenke);
         sendPatchRequest(dialogUuid, patchRequestInnsendt);
     }
 
