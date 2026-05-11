@@ -20,24 +20,21 @@ import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.aginitiert.Arbeidsgiv
 import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.kvittering.PdfDokumentRest;
 import no.nav.foreldrepenger.inntektsmelding.overstyring.rest.InntektsmeldingFpsakRest;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.AutentiseringAnnoteringFilter;
-import no.nav.foreldrepenger.inntektsmelding.server.exceptions.LokalRestExceptionMapper;
-import no.nav.vedtak.server.rest.AuthenticationFilter;
-import no.nav.vedtak.server.rest.ValidationExceptionMapper;
-import no.nav.vedtak.server.rest.jackson.Jackson2MapperFeature;
+import no.nav.vedtak.server.rest.FeilUtils;
+import no.nav.vedtak.server.rest.FpRestJackson2Feature;
 
 @ApplicationPath(ApiConfig.API_URI)
 public class ApiConfig extends ResourceConfig {
 
     private static final Logger LOG = LoggerFactory.getLogger(ApiConfig.class);
     public static final String API_URI = "/api";
+    private static final Logger SECURE_LOG = LoggerFactory.getLogger("secureLogger");
 
     public ApiConfig() {
         LOG.info("Initialiserer: {}", API_URI);
-        // TODO gjennomgå behov for LokalRestExceptionMapper - frontend bruker ikke feilmelding.
-        register(AuthenticationFilter.class);
-        register(Jackson2MapperFeature.class);
-        register(ValidationExceptionMapper.class);
-        register(LokalRestExceptionMapper.class);
+        register(FpRestJackson2Feature.class);
+        // Sørger for logging av feil (validering og annet)  til sikkerlogg
+        FeilUtils.setSikkerlogg(SECURE_LOG);
         // Sikkerhet - lokal "tilleggsautentisering" sjekker match IdentType og Annotering
         register(AutentiseringAnnoteringFilter.class);
 
