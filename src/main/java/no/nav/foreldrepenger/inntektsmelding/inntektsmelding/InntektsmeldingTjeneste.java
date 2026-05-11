@@ -8,6 +8,7 @@ import java.util.UUID;
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselRepository;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.InntektsmeldingRepository;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
@@ -18,6 +19,7 @@ public class InntektsmeldingTjeneste {
 
     private ForespørselBehandlingTjeneste forespørselBehandlingTjeneste;
     private InntektsmeldingRepository inntektsmeldingRepository;
+    private ForespørselRepository forespørselRepository;
 
     InntektsmeldingTjeneste() {
         // CDI proxy
@@ -25,9 +27,11 @@ public class InntektsmeldingTjeneste {
 
     @Inject
     public InntektsmeldingTjeneste(ForespørselBehandlingTjeneste forespørselBehandlingTjeneste,
-                                   InntektsmeldingRepository inntektsmeldingRepository) {
+                                   InntektsmeldingRepository inntektsmeldingRepository,
+                                   ForespørselRepository forespørselRepository) {
         this.forespørselBehandlingTjeneste = forespørselBehandlingTjeneste;
         this.inntektsmeldingRepository = inntektsmeldingRepository;
+        this.forespørselRepository = forespørselRepository;
     }
 
     public InntektsmeldingDto hentInntektsmelding(long inntektsmeldingId) {
@@ -55,8 +59,12 @@ public class InntektsmeldingTjeneste {
             .stream().map(InntektsmeldingDtoMapper::mapFraEntitet).toList();
     }
 
-    public Long lagreInntektsmelding(InntektsmeldingDto inntektsmeldingDto) {
-        return inntektsmeldingRepository.lagreInntektsmelding(InntektsmeldingDtoMapper.mapTilEntitet(inntektsmeldingDto));
+    public Long lagreOverstyrtInntektsmelding(InntektsmeldingDto inntektsmeldingDto) {
+        return inntektsmeldingRepository.lagreInntektsmelding(InntektsmeldingDtoMapper.mapTilEntitetUtenKoblingMotForespørsel(inntektsmeldingDto));
+    }
+
+    public Long lagreInntektsmelding(InntektsmeldingDto inntektsmeldingDto, UUID forespørselUuid) {
+        return inntektsmeldingRepository.lagreInntektsmelding(InntektsmeldingDtoMapper.mapTilEntitet(inntektsmeldingDto, forespørselRepository.hentForespørsel(forespørselUuid).orElseThrow()));
     }
 
     public List<InntektsmeldingDto> hentInntektsmeldingerFraFilter(String orgnr,

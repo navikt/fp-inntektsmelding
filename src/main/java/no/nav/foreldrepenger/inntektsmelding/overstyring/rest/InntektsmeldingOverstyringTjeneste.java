@@ -34,7 +34,7 @@ public class InntektsmeldingOverstyringTjeneste {
     }
 
     public void mottaOverstyrtInntektsmelding(InntektsmeldingDto inntektsmeldingDto, Saksnummer saksnummer) {
-        opprettTaskForSendTilJoark(inntektsmeldingTjeneste.lagreInntektsmelding(inntektsmeldingDto), saksnummer);
+        opprettTaskForSendTilJoark(inntektsmeldingTjeneste.lagreOverstyrtInntektsmelding(inntektsmeldingDto), saksnummer);
     }
 
     private void opprettTaskForSendTilJoark(Long imId, Saksnummer fagsystemSaksnummer) {

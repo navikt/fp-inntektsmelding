@@ -43,11 +43,11 @@ class InntektsmeldingOverstyringTjenesteTest {
         var saksnummer = Saksnummer.fra("SAK_123");
         var forventetImId = 42L;
 
-        when(inntektsmeldingTjeneste.lagreInntektsmelding(any())).thenReturn(forventetImId);
+        when(inntektsmeldingTjeneste.lagreOverstyrtInntektsmelding(any())).thenReturn(forventetImId);
 
         overstyringTjeneste.mottaOverstyrtInntektsmelding(imDto, saksnummer);
 
-        verify(inntektsmeldingTjeneste).lagreInntektsmelding(imDto);
+        verify(inntektsmeldingTjeneste).lagreOverstyrtInntektsmelding(imDto);
         verify(prosessTaskTjeneste).lagre(taskCaptor.capture());
 
         var expectedTaskType = TaskType.forProsessTask(SendTilJoarkTask.class);
@@ -63,7 +63,7 @@ class InntektsmeldingOverstyringTjenesteTest {
         var imDto = InntektsmeldingDto.builder().build();
         var saksnummer = Saksnummer.fra("FAGSAK_999");
 
-        when(inntektsmeldingTjeneste.lagreInntektsmelding(any())).thenReturn(1L);
+        when(inntektsmeldingTjeneste.lagreOverstyrtInntektsmelding(any())).thenReturn(1L);
 
         overstyringTjeneste.mottaOverstyrtInntektsmelding(imDto, saksnummer);
 
@@ -78,7 +78,7 @@ class InntektsmeldingOverstyringTjenesteTest {
         var saksnummer = Saksnummer.fra("SAK_1");
         var imId = 12345L;
 
-        when(inntektsmeldingTjeneste.lagreInntektsmelding(any())).thenReturn(imId);
+        when(inntektsmeldingTjeneste.lagreOverstyrtInntektsmelding(any())).thenReturn(imId);
 
         overstyringTjeneste.mottaOverstyrtInntektsmelding(imDto, saksnummer);
 
