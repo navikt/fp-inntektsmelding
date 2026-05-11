@@ -35,7 +35,7 @@ public class FpDokgenRestKlient {
         var endpoint = UriBuilder.fromUri(restConfig.fpContextPath()).path(API_PATH).path("/v1/dokument/generer/pdf").build();
 
         var request = RestRequest.newPOSTJson(requestDto, endpoint, restConfig)
-            .header(HttpHeaders.ACCEPT, "application/pdf");
+            .setAndReplaceHeader(HttpHeaders.ACCEPT, "application/pdf");
 
         var pdf = restClient.sendReturnByteArray(request);
 
