@@ -28,7 +28,6 @@ public class ApiConfig extends ResourceConfig {
 
     private static final Logger LOG = LoggerFactory.getLogger(ApiConfig.class);
     public static final String API_URI = "/api";
-    private static final Logger SECURE_LOG = LoggerFactory.getLogger("secureLogger");
 
     public ApiConfig() {
         LOG.info("Initialiserer: {}", API_URI);
