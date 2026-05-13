@@ -6,7 +6,7 @@
     <parent>
         <groupId>no.nav.foreldrepenger.felles</groupId>
         <artifactId>fp-parent-app</artifactId>
-        <version>5.3.2</version>
+        <version>5.3.3</version>
     </parent>
 
     <groupId>no.nav.foreldrepenger.inntektsmelding</groupId>
@@ -18,8 +18,8 @@
         <sonar.projectName>fp-inntektsmelding</sonar.projectName>
         <sonar.projectKey>navikt_fp-inntektsmelding</sonar.projectKey>
 
-        <felles.version>7.8.0</felles.version>
-        <prosesstask.version>5.2.5</prosesstask.version>
+        <felles.version>7.8.2</felles.version>
+        <prosesstask.version>5.2.6</prosesstask.version>
         <fp-kontrakter.version>9.4.33</fp-kontrakter.version>
     </properties>
 
@@ -248,9 +248,6 @@
                             <graphqlSchemaPaths>${project.basedir}/src/main/resources/graphql/produsent.graphql</graphqlSchemaPaths>
                             <outputDir>${project.build.directory}/generated-sources/client-arbeidsgiver-notifikasjon</outputDir>
                             <modelPackageName>no.nav.foreldrepenger.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon</modelPackageName>
-                            <customTypesMapping>
-                                <DateTime>java.util.Date</DateTime>
-                            </customTypesMapping>
                             <generateClient>true</generateClient>
                             <generateApis>false</generateApis>
                             <generateBuilder>true</generateBuilder>

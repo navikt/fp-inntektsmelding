@@ -16,18 +16,23 @@ import no.nav.vedtak.feil.FeilDto;
 import no.nav.vedtak.feil.Feilkode;
 import no.nav.vedtak.log.mdc.MDCOperations;
 import no.nav.vedtak.log.util.MemoryAppender;
-import no.nav.vedtak.server.rest.FeilUtils;
+import no.nav.vedtak.server.rest.GeneralRestExceptionMapper;
+import no.nav.vedtak.server.rest.RestServerFeilUtils;
 
+/*
+ * Hovedpoenget er er å teste feilkoder for InntektsmeldingException.LokalFeilKode
+ * Frontend bruker uansett ikke feilmeldingstekst fra backend
+ */
 @Execution(ExecutionMode.SAME_THREAD)
 class LokalRestExceptionMapperTest {
 
     private static MemoryAppender logSniffer;
 
-    private final LokalRestExceptionMapper exceptionMapper = new LokalRestExceptionMapper();
+    private final GeneralRestExceptionMapper exceptionMapper = new GeneralRestExceptionMapper();
 
     @BeforeEach
     void setUp() {
-        logSniffer = MemoryAppender.sniff(FeilUtils.class);
+        logSniffer = MemoryAppender.sniff(RestServerFeilUtils.class);
     }
 
     @AfterEach
@@ -45,9 +50,9 @@ class LokalRestExceptionMapperTest {
             assertThat(response.getEntity()).isInstanceOf(FeilDto.class);
             var feilDto = (FeilDto) response.getEntity();
 
-            assertThat(feilDto.type()).isEqualTo(Feilkode.IKKE_TILGANG.name());
+            assertThat(feilDto.feilkode()).isEqualTo(Feilkode.IKKE_TILGANG.name());
             assertThat(feilDto.callId()).isEqualTo(callId);
-            assertThat(feilDto.feilmelding()).isEqualTo("Mangler tilgang");
+            assertThat(feilDto.feilmelding()).isEqualTo("MANGLER_TILGANG_FEIL: ManglerTilgangFeilmeldingKode");
             assertThat(logSniffer.search("ManglerTilgangFeilmeldingKode", Level.WARN)).isEmpty();
         }
     }
@@ -60,7 +65,7 @@ class LokalRestExceptionMapperTest {
             assertThat(response.getEntity()).isInstanceOf(FeilDto.class);
             var feilDto = (FeilDto) response.getEntity();
 
-            assertThat(feilDto.feilmelding()).isEqualTo("Serverfeil");
+            assertThat(feilDto.feilmelding()).isEqualTo("FUNK_FEIL: en funksjonell feilmelding. et løsningsforslag");
             assertThat(feilDto.callId()).isEqualTo(callId);
             assertThat(logSniffer.search("en funksjonell feilmelding", Level.WARN)).hasSize(1);
         }
@@ -75,7 +80,7 @@ class LokalRestExceptionMapperTest {
             assertThat(response.getEntity()).isInstanceOf(FeilDto.class);
             var feilDto = (FeilDto) response.getEntity();
 
-            assertThat(feilDto.type()).isEqualTo(InntektsmeldingException.LokalFeilKode.INGEN_SAK_FUNNET.name());
+            assertThat(feilDto.feilkode()).isEqualTo(InntektsmeldingException.LokalFeilKode.INGEN_SAK_FUNNET.name());
             assertThat(feilDto.callId()).isEqualTo(callId);
             assertThat(feilDto.feilmelding()).isEqualTo("Ingen sak funnet");
             assertThat(logSniffer.search(InntektsmeldingException.LokalFeilKode.INGEN_SAK_FUNNET.getFeiltekst(), Level.INFO)).hasSize(1);
@@ -91,7 +96,7 @@ class LokalRestExceptionMapperTest {
             assertThat(response.getEntity()).isInstanceOf(FeilDto.class);
             var feilDto = (FeilDto) response.getEntity();
 
-            assertThat(feilDto.type()).isEqualTo(InntektsmeldingException.LokalFeilKode.SENDT_FOR_TIDLIG.name());
+            assertThat(feilDto.feilkode()).isEqualTo(InntektsmeldingException.LokalFeilKode.SENDT_FOR_TIDLIG.name());
             assertThat(feilDto.callId()).isEqualTo(callId);
             assertThat(feilDto.feilmelding()).isEqualTo("Sendt inntektsmelding for tidlig");
             assertThat(logSniffer.search(InntektsmeldingException.LokalFeilKode.SENDT_FOR_TIDLIG.getFeiltekst(), Level.INFO)).hasSize(1);
@@ -107,7 +112,7 @@ class LokalRestExceptionMapperTest {
             assertThat(response.getEntity()).isInstanceOf(FeilDto.class);
             var feilDto = (FeilDto) response.getEntity();
 
-            assertThat(feilDto.type()).isEqualTo(InntektsmeldingException.LokalFeilKode.FINNES_I_AAREG.name());
+            assertThat(feilDto.feilkode()).isEqualTo(InntektsmeldingException.LokalFeilKode.FINNES_I_AAREG.name());
             assertThat(feilDto.callId()).isEqualTo(callId);
             assertThat(feilDto.feilmelding()).isEqualTo("Organisasjonsnummer er rapportert i Aa-reg");
             assertThat(logSniffer.search(InntektsmeldingException.LokalFeilKode.FINNES_I_AAREG.getFeiltekst(), Level.INFO)).hasSize(1);
@@ -123,7 +128,7 @@ class LokalRestExceptionMapperTest {
             var feilDto = (FeilDto) response.getEntity();
 
             assertThat(feilDto.callId()).isEqualTo(callId);
-            assertThat(feilDto.feilmelding()).isEqualTo("Serverfeil");
+            assertThat(feilDto.feilmelding()).isEqualTo("TEK_FEIL: en teknisk feilmelding");
             assertThat(logSniffer.search("en teknisk feilmelding", Level.WARN)).hasSize(1);
         }
     }
@@ -141,7 +146,7 @@ class LokalRestExceptionMapperTest {
             var feilDto = (FeilDto) response.getEntity();
 
             assertThat(feilDto.callId()).isEqualTo(callId);
-            assertThat(feilDto.feilmelding()).isEqualTo("Serverfeil");
+            assertThat(feilDto.feilmelding()).isEqualTo("KODE: TEKST");
             assertThat(logSniffer.search("TEKST", Level.WARN)).hasSize(1);
         }
     }
@@ -157,7 +162,7 @@ class LokalRestExceptionMapperTest {
             var feilDto = (FeilDto) response.getEntity();
 
             assertThat(feilDto.callId()).isEqualTo(callId);
-            assertThat(feilDto.feilmelding()).isEqualTo("Serverfeil");
+            assertThat(feilDto.feilmelding()).isEqualTo("KODE: en helt generell feil");
             assertThat(logSniffer.search(feilmelding, Level.WARN)).hasSize(1);
         }
     }
@@ -175,7 +180,7 @@ class LokalRestExceptionMapperTest {
             var feilDto = (FeilDto) response.getEntity();
 
             assertThat(feilDto.callId()).isEqualTo(callId);
-            assertThat(feilDto.feilmelding()).isEqualTo("Serverfeil");
+            assertThat(feilDto.feilmelding()).isEqualTo("en helt generell feil");
             assertThat(logSniffer.search(feilmelding, Level.WARN)).hasSize(1);
         }
     }
