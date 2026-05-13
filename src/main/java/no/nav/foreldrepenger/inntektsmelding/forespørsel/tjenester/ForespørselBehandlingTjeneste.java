@@ -163,7 +163,7 @@ public class ForespørselBehandlingTjeneste {
                     .append(PdfDokumentRest.INNTEKTSMELDING_FULL_PATH)
                     .append("/")
                     .append(imUuid).toString();
-                minSideArbeidsgiverTjeneste.sendNyBeskjedMedKvittering(foresporselUuid.toString(),
+                    minSideArbeidsgiverTjeneste.sendNyBeskjedMedKvittering(foresporselUuid.toString(),
                     merkelapp,
                     foresporselUuid.toString(),
                     arbeidsgiver.orgnr(),
@@ -206,9 +206,9 @@ public class ForespørselBehandlingTjeneste {
                     .append(PdfDokumentRest.INNTEKTSMELDING_FULL_PATH)
                     .append("/")
                     .append(imUuid).toString();
-                minSideArbeidsgiverTjeneste.sendNyBeskjedMedKvittering(forespørsel.toString(),
+                minSideArbeidsgiverTjeneste.sendNyBeskjedMedKvittering(forespørsel.uuid().toString(),
                     merkelapp,
-                    forespørsel.toString(),
+                    forespørsel.uuid().toString(),
                     arbeidsgiver.orgnr(),
                     beskjedTekst,
                     URI.create(url));
