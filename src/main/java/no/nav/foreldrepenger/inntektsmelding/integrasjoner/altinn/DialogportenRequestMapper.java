@@ -33,23 +33,20 @@ public class DialogportenRequestMapper {
         //Oppretter dialog
         var summaryDialog = String.format("Nav trenger inntektsmelding for å behandle søknad om %s med startdato %s.",
             ytelsetype.name().toLowerCase(),
-            førsteUttaksdato);
+            formaterDato(førsteUttaksdato));
         var contentDialog = new DialogportenRequest.Content(lagContentValue(sakstittel), lagContentValue(summaryDialog), null);
 
         //Oppretter transmission
         var contentTransmission = new DialogportenRequest.Content(lagContentValue("Send inn inntektsmelding"), null, null);
-        var guiUrl = new DialogportenRequest.Url(inntektsmeldingSkjemaLenke + "/" + forespørselUuid.toString(), DialogportenRequest.NB,
+        var guiUrl = new DialogportenRequest.Url(inntektsmeldingSkjemaLenke + "/" + forespørselUuid.toString(), DialogportenRequest.TEXT_PLAIN,
             DialogportenRequest.AttachmentUrlConsumerType.Gui);
-        var apiUrl = new DialogportenRequest.Url(inntektsmeldingApiLenke,
-            DialogportenRequest.TEXT_PLAIN,
-            DialogportenRequest.AttachmentUrlConsumerType.Api);
         var forespørselApiUrl = new DialogportenRequest.Url(forespørselApiLenke + "/" + forespørselUuid,
             DialogportenRequest.TEXT_PLAIN,
             DialogportenRequest.AttachmentUrlConsumerType.Api);
         var attachementTransmission = new DialogportenRequest.Attachment(
             List.of(new DialogportenRequest.ContentValueItem("Innsending av inntektsmelding på min side - arbeidsgiver hos Nav",
                 DialogportenRequest.NB)),
-            List.of(guiUrl, apiUrl, forespørselApiUrl));
+            List.of(guiUrl, forespørselApiUrl));
         var transmission = new DialogportenRequest.Transmission(DialogportenRequest.TransmissionType.Request,
             DialogportenRequest.ExtendedType.INNTEKTSMELDING,
             new DialogportenRequest.Sender("ServiceOwner", null),
@@ -59,7 +56,7 @@ public class DialogportenRequestMapper {
         //oppretter api action
         var apiAction = new DialogportenRequest.ApiAction(String.format("Innsending av inntektsmelding for %s med startdato %s",
             ytelsetype.name().toLowerCase(),
-            førsteUttaksdato.format(DateTimeFormatter.ofPattern("dd.MM.yy"))),
+            formaterDato(førsteUttaksdato)),
             List.of(new DialogportenRequest.Endpoint(inntektsmeldingApiLenke, DialogportenRequest.HttpMethod.POST, dokumentasjonsLenke)),
             DialogportenRequest.ACTION_WRITE);
 
@@ -87,8 +84,7 @@ public class DialogportenRequestMapper {
         //oppdatere innholdet i dialogen
         var summaryDialog = String.format("Nav har mottatt inntektsmelding for søknad om %s med startdato %s",
             ytelsetype.name().toLowerCase(),
-            førsteUttaksdato.format(
-                DateTimeFormatter.ofPattern("dd.MM.yy")));
+            formaterDato(førsteUttaksdato));
         var contentRequest = new DialogportenRequest.Content(lagContentValue(sakstittel), lagContentValue(summaryDialog), null);
         var patchContent = new DialogportenPatchRequest(DialogportenPatchRequest.OP_REPLACE,
             DialogportenPatchRequest.PATH_CONTENT,
@@ -189,5 +185,9 @@ public class DialogportenRequestMapper {
     private static DialogportenRequest.ContentValue lagContentValue(String verdi) {
         return new DialogportenRequest.ContentValue(List.of(new DialogportenRequest.ContentValueItem(verdi, DialogportenRequest.NB)),
             DialogportenRequest.TEXT_PLAIN);
+    }
+
+    private static String formaterDato(LocalDate dato) {
+        return dato.format(DateTimeFormatter.ofPattern("dd.MM.yy"));
     }
 }

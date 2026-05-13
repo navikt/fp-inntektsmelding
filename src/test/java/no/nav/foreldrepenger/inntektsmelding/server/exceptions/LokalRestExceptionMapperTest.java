@@ -16,8 +16,8 @@ import no.nav.vedtak.feil.FeilDto;
 import no.nav.vedtak.feil.Feilkode;
 import no.nav.vedtak.log.mdc.MDCOperations;
 import no.nav.vedtak.log.util.MemoryAppender;
-import no.nav.vedtak.server.rest.FeilUtils;
 import no.nav.vedtak.server.rest.GeneralRestExceptionMapper;
+import no.nav.vedtak.server.rest.RestServerFeilUtils;
 
 /*
  * Hovedpoenget er er å teste feilkoder for InntektsmeldingException.LokalFeilKode
@@ -32,7 +32,7 @@ class LokalRestExceptionMapperTest {
 
     @BeforeEach
     void setUp() {
-        logSniffer = MemoryAppender.sniff(FeilUtils.class);
+        logSniffer = MemoryAppender.sniff(RestServerFeilUtils.class);
     }
 
     @AfterEach

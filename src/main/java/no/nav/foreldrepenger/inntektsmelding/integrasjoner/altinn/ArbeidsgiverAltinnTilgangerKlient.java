@@ -57,7 +57,10 @@ public class ArbeidsgiverAltinnTilgangerKlient {
         request.otherCallId(NavHeaders.HEADER_NAV_CORRELATION_ID);
         try {
             if (loggRawResponse) {
-                SECURE_LOG.info("ALTINN: Raw response fra tjenesten for {} er: {}", KontekstHolder.getKontekst().getUid(), restClient.sendReturnResponseString(request).body()); //NOSONAR midlertidig for analyse - bør fjernes senere.
+                //Todo midlertidig for analyse - må fjernes når vi er over på altinn3 tilganger.
+                var loggRequest = RestRequest.newPOSTJson(lagRequestFilter(), uri, restConfig);
+                loggRequest.otherCallId(NavHeaders.HEADER_NAV_CORRELATION_ID);
+                SECURE_LOG.info("ALTINN: Raw response fra tjenesten for {} er: {}", KontekstHolder.getKontekst().getUid(), restClient.sendReturnResponseString(loggRequest).body());//NOSONAR midlertidig for analyse
             }
             return restClient.send(request, ArbeidsgiverAltinnTilgangerResponse.class);
         } catch (RuntimeException e) {

@@ -20,21 +20,20 @@ import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.aginitiert.Arbeidsgiv
 import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.kvittering.PdfDokumentRest;
 import no.nav.foreldrepenger.inntektsmelding.overstyring.rest.InntektsmeldingFpsakRest;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.AutentiseringAnnoteringFilter;
-import no.nav.vedtak.server.rest.FeilUtils;
 import no.nav.vedtak.server.rest.FpRestJackson2Feature;
+import no.nav.vedtak.server.rest.RestSecureLogFeature;
 
 @ApplicationPath(ApiConfig.API_URI)
 public class ApiConfig extends ResourceConfig {
 
     private static final Logger LOG = LoggerFactory.getLogger(ApiConfig.class);
     public static final String API_URI = "/api";
-    private static final Logger SECURE_LOG = LoggerFactory.getLogger("secureLogger");
 
     public ApiConfig() {
         LOG.info("Initialiserer: {}", API_URI);
         register(FpRestJackson2Feature.class);
-        // Sørger for logging av feil (validering og annet)  til sikkerlogg
-        FeilUtils.setSikkerlogg(SECURE_LOG);
+        // Sørger for logging av feil (validering og annet) til sikkerlogg
+        register(RestSecureLogFeature.class);
         // Sikkerhet - lokal "tilleggsautentisering" sjekker match IdentType og Annotering
         register(AutentiseringAnnoteringFilter.class);
 
