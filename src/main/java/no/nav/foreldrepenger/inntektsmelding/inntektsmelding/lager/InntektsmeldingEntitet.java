@@ -333,7 +333,7 @@ public class InntektsmeldingEntitet {
 
         private void validerForespørselkobling() {
             if (!kladd.getKildesystem().equals(Kildesystem.FPSAK)) {
-                Objects.requireNonNull(kladd.forespørsel, "inntektsmeldingforespørsel");
+                Objects.requireNonNull(kladd.forespørsel, "Inntektsmelding mangler forespørsel");
             }
         }
 
