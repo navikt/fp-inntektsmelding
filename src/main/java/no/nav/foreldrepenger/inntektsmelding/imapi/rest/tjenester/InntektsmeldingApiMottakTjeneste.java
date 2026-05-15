@@ -181,7 +181,8 @@ public class InntektsmeldingApiMottakTjeneste {
         return Objects.equals(nyInntektsmelding.getStartdato(), tidligereInntektsmelding.getStartdato())
             && Objects.equals(nyInntektsmelding.getKontaktperson().navn(), tidligereInntektsmelding.getKontaktperson().navn())
             && Objects.equals(nyInntektsmelding.getKontaktperson().telefonnummer(), tidligereInntektsmelding.getKontaktperson().telefonnummer())
-            && erMånedInntektLike(nyInntektsmelding.getMånedInntekt(),tidligereInntektsmelding.getMånedInntekt())
+            && erBeløpLike(nyInntektsmelding.getMånedInntekt(),tidligereInntektsmelding.getMånedInntekt())
+            && erBeløpLike(nyInntektsmelding.getMånedRefusjon(),tidligereInntektsmelding.getMånedRefusjon())
             && refusjonsendringerErLike(nyInntektsmelding.getSøkteRefusjonsperioder(), tidligereInntektsmelding.getSøkteRefusjonsperioder())
             && naturalytelserErLike(nyInntektsmelding.getBortfaltNaturalytelsePerioder(), tidligereInntektsmelding.getBortfaltNaturalytelsePerioder())
             && Objects.equals(nyInntektsmelding.getYtelse(), tidligereInntektsmelding.getYtelse())
@@ -189,10 +190,12 @@ public class InntektsmeldingApiMottakTjeneste {
             && endringsårsakerErLike(nyInntektsmelding.getEndringAvInntektÅrsaker(), tidligereInntektsmelding.getEndringAvInntektÅrsaker());
     }
 
-    private boolean erMånedInntektLike(BigDecimal månedInntekt, BigDecimal månedInntekt1) {
-        return månedInntekt.compareTo(månedInntekt1) == 0;
+    private boolean erBeløpLike(BigDecimal beløp1, BigDecimal beløp2) {
+        if (beløp1 == null || beløp2 == null) {
+            return beløp1 == beløp2;
+        }
+        return beløp1.compareTo(beløp2) == 0;
     }
-
 
     private boolean refusjonsendringerErLike(List<InntektsmeldingDto.SøktRefusjon> nyListe,
                                              List<InntektsmeldingDto.SøktRefusjon> tidligereListe) {
