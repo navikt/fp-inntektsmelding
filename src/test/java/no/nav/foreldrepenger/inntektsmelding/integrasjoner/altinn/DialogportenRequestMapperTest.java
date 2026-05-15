@@ -20,7 +20,7 @@ class DialogportenRequestMapperTest {
     private static final String INNTEKTSMELDING_SKJEMA_LENKE = "https://arbeidsgiver.nav.no/fp-im-dialog";
     private static final String INNTEKTSMELDING_API_LENKE = "https://foreldrepenger-inntektsmelding-api.ekstern.nav.no/v1/inntektsmelding/send-inn";
     private final String FORESPORSEL_API_LENKE = "https://foreldrepenger-inntektsmelding-api.ekstern.nav.no/foresporsel-ekstern/hent";
-    private final String DOKUMENTASJONS_LENKE = "https://foreldrepenger-inntektsmelding-api.ekstern.nav.no/forvaltning/api/openapi.json";
+    private final String DOKUMENTASJONS_LENKE = "https://foreldrepenger-inntektsmelding-api.ekstern.dev.nav.no/swagger";
     private final LocalDate FØRSTE_UTTAKSDATO = LocalDate.now().plusWeeks(4);
 
     @Test
@@ -37,7 +37,6 @@ class DialogportenRequestMapperTest {
         var attachmentUrls = attachment.urls();
         var guiUrl = attachmentUrls.stream().filter(u -> u.consumerType() == DialogportenRequest.AttachmentUrlConsumerType.Gui).findFirst().orElseThrow().url();
         var apiUrl = attachmentUrls.stream().filter(u -> u.consumerType() == DialogportenRequest.AttachmentUrlConsumerType.Api).findFirst().orElseThrow().url();
-        var forespørselApiUrl = attachmentUrls.stream().filter(u -> u.consumerType() == DialogportenRequest.AttachmentUrlConsumerType.Api).skip(1).findFirst().orElseThrow().url();
         var apiActionEndpointUrl = opprettRequest.apiActions().getFirst().endpoints().getFirst().url();
 
         assertThat(opprettRequest.party()).isEqualTo(party);
@@ -49,8 +48,7 @@ class DialogportenRequestMapperTest {
         assertThat(opprettRequest.content().title().value().getFirst().value()).isEqualTo("Sakstittel");
         assertThat(attachmentName).isEqualTo("Innsending av inntektsmelding på min side - arbeidsgiver hos Nav");
         assertThat(guiUrl).isEqualTo(INNTEKTSMELDING_SKJEMA_LENKE + "/" + FORESPØRSEL_UUID);
-        assertThat(apiUrl).isEqualTo(INNTEKTSMELDING_API_LENKE);
-        assertThat(forespørselApiUrl).isEqualTo(FORESPORSEL_API_LENKE + "/" + FORESPØRSEL_UUID);
+        assertThat(apiUrl).isEqualTo(FORESPORSEL_API_LENKE + "/" + FORESPØRSEL_UUID);
         assertThat(apiActionEndpointUrl).isEqualTo(INNTEKTSMELDING_API_LENKE);
         assertThat(opprettRequest.apiActions().getFirst().endpoints().getFirst().documentationUrl()).isEqualTo(DOKUMENTASJONS_LENKE);
         assertThat(transmissionContent).isEqualTo("Send inn inntektsmelding");

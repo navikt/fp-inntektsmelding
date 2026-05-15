@@ -152,25 +152,23 @@ public class ForespørselBehandlingTjeneste {
         // Oppdaterer status i forespørsel
         forespørselTjeneste.ferdigstillForespørsel(forespørsel.arbeidsgiverNotifikasjonSakId());
 
-        if (!Environment.current().isProd()) {
-            inntektsmeldingUuid.ifPresent(imUuid -> {
-                var merkelapp = ForespørselTekster.finnMerkelapp(forespørsel.ytelseType());
-                var beskjedTekst = erFørstegangsinnsending
-                                   ? ForespørselTekster.lagBeskjedOmKvitteringFørsteInnsendingTekst()
-                                   : ForespørselTekster.lagBeskjedOmOppdatertInntektsmelding();
-                String url = new StringBuilder(inntektsmeldingSkjemaLenke)
-                    .append("/server/api")
-                    .append(PdfDokumentRest.INNTEKTSMELDING_FULL_PATH)
-                    .append("/")
-                    .append(imUuid).toString();
-                minSideArbeidsgiverTjeneste.sendNyBeskjedMedKvittering(foresporselUuid.toString(),
-                    merkelapp,
-                    foresporselUuid.toString(),
-                    arbeidsgiver.orgnr(),
-                    beskjedTekst,
-                    URI.create(url));
-            });
-        }
+        inntektsmeldingUuid.ifPresent(imUuid -> {
+            var merkelapp = ForespørselTekster.finnMerkelapp(forespørsel.ytelseType());
+            var beskjedTekst = erFørstegangsinnsending
+                               ? ForespørselTekster.lagBeskjedOmKvitteringFørsteInnsendingTekst()
+                               : ForespørselTekster.lagBeskjedOmOppdatertInntektsmelding();
+            String url = new StringBuilder(inntektsmeldingSkjemaLenke)
+                .append("/server/api")
+                .append(PdfDokumentRest.INNTEKTSMELDING_FULL_PATH)
+                .append("/")
+                .append(imUuid).toString();
+            minSideArbeidsgiverTjeneste.sendNyBeskjedMedKvittering(foresporselUuid.toString(),
+                merkelapp,
+                foresporselUuid.toString(),
+                arbeidsgiver.orgnr(),
+                beskjedTekst,
+                URI.create(url));
+        });
         // Oppdaterer status i altinn dialogporten
         if (forespørsel.dialogportenUuid() != null) {
             if (ENV.isDev()) {
@@ -197,23 +195,21 @@ public class ForespørselBehandlingTjeneste {
                                                          Optional<UUID> inntektsmeldingUuid,
                                                          Arbeidsgiver arbeidsgiver) {
         // Oppdater status i arbeidsgiverportalen
-        if (!Environment.current().isProd()) {
-            inntektsmeldingUuid.ifPresent(imUuid -> {
-                var merkelapp = ForespørselTekster.finnMerkelapp(forespørsel.ytelseType());
-                var beskjedTekst = ForespørselTekster.lagBeskjedOmOppdatertInntektsmelding();
-                String url = new StringBuilder(inntektsmeldingSkjemaLenke)
-                    .append("/server/api")
-                    .append(PdfDokumentRest.INNTEKTSMELDING_FULL_PATH)
-                    .append("/")
-                    .append(imUuid).toString();
-                minSideArbeidsgiverTjeneste.sendNyBeskjedMedKvittering(forespørsel.toString(),
-                    merkelapp,
-                    forespørsel.toString(),
-                    arbeidsgiver.orgnr(),
-                    beskjedTekst,
-                    URI.create(url));
-            });
-        }
+        inntektsmeldingUuid.ifPresent(imUuid -> {
+            var merkelapp = ForespørselTekster.finnMerkelapp(forespørsel.ytelseType());
+            var beskjedTekst = ForespørselTekster.lagBeskjedOmOppdatertInntektsmelding();
+            String url = new StringBuilder(inntektsmeldingSkjemaLenke)
+                .append("/server/api")
+                .append(PdfDokumentRest.INNTEKTSMELDING_FULL_PATH)
+                .append("/")
+                .append(imUuid).toString();
+            minSideArbeidsgiverTjeneste.sendNyBeskjedMedKvittering(forespørsel.uuid().toString(),
+                merkelapp,
+                forespørsel.uuid().toString(),
+                arbeidsgiver.orgnr(),
+                beskjedTekst,
+                URI.create(url));
+        });
 
         // Oppdater status i altinn dialogporten
         var dialogUuid = forespørsel.dialogportenUuid();
