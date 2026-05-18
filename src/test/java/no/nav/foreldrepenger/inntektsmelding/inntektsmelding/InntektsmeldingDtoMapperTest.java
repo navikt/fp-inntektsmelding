@@ -7,10 +7,12 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
-
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.EndringsårsakType;
-import org.junit.jupiter.api.Test;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
+import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
 
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.BortaltNaturalytelseEntitet;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.EndringsårsakEntitet;
@@ -19,8 +21,7 @@ import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.Kontaktperson
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.RefusjonsendringEntitet;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.NaturalytelseType;
-import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
-import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
+import org.junit.jupiter.api.Test;
 
 class InntektsmeldingDtoMapperTest {
 
@@ -387,23 +388,23 @@ class InntektsmeldingDtoMapperTest {
         var dto = InntektsmeldingDto.builder()
             .medAktørId(aktørId)
             .medYtelse(Ytelsetype.SVANGERSKAPSPENGER)
-            .medArbeidsgiver(new Arbeidsgiver(ARBEIDSGIVER_IDENT))
+            .medArbeidsgiver(new no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver(ARBEIDSGIVER_IDENT))
             .medKontaktperson(new InntektsmeldingDto.Kontaktperson("99887766", "Per Hansen"))
             .medStartdato(START_DATO)
             .medInntekt(new BigDecimal("55000"))
             .medMånedRefusjon(new BigDecimal("25000"))
             .medOpphørsdatoRefusjon(START_DATO.plusMonths(6))
             .medOpprettetAv("bruker")
-            .medKildesystem(Kildesystem.LØNN_OG_PERSONAL_SYSTEM)
+            .medKildesystem(no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem.LØNN_OG_PERSONAL_SYSTEM)
             .medSøkteRefusjonsperioder(List.of(
                 new InntektsmeldingDto.SøktRefusjon(START_DATO.plusMonths(2), new BigDecimal("20000"))))
             .medBortfaltNaturalytelsePerioder(List.of(
-                new InntektsmeldingDto.BortfaltNaturalytelse(START_DATO, START_DATO.plusMonths(3), NaturalytelseType.LOSJI, new BigDecimal("2000"))))
+                new InntektsmeldingDto.BortfaltNaturalytelse(START_DATO, START_DATO.plusMonths(3), no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.NaturalytelseType.LOSJI, new BigDecimal("2000"))))
             .medEndringAvInntektÅrsaker(List.of(
-                new InntektsmeldingDto.Endringsårsak(EndringsårsakType.VARIG_LØNNSENDRING, START_DATO.minusMonths(1), null, START_DATO.minusWeeks(2))))
+                new InntektsmeldingDto.Endringsårsak(no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.EndringsårsakType.VARIG_LØNNSENDRING, START_DATO.minusMonths(1), null, START_DATO.minusWeeks(2))))
             .build();
 
-        var entitet = InntektsmeldingDtoMapper.mapTilEntitet(dto);
+        var entitet = InntektsmeldingDtoMapper.mapTilEntitet(dto, lagForespørselEntitet(dto));
 
         assertThat(entitet.getAktørId().getAktørId()).isEqualTo(AKTØR_ID);
         assertThat(entitet.getYtelsetype()).isEqualTo(Ytelsetype.SVANGERSKAPSPENGER);
@@ -413,7 +414,7 @@ class InntektsmeldingDtoMapperTest {
         assertThat(entitet.getMånedRefusjon()).isEqualByComparingTo(new BigDecimal("25000"));
         assertThat(entitet.getOpphørsdatoRefusjon()).isEqualTo(START_DATO.plusMonths(6));
         assertThat(entitet.getOpprettetAv()).isEqualTo("bruker");
-        assertThat(entitet.getKildesystem()).isEqualTo(Kildesystem.LØNN_OG_PERSONAL_SYSTEM);
+        assertThat(entitet.getKildesystem()).isEqualTo(no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem.LØNN_OG_PERSONAL_SYSTEM);
         assertThat(entitet.getKontaktperson().getNavn()).isEqualTo("Per Hansen");
         assertThat(entitet.getKontaktperson().getTelefonnummer()).isEqualTo("99887766");
         assertThat(entitet.getRefusjonsendringer()).hasSize(1);
@@ -428,22 +429,22 @@ class InntektsmeldingDtoMapperTest {
         var dto = InntektsmeldingDto.builder()
             .medAktørId(aktørId)
             .medYtelse(Ytelsetype.FORELDREPENGER)
-            .medArbeidsgiver(new Arbeidsgiver(ARBEIDSGIVER_IDENT))
+            .medArbeidsgiver(new no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver(ARBEIDSGIVER_IDENT))
             .medKontaktperson(new InntektsmeldingDto.Kontaktperson("12345678", "Test"))
             .medStartdato(START_DATO)
             .medInntekt(MÅNED_INNTEKT)
             .medMånedRefusjon(new BigDecimal("30000"))
             .medOpphørsdatoRefusjon(opphørsdato)
-            .medKildesystem(Kildesystem.ARBEIDSGIVERPORTAL)
+            .medKildesystem(no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem.ARBEIDSGIVERPORTAL)
             .medSøkteRefusjonsperioder(List.of(
-                new InntektsmeldingDto.SøktRefusjon(START_DATO, new BigDecimal("30000")),                   // filtreres bort (startdato)
-                new InntektsmeldingDto.SøktRefusjon(opphørsdato.plusDays(1), BigDecimal.ZERO),               // filtreres bort (opphørsdato + 1)
-                new InntektsmeldingDto.SøktRefusjon(START_DATO.plusMonths(2), new BigDecimal("20000"))))     // beholdes
+                new InntektsmeldingDto.SøktRefusjon(START_DATO, new BigDecimal("30000")),
+                new InntektsmeldingDto.SøktRefusjon(opphørsdato.plusDays(1), BigDecimal.ZERO),
+                new InntektsmeldingDto.SøktRefusjon(START_DATO.plusMonths(2), new BigDecimal("20000"))))
             .medBortfaltNaturalytelsePerioder(List.of())
             .medEndringAvInntektÅrsaker(List.of())
             .build();
 
-        var entitet = InntektsmeldingDtoMapper.mapTilEntitet(dto);
+        var entitet = InntektsmeldingDtoMapper.mapTilEntitet(dto, lagForespørselEntitet(dto));
 
         assertThat(entitet.getRefusjonsendringer()).hasSize(1);
         assertThat(entitet.getRefusjonsendringer().getFirst().getFom()).isEqualTo(START_DATO.plusMonths(2));
@@ -456,18 +457,18 @@ class InntektsmeldingDtoMapperTest {
         var original = InntektsmeldingDto.builder()
             .medAktørId(aktørId)
             .medYtelse(Ytelsetype.SVANGERSKAPSPENGER)
-            .medArbeidsgiver(new Arbeidsgiver(ARBEIDSGIVER_IDENT))
+            .medArbeidsgiver(new no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver(ARBEIDSGIVER_IDENT))
             .medKontaktperson(new InntektsmeldingDto.Kontaktperson("11112222", "Kari Nordmann"))
             .medStartdato(START_DATO)
             .medInntekt(new BigDecimal("60000"))
             .medOpprettetAv("bruker")
-            .medKildesystem(Kildesystem.ARBEIDSGIVERPORTAL)
+            .medKildesystem(no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem.ARBEIDSGIVERPORTAL)
             .medSøkteRefusjonsperioder(List.of())
             .medBortfaltNaturalytelsePerioder(List.of())
             .medEndringAvInntektÅrsaker(List.of())
             .build();
 
-        var entitet = InntektsmeldingDtoMapper.mapTilEntitet(original);
+        var entitet = InntektsmeldingDtoMapper.mapTilEntitet(original, lagForespørselEntitet(original));
         var roundtripped = InntektsmeldingDtoMapper.mapFraEntitet(entitet);
 
         assertThat(roundtripped.getAktørId()).isEqualTo(original.getAktørId());
@@ -487,27 +488,27 @@ class InntektsmeldingDtoMapperTest {
         var original = InntektsmeldingDto.builder()
             .medAktørId(aktørId)
             .medYtelse(Ytelsetype.FORELDREPENGER)
-            .medArbeidsgiver(new Arbeidsgiver(ARBEIDSGIVER_IDENT))
+            .medArbeidsgiver(new no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver(ARBEIDSGIVER_IDENT))
             .medKontaktperson(new InntektsmeldingDto.Kontaktperson("12345678", "Test"))
             .medStartdato(START_DATO)
             .medInntekt(MÅNED_INNTEKT)
-            .medKildesystem(Kildesystem.ARBEIDSGIVERPORTAL)
+            .medKildesystem(no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem.ARBEIDSGIVERPORTAL)
             .medSøkteRefusjonsperioder(List.of())
             .medBortfaltNaturalytelsePerioder(List.of())
             .medEndringAvInntektÅrsaker(List.of(
-                new InntektsmeldingDto.Endringsårsak(EndringsårsakType.TARIFFENDRING, START_DATO, START_DATO.plusMonths(1), START_DATO.minusDays(5)),
-                new InntektsmeldingDto.Endringsårsak(EndringsårsakType.BONUS, null, null, null)))
+                new InntektsmeldingDto.Endringsårsak(no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.EndringsårsakType.TARIFFENDRING, START_DATO, START_DATO.plusMonths(1), START_DATO.minusDays(5)),
+                new InntektsmeldingDto.Endringsårsak(no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.EndringsårsakType.BONUS, null, null, null)))
             .build();
 
-        var entitet = InntektsmeldingDtoMapper.mapTilEntitet(original);
+        var entitet = InntektsmeldingDtoMapper.mapTilEntitet(original, lagForespørselEntitet(original));
         var roundtripped = InntektsmeldingDtoMapper.mapFraEntitet(entitet);
 
         assertThat(roundtripped.getEndringAvInntektÅrsaker()).hasSize(2);
-        assertThat(roundtripped.getEndringAvInntektÅrsaker().getFirst().årsak()).isEqualTo(EndringsårsakType.TARIFFENDRING);
+        assertThat(roundtripped.getEndringAvInntektÅrsaker().getFirst().årsak()).isEqualTo(no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.EndringsårsakType.TARIFFENDRING);
         assertThat(roundtripped.getEndringAvInntektÅrsaker().getFirst().fom()).isEqualTo(START_DATO);
         assertThat(roundtripped.getEndringAvInntektÅrsaker().getFirst().tom()).isEqualTo(START_DATO.plusMonths(1));
         assertThat(roundtripped.getEndringAvInntektÅrsaker().getFirst().bleKjentFom()).isEqualTo(START_DATO.minusDays(5));
-        assertThat(roundtripped.getEndringAvInntektÅrsaker().get(1).årsak()).isEqualTo(EndringsårsakType.BONUS);
+        assertThat(roundtripped.getEndringAvInntektÅrsaker().get(1).årsak()).isEqualTo(no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.EndringsårsakType.BONUS);
         assertThat(roundtripped.getEndringAvInntektÅrsaker().get(1).fom()).isNull();
     }
 
@@ -517,25 +518,25 @@ class InntektsmeldingDtoMapperTest {
         var original = InntektsmeldingDto.builder()
             .medAktørId(aktørId)
             .medYtelse(Ytelsetype.FORELDREPENGER)
-            .medArbeidsgiver(new Arbeidsgiver(ARBEIDSGIVER_IDENT))
+            .medArbeidsgiver(new no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver(ARBEIDSGIVER_IDENT))
             .medKontaktperson(new InntektsmeldingDto.Kontaktperson("12345678", "Test"))
             .medStartdato(START_DATO)
             .medInntekt(MÅNED_INNTEKT)
-            .medKildesystem(Kildesystem.ARBEIDSGIVERPORTAL)
+            .medKildesystem(no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem.ARBEIDSGIVERPORTAL)
             .medSøkteRefusjonsperioder(List.of())
             .medBortfaltNaturalytelsePerioder(List.of(
-                new InntektsmeldingDto.BortfaltNaturalytelse(START_DATO, START_DATO.plusMonths(6), NaturalytelseType.ELEKTRISK_KOMMUNIKASJON, new BigDecimal("500")),
-                new InntektsmeldingDto.BortfaltNaturalytelse(START_DATO, START_DATO.plusMonths(3), NaturalytelseType.LOSJI, new BigDecimal("2000"))))
+                new InntektsmeldingDto.BortfaltNaturalytelse(START_DATO, START_DATO.plusMonths(6), no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.NaturalytelseType.ELEKTRISK_KOMMUNIKASJON, new BigDecimal("500")),
+                new InntektsmeldingDto.BortfaltNaturalytelse(START_DATO, START_DATO.plusMonths(3), no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.NaturalytelseType.LOSJI, new BigDecimal("2000"))))
             .medEndringAvInntektÅrsaker(List.of())
             .build();
 
-        var entitet = InntektsmeldingDtoMapper.mapTilEntitet(original);
+        var entitet = InntektsmeldingDtoMapper.mapTilEntitet(original, lagForespørselEntitet(original));
         var roundtripped = InntektsmeldingDtoMapper.mapFraEntitet(entitet);
 
         assertThat(roundtripped.getBortfaltNaturalytelsePerioder()).hasSize(2);
-        assertThat(roundtripped.getBortfaltNaturalytelsePerioder().getFirst().naturalytelsetype()).isEqualTo(NaturalytelseType.ELEKTRISK_KOMMUNIKASJON);
+        assertThat(roundtripped.getBortfaltNaturalytelsePerioder().getFirst().naturalytelsetype()).isEqualTo(no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.NaturalytelseType.ELEKTRISK_KOMMUNIKASJON);
         assertThat(roundtripped.getBortfaltNaturalytelsePerioder().getFirst().beløp()).isEqualByComparingTo(new BigDecimal("500"));
-        assertThat(roundtripped.getBortfaltNaturalytelsePerioder().get(1).naturalytelsetype()).isEqualTo(NaturalytelseType.LOSJI);
+        assertThat(roundtripped.getBortfaltNaturalytelsePerioder().get(1).naturalytelsetype()).isEqualTo(no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.NaturalytelseType.LOSJI);
     }
 
     @Test
@@ -544,18 +545,18 @@ class InntektsmeldingDtoMapperTest {
         var original = InntektsmeldingDto.builder()
             .medAktørId(aktørId)
             .medYtelse(Ytelsetype.FORELDREPENGER)
-            .medArbeidsgiver(Arbeidsgiver.fra(ARBEIDSGIVER_IDENT))
+            .medArbeidsgiver(no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver.fra(ARBEIDSGIVER_IDENT))
             .medKontaktperson(new InntektsmeldingDto.Kontaktperson("12345678", "Test"))
             .medStartdato(START_DATO)
             .medInntekt(MÅNED_INNTEKT)
-            .medKildesystem(Kildesystem.ARBEIDSGIVERPORTAL)
+            .medKildesystem(no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem.ARBEIDSGIVERPORTAL)
             .medSøkteRefusjonsperioder(List.of())
             .medBortfaltNaturalytelsePerioder(List.of())
             .medEndringAvInntektÅrsaker(List.of())
             .medAvsenderSystem(new InntektsmeldingDto.AvsenderSystem("TestSystem", "1.0"))
             .build();
 
-        var entitet = InntektsmeldingDtoMapper.mapTilEntitet(original);
+        var entitet = InntektsmeldingDtoMapper.mapTilEntitet(original, lagForespørselEntitet(original));
         var roundtripped = InntektsmeldingDtoMapper.mapFraEntitet(entitet);
 
         assertThat(roundtripped.getAvsenderSystem()).isNotNull();
@@ -569,22 +570,32 @@ class InntektsmeldingDtoMapperTest {
         var dto = InntektsmeldingDto.builder()
             .medAktørId(aktørId)
             .medYtelse(Ytelsetype.SVANGERSKAPSPENGER)
-            .medArbeidsgiver(new Arbeidsgiver(ARBEIDSGIVER_IDENT))
+            .medArbeidsgiver(new no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver(ARBEIDSGIVER_IDENT))
             .medStartdato(START_DATO)
             .medInntekt(new BigDecimal("55000"))
             .medMånedRefusjon(new BigDecimal("25000"))
             .medOpphørsdatoRefusjon(START_DATO.plusMonths(6))
             .medOpprettetAv("bruker")
-            .medKildesystem(Kildesystem.LØNN_OG_PERSONAL_SYSTEM)
+            .medKildesystem(no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem.LØNN_OG_PERSONAL_SYSTEM)
             .medSøkteRefusjonsperioder(List.of())
             .medBortfaltNaturalytelsePerioder(List.of())
             .medEndringAvInntektÅrsaker(List.of())
             .build();
 
-        var entitet = InntektsmeldingDtoMapper.mapTilEntitet(dto);
+        var entitet = InntektsmeldingDtoMapper.mapTilEntitet(dto, lagForespørselEntitet(dto));
 
         assertThat(entitet.getAktørId().getAktørId()).isEqualTo(AKTØR_ID);
         assertThat(entitet.getKontaktperson()).isNull();
+    }
+
+    // ---- Helper ----
+
+    private static ForespørselEntitet lagForespørselEntitet(InntektsmeldingDto dto) {
+        var aktørIdEntitet = new AktørIdEntitet(dto.getAktørId().getAktørId());
+        var orgnr = dto.getArbeidsgiver().orgnr();
+        var ytelse = dto.getYtelse() != null ? dto.getYtelse() : Ytelsetype.FORELDREPENGER;
+        var startdato = dto.getStartdato() != null ? dto.getStartdato() : START_DATO;
+        return new ForespørselEntitet(orgnr, startdato, aktørIdEntitet, ytelse, "SAK-001", startdato, ForespørselType.BESTILT_AV_FAGSYSTEM);
     }
 
     private InntektsmeldingEntitet.Builder lagBasisInntektsmeldingEntitet() {
@@ -598,6 +609,7 @@ class InntektsmeldingDtoMapperTest {
             .medArbeidsgiverIdent(ARBEIDSGIVER_IDENT)
             .medStartDato(START_DATO)
             .medMånedInntekt(MÅNED_INNTEKT)
+            .medForespørsel(new ForespørselEntitet(ARBEIDSGIVER_IDENT, START_DATO, new AktørIdEntitet(AKTØR_ID), ytelsetype, "123", START_DATO, ForespørselType.BESTILT_AV_FAGSYSTEM))
             .medKildesystem(Kildesystem.ARBEIDSGIVERPORTAL);
     }
 

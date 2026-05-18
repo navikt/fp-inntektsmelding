@@ -45,7 +45,7 @@ public class FellesMottakTjeneste {
 
     private Long lagreOgLagJournalførTask(InntektsmeldingDto inntektsmelding, ForespørselDto forespørsel) {
         LOG.info("Lagrer inntektsmelding for forespørsel {}", forespørsel.uuid());
-        var imId = inntektsmeldingTjeneste.lagreInntektsmelding(inntektsmelding);
+        var imId = inntektsmeldingTjeneste.lagreInntektsmelding(inntektsmelding, forespørsel.uuid());
         opprettTaskForSendTilJoark(imId, forespørsel);
         return imId;
     }

@@ -7,7 +7,12 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselRepository;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.EndringsårsakType;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,19 +27,24 @@ import no.nav.vedtak.konfig.Tid;
 class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
 
     private InntektsmeldingRepository inntektsmeldingRepository;
+    private ForespørselRepository forespørselRepository;
 
     @BeforeEach
     void setUp() {
+        this.forespørselRepository = new ForespørselRepository(getEntityManager());
         this.inntektsmeldingRepository = new InntektsmeldingRepository(getEntityManager());
     }
 
     @Test
     void skal_lagre_inntektsmelding() {
         // Arrange
+        var forespørselEntitet = lagreForespørsel("9999999999999", "999999999", Ytelsetype.FORELDREPENGER);
         var førLagring = InntektsmeldingEntitet.builder()
             .medAktørId(new AktørIdEntitet("9999999999999"))
             .medKontaktperson(new KontaktpersonEntitet("Testy test", "999999999"))
             .medYtelsetype(Ytelsetype.FORELDREPENGER)
+            .medForespørsel(forespørselEntitet)
+            .medKildesystem(Kildesystem.ARBEIDSGIVERPORTAL)
             .medMånedInntekt(BigDecimal.valueOf(4000))
             .medStartDato(LocalDate.now())
             .medArbeidsgiverIdent("999999999")
@@ -58,6 +68,7 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
     @Test
     void skal_lagre_inntektsmelding_med_refusjon() {
         // Arrange
+        var forespørselEntitet = lagreForespørsel("9999999999999", "999999999", Ytelsetype.FORELDREPENGER);
         var startdato = LocalDate.now();
         var førLagring = InntektsmeldingEntitet.builder()
             .medAktørId(new AktørIdEntitet("9999999999999"))
@@ -69,6 +80,8 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
             .medStartDato(startdato)
             .medRefusjonsendringer(Collections.singletonList(new RefusjonsendringEntitet(startdato.plusDays(3), BigDecimal.valueOf(2000))))
             .medArbeidsgiverIdent("999999999")
+            .medForespørsel(forespørselEntitet)
+            .medKildesystem(Kildesystem.ARBEIDSGIVERPORTAL)
             .build();
 
         // Act
@@ -96,6 +109,7 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
     @Test
     void skal_lagre_inntektsmelding_med_endringsårsaker() {
         // Arrange
+        var forespørselEntitet = lagreForespørsel("9999999999999", "999999999", Ytelsetype.FORELDREPENGER);
         var endring = EndringsårsakEntitet.builder()
             .medÅrsak(EndringsårsakType.TARIFFENDRING)
             .medFom(LocalDate.now())
@@ -111,6 +125,8 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
             .medStartDato(LocalDate.now())
             .medEndringsårsaker(Collections.singletonList(endring))
             .medArbeidsgiverIdent("999999999")
+            .medForespørsel(forespørselEntitet)
+            .medKildesystem(Kildesystem.ARBEIDSGIVERPORTAL)
             .build();
 
         // Act
@@ -141,6 +157,7 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
         var aktørId = new AktørIdEntitet("9999999999999");
         var arbeidsgiverIdent = "999999999";
         var startDato = LocalDate.now();
+        var forespørselEntitet = lagreForespørsel("9999999999999", arbeidsgiverIdent, Ytelsetype.FORELDREPENGER);
 
         var im1 = InntektsmeldingEntitet.builder()
             .medAktørId(aktørId)
@@ -150,8 +167,10 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
             .medMånedRefusjon(BigDecimal.valueOf(4000))
             .medRefusjonOpphørsdato(Tid.TIDENES_ENDE)
             .medStartDato(startDato)
+            .medKildesystem(Kildesystem.ARBEIDSGIVERPORTAL)
             .medArbeidsgiverIdent(arbeidsgiverIdent)
             .medOpprettetTidspunkt(LocalDateTime.now().plusDays(1))
+            .medForespørsel(forespørselEntitet)
             .build();
 
         var im2 = InntektsmeldingEntitet.builder()
@@ -162,6 +181,8 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
             .medMånedRefusjon(BigDecimal.valueOf(4000))
             .medRefusjonOpphørsdato(Tid.TIDENES_ENDE)
             .medStartDato(startDato)
+            .medKildesystem(Kildesystem.ARBEIDSGIVERPORTAL)
+            .medForespørsel(forespørselEntitet)
             .medRefusjonsendringer(Collections.singletonList(new RefusjonsendringEntitet(startDato.plusDays(10), BigDecimal.valueOf(2000))))
             .medArbeidsgiverIdent(arbeidsgiverIdent)
             .medOpprettetTidspunkt(LocalDateTime.now().plusDays(2))
@@ -184,6 +205,7 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
         var aktørId = new AktørIdEntitet("9999999999999");
         var arbeidsgiverIdent = "999999999";
         var startDato = LocalDate.now();
+        var forespørselEntitet = lagreForespørsel("9999999999999", arbeidsgiverIdent, Ytelsetype.FORELDREPENGER);
 
         var im1 = InntektsmeldingEntitet.builder()
             .medAktørId(aktørId)
@@ -195,6 +217,8 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
             .medStartDato(startDato)
             .medRefusjonsendringer(Collections.singletonList(new RefusjonsendringEntitet(startDato.plusDays(10), BigDecimal.valueOf(2000))))
             .medArbeidsgiverIdent(arbeidsgiverIdent)
+            .medKildesystem(Kildesystem.ARBEIDSGIVERPORTAL)
+            .medForespørsel(forespørselEntitet)
             .medOpprettetTidspunkt(LocalDateTime.now().plusDays(1))
             .build();
 
@@ -208,6 +232,8 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
             .medStartDato(startDato)
             .medRefusjonsendringer(Collections.singletonList(new RefusjonsendringEntitet(startDato.plusDays(10), BigDecimal.valueOf(2000))))
             .medArbeidsgiverIdent(arbeidsgiverIdent)
+            .medKildesystem(Kildesystem.ARBEIDSGIVERPORTAL)
+            .medForespørsel(forespørselEntitet)
             .medOpprettetTidspunkt(LocalDateTime.now().plusDays(2))
             .build();
 
@@ -221,6 +247,8 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
             .medStartDato(startDato)
             .medRefusjonsendringer(Collections.singletonList(new RefusjonsendringEntitet(startDato.plusDays(10), BigDecimal.valueOf(2000))))
             .medArbeidsgiverIdent(arbeidsgiverIdent)
+            .medKildesystem(Kildesystem.ARBEIDSGIVERPORTAL)
+            .medForespørsel(forespørselEntitet)
             .medOpprettetTidspunkt(LocalDateTime.now().plusDays(3))
             .build();
 
@@ -234,6 +262,8 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
             .medStartDato(startDato)
             .medRefusjonsendringer(Collections.singletonList(new RefusjonsendringEntitet(startDato.plusDays(10), BigDecimal.valueOf(2000))))
             .medArbeidsgiverIdent(arbeidsgiverIdent)
+            .medKildesystem(Kildesystem.ARBEIDSGIVERPORTAL)
+            .medForespørsel(forespørselEntitet)
             .medOpprettetTidspunkt(LocalDateTime.now().plusDays(4))
             .build();
 
@@ -254,6 +284,7 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
     @Test
     void skal_hente_inntektsmelding_fra_uuid() {
         // Arrange
+        var forespørselEntitet = lagreForespørsel("9999999999999", "999999999", Ytelsetype.FORELDREPENGER);
         var førLagring = InntektsmeldingEntitet.builder()
             .medAktørId(new AktørIdEntitet("9999999999999"))
             .medKontaktperson(new KontaktpersonEntitet("Testy test", "999999999"))
@@ -261,6 +292,8 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
             .medMånedInntekt(BigDecimal.valueOf(4000))
             .medStartDato(LocalDate.now())
             .medArbeidsgiverIdent("999999999")
+            .medForespørsel(forespørselEntitet)
+            .medKildesystem(Kildesystem.ARBEIDSGIVERPORTAL)
             .build();
 
         var uuid = førLagring.getUuid();
@@ -365,6 +398,8 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
             .medMånedInntekt(BigDecimal.valueOf(4000))
             .medStartDato(LocalDate.now())
             .medArbeidsgiverIdent(orgnr)
+            .medKildesystem(Kildesystem.ARBEIDSGIVERPORTAL)
+            .medForespørsel(lagreForespørsel(aktørId, orgnr, ytelsetype))
             .build();
         inntektsmeldingRepository.lagreInntektsmelding(entitet);
     }
@@ -377,8 +412,22 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
             .medMånedInntekt(BigDecimal.valueOf(4000))
             .medStartDato(LocalDate.now())
             .medArbeidsgiverIdent(orgnr)
+            .medForespørsel(lagreForespørsel(aktørId, orgnr, ytelsetype))
+            .medKildesystem(Kildesystem.ARBEIDSGIVERPORTAL)
             .medOpprettetTidspunkt(opprettetTidspunkt)
             .build();
+    }
+
+    private ForespørselEntitet lagreForespørsel(String aktørId, String orgnr, Ytelsetype ytelsetype) {
+        var forespørselEntitet = new ForespørselEntitet(orgnr,
+            LocalDate.now(),
+            new AktørIdEntitet(aktørId),
+            ytelsetype,
+            "123",
+            LocalDate.now(),
+            ForespørselType.BESTILT_AV_FAGSYSTEM);
+        forespørselRepository.lagreForespørsel(forespørselEntitet);
+        return forespørselEntitet;
     }
 
 }

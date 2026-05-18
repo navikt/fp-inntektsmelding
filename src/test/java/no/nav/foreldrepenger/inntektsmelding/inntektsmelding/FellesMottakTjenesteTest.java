@@ -67,7 +67,7 @@ class FellesMottakTjenesteTest {
         var forespørselDto = lagForespørselDto(forespørselUuid, null);
         var lagretInntektsmelding = lagInntektsmeldingDtoMedUuid(UUID.randomUUID());
 
-        when(inntektsmeldingTjeneste.lagreInntektsmelding(any())).thenReturn(imId);
+        when(inntektsmeldingTjeneste.lagreInntektsmelding(any(), any())).thenReturn(imId);
         when(inntektsmeldingTjeneste.hentInntektsmelding(imId)).thenReturn(lagretInntektsmelding);
 
         // Act
@@ -76,7 +76,7 @@ class FellesMottakTjenesteTest {
         // Assert
         assertThat(resultat).isNotNull();
         assertThat(resultat.getInntektsmeldingUuid()).isNotNull();
-        verify(inntektsmeldingTjeneste).lagreInntektsmelding(inntektsmeldingDto);
+        verify(inntektsmeldingTjeneste).lagreInntektsmelding(inntektsmeldingDto, forespørselDto.uuid());
         verify(inntektsmeldingTjeneste).hentInntektsmelding(imId);
 
         // Verifiser at task ble opprettet
@@ -106,7 +106,7 @@ class FellesMottakTjenesteTest {
             .build();
         var lagretInntektsmelding = lagInntektsmeldingDtoMedUuid(UUID.randomUUID());
 
-        when(inntektsmeldingTjeneste.lagreInntektsmelding(any())).thenReturn(imId);
+        when(inntektsmeldingTjeneste.lagreInntektsmelding(any(), any())).thenReturn(imId);
         when(inntektsmeldingTjeneste.hentInntektsmelding(imId)).thenReturn(lagretInntektsmelding);
 
         // Act
@@ -128,7 +128,7 @@ class FellesMottakTjenesteTest {
         var forespørselDto = lagForespørselDto(forespørselUuid, null);
         var lagretInntektsmelding = lagInntektsmeldingDtoMedUuid(UUID.randomUUID());
 
-        when(inntektsmeldingTjeneste.lagreInntektsmelding(any())).thenReturn(imId);
+        when(inntektsmeldingTjeneste.lagreInntektsmelding(any(), any())).thenReturn(imId);
         when(inntektsmeldingTjeneste.hentInntektsmelding(imId)).thenReturn(lagretInntektsmelding);
 
         // Act
