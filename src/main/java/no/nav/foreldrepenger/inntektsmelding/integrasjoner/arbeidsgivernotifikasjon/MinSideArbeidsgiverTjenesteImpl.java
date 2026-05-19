@@ -28,7 +28,7 @@ class MinSideArbeidsgiverTjenesteImpl implements MinSideArbeidsgiverTjeneste {
     public static final boolean BRUK_ALTINN_TRE_RESSURS_TOGGLE;
 
     static {
-        BRUK_ALTINN_TRE_RESSURS_TOGGLE = ENV.getProperty("bruk.altinn.tre.ressurs.i.fager.toggle", boolean.class, false);
+        BRUK_ALTINN_TRE_RESSURS_TOGGLE = ENV.getProperty("bruk.altinn.tre.ressurs.i.fager.toggle", boolean.class, true);
         PÅMINNELSE_ETTER_DAGER = ENV.getProperty("paaminnelse.etter.dager", int.class, 14);
     }
 
