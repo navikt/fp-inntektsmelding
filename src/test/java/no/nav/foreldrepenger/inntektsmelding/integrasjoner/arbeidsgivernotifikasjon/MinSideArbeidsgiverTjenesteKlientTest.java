@@ -16,8 +16,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.kobylynskyi.graphql.codegen.model.graphql.GraphQLError;
-import com.kobylynskyi.graphql.codegen.model.graphql.GraphQLErrorType;
+import no.nav.foreldrepenger.graphql.GraphQLError;
+import no.nav.foreldrepenger.graphql.GraphQLErrorType;
 
 import no.nav.vedtak.exception.TekniskException;
 import no.nav.vedtak.felles.integrasjon.rest.RestClient;
