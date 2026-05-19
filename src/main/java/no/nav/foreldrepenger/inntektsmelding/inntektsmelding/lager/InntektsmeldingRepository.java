@@ -12,6 +12,8 @@ import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.Predicate;
 
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -100,5 +102,10 @@ public class InntektsmeldingRepository {
             return redusertListe;
         }
         return result;
+    }
+
+    public void oppdaterImMedForespørsel(InntektsmeldingEntitet im, ForespørselEntitet forespørselEntitet) {
+        im.setForespørsel(forespørselEntitet);
+        entityManager.flush();
     }
 }
