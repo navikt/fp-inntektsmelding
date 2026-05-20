@@ -28,11 +28,11 @@ class MinSideArbeidsgiverTjenesteImpl implements MinSideArbeidsgiverTjeneste {
         PÅMINNELSE_ETTER_DAGER = ENV.getProperty("paaminnelse.etter.dager", int.class, 14);
     }
 
-    private MinSideArbeidsgiverKlient klient;
+    private final MinSideArbeidsgiverKlient minSideArbeidsgiverKlient;
 
     @Inject
-    public MinSideArbeidsgiverTjenesteImpl(MinSideArbeidsgiverKlient klient) {
-        this.klient = klient;
+    public MinSideArbeidsgiverTjenesteImpl(MinSideArbeidsgiverKlient minSideArbeidsgiverKlient) {
+        this.minSideArbeidsgiverKlient = minSideArbeidsgiverKlient;
     }
 
     @Override
@@ -57,7 +57,7 @@ class MinSideArbeidsgiverTjenesteImpl implements MinSideArbeidsgiverTjeneste {
             .onUkjentProdusent(new UkjentProdusentResponseProjection().feilmelding())
             .onUkjentRolle(new UkjentRolleResponseProjection().feilmelding());
 
-        return klient.opprettSak(request.build(), projection);
+        return minSideArbeidsgiverKlient.opprettSak(request.build(), projection);
     }
 
     @Override
@@ -101,7 +101,7 @@ class MinSideArbeidsgiverTjenesteImpl implements MinSideArbeidsgiverTjeneste {
             .onUkjentRolle(new UkjentRolleResponseProjection().feilmelding())
             .onUgyldigPaaminnelseTidspunkt(new UgyldigPaaminnelseTidspunktResponseProjection().feilmelding());
 
-        return klient.opprettOppgave(request, projection);
+        return minSideArbeidsgiverKlient.opprettOppgave(request, projection);
     }
 
     @Override
@@ -156,7 +156,7 @@ class MinSideArbeidsgiverTjenesteImpl implements MinSideArbeidsgiverTjeneste {
             .onUgyldigMerkelapp(new UgyldigMerkelappResponseProjection().feilmelding())
             .onUgyldigMottaker(new UgyldigMottakerResponseProjection().feilmelding())
             .onUkjentRolle(new UkjentRolleResponseProjection().feilmelding());
-        return klient.opprettBeskjedOgVarsling(beskjedRequest, projection);
+        return minSideArbeidsgiverKlient.opprettBeskjedOgVarsling(beskjedRequest, projection);
     }
 
     private static MottakerInput lagAltinnMottakerInput() {
@@ -212,7 +212,7 @@ class MinSideArbeidsgiverTjenesteImpl implements MinSideArbeidsgiverTjeneste {
             .onNotifikasjonFinnesIkke(new NotifikasjonFinnesIkkeResponseProjection().feilmelding())
             .onUkjentProdusent(new UkjentProdusentResponseProjection().feilmelding());
 
-        return klient.oppgaveUtført(request, projection);
+        return minSideArbeidsgiverKlient.oppgaveUtført(request, projection);
     }
 
     @Override
@@ -229,7 +229,7 @@ class MinSideArbeidsgiverTjenesteImpl implements MinSideArbeidsgiverTjeneste {
             .onNotifikasjonFinnesIkke(new NotifikasjonFinnesIkkeResponseProjection().feilmelding())
             .onUkjentProdusent(new UkjentProdusentResponseProjection().feilmelding());
 
-        return klient.oppgaveUtgått(request, projection);
+        return minSideArbeidsgiverKlient.oppgaveUtgått(request, projection);
     }
 
     @Override
@@ -252,7 +252,7 @@ class MinSideArbeidsgiverTjenesteImpl implements MinSideArbeidsgiverTjeneste {
             .onUkjentProdusent(new UkjentProdusentResponseProjection().feilmelding())
             .onSakFinnesIkke(new SakFinnesIkkeResponseProjection().feilmelding());
 
-        return klient.oppdaterSakStatus(requestBuilder.build(), projection);
+        return minSideArbeidsgiverKlient.oppdaterSakStatus(requestBuilder.build(), projection);
     }
 
     @Override
@@ -266,7 +266,7 @@ class MinSideArbeidsgiverTjenesteImpl implements MinSideArbeidsgiverTjeneste {
             .onUgyldigMerkelapp(new UgyldigMerkelappResponseProjection().feilmelding())
             .onUkjentProdusent(new UkjentProdusentResponseProjection().feilmelding());
 
-        return klient.oppdaterSakTilleggsinformasjon(request, projection);
+        return minSideArbeidsgiverKlient.oppdaterSakTilleggsinformasjon(request, projection);
     }
 
     @Override
@@ -277,7 +277,7 @@ class MinSideArbeidsgiverTjenesteImpl implements MinSideArbeidsgiverTjeneste {
             .onUgyldigMerkelapp(new UgyldigMerkelappResponseProjection().feilmelding())
             .onUkjentProdusent(new UkjentProdusentResponseProjection().feilmelding())
             .onSakFinnesIkke(new SakFinnesIkkeResponseProjection().feilmelding());
-        return klient.slettSak(request, projection);
+        return minSideArbeidsgiverKlient.slettSak(request, projection);
     }
 
 }
