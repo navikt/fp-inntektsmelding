@@ -18,17 +18,13 @@ import no.nav.foreldrepenger.konfig.Environment;
 @ApplicationScoped
 class MinSideArbeidsgiverTjenesteImpl implements MinSideArbeidsgiverTjeneste {
     private static final Environment ENV = Environment.current();
-    static final String SERVICE_CODE = "4936";
-    static final String SERVICE_EDITION_CODE = "1";
     static final String SAK_STATUS_TEKST = "";
     static final String SAK_STATUS_TEKST_ARBEIDSGIVERINITIERT = "Mottatt - Se kvittering eller korriger inntektsmelding";
     static final Sendevindu VARSEL_SENDEVINDU = Sendevindu.LOEPENDE;
     static final int PÅMINNELSE_ETTER_DAGER;
     static final String ALTINN_INNTEKTSMELDING_RESSURS = AltinnRessurser.ALTINN_TRE_INNTEKTSMELDING_RESSURS;
-    public static final boolean BRUK_ALTINN_TRE_RESSURS_TOGGLE;
 
     static {
-        BRUK_ALTINN_TRE_RESSURS_TOGGLE = ENV.getProperty("bruk.altinn.tre.ressurs.i.fager.toggle", boolean.class, true);
         PÅMINNELSE_ETTER_DAGER = ENV.getProperty("paaminnelse.etter.dager", int.class, 14);
     }
 
@@ -164,22 +160,15 @@ class MinSideArbeidsgiverTjenesteImpl implements MinSideArbeidsgiverTjeneste {
     }
 
     private static MottakerInput lagAltinnMottakerInput() {
-        var builder = MottakerInput.builder();
-            // TODO: Rydd opp etter Altinn 3 er i bruk i prod
-            if (BRUK_ALTINN_TRE_RESSURS_TOGGLE) {
-                builder.setAltinnRessurs(AltinnRessursMottakerInput.builder().setRessursId(ALTINN_INNTEKTSMELDING_RESSURS).build());
-            } else {
-                builder.setAltinn(AltinnMottakerInput.builder().setServiceCode(SERVICE_CODE).setServiceEdition(SERVICE_EDITION_CODE).build());
-            }
-        return builder.build();
+        return MottakerInput.builder()
+            .setAltinnRessurs(AltinnRessursMottakerInput.builder().setRessursId(ALTINN_INNTEKTSMELDING_RESSURS).build())
+            .build();
     }
 
     private static EksterntVarselInput lagEksternVarselAltinn(String varselTekst, Integer minutterForsinkelse) {
         var builder = EksterntVarselInput.builder();
         var tittel = "Nav trenger inntektsmelding";
-        // TODO: Rydd opp etter Altinn 3 er i bruk i prod
-        if (BRUK_ALTINN_TRE_RESSURS_TOGGLE) {
-            builder.setAltinnressurs(EksterntVarselAltinnressursInput.builder()
+        return builder.setAltinnressurs(EksterntVarselAltinnressursInput.builder()
                 .setEpostTittel(tittel)
                 .setEpostHtmlBody(varselTekst)
                 .setSmsTekst("%s. %s".formatted(tittel, varselTekst))
@@ -187,47 +176,22 @@ class MinSideArbeidsgiverTjenesteImpl implements MinSideArbeidsgiverTjeneste {
                 .setSendetidspunkt(SendetidspunktInput.builder()
                     .setTidspunkt(LocalDateTime.now().plusMinutes(minutterForsinkelse).toString())
                     .build())
-                .build());
-        } else {
-            builder.setAltinntjeneste(EksterntVarselAltinntjenesteInput.builder()
-                .setTittel(tittel)
-                .setInnhold(varselTekst)
-                .setMottaker(lagAltinnTjenesteMottakerInput())
-                .setSendetidspunkt(SendetidspunktInput.builder()
-                    .setTidspunkt(LocalDateTime.now().plusMinutes(minutterForsinkelse).toString())
-                    .build())
-                .build());
-        }
-
-        return builder.build();
+                .build())
+            .build();
     }
 
     private static PaaminnelseEksterntVarselInput lagPåminnelseVarselAltinn(String påminnelseTekst) {
         var builder = PaaminnelseEksterntVarselInput.builder();
         var tittel = "Påminnelse: Nav trenger inntektsmelding";
-        // TODO: Rydd opp etter Altinn 3 er i bruk i prod
-        if (BRUK_ALTINN_TRE_RESSURS_TOGGLE) {
-            builder.setAltinnressurs(PaaminnelseEksterntVarselAltinnressursInput.builder()
+
+           return builder.setAltinnressurs(PaaminnelseEksterntVarselAltinnressursInput.builder()
                 .setEpostTittel(tittel)
                 .setEpostHtmlBody(påminnelseTekst)
                 .setSmsTekst("%s. %s".formatted(tittel, påminnelseTekst))
                 .setMottaker(lagAltinnRessursMottakerInput())
                 .setSendevindu(VARSEL_SENDEVINDU)
-                .build());
-        } else {
-            builder.setAltinntjeneste(PaaminnelseEksterntVarselAltinntjenesteInput.builder()
-                .setTittel(tittel)
-                .setInnhold(påminnelseTekst)
-                .setMottaker(lagAltinnTjenesteMottakerInput())
-                .setSendevindu(VARSEL_SENDEVINDU)
-                .build());
-        }
-
-        return builder.build();
-    }
-
-    private static AltinntjenesteMottakerInput lagAltinnTjenesteMottakerInput() {
-        return AltinntjenesteMottakerInput.builder().setServiceCode(SERVICE_CODE).setServiceEdition(SERVICE_EDITION_CODE).build();
+                   .build())
+               .build();
     }
 
     private static AltinnRessursMottakerInput lagAltinnRessursMottakerInput() {
