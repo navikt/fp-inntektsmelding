@@ -10,6 +10,8 @@ import jakarta.inject.Inject;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselRepository;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
+import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.InntektsmeldingEntitet;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.InntektsmeldingRepository;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
@@ -78,4 +80,13 @@ public class InntektsmeldingTjeneste {
             .toList();
     }
 
+    /**
+     * Kun for bruk til å migrere gamle inntektsmeldinger som ikke er knyttet til en forespørsel
+     * @param im
+     * @param forespørsel
+     */
+    public void oppdaterInntektsmelding(InntektsmeldingEntitet im, ForespørselDto forespørsel) {
+        var forespørselEntitet = forespørselRepository.hentForespørsel(forespørsel.uuid()).orElseThrow();
+        inntektsmeldingRepository.oppdaterImMedForespørsel(im, forespørselEntitet);
+    }
 }

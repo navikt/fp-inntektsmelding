@@ -21,6 +21,7 @@
         <felles.version>7.8.2</felles.version>
         <prosesstask.version>5.2.6</prosesstask.version>
         <fp-kontrakter.version>9.4.33</fp-kontrakter.version>
+        <fp-graphql.version>1.0.0</fp-graphql.version>
     </properties>
 
     <dependencyManagement>
@@ -72,6 +73,11 @@
         <dependency>
             <groupId>no.nav.foreldrepenger.felles.integrasjon</groupId>
             <artifactId>felles-integrasjon-rest-klient</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>no.nav.foreldrepenger.graphql</groupId>
+            <artifactId>graphql-runtime</artifactId>
+            <version>${fp-graphql.version}</version>
         </dependency>
         <dependency>
             <groupId>no.nav.foreldrepenger.felles.integrasjon</groupId>
@@ -236,9 +242,9 @@
         <finalName>app</finalName>
         <plugins>
             <plugin>
-                <groupId>io.github.kobylynskyi</groupId>
-                <artifactId>graphql-codegen-maven-plugin</artifactId>
-                <version>5.10.0</version>
+                <groupId>no.nav.foreldrepenger.graphql</groupId>
+                <artifactId>graphql-maven-plugin</artifactId>
+                <version>${fp-graphql.version}</version>
                 <executions>
                     <execution>
                         <goals>
@@ -248,14 +254,7 @@
                             <graphqlSchemaPaths>${project.basedir}/src/main/resources/graphql/produsent.graphql</graphqlSchemaPaths>
                             <outputDir>${project.build.directory}/generated-sources/client-arbeidsgiver-notifikasjon</outputDir>
                             <modelPackageName>no.nav.foreldrepenger.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon</modelPackageName>
-                            <generateClient>true</generateClient>
-                            <generateApis>false</generateApis>
                             <generateBuilder>true</generateBuilder>
-                            <generateToString>true</generateToString>
-                            <generateParameterizedFieldsResolvers>false</generateParameterizedFieldsResolvers>
-                            <addGeneratedAnnotation>true</addGeneratedAnnotation>
-                            <generatedAnnotation>jakarta.annotation.Generated</generatedAnnotation>
-                            <modelValidationAnnotation>@jakarta.validation.constraints.NotNull</modelValidationAnnotation>
                             <generateJacksonTypeIdResolver>true</generateJacksonTypeIdResolver>
                         </configuration>
                     </execution>
@@ -312,4 +311,10 @@
             <url>https://maven.pkg.github.com/navikt/fp-felles</url> <!-- Samme url som brukes i dependabot.yml -->
         </repository>
     </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>github</id> <!-- OBS: Brukes også av fp-gha-workflows for action/setup-java -->
+            <url>https://maven.pkg.github.com/navikt/fp-graphql</url>
+        </pluginRepository>
+    </pluginRepositories>
 </project>
