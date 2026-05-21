@@ -166,9 +166,9 @@ class MinSideArbeidsgiverTjenesteImpl implements MinSideArbeidsgiverTjeneste {
     }
 
     private static EksterntVarselInput lagEksternVarselAltinn(String varselTekst, Integer minutterForsinkelse) {
-        var builder = EksterntVarselInput.builder();
         var tittel = "Nav trenger inntektsmelding";
-        return builder.setAltinnressurs(EksterntVarselAltinnressursInput.builder()
+        return EksterntVarselInput.builder()
+            .setAltinnressurs(EksterntVarselAltinnressursInput.builder()
                 .setEpostTittel(tittel)
                 .setEpostHtmlBody(varselTekst)
                 .setSmsTekst("%s. %s".formatted(tittel, varselTekst))
@@ -181,17 +181,16 @@ class MinSideArbeidsgiverTjenesteImpl implements MinSideArbeidsgiverTjeneste {
     }
 
     private static PaaminnelseEksterntVarselInput lagPåminnelseVarselAltinn(String påminnelseTekst) {
-        var builder = PaaminnelseEksterntVarselInput.builder();
         var tittel = "Påminnelse: Nav trenger inntektsmelding";
-
-           return builder.setAltinnressurs(PaaminnelseEksterntVarselAltinnressursInput.builder()
+        return PaaminnelseEksterntVarselInput.builder()
+            .setAltinnressurs(PaaminnelseEksterntVarselAltinnressursInput.builder()
                 .setEpostTittel(tittel)
                 .setEpostHtmlBody(påminnelseTekst)
                 .setSmsTekst("%s. %s".formatted(tittel, påminnelseTekst))
                 .setMottaker(lagAltinnRessursMottakerInput())
                 .setSendevindu(VARSEL_SENDEVINDU)
-                   .build())
-               .build();
+                .build())
+            .build();
     }
 
     private static AltinnRessursMottakerInput lagAltinnRessursMottakerInput() {
