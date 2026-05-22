@@ -249,7 +249,6 @@ public class GrunnlagDtoTjeneste {
 
     public Optional<SlåOppArbeidstakerResponseDto> finnArbeidsforholdForFnr(PersonInfo personInfo,
                                                                             LocalDate førsteFraværsdag) {
-        // TODO Skal vi sjekke noe mtp kode 6/7
         var arbeidsforholdSøkerHarHosArbeidsgiver = arbeidstakerTjeneste.finnSøkersArbeidsforholdSomArbeidsgiverHarTilgangTil(personInfo.fødselsnummer(),
             førsteFraværsdag);
         if (arbeidsforholdSøkerHarHosArbeidsgiver.isEmpty()) {

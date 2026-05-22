@@ -69,7 +69,6 @@ class InntektsmeldingXMLMapper {
         }
     }
 
-    // TODO Vi bør ta en diskusjon på hva denne skal være
     private static Avsendersystem lagAvsendersysem(InntektsmeldingDto inntektsmelding) {
         var as = new Avsendersystem();
         as.setSystemnavn(mapTilSystem(inntektsmelding.getKildesystem()).name());
@@ -78,7 +77,6 @@ class InntektsmeldingXMLMapper {
         return as;
     }
 
-    // TODO Vi bør ta en diskusjon på hva denne skal være
     private static Systemnavn mapTilSystem(Kildesystem kildesystem) {
         return switch (kildesystem) {
             case FPSAK -> Systemnavn.OVERSTYRING_FPSAK;
