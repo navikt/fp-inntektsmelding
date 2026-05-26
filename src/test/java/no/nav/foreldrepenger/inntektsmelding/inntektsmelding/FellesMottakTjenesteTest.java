@@ -159,7 +159,7 @@ class FellesMottakTjenesteTest {
         )).thenReturn(ferdigstiltForespørselDto);
 
         // Act
-        fellesMottakTjeneste.behandlerForespørsel(forespørselDto, Optional.of(imUuid));
+        fellesMottakTjeneste.ferdigstillOgOppdaterEksterneSystemer(forespørselDto, Optional.of(imUuid));
 
         // Assert
         verify(forespørselBehandlingTjeneste).ferdigstillForespørsel(
@@ -180,7 +180,7 @@ class FellesMottakTjenesteTest {
         var forespørselDto = lagForespørselDto(forespørselUuid, ForespørselStatus.FERDIG);
 
         // Act
-        fellesMottakTjeneste.behandlerForespørsel(forespørselDto, Optional.of(imUuid));
+        fellesMottakTjeneste.ferdigstillOgOppdaterEksterneSystemer(forespørselDto, Optional.of(imUuid));
 
         // Assert
         verify(forespørselBehandlingTjeneste).oppdaterPortalerMedEndretInntektsmelding(

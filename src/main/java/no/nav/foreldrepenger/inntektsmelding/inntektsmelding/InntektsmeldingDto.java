@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
@@ -34,7 +35,10 @@ public class InntektsmeldingDto {
     private final List<Endringsårsak> endringAvInntektÅrsaker;
     private final String opprettetAv;
     private final ForespørselDto forespørsel;
+<<<<<<< HEAD
     private final InntektsmeldingStatus status;
+=======
+>>>>>>> b0a0193 (TFP-6983: Mekanisme for å vente på etterkontroll av inntektsmelding når a-inntekt er nede)
 
     private InntektsmeldingDto(Builder builder) {
         this.id = builder.id;
@@ -54,7 +58,10 @@ public class InntektsmeldingDto {
         this.søkteRefusjonsperioder = builder.søkteRefusjonsperioder;
         this.bortfaltNaturalytelsePerioder = builder.bortfaltNaturalytelsePerioder;
         this.endringAvInntektÅrsaker = builder.endringAvInntektÅrsaker;
+<<<<<<< HEAD
         this.status = builder.status;
+=======
+>>>>>>> b0a0193 (TFP-6983: Mekanisme for å vente på etterkontroll av inntektsmelding når a-inntekt er nede)
         this.forespørsel = builder.forespørsel;
     }
 
@@ -130,12 +137,17 @@ public class InntektsmeldingDto {
         return endringAvInntektÅrsaker;
     }
 
+<<<<<<< HEAD
     public InntektsmeldingStatus getStatus() {
         return status;
     }
 
     public ForespørselDto getForespørsel() {
         return forespørsel;
+=======
+    public Optional<ForespørselDto> getForespørsel() {
+        return Optional.ofNullable(forespørsel);
+>>>>>>> b0a0193 (TFP-6983: Mekanisme for å vente på etterkontroll av inntektsmelding når a-inntekt er nede)
     }
 
     public static class Builder {
@@ -156,7 +168,10 @@ public class InntektsmeldingDto {
         private List<SøktRefusjon> søkteRefusjonsperioder;
         private List<BortfaltNaturalytelse> bortfaltNaturalytelsePerioder;
         private List<Endringsårsak> endringAvInntektÅrsaker;
+<<<<<<< HEAD
         private InntektsmeldingStatus status;
+=======
+>>>>>>> b0a0193 (TFP-6983: Mekanisme for å vente på etterkontroll av inntektsmelding når a-inntekt er nede)
         private ForespørselDto forespørsel;
 
         private Builder() {
@@ -247,6 +262,7 @@ public class InntektsmeldingDto {
             return this;
         }
 
+<<<<<<< HEAD
         public Builder medStatus(InntektsmeldingStatus status) {
             this.status = status;
             return this;
@@ -254,6 +270,10 @@ public class InntektsmeldingDto {
 
         public Builder medForespørsel(ForespørselDto forespørsel) {
             this.forespørsel = forespørsel;
+=======
+        public Builder medForespørsel(ForespørselDto forespørselDto) {
+            this.forespørsel = forespørselDto;
+>>>>>>> b0a0193 (TFP-6983: Mekanisme for å vente på etterkontroll av inntektsmelding når a-inntekt er nede)
             return this;
         }
 

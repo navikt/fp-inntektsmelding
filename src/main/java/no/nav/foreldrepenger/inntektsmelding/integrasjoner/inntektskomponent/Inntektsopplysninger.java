@@ -10,6 +10,13 @@ import no.nav.foreldrepenger.inntektsmelding.typer.dto.MånedslønnStatus;
 public record Inntektsopplysninger(BigDecimal gjennomsnitt, String orgnummer, List<InntektMåned> måneder) {
     public record InntektMåned(BigDecimal beløp, YearMonth månedÅr, MånedslønnStatus status){}
 
+    public boolean harNedetid() {
+        return måneder() != null && måneder()
+            .stream()
+            .anyMatch(status -> MånedslønnStatus.NEDETID_AINNTEKT.equals(status.status()));
+    }
+
+
     @Override
     public String toString() {
         return "Inntektsopplysninger{" +

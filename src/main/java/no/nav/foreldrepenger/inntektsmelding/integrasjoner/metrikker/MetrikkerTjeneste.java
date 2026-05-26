@@ -45,12 +45,6 @@ public class MetrikkerTjeneste {
     // Måler innsending av arbeidsgiverinitiert uregistrert inntektsmelding
     private static final String ARBEIDSGIVERINITIERT_UREGISTRERT_INNSENDING = APP_NAME + ".arbeidsgiverinitiert.uregistrert.innsending";
 
-    // Måler endring av arbeidsgiverinitiert nyansatt inntektsmelding
-    private static final String ARBEIDSGIVERINITIERT_ENDRING = APP_NAME + ".arbeidsgiverinitiert.endring";
-
-    // Måler endring av arbeidsgiverinitiert uregistrert inntektsmelding
-    private static final String ARBEIDSGIVERINITIERT_UREGISTRERT_ENDRING = APP_NAME + ".arbeidsgiverinitiert.uregistrert.endring";
-
     // Måler hvor ofte vi gjør redirect fra agi til vanlig forespørsel
     private static final String ARBEIDSGIVERINITIERT_REDIRECT = APP_NAME + ".arbeidsgiverinitiert.redirect";
 
@@ -59,6 +53,9 @@ public class MetrikkerTjeneste {
 
     // Måler mottak av inntektsmeldinger per ytelse
     private static final String COUNTER_INNTEKTSMELDING = APP_NAME + ".inntektsmeldinger.mottatt";
+
+    // Måler mottak av inntektsmeldinger som ikke kunne ferdigstille grunnet nedetid
+    private static final String COUNTER_INNTEKTSMELDING_NEDETID = APP_NAME + ".inntektsmeldinger.mottatt";
 
     // Måler årsaker til endring av inntekt i inntektsmeldinger innsendt
     private static final String COUNTER_ENDRINGSÅRSAKER = APP_NAME + ".inntektsmeldinger.endringsaarsak";
@@ -180,28 +177,6 @@ public class MetrikkerTjeneste {
         }
     }
 
-    //TODO skal denne brukes noe sted
-    public static void loggEndretArbeidsgiverinitiertNyansattIm(InntektsmeldingDto imEntitet) {
-        try {
-            var tags = new ArrayList<Tag>();
-            tags.add(new ImmutableTag(TAG_YTELSE, imEntitet.getYtelse().name()));
-            Metrics.counter(ARBEIDSGIVERINITIERT_ENDRING, tags).increment();
-        } catch (Exception e) {
-            loggFeil(e, "loggEndretArbeidsgiverinitiertIm");
-        }
-    }
-
-    //TODO skal denne brukes noe sted
-    public static void loggEndretArbeidsgiverinitiertUregistrertIm(InntektsmeldingDto imEntitet) {
-        try {
-            var tags = new ArrayList<Tag>();
-            tags.add(new ImmutableTag(TAG_YTELSE, imEntitet.getYtelse().name()));
-            Metrics.counter(ARBEIDSGIVERINITIERT_UREGISTRERT_ENDRING, tags).increment();
-        } catch (Exception e) {
-            loggFeil(e, "loggEndretArbeidsgiverinitiertUregistrertIm");
-        }
-    }
-
     public static void loggRedirectFraAGITilVanligForespørsel(ForespørselDto forespørsel) {
         try {
             var tags = new ArrayList<Tag>();
@@ -211,5 +186,13 @@ public class MetrikkerTjeneste {
             loggFeil(e, "loggRedirectFraAGITilVanligForespørsel");
         }
 
+    }
+
+    public static void loggInnsendtInntektsmeldingUnderNedetid() {
+        try {
+            Metrics.counter(COUNTER_INNTEKTSMELDING_NEDETID).increment();
+        } catch (Exception e) {
+            loggFeil(e, "loggInnsendtInntektsmeldingUnderNedetid");
+        }
     }
 }
