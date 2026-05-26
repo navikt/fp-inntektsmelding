@@ -169,7 +169,7 @@ class InntektsmeldingApiMottakTjenesteTest {
 
         assertThat(response.success()).isTrue();
         assertThat(response.inntektsmeldingUuid()).isEqualTo(imUuid);
-        verify(fellesMottakTjeneste).behandlerForespørsel(forespørselDto, Optional.of(imUuid));
+        verify(fellesMottakTjeneste).ferdigstillOgOppdaterEksterneSystemer(forespørselDto, Optional.of(imUuid));
     }
 
     @Test
@@ -193,7 +193,7 @@ class InntektsmeldingApiMottakTjenesteTest {
 
         assertThat(response.success()).isTrue();
         assertThat(response.inntektsmeldingUuid()).isEqualTo(imUuid);
-        verify(fellesMottakTjeneste).behandlerForespørsel(forespørselDto, Optional.of(imUuid));
+        verify(fellesMottakTjeneste).ferdigstillOgOppdaterEksterneSystemer(forespørselDto, Optional.of(imUuid));
     }
 
     @Test
@@ -239,7 +239,7 @@ class InntektsmeldingApiMottakTjenesteTest {
 
         assertThat(response.success()).isTrue();
         assertThat(response.inntektsmeldingUuid()).isEqualTo(imUuid);
-        verify(fellesMottakTjeneste).behandlerForespørsel(forespørselDto, Optional.of(imUuid));
+        verify(fellesMottakTjeneste).ferdigstillOgOppdaterEksterneSystemer(forespørselDto, Optional.of(imUuid));
     }
 
     private static ForespørselDto lagForespørselDto(UUID uuid, LocalDate startdatoOverride, ForespørselStatus status) {

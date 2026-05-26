@@ -116,7 +116,7 @@ class InntektsmeldingMottakTjenesteTest {
         var responseDto = inntektsmeldingMottakTjeneste.mottaInntektsmelding(im, forespørselDto.uuid());
 
         // Assert
-        verify(fellesMottakTjeneste, times(1)).behandlerForespørsel(forespørselDto, Optional.ofNullable(im.getInntektsmeldingUuid()));
+        verify(fellesMottakTjeneste, times(1)).ferdigstillOgOppdaterEksterneSystemer(forespørselDto, Optional.ofNullable(im.getInntektsmeldingUuid()));
         assertThat(responseDto).isNotNull();
         assertThat(responseDto.refusjon()).hasSize(1);
     }
