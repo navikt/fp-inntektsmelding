@@ -10,6 +10,7 @@ import jakarta.persistence.EntityManager;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.InntektsmeldingEntitet;
 
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
 
 import org.slf4j.Logger;
@@ -91,6 +92,10 @@ public class KobleInntektsmeldingTilForespørselTask implements ProsessTaskHandl
         } else if (forespørslerOpprettetFørImMedMatchendeStartdato.size() == 1) {
             oppdaterInntektsmeldingMedForespørsel(im, forespørslerOpprettetFørImMedMatchendeStartdato.getFirst());
         } else {
+            var aktiveForespørsler = forespørslerOpprettetFørImMedMatchendeStartdato.stream().filter(f -> !ForespørselStatus.UTGÅTT.equals(f.status())).toList();
+            if (aktiveForespørsler.size() == 1) {
+                oppdaterInntektsmeldingMedForespørsel(im, aktiveForespørsler.getFirst());
+            }
             // Her mistenker vi at kun arbeidsgiverinitiert IM gjennstår, da disse ikke nødvendigvis vil matche på startdato hvis den er blitt endret, men vi logger i første omgang for å være sikker
             var forespørselUuider = matchendeForespørsler.stream().map(ForespørselDto::uuid).toList();
             LOG.info("KOBLE_INNTEKTSMELDINGER_FEIL: Klarte ikke identifisere hvilken forespørsel inntektsmelding {} skal kobles til. Fant følgende forespørsler: {}", im.getId(), forespørselUuider);
