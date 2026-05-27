@@ -1,7 +1,10 @@
 package no.nav.foreldrepenger.inntektsmelding.forvaltning;
 
+import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -10,8 +13,12 @@ import jakarta.persistence.EntityManager;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.InntektsmeldingEntitet;
 
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
+
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,21 +68,24 @@ public class KobleInntektsmeldingTilForespørselTask implements ProsessTaskHandl
         LOG.info("KOBLE_INNTEKTSMELDINGER: Fant {} inntektsmeldinger som skal kobles til en forespørsel",
             inntektsmeldinger.size());
 
-        inntektsmeldinger.forEach(im -> {
-            var matchendeForespørsler = forespørselBehandlingTjeneste.finnForespørsler(new AktørId(im.getAktørId().getAktørId()),
-                im.getYtelsetype(),
-                im.getArbeidsgiverIdent());
-            if (matchendeForespørsler.isEmpty()) {
-                kastIngenForespørselFeil(im);
-            } else if (matchendeForespørsler.size() == 1) {
-                oppdaterInntektsmeldingMedForespørsel(im, matchendeForespørsler.getFirst());
-            } else {
-                LOG.info("KOBLE_INNTEKTSMELDINGER: Fant {} mulige forespørsler som matcher for inntektsmelding {}",
-                    matchendeForespørsler.size(),
-                    im.getId());
-                finnBesteMatchUtfraOpprettetTidOgStartdato(im, matchendeForespørsler);
-            }
-        });
+        if (!dryRun) {
+            inntektsmeldinger.forEach(im -> {
+                var matchendeForespørsler = forespørselBehandlingTjeneste.finnForespørsler(new AktørId(im.getAktørId().getAktørId()),
+                    im.getYtelsetype(),
+                    im.getArbeidsgiverIdent());
+                if (matchendeForespørsler.isEmpty()) {
+                    kastIngenForespørselFeil(im);
+                } else if (matchendeForespørsler.size() == 1) {
+                    oppdaterInntektsmeldingMedForespørsel(im, matchendeForespørsler.getFirst());
+                } else {
+                    LOG.info("KOBLE_INNTEKTSMELDINGER: Fant {} mulige forespørsler som matcher for inntektsmelding {}",
+                        matchendeForespørsler.size(),
+                        im.getId());
+                    finnBesteMatchUtfraOpprettetTidOgStartdato(im, matchendeForespørsler);
+                }
+            });
+        }
+
         inntektsmeldinger.stream().map(InntektsmeldingEntitet::getId).max(Long::compareTo).ifPresent(maxId -> lagNesteTask(maxId + 1, tom, dryRun));
     }
 
@@ -95,10 +105,15 @@ public class KobleInntektsmeldingTilForespørselTask implements ProsessTaskHandl
             var aktiveForespørsler = forespørslerOpprettetFørImMedMatchendeStartdato.stream().filter(f -> !ForespørselStatus.UTGÅTT.equals(f.status())).toList();
             if (aktiveForespørsler.size() == 1) {
                 oppdaterInntektsmeldingMedForespørsel(im, aktiveForespørsler.getFirst());
+            } else if (aktiveForespørsler.stream().map(this::mapForLikhetssjekk).collect(Collectors.toSet()).size() == 1) {
+                var nyesteForespørsel = aktiveForespørsler.stream().max(Comparator.comparing(ForespørselDto::opprettetTidspunkt)).orElseThrow();
+                LOG.info("Fant {} like forespørsler for inntektsmelding {}. Velger {}, som er den siste", aktiveForespørsler.size(), im.getId(), nyesteForespørsel.uuid());
+                oppdaterInntektsmeldingMedForespørsel(im, nyesteForespørsel);
+            } else {
+                // Her mistenker vi at kun arbeidsgiverinitiert IM gjennstår, da disse ikke nødvendigvis vil matche på startdato hvis den er blitt endret, men vi logger i første omgang for å være sikker
+                var forespørselUuider = matchendeForespørsler.stream().map(ForespørselDto::uuid).toList();
+                LOG.info("KOBLE_INNTEKTSMELDINGER_FEIL: Klarte ikke identifisere hvilken forespørsel inntektsmelding {} skal kobles til. Fant følgende forespørsler: {}", im.getId(), forespørselUuider);
             }
-            // Her mistenker vi at kun arbeidsgiverinitiert IM gjennstår, da disse ikke nødvendigvis vil matche på startdato hvis den er blitt endret, men vi logger i første omgang for å være sikker
-            var forespørselUuider = matchendeForespørsler.stream().map(ForespørselDto::uuid).toList();
-            LOG.info("KOBLE_INNTEKTSMELDINGER_FEIL: Klarte ikke identifisere hvilken forespørsel inntektsmelding {} skal kobles til. Fant følgende forespørsler: {}", im.getId(), forespørselUuider);
         }
     }
 
@@ -126,5 +141,18 @@ public class KobleInntektsmeldingTilForespørselTask implements ProsessTaskHandl
         query.setMaxResults(50);
         return query.getResultList();
     }
+
+    private ForespørselLikhetssjekk mapForLikhetssjekk(ForespørselDto forespørsel) {
+        return new ForespørselLikhetssjekk(forespørsel.arbeidsgiver(), forespørsel.aktørId(), forespørsel.ytelseType(),
+            forespørsel.status(), forespørsel.forespørselType(), forespørsel.skjæringstidspunkt(), forespørsel.førsteUttaksdato());
+    }
+
+    private record ForespørselLikhetssjekk(Arbeidsgiver arbeidsgiver,
+                                           AktørId aktørId,
+                                           Ytelsetype ytelseType,
+                                           ForespørselStatus status,
+                                           ForespørselType forespørselType,
+                                           LocalDate skjæringstidspunkt,
+                                           LocalDate førsteUttaksdato) {};
 }
 
