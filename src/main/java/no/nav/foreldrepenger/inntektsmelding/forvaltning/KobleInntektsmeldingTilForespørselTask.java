@@ -94,7 +94,9 @@ public class KobleInntektsmeldingTilForespørselTask implements ProsessTaskHandl
     }
 
     private void finnBesteMatchUtfraOpprettetTidOgStartdato(InntektsmeldingEntitet im, List<ForespørselDto> matchendeForespørsler) {
-        var forespørslerOpprettetFørImMedMatchendeStartdato = matchendeForespørsler.stream().filter(f -> f.opprettetTidspunkt().isBefore(im.getOpprettetTidspunkt())
+        // Arbeidsgiverinitierte forespørsler kan bli lagret opptil ett sekund etter inntektsmeldingen, så vi tillater et lite vindu
+        var grenseTidspunkt = im.getOpprettetTidspunkt().plusSeconds(1);
+        var forespørslerOpprettetFørImMedMatchendeStartdato = matchendeForespørsler.stream().filter(f -> f.opprettetTidspunkt().isBefore(grenseTidspunkt)
             && im.getStartDato()
             .equals(f.førsteUttaksdato())).toList();
         if (forespørslerOpprettetFørImMedMatchendeStartdato.isEmpty()) {
