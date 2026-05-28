@@ -105,13 +105,23 @@ public class KobleInntektsmeldingTilForespørselTask implements ProsessTaskHandl
             oppdaterInntektsmeldingMedForespørsel(im, forespørslerOpprettetFørImMedMatchendeStartdato.getFirst());
         } else {
             var aktiveForespørsler = forespørslerOpprettetFørImMedMatchendeStartdato.stream().filter(f -> !ForespørselStatus.UTGÅTT.equals(f.status())).toList();
-            if (aktiveForespørsler.size() == 1) {
+            // Hvis ingen forespørsler lenger er aktive / ferdige, tar vi den siste utgåtte
+            if (aktiveForespørsler.isEmpty()) {
+                var sisteUtgåtteForespørsel = forespørslerOpprettetFørImMedMatchendeStartdato.stream()
+                    .max(Comparator.comparing(ForespørselDto::opprettetTidspunkt))
+                    .orElseThrow();
+                oppdaterInntektsmeldingMedForespørsel(im, sisteUtgåtteForespørsel);
+            }
+            else if (aktiveForespørsler.size() == 1) {
                 oppdaterInntektsmeldingMedForespørsel(im, aktiveForespørsler.getFirst());
-            } else if (aktiveForespørsler.stream().map(this::mapForLikhetssjekk).collect(Collectors.toSet()).size() == 1) {
+            }
+            // Flere forespørsler som alle er identiske, tar bare den siste opprettede
+            else if (aktiveForespørsler.stream().map(this::mapForLikhetssjekk).collect(Collectors.toSet()).size() == 1) {
                 var nyesteForespørsel = aktiveForespørsler.stream().max(Comparator.comparing(ForespørselDto::opprettetTidspunkt)).orElseThrow();
                 LOG.info("Fant {} like forespørsler for inntektsmelding {}. Velger {}, som er den siste", aktiveForespørsler.size(), im.getId(), nyesteForespørsel.uuid());
                 oppdaterInntektsmeldingMedForespørsel(im, nyesteForespørsel);
-            } else {
+            }
+            else {
                 // Her mistenker vi at kun arbeidsgiverinitiert IM gjennstår, da disse ikke nødvendigvis vil matche på startdato hvis den er blitt endret, men vi logger i første omgang for å være sikker
                 var forespørselUuider = matchendeForespørsler.stream().map(ForespørselDto::uuid).toList();
                 LOG.info("KOBLE_INNTEKTSMELDINGER_FEIL: Klarte ikke identifisere hvilken forespørsel inntektsmelding {} skal kobles til. Fant følgende forespørsler: {}", im.getId(), forespørselUuider);
