@@ -127,7 +127,7 @@ public class DialogportenRequestMapper {
         var transmissionContent = new DialogportenRequest.Content(contentTransmission, null, null);
 
         //attachement med kvittering
-        var apiActions = inntektsmeldingUuid.map(imUuid -> {
+        var attachements = inntektsmeldingUuid.map(imUuid -> {
             var innsendingTekst = førsteInnsending ? "Innsendt inntektsmelding" : "Oppdatert inntektsmelding";
             var contentAttachement = List.of(new DialogportenRequest.ContentValueItem(innsendingTekst, DialogportenRequest.NB));
             String urlPdf = new StringBuilder(inntektsmeldingSkjemaLenke)
@@ -149,7 +149,7 @@ public class DialogportenRequestMapper {
             DialogportenRequest.ExtendedType.INNTEKTSMELDING,
             new DialogportenRequest.Sender("PartyRepresentative", actorId),
             transmissionContent,
-            apiActions);
+            attachements);
 
         //patch
         return new DialogportenPatchRequest(DialogportenPatchRequest.OP_ADD,
