@@ -33,6 +33,7 @@ public class DialogportenKlient {
     private final String sendInntektsmeldingApiLenke;
     private final String hentForespørselApiLenke;
     private final String apiDokumentasjonLenke;
+    private final String hentInntektsmeldingApiLenke;
 
     DialogportenKlient() {
         this(RestClient.client());
@@ -45,6 +46,7 @@ public class DialogportenKlient {
         this.arbeidsgiverportalSkjemaLenke = ENV.getProperty("inntektsmelding.skjema.lenke", "https://arbeidsgiver.nav.no/fp-im-dialog");
         this.sendInntektsmeldingApiLenke = ENV.getProperty("inntektsmelding.api.lenke", "https://foreldrepenger-inntektsmelding-api.ekstern.nav.no/v1/inntektsmelding/send-inn");
         this.hentForespørselApiLenke = ENV.getProperty("foresporsel.api.lenke", "https://foreldrepenger-inntektsmelding-api.ekstern.nav.no/v1/forespoersel");
+        this.hentInntektsmeldingApiLenke = ENV.getProperty("inntektsmelding.hent.api.lenke", "https://foreldrepenger-inntektsmelding-api.ekstern.nav.no/v1/forespoersel");
         this.apiDokumentasjonLenke = ENV.getProperty("inntektsmelding.dokumentasjon.lenke", "https://foreldrepenger-inntektsmelding-api.ekstern.dev.nav.no/swagger/");
     }
 
@@ -83,7 +85,8 @@ public class DialogportenKlient {
             førsteUttaksdato,
             inntektsmeldingUuid,
             lukkeÅrsak,
-            arbeidsgiverportalSkjemaLenke);
+            arbeidsgiverportalSkjemaLenke,
+            hentInntektsmeldingApiLenke);
         sendPatchRequest(dialogUuid, patchRequestFerdig);
     }
 
@@ -93,7 +96,8 @@ public class DialogportenKlient {
         var patchRequestInnsendt = DialogportenRequestMapper.opprettInnsendtInntektsmeldingPatchRequest(
             arbeidsgiver,
             inntektsmeldingUuid,
-            arbeidsgiverportalSkjemaLenke);
+            arbeidsgiverportalSkjemaLenke,
+            hentInntektsmeldingApiLenke);
         sendPatchRequest(dialogUuid, patchRequestInnsendt);
     }
 

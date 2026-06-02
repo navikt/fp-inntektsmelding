@@ -18,6 +18,7 @@ class DialogportenRequestMapperTest {
     private static final Arbeidsgiver ARBEIDSGIVER = Arbeidsgiver.fra("999999999");
     private static final UUID FORESPØRSEL_UUID = UUID.randomUUID();
     private static final String INNTEKTSMELDING_SKJEMA_LENKE = "https://arbeidsgiver.nav.no/fp-im-dialog";
+    private static final String HENT_INNTEKTSMELDING_API_LENKE = "https://foreldrepenger-inntektsmelding-api.ekstern.nav.no/v1/inntektsmelding/hent";
     private static final String INNTEKTSMELDING_API_LENKE = "https://foreldrepenger-inntektsmelding-api.ekstern.nav.no/v1/inntektsmelding/send-inn";
     private final String FORESPORSEL_API_LENKE = "https://foreldrepenger-inntektsmelding-api.ekstern.nav.no/foresporsel-ekstern/hent";
     private final String DOKUMENTASJONS_LENKE = "https://foreldrepenger-inntektsmelding-api.ekstern.dev.nav.no/swagger";
@@ -62,7 +63,7 @@ class DialogportenRequestMapperTest {
             FØRSTE_UTTAKSDATO,
             Optional.of(FORESPØRSEL_UUID),
             null,
-            INNTEKTSMELDING_SKJEMA_LENKE);
+            INNTEKTSMELDING_SKJEMA_LENKE, HENT_INNTEKTSMELDING_API_LENKE);
 
         var ops = ferdigstillPatchRequest.stream().map(DialogportenPatchRequest::op).toList();
         var paths = ferdigstillPatchRequest.stream().map(DialogportenPatchRequest::path).toList();
@@ -85,6 +86,7 @@ class DialogportenRequestMapperTest {
         assertThat(patchValue.toString()).contains("Innsendt inntektsmelding");
         assertThat(patchValue.toString()).contains("urn:altinn:organization:identifier-no:999999999");
         assertThat(patchValue.toString()).contains("url=https://arbeidsgiver.nav.no/fp-im-dialog/server/api/pdf/inntektsmelding/");
+        assertThat(patchValue.toString()).contains(HENT_INNTEKTSMELDING_API_LENKE + "/" + FORESPØRSEL_UUID);
     }
 
     @Test
@@ -95,7 +97,8 @@ class DialogportenRequestMapperTest {
             FØRSTE_UTTAKSDATO,
             Optional.of(FORESPØRSEL_UUID),
             LukkeÅrsak.EKSTERN_INNSENDING,
-            INNTEKTSMELDING_SKJEMA_LENKE);
+            INNTEKTSMELDING_SKJEMA_LENKE,
+            HENT_INNTEKTSMELDING_API_LENKE);
 
         var ops = ferdigstillPatchRequest.stream().map(DialogportenPatchRequest::op).toList();
         var paths = ferdigstillPatchRequest.stream().map(DialogportenPatchRequest::path).toList();
@@ -143,7 +146,8 @@ class DialogportenRequestMapperTest {
         var innsendtInntektsmeldingRequest = DialogportenRequestMapper.opprettInnsendtInntektsmeldingPatchRequest(
             ARBEIDSGIVER,
             Optional.of(FORESPØRSEL_UUID),
-            INNTEKTSMELDING_SKJEMA_LENKE);
+            INNTEKTSMELDING_SKJEMA_LENKE,
+            HENT_INNTEKTSMELDING_API_LENKE);
 
         var patchValue = innsendtInntektsmeldingRequest.stream().map(DialogportenPatchRequest::value).toList();
 
@@ -151,5 +155,6 @@ class DialogportenRequestMapperTest {
         assertThat(patchValue).hasSize(1);
         assertThat(patchValue.toString()).contains("Oppdatert inntektsmelding er mottatt");
         assertThat(patchValue.toString()).contains(INNTEKTSMELDING_SKJEMA_LENKE);
+        assertThat(patchValue.toString()).contains(HENT_INNTEKTSMELDING_API_LENKE + "/" + FORESPØRSEL_UUID);
     }
 }
