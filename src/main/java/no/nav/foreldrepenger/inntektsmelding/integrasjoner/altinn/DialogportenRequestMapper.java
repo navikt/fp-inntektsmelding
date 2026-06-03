@@ -69,13 +69,14 @@ public class DialogportenRequestMapper {
             List.of(apiAction));
     }
 
-    public static List<DialogportenPatchRequest> opprettFerdigstillPatchRequest(String sakstittel,
-                                                                                Arbeidsgiver arbeidsgiver,
-                                                                                Ytelsetype ytelsetype,
-                                                                                LocalDate førsteUttaksdato,
-                                                                                Optional<UUID> inntektsmeldingUuid,
-                                                                                LukkeÅrsak årsak,
-                                                                                String inntektsmeldingSkjemaLenke) {
+    public static List<DialogportenPatchRequest>  opprettFerdigstillPatchRequest(String sakstittel,
+                                                                                 Arbeidsgiver arbeidsgiver,
+                                                                                 Ytelsetype ytelsetype,
+                                                                                 LocalDate førsteUttaksdato,
+                                                                                 Optional<UUID> inntektsmeldingUuid,
+                                                                                 LukkeÅrsak årsak,
+                                                                                 String inntektsmeldingSkjemaLenke,
+                                                                                 String hentInntektsmeldingApiLenke) {
         //oppdatere status på meldingen til fullført
         var patchStatus = new DialogportenPatchRequest(DialogportenPatchRequest.OP_REPLACE,
             DialogportenPatchRequest.PATH_STATUS,
@@ -90,18 +91,22 @@ public class DialogportenRequestMapper {
             DialogportenPatchRequest.PATH_CONTENT,
             contentRequest);
 
-        var patchTransmission = inntektsmeldingMottattTransmission(arbeidsgiver, inntektsmeldingUuid, årsak, inntektsmeldingSkjemaLenke, true);
+        var patchTransmission = inntektsmeldingMottattTransmission(arbeidsgiver, inntektsmeldingUuid, årsak, inntektsmeldingSkjemaLenke,
+            hentInntektsmeldingApiLenke,
+            true);
 
         return List.of(patchStatus, patchContent, patchTransmission);
     }
 
     public static List<DialogportenPatchRequest> opprettInnsendtInntektsmeldingPatchRequest(Arbeidsgiver arbeidsgiver,
                                                                                             Optional<UUID> inntektsmeldingUuid,
-                                                                                            String inntektsmeldingSkjemaLenke) {
+                                                                                            String inntektsmeldingSkjemaLenke,
+                                                                                            String hentInntektsmeldingApiLenke) {
         var patchTransmission = inntektsmeldingMottattTransmission(arbeidsgiver,
             inntektsmeldingUuid,
             LukkeÅrsak.ORDINÆR_INNSENDING,
             inntektsmeldingSkjemaLenke,
+            hentInntektsmeldingApiLenke,
             false);
 
         return List.of(patchTransmission);
@@ -111,6 +116,7 @@ public class DialogportenRequestMapper {
                                                                                Optional<UUID> inntektsmeldingUuid,
                                                                                LukkeÅrsak årsak,
                                                                                String inntektsmeldingSkjemaLenke,
+                                                                               String hentInntektsmeldingApiLenke,
                                                                                boolean førsteInnsending) {
         //Ny transmission som sier at inntektsmelding er mottatt, og med en lenke til kvittering. Ekstern innsending har ingen kvittering.
         var mottattTekst = førsteInnsending ? "Inntektsmelding er mottatt" : "Oppdatert inntektsmelding er mottatt";
@@ -121,16 +127,19 @@ public class DialogportenRequestMapper {
         var transmissionContent = new DialogportenRequest.Content(contentTransmission, null, null);
 
         //attachement med kvittering
-        var apiActions = inntektsmeldingUuid.map(imUuid -> {
+        var attachements = inntektsmeldingUuid.map(imUuid -> {
             var innsendingTekst = førsteInnsending ? "Innsendt inntektsmelding" : "Oppdatert inntektsmelding";
             var contentAttachement = List.of(new DialogportenRequest.ContentValueItem(innsendingTekst, DialogportenRequest.NB));
-            String url = new StringBuilder(inntektsmeldingSkjemaLenke)
+            String urlPdf = new StringBuilder(inntektsmeldingSkjemaLenke)
                 .append("/server/api")
                 .append(PdfDokumentRest.INNTEKTSMELDING_FULL_PATH)
                 .append("/")
                 .append(imUuid).toString();
-            var urlApi = new DialogportenRequest.Url(url, DialogportenRequest.TEXT_PLAIN, DialogportenRequest.AttachmentUrlConsumerType.Api);
-            var urlGui = new DialogportenRequest.Url(url, DialogportenRequest.TEXT_PLAIN, DialogportenRequest.AttachmentUrlConsumerType.Gui);
+            var urlJson = new StringBuilder(hentInntektsmeldingApiLenke)
+                .append("/")
+                .append(imUuid).toString();
+            var urlApi = new DialogportenRequest.Url(urlJson, DialogportenRequest.APPLICATION_JSON, DialogportenRequest.AttachmentUrlConsumerType.Api);
+            var urlGui = new DialogportenRequest.Url(urlPdf, DialogportenRequest.APPLICATION_PDF, DialogportenRequest.AttachmentUrlConsumerType.Gui);
             var attachment = new DialogportenRequest.Attachment(contentAttachement, List.of(urlApi, urlGui));
             return List.of(attachment);
         }).orElse(List.of());
@@ -140,7 +149,7 @@ public class DialogportenRequestMapper {
             DialogportenRequest.ExtendedType.INNTEKTSMELDING,
             new DialogportenRequest.Sender("PartyRepresentative", actorId),
             transmissionContent,
-            apiActions);
+            attachements);
 
         //patch
         return new DialogportenPatchRequest(DialogportenPatchRequest.OP_ADD,

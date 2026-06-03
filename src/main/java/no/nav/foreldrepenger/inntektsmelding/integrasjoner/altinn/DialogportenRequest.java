@@ -16,6 +16,8 @@ public record DialogportenRequest(@NotNull String serviceResource,
                                   List<ApiAction> apiActions) {
 
     public static final String TEXT_PLAIN = "text/plain";
+    public static final String APPLICATION_PDF = "application/pdf";
+    public static final String APPLICATION_JSON = "application/json";
     public static final String NB = "nb";
     public static final String ACTION_READ = "read";
     public static final String ACTION_WRITE = "write";

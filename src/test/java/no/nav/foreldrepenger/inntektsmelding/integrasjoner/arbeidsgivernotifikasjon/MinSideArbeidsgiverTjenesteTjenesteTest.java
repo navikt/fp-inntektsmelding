@@ -1,7 +1,6 @@
 package no.nav.foreldrepenger.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon;
 
-import static no.nav.foreldrepenger.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon.MinSideArbeidsgiverTjenesteImpl.SERVICE_CODE;
-import static no.nav.foreldrepenger.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon.MinSideArbeidsgiverTjenesteImpl.SERVICE_EDITION_CODE;
+import static no.nav.foreldrepenger.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon.MinSideArbeidsgiverTjenesteImpl.ALTINN_INNTEKTSMELDING_RESSURS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 
@@ -77,6 +76,7 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
         var expectedGrupperingsid = "id-som-knytter-sak-til-notifikasjon";
         var expectedVirksomhetsnummer = "2342342334";
         var expectedNotifikasjonsTekst = "Du har en ny oppgave i AG-portalen";
+        var expectedTittel = "Nav trenger inntektsmelding";
         var expectedEksternvarselTekst = "En ansatt har søkt foreldrepenger";
         var expectedPåminnelseTekst = "Påmminnelse: En ansatt har søkt foreldrepenger";
         var expectedNotifikasjonsLenke = "https://arbeidsgiver-portal.com";
@@ -104,9 +104,7 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
         var nyOppgave = (NyOppgaveInput) input.get(inputKey);
 
         assertThat(nyOppgave.getMottaker()).isNotNull();
-        assertThat(nyOppgave.getMottaker().getAltinn().getServiceCode()).isEqualTo(SERVICE_CODE);
-        assertThat(nyOppgave.getMottaker().getAltinn().getServiceEdition()).isEqualTo(SERVICE_EDITION_CODE);
-
+        assertThat(nyOppgave.getMottaker().getAltinnRessurs().getRessursId()).isEqualTo(ALTINN_INNTEKTSMELDING_RESSURS);
         assertThat(nyOppgave.getMetadata()).isNotNull();
         assertThat(nyOppgave.getMetadata().getEksternId()).isNotNull().isEqualTo(expectedEksternId);
         assertThat(nyOppgave.getMetadata().getGrupperingsid()).isNotNull().isEqualTo(expectedGrupperingsid);
@@ -119,13 +117,14 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
         assertThat(nyOppgave.getNotifikasjon().getMerkelapp()).isEqualTo(expectedNotifikasjonsMerkelapp.getBeskrivelse());
 
         assertThat(nyOppgave.getEksterneVarsler()).hasSize(1);
-        assertThat(nyOppgave.getEksterneVarsler().getFirst().getAltinntjeneste()).isNotNull();
-        assertThat(nyOppgave.getEksterneVarsler().getFirst().getAltinntjeneste().getInnhold()).isEqualTo(expectedEksternvarselTekst);
+        assertThat(nyOppgave.getEksterneVarsler().getFirst().getAltinnressurs()).isNotNull();
+        assertThat(nyOppgave.getEksterneVarsler().getFirst().getAltinnressurs().getEpostTittel()).isEqualTo(expectedTittel);
+        assertThat(nyOppgave.getEksterneVarsler().getFirst().getAltinnressurs().getEpostHtmlBody()).isEqualTo(expectedEksternvarselTekst);
 
         assertThat(nyOppgave.getPaaminnelse()).isNotNull();
         assertThat(nyOppgave.getPaaminnelse().getEksterneVarsler()).isNotNull().hasSize(1);
-        assertThat(nyOppgave.getPaaminnelse().getEksterneVarsler().getFirst().getAltinntjeneste()).isNotNull();
-        assertThat(nyOppgave.getPaaminnelse().getEksterneVarsler().getFirst().getAltinntjeneste().getInnhold()).isEqualTo(expectedPåminnelseTekst);
+        assertThat(nyOppgave.getPaaminnelse().getEksterneVarsler().getFirst().getAltinnressurs()).isNotNull();
+        assertThat(nyOppgave.getPaaminnelse().getEksterneVarsler().getFirst().getAltinnressurs().getEpostHtmlBody()).isEqualTo(expectedPåminnelseTekst);
 
         assertThat(nyOppgave.getFrist()).isNull();
         assertThat(nyOppgave.getMottakere()).isEmpty();
