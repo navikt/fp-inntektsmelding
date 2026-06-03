@@ -418,36 +418,6 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
             .build();
     }
 
-    @Test
-    void skal_oppdatere_inntektsmelding_med_forespørsel() {
-        // Arrange - lagre IM uten forespørsel-kobling
-        var aktørId = "9999999999999";
-        var orgnr = "999999999";
-        var im = InntektsmeldingEntitet.builder()
-            .medAktørId(new AktørIdEntitet(aktørId))
-            .medKontaktperson(new KontaktpersonEntitet("Test", "999999999"))
-            .medYtelsetype(Ytelsetype.FORELDREPENGER)
-            .medMånedInntekt(BigDecimal.valueOf(4000))
-            .medStartDato(LocalDate.now())
-            .medArbeidsgiverIdent(orgnr)
-            .medKildesystem(Kildesystem.FPSAK)
-            .build();
-        var id = inntektsmeldingRepository.lagreInntektsmelding(im);
-
-        var forespørselEntitet = lagreForespørsel(aktørId, orgnr, Ytelsetype.FORELDREPENGER);
-        var hentetUtenForespørsel = inntektsmeldingRepository.hent(id);
-
-        assertThat(hentetUtenForespørsel.getForespørsel()).isEmpty();
-        // Act
-        inntektsmeldingRepository.oppdaterImMedForespørsel(im, forespørselEntitet);
-
-        // Assert
-        var hentetMedForespørsel = inntektsmeldingRepository.hent(id);
-        assertThat(hentetMedForespørsel).isNotNull();
-        assertThat(hentetMedForespørsel.getForespørsel()).isPresent();
-        assertThat(hentetMedForespørsel.getForespørsel().get().getUuid()).isEqualTo(forespørselEntitet.getUuid());
-    }
-
     private ForespørselEntitet lagreForespørsel(String aktørId, String orgnr, Ytelsetype ytelsetype) {
         var forespørselEntitet = new ForespørselEntitet(orgnr,
             LocalDate.now(),

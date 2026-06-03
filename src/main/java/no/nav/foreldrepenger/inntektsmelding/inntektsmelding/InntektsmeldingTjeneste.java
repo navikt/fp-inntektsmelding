@@ -79,14 +79,4 @@ public class InntektsmeldingTjeneste {
             .map(InntektsmeldingDtoMapper::mapFraEntitet)
             .toList();
     }
-
-    /**
-     * Kun for bruk til å migrere gamle inntektsmeldinger som ikke er knyttet til en forespørsel
-     * @param im
-     * @param forespørsel
-     */
-    public void oppdaterInntektsmelding(InntektsmeldingEntitet im, ForespørselDto forespørsel) {
-        var forespørselEntitet = forespørselRepository.hentForespørsel(forespørsel.uuid()).orElseThrow();
-        inntektsmeldingRepository.oppdaterImMedForespørsel(im, forespørselEntitet);
-    }
 }

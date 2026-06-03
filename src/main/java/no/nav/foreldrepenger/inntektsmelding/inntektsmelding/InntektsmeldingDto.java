@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.EndringsårsakType;
@@ -32,6 +33,7 @@ public class InntektsmeldingDto {
     private final List<BortfaltNaturalytelse> bortfaltNaturalytelsePerioder;
     private final List<Endringsårsak> endringAvInntektÅrsaker;
     private final String opprettetAv;
+    private final ForespørselDto forespørsel;
     private final InntektsmeldingStatus status;
 
     private InntektsmeldingDto(Builder builder) {
@@ -53,6 +55,7 @@ public class InntektsmeldingDto {
         this.bortfaltNaturalytelsePerioder = builder.bortfaltNaturalytelsePerioder;
         this.endringAvInntektÅrsaker = builder.endringAvInntektÅrsaker;
         this.status = builder.status;
+        this.forespørsel = builder.forespørsel;
     }
 
     public static Builder builder() {
@@ -131,6 +134,10 @@ public class InntektsmeldingDto {
         return status;
     }
 
+    public ForespørselDto getForespørsel() {
+        return forespørsel;
+    }
+
     public static class Builder {
         private Long id;
         private UUID inntektsmeldingUuid;
@@ -150,6 +157,7 @@ public class InntektsmeldingDto {
         private List<BortfaltNaturalytelse> bortfaltNaturalytelsePerioder;
         private List<Endringsårsak> endringAvInntektÅrsaker;
         private InntektsmeldingStatus status;
+        private ForespørselDto forespørsel;
 
         private Builder() {
         }
@@ -241,6 +249,11 @@ public class InntektsmeldingDto {
 
         public Builder medStatus(InntektsmeldingStatus status) {
             this.status = status;
+            return this;
+        }
+
+        public Builder medForespørsel(ForespørselDto forespørsel) {
+            this.forespørsel = forespørsel;
             return this;
         }
 

@@ -179,13 +179,6 @@ public class InntektsmeldingEntitet {
         return Optional.ofNullable(forespørsel);
     }
 
-    void setForespørsel(ForespørselEntitet forespørsel) {
-        if (this.forespørsel != null) {
-            throw new IllegalStateException("Kan ikke endre koblet forespørsel hvis inntektsmelding allerede har denne satt");
-        }
-        this.forespørsel = forespørsel;
-    }
-
     private void leggTilRefusjonsendring(RefusjonsendringEntitet refusjonsendringEntitet) {
         if (refusjonsendringer.stream().anyMatch(r -> r.getFom().equals(refusjonsendringEntitet.getFom()))) {
             throw new IllegalStateException("Det finnes allerede en refusjonsendring for denne datoen: " + refusjonsendringEntitet.getFom());
