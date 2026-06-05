@@ -16,7 +16,7 @@ Backend for employer inntektsmelding flows.
 | Tech stack | Standard fp Java backend using `fp-prosesstask`                                                |
 | Data       | PostgreSQL forepørsler and received inntektsmeldinger                                          |
 
-Team FAGER is responsible for Nav's employer portal: Inntektsmelding flows are included in this portal: tasks, messages, and links to `fp-inntektsmelding-frontend` for submitting inntektsmelding. FAGER use AltInn for distributing sms and emails to employers. 
+Team FAGER is responsible for Nav's employer portal (MinSide Arbeidsgiver): Inntektsmelding flows are included in this portal: tasks, messages, and links to `fp-inntektsmelding-frontend` for submitting inntektsmelding. FAGER use AltInn for distributing sms and emails to employers. 
 
 Data sources / REST integrations besides PDL:
 - Aa-register: employment data
