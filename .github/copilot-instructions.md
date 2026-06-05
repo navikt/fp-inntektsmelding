@@ -16,11 +16,13 @@ Backend for employer inntektsmelding flows.
 | Tech stack | Standard fp Java backend using `fp-prosesstask`                                                |
 | Data       | PostgreSQL forepørsler and received inntektsmeldinger                                          |
 
+Team FAGER is responsible for Nav's employer portal: Inntektsmelding flows are included in this portal: tasks, messages, and links to `fp-inntektsmelding-frontend` for submitting inntektsmelding. FAGER use AltInn for distributing sms and emails to employers. 
+
 Data sources / REST integrations besides PDL:
 - Aa-register: employment data
 - EREG: Company registration data (source Brreg)
 - Inntekt: Monthly income - proxy for Skatteetaten Inntekt API
-- FAGER: Main employer portal in Nav and bridge to AltInn. Creates and queries requests for inntektmelding.
+- MinSideArbeidsgiver (FAGER): Creates and queries requests for inntektmelding.
 - Joark: Journaling incoming inntektsmelding
 - `fp-sak`: Sak information for non-requested inntektsmeldinger
 - `fp-dokgen`: Generating PDF for inntektsmelding journaling, and receipts
