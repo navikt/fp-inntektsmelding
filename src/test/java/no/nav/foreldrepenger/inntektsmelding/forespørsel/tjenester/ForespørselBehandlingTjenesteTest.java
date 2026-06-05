@@ -43,6 +43,7 @@ import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
+import no.nav.vedtak.felles.prosesstask.api.ProsessTaskTjeneste;
 import no.nav.vedtak.felles.testutilities.db.EntityManagerAwareTest;
 
 @ExtendWith({JpaExtension.class, MockitoExtension.class})
@@ -67,6 +68,8 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
     private OrganisasjonTjeneste organisasjonTjeneste;
     @Mock
     private DialogportenKlient dialogportenKlient;
+    @Mock
+    private ProsessTaskTjeneste prosessTaskTjeneste;
 
     private ForespørselRepository forespørselRepository;
     private ForespørselBehandlingTjeneste forespørselBehandlingTjeneste;
@@ -74,11 +77,10 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
     @BeforeEach
     void setUp() {
         this.forespørselRepository = new ForespørselRepository(getEntityManager());
-        this.forespørselBehandlingTjeneste = new ForespørselBehandlingTjeneste(KVITTERING_BASE_URL, new ForespørselTjeneste(forespørselRepository),
-            minSideArbeidsgiverTjeneste,
+        this.forespørselBehandlingTjeneste = new ForespørselBehandlingTjeneste(
+            new ForespørselTjeneste(forespørselRepository),
             personTjeneste,
-            organisasjonTjeneste,
-            dialogportenKlient);
+            prosessTaskTjeneste);
     }
 
     @Test

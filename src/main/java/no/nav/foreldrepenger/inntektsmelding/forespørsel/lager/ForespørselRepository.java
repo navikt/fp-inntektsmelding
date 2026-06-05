@@ -102,6 +102,22 @@ public class ForespørselRepository {
         entityManager.flush();
     }
 
+    public void ferdigstillForespørselByUuid(UUID forespørselUuid) {
+        var entitet = hentForespørsel(forespørselUuid)
+            .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel med uuid: " + forespørselUuid));
+        entitet.setStatus(ForespørselStatus.FERDIG);
+        entityManager.persist(entitet);
+        entityManager.flush();
+    }
+
+    public void settForespørselTilUtgåttByUuid(UUID forespørselUuid) {
+        var entitet = hentForespørsel(forespørselUuid)
+            .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel med uuid: " + forespørselUuid));
+        entitet.setStatus(ForespørselStatus.UTGÅTT);
+        entityManager.persist(entitet);
+        entityManager.flush();
+    }
+
 
     public List<ForespørselEntitet> hentForespørslerPåSak(String fagsakSaksnummer) {
         var query = entityManager.createQuery("FROM ForespørselEntitet f where fagsystemSaksnummer = :saksnr", ForespørselEntitet.class)

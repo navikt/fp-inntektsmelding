@@ -81,6 +81,14 @@ public class ForespørselTjeneste {
         forespørselRepository.settForespørselTilUtgått(arbeidsgiverNotifikasjonSakId);
     }
 
+    public void ferdigstillForespørselByUuid(UUID forespørselUuid) {
+        forespørselRepository.ferdigstillForespørselByUuid(forespørselUuid);
+    }
+
+    public void settForespørselTilUtgåttByUuid(UUID forespørselUuid) {
+        forespørselRepository.settForespørselTilUtgåttByUuid(forespørselUuid);
+    }
+
     public Optional<ForespørselDto> finnGjeldendeForespørsel(LocalDate skjæringstidspunkt,
                                                              Ytelsetype ytelseType,
                                                              AktørId brukerAktørId,
