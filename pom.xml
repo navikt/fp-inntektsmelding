@@ -20,8 +20,8 @@
 
         <felles.version>7.8.2</felles.version>
         <prosesstask.version>5.2.6</prosesstask.version>
-        <fp-kontrakter.version>9.4.33</fp-kontrakter.version>
-        <fp-graphql.version>1.0.0</fp-graphql.version>
+        <fp-kontrakter.version>9.4.34</fp-kontrakter.version>
+        <fp-graphql.version>1.0.1</fp-graphql.version>
     </properties>
 
     <dependencyManagement>
