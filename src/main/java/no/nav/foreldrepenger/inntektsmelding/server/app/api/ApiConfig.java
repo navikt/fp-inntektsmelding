@@ -20,6 +20,7 @@ import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.aginitiert.Arbeidsgiv
 import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.kvittering.PdfDokumentRest;
 import no.nav.foreldrepenger.inntektsmelding.overstyring.rest.InntektsmeldingFpsakRest;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.AutentiseringAnnoteringFilter;
+import no.nav.vedtak.server.rest.AuthenticationFilter;
 import no.nav.vedtak.server.rest.FpRestJackson2Feature;
 import no.nav.vedtak.server.rest.RestSecureLogFeature;
 
@@ -31,6 +32,7 @@ public class ApiConfig extends ResourceConfig {
 
     public ApiConfig() {
         LOG.info("Initialiserer: {}", API_URI);
+        register(AuthenticationFilter.class);
         register(FpRestJackson2Feature.class);
         // Sørger for logging av feil (validering og annet) til sikkerlogg
         register(RestSecureLogFeature.class);
