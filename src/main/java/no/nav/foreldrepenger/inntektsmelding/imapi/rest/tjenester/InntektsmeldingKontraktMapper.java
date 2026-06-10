@@ -8,6 +8,7 @@ import no.nav.foreldrepenger.inntektsmelding.felles.BortfaltNaturalytelseDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.EndringsårsakDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.EndringsårsakerDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.FødselsnummerDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.InntektsmeldingStatusDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.KontaktpersonDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.NaturalytelsetypeDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.OrganisasjonsnummerDto;
@@ -68,8 +69,16 @@ public class InntektsmeldingKontraktMapper {
                 .toList(),
             inntektsmelding.getEndringAvInntektÅrsaker().stream()
                 .map(e -> new EndringsårsakerDto(EndringsårsakDto.valueOf(e.årsak().name()), e.fom(), e.tom(), e.bleKjentFom()))
-                .toList()
+                .toList(),
+            mapStatus(inntektsmelding.getStatus())
         );
+    }
+
+    private InntektsmeldingStatusDto mapStatus(no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingStatusDto status) {
+        if (status == null) {
+            return null;
+        }
+        return InntektsmeldingStatusDto.valueOf(status.name());
     }
 
     private YtelseTypeDto mapKodeverk(Ytelsetype ytelse) {

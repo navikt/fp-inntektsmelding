@@ -10,6 +10,7 @@ import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.EndringsårsakType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingStatusDto;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.NaturalytelseType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 
@@ -31,6 +32,7 @@ public class InntektsmeldingDto {
     private final List<BortfaltNaturalytelse> bortfaltNaturalytelsePerioder;
     private final List<Endringsårsak> endringAvInntektÅrsaker;
     private final String opprettetAv;
+    private final InntektsmeldingStatusDto status;
 
     private InntektsmeldingDto(Builder builder) {
         this.id = builder.id;
@@ -50,6 +52,7 @@ public class InntektsmeldingDto {
         this.søkteRefusjonsperioder = builder.søkteRefusjonsperioder;
         this.bortfaltNaturalytelsePerioder = builder.bortfaltNaturalytelsePerioder;
         this.endringAvInntektÅrsaker = builder.endringAvInntektÅrsaker;
+        this.status = builder.status;
     }
 
     public static Builder builder() {
@@ -100,6 +103,10 @@ public class InntektsmeldingDto {
         return opprettetAv;
     }
 
+    public InntektsmeldingStatusDto getStatus() {
+        return status;
+    }
+
     public AvsenderSystem getAvsenderSystem() {
         return avsenderSystem;
     }
@@ -142,6 +149,7 @@ public class InntektsmeldingDto {
         private List<SøktRefusjon> søkteRefusjonsperioder;
         private List<BortfaltNaturalytelse> bortfaltNaturalytelsePerioder;
         private List<Endringsårsak> endringAvInntektÅrsaker;
+        private InntektsmeldingStatusDto status;
 
         private Builder() {
         }
@@ -228,6 +236,11 @@ public class InntektsmeldingDto {
 
         public Builder medEndringAvInntektÅrsaker(List<Endringsårsak> endringAvInntektÅrsaker) {
             this.endringAvInntektÅrsaker = endringAvInntektÅrsaker;
+            return this;
+        }
+
+        public Builder medStatus(InntektsmeldingStatusDto status) {
+            this.status = status;
             return this;
         }
 

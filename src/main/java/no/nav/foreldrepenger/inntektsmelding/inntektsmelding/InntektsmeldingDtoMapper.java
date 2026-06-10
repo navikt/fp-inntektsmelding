@@ -47,6 +47,7 @@ public class InntektsmeldingDtoMapper {
             .medEndringAvInntektÅrsaker(entitet.getEndringsårsaker().stream().map(InntektsmeldingDtoMapper::mapEndringsårsak).toList())
             .medAvsenderSystem(entitet.getLpsSystem() != null ? new InntektsmeldingDto.AvsenderSystem(entitet.getLpsSystem().getNavn(),
                 entitet.getLpsSystem().getVersjon()) : null)
+            .medStatus(null)
             .build();
     }
 
