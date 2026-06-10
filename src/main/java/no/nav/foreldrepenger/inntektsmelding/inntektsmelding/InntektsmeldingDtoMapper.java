@@ -47,6 +47,7 @@ public class InntektsmeldingDtoMapper {
             .medEndringAvInntektÅrsaker(entitet.getEndringsårsaker().stream().map(InntektsmeldingDtoMapper::mapEndringsårsak).toList())
             .medAvsenderSystem(entitet.getLpsSystem() != null ? new InntektsmeldingDto.AvsenderSystem(entitet.getLpsSystem().getNavn(),
                 entitet.getLpsSystem().getVersjon()) : null)
+            .medStatus(entitet.getStatus())
             .build();
     }
 
@@ -113,6 +114,10 @@ public class InntektsmeldingDtoMapper {
 
         mapKontaktperson(inntektsmeldingDto.getKontaktperson()).ifPresent(builder::medKontaktperson);
         mapLpsSystemInformasjon(inntektsmeldingDto.getAvsenderSystem()).ifPresent(builder::medLpsSystemInfo);
+
+        if (inntektsmeldingDto.getStatus() != null) {
+            builder.medStatus(inntektsmeldingDto.getStatus());
+        }
 
         return builder.build();
     }

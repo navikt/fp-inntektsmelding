@@ -18,6 +18,7 @@ import no.nav.foreldrepenger.inntektsmelding.felles.EndringsårsakerDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.FødselsnummerDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.InnsendingstypeDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.InnsendingsårsakDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.InntektsmeldingStatusDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.KontaktpersonDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.OrganisasjonsnummerDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.SøktRefusjonDto;
@@ -38,7 +39,8 @@ public record HentInntektsmeldingResponse(
     @NotNull @Valid AvsenderSystemDto avsenderSystem,
     @NotNull List<@Valid SøktRefusjonDto> refusjonsendringer,
     @NotNull List<@Valid BortfaltNaturalytelseDto> bortfaltNaturalytelsePerioder,
-    @NotNull List<@Valid EndringsårsakerDto> endringAvInntektÅrsaker
+    @NotNull List<@Valid EndringsårsakerDto> endringAvInntektÅrsaker,
+    @NotNull @Valid InntektsmeldingStatusDto status
 ) {
 
 }

@@ -62,6 +62,7 @@ public class InntektsmeldingApiMottakTjeneste {
         var forespørsel = forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid).orElse(null);
         if (forespørsel == null) {
             LOG.info("Finner ikke forespørsel for uuid {}", forespørselUuid);
+            // TODO: Legg til null for status (InntektsmeldingStatusDto) når record oppdateres til 4 args
             return new SendInntektsmeldingResponse(false,
                 null,
                 new SendInntektsmeldingResponse.FeilInfo(FeilkodeDto.TOM_FORESPOERSEL, "Finner ikke forespørsel for uuid " + forespørselUuid,
@@ -70,6 +71,7 @@ public class InntektsmeldingApiMottakTjeneste {
 
         if (ForespørselStatus.UTGÅTT.equals(forespørsel.status())) {
             LOG.info("Forespørsel har status utgått. Inntektsmelding kan ikke mottas. forespørselUuid: {}", forespørselUuid);
+            // TODO: Legg til null for status (InntektsmeldingStatusDto) når record oppdateres til 4 args
             return new SendInntektsmeldingResponse(false,
                 null,
                 new SendInntektsmeldingResponse.FeilInfo(FeilkodeDto.UGYLDIG_FORESPOERSEL,
@@ -82,6 +84,7 @@ public class InntektsmeldingApiMottakTjeneste {
             LOG.info(
                 "Inntektsmelding avvises. Ingen endring på ny inntektsmelding sammenlignet med tidligere innsendt inntektsmelding. inntektsmeldingId: {}",
                 inntektsmelding.getId());
+            // TODO: Legg til null for status (InntektsmeldingStatusDto) når record oppdateres til 4 args
             return new SendInntektsmeldingResponse(false, null,
                 new SendInntektsmeldingResponse.FeilInfo(FeilkodeDto.DUPLIKAT,
                     "Inntektsmelding avvises. Ingen endring på ny inntektsmelding sammenlignet med tidligere innsendt inntektsmelding med id: "
@@ -100,6 +103,7 @@ public class InntektsmeldingApiMottakTjeneste {
 
         MetrikkerTjeneste.loggInnsendtInntektsmelding(lagretIm);
 
+        // TODO: Legg til InntektsmeldingStatusDto.GODKJENT (ekstern) som parameter nr 3 når record oppdateres
         return new SendInntektsmeldingResponse(true, lagretIm.getInntektsmeldingUuid(), null);
     }
 
@@ -130,6 +134,8 @@ public class InntektsmeldingApiMottakTjeneste {
             LOG.warn(
                 "Inntektskomponenten har nedetid, og vi kan ikke verifisere inntekt i inntektsmeldingen mot A-inntekt. inntektsmeldingId: {}",
                 inntektsmelding.getId());
+            // TODO: Nedetid-håndtering — i stedet for å returnere feil skal IM lagres med status VENTER_VURDERING,
+            //       og vi returnerer success=true med UUID og ekstern status MOTTATT til LPS
             return new SendInntektsmeldingResponse(false,
                 null,
                 new SendInntektsmeldingResponse.FeilInfo(FeilkodeDto.NEDETID_AINNTEKT,
@@ -146,6 +152,7 @@ public class InntektsmeldingApiMottakTjeneste {
                 "Inntekt i inntektsmelding er ulik inntekt fra A-inntekt, og ingen endringsårsak er oppgitt. Gjennomsnittlig inntekt fra A-inntekt: %s, oppgitt inntekt i inntektsmelding: %s",
                 inntektFraAInntekt.gjennomsnitt(),
                 inntektsmelding.getMånedInntekt());
+            // TODO: Legg til null for status (InntektsmeldingStatusDto) når record oppdateres til 4 args
             return new SendInntektsmeldingResponse(false,
                 null,
                 new SendInntektsmeldingResponse.FeilInfo(FeilkodeDto.ULIK_INNTEKT, feilmelding, forespørsel.uuid().toString()));
@@ -153,6 +160,7 @@ public class InntektsmeldingApiMottakTjeneste {
 
         loggTilfellerMedLikInntektOgHarÅrsak(inntektsmelding, inntektFraAInntekt.gjennomsnitt());
 
+        // TODO: Legg til InntektsmeldingStatusDto.GODKJENT (ekstern) som parameter nr 3 når record oppdateres
         return new SendInntektsmeldingResponse(true, inntektsmelding.getInntektsmeldingUuid(), null);
     }
 

@@ -90,8 +90,10 @@ public class InntektsmeldingApiRest {
             return RestServerFeilUtils.responseFra(Response.Status.NOT_FOUND, Feilkode.IKKE_FUNNET, "Inntektsmelding med %s id finnes ikke.".formatted(inntektsmeldingUuid));
         }
 
+
         var kontrakt = inntektsmeldingKontraktMapper.mapTilKontrakt(inntektsmelding, personTjeneste.finnPersonIdentForAktørId(inntektsmelding.getAktørId()));
-        return Response.ok(kontrakt).build();    }
+        return Response.ok(kontrakt).build();
+    }
 
     @POST
     @Path("/send-inntektsmelding")

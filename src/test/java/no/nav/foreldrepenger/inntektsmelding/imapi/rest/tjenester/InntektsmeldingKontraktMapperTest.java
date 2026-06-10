@@ -11,7 +11,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import no.nav.foreldrepenger.inntektsmelding.felles.InntektsmeldingStatusDto;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.EndringsårsakType;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingStatus;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -145,6 +147,68 @@ class InntektsmeldingKontraktMapperTest {
         assertThat(resultat.avsenderSystem().systemNavn()).isEqualTo("NAV_NO");
     }
 
+    @Test
+    void skal_mappe_status_godkjent() {
+        var inntektsmelding = lagInntektsmeldingMedStatus(InntektsmeldingStatus.GODKJENT);
+
+        when(forespørselTjeneste.finnForespørsler(any(), any(), eq(ORGNR)))
+            .thenReturn(List.of(lagForespørselDto(UUID.randomUUID())));
+        var resultat = mapper.mapTilKontrakt(inntektsmelding, new PersonIdent(FNR));
+
+        assertThat(resultat.status()).isEqualTo(InntektsmeldingStatusDto.GODKJENT);
+    }
+
+    @Test
+    void skal_mappe_status_venter_vurdering() {
+        var inntektsmelding = lagInntektsmeldingMedStatus(InntektsmeldingStatus.VENTER_VURDERING);
+
+        when(forespørselTjeneste.finnForespørsler(any(), any(), eq(ORGNR)))
+            .thenReturn(List.of(lagForespørselDto(UUID.randomUUID())));
+        var resultat = mapper.mapTilKontrakt(inntektsmelding, new PersonIdent(FNR));
+
+        assertThat(resultat.status()).isEqualTo(InntektsmeldingStatusDto.VENTER_VURDERING);
+    }
+
+    @Test
+    void skal_mappe_status_avvist() {
+        var inntektsmelding = lagInntektsmeldingMedStatus(InntektsmeldingStatus.AVVIST);
+
+        when(forespørselTjeneste.finnForespørsler(any(), any(), eq(ORGNR)))
+            .thenReturn(List.of(lagForespørselDto(UUID.randomUUID())));
+        var resultat = mapper.mapTilKontrakt(inntektsmelding, new PersonIdent(FNR));
+
+        assertThat(resultat.status()).isEqualTo(InntektsmeldingStatusDto.AVVIST);
+    }
+
+    @Test
+    void skal_mappe_status_utdatert() {
+        var inntektsmelding = lagInntektsmeldingMedStatus(InntektsmeldingStatus.UTDATERT);
+
+        when(forespørselTjeneste.finnForespørsler(any(), any(), eq(ORGNR)))
+            .thenReturn(List.of(lagForespørselDto(UUID.randomUUID())));
+        var resultat = mapper.mapTilKontrakt(inntektsmelding, new PersonIdent(FNR));
+
+        assertThat(resultat.status()).isEqualTo(InntektsmeldingStatusDto.UTDATERT);
+    }
+
+    private static InntektsmeldingDto lagInntektsmeldingMedStatus(InntektsmeldingStatus status) {
+        return InntektsmeldingDto.builder()
+            .medInntektsmeldingUuid(UUID.randomUUID())
+            .medAktørId(AktørId.fra(AKTØR_ID))
+            .medArbeidsgiver(Arbeidsgiver.fra(ORGNR))
+            .medStartdato(STARTDATO)
+            .medYtelse(Ytelsetype.FORELDREPENGER)
+            .medKontaktperson(new InntektsmeldingDto.Kontaktperson("12345678", "Kontakt Person"))
+            .medInntekt(BigDecimal.valueOf(45000))
+            .medInnsendtTidspunkt(LocalDateTime.of(2026, 1, 10, 12, 0))
+            .medKildesystem(Kildesystem.FPSAK)
+            .medSøkteRefusjonsperioder(List.of())
+            .medBortfaltNaturalytelsePerioder(List.of())
+            .medEndringAvInntektÅrsaker(List.of())
+            .medStatus(status)
+            .build();
+    }
+
     private static ForespørselDto lagForespørselDto(UUID uuid) {
         return ForespørselDto.builder()
             .uuid(uuid)
@@ -178,6 +242,7 @@ class InntektsmeldingKontraktMapperTest {
             ))
             .medKildesystem(Kildesystem.FPSAK)
             .medAvsenderSystem(new InntektsmeldingDto.AvsenderSystem("test-lps", "1.0.0"))
+            .medStatus(InntektsmeldingStatus.GODKJENT)
             .build();
     }
 
@@ -195,6 +260,7 @@ class InntektsmeldingKontraktMapperTest {
             .medSøkteRefusjonsperioder(List.of())
             .medBortfaltNaturalytelsePerioder(List.of())
             .medEndringAvInntektÅrsaker(List.of())
+            .medStatus(InntektsmeldingStatus.GODKJENT)
             .build();
     }
 }

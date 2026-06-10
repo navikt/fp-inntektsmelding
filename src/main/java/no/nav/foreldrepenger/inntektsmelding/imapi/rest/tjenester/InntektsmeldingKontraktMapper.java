@@ -8,6 +8,7 @@ import no.nav.foreldrepenger.inntektsmelding.felles.BortfaltNaturalytelseDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.EndringsårsakDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.EndringsårsakerDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.FødselsnummerDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.InntektsmeldingStatusDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.KontaktpersonDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.NaturalytelsetypeDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.OrganisasjonsnummerDto;
@@ -18,7 +19,10 @@ import no.nav.foreldrepenger.inntektsmelding.imapi.inntektsmelding.HentInntektsm
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
+
+import static no.nav.foreldrepenger.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon.SaksStatus.MOTTATT;
 
 @ApplicationScoped
 public class InntektsmeldingKontraktMapper {
@@ -68,7 +72,8 @@ public class InntektsmeldingKontraktMapper {
                 .toList(),
             inntektsmelding.getEndringAvInntektÅrsaker().stream()
                 .map(e -> new EndringsårsakerDto(EndringsårsakDto.valueOf(e.årsak().name()), e.fom(), e.tom(), e.bleKjentFom()))
-                .toList()
+                .toList(),
+            mapStatus(inntektsmelding.getStatus())
         );
     }
 
@@ -76,6 +81,15 @@ public class InntektsmeldingKontraktMapper {
         return switch (ytelse) {
             case FORELDREPENGER -> YtelseTypeDto.FORELDREPENGER;
             case SVANGERSKAPSPENGER -> YtelseTypeDto.SVANGERSKAPSPENGER;
+        };
+    }
+
+    private InntektsmeldingStatusDto mapStatus(InntektsmeldingStatus status) {
+        return switch (status) {
+            case AVVIST -> InntektsmeldingStatusDto.AVVIST;
+            case VENTER_VURDERING -> InntektsmeldingStatusDto.VENTER_VURDERING;
+            case GODKJENT -> InntektsmeldingStatusDto.GODKJENT;
+            case UTDATERT -> InntektsmeldingStatusDto.UTDATERT;
         };
     }
 }
