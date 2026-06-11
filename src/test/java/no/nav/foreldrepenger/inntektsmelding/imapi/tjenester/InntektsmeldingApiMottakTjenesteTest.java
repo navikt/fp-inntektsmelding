@@ -250,6 +250,79 @@ class InntektsmeldingApiMottakTjenesteTest {
         verify(fellesMottakTjeneste).ferdigstillOgOppdaterEksterneSystemer(forespørselDto, Optional.of(imUuid));
     }
 
+    @Test
+    void kontrollerInntektsmeldingEtterNedetid_skal_kaste_exception_når_det_fortsatt_er_nedetid() {
+        var inntektsmeldingId = 123L;
+        var foresporselUuid = UUID.randomUUID();
+        var imUuid = UUID.randomUUID();
+        var forespørselDto = lagForespørselDtoMedSkjæringstidspunkt(foresporselUuid, ForespørselStatus.UNDER_BEHANDLING);
+        var inntektsmelding = lagInntektsmeldingDtoMedForespørsel(imUuid, forespørselDto, false);
+
+        var inntektsopplysninger = new Inntektsopplysninger(BigDecimal.ZERO, ORGNR, List.of(
+            new Inntektsopplysninger.InntektMåned(BigDecimal.ZERO, YearMonth.of(2026, 1), MånedslønnStatus.NEDETID_AINNTEKT),
+            new Inntektsopplysninger.InntektMåned(BigDecimal.ZERO, YearMonth.of(2026, 2), MånedslønnStatus.NEDETID_AINNTEKT),
+            new Inntektsopplysninger.InntektMåned(BigDecimal.ZERO, YearMonth.of(2026, 3), MånedslønnStatus.NEDETID_AINNTEKT)));
+
+        when(inntektsmeldingTjeneste.hentInntektsmelding(inntektsmeldingId)).thenReturn(inntektsmelding);
+        when(personTjeneste.hentPersonInfoFraAktørId(any(), any())).thenReturn(lagPersonInfo());
+        when(fellesGrunnlagTjeneste.harJobbetHeleBeregningsperioden(any(), any(), any())).thenReturn(false);
+        when(inntektTjeneste.hentInntekt(any(), any(), any(), any(), eq(false))).thenReturn(inntektsopplysninger);
+
+        org.junit.jupiter.api.Assertions.assertThrows(no.nav.vedtak.exception.TekniskException.class,
+            () -> inntektsmeldingApiMottakTjeneste.kontrollerInntektsmeldingEtterNedetid(inntektsmeldingId));
+
+        verify(fellesMottakTjeneste, never()).opprettTaskForSendTilJoark(any(), any());
+        verify(fellesMottakTjeneste, never()).ferdigstillOgOppdaterEksterneSystemer(any(), any());
+    }
+
+    @Test
+    void kontrollerInntektsmeldingEtterNedetid_skal_ferdigstille_når_inntekt_er_gyldig() {
+        var inntektsmeldingId = 123L;
+        var foresporselUuid = UUID.randomUUID();
+        var imUuid = UUID.randomUUID();
+        var forespørselDto = lagForespørselDtoMedSkjæringstidspunkt(foresporselUuid, ForespørselStatus.UNDER_BEHANDLING);
+        var inntektsmelding = lagInntektsmeldingDtoMedForespørsel(imUuid, forespørselDto, false);
+
+        var inntektsopplysninger = new Inntektsopplysninger(BigDecimal.valueOf(45000), ORGNR, List.of(
+            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45000), YearMonth.of(2026, 1), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
+            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45000), YearMonth.of(2026, 2), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
+            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45000), YearMonth.of(2026, 3), MånedslønnStatus.BRUKT_I_GJENNOMSNITT)));
+
+        when(inntektsmeldingTjeneste.hentInntektsmelding(inntektsmeldingId)).thenReturn(inntektsmelding);
+        when(personTjeneste.hentPersonInfoFraAktørId(any(), any())).thenReturn(lagPersonInfo());
+        when(fellesGrunnlagTjeneste.harJobbetHeleBeregningsperioden(any(), any(), any())).thenReturn(false);
+        when(inntektTjeneste.hentInntekt(any(), any(), any(), any(), eq(false))).thenReturn(inntektsopplysninger);
+
+        inntektsmeldingApiMottakTjeneste.kontrollerInntektsmeldingEtterNedetid(inntektsmeldingId);
+
+        verify(fellesMottakTjeneste).opprettTaskForSendTilJoark(inntektsmeldingId, forespørselDto);
+        verify(fellesMottakTjeneste).ferdigstillOgOppdaterEksterneSystemer(forespørselDto, Optional.of(imUuid));
+    }
+
+    @Test
+    void kontrollerInntektsmeldingEtterNedetid_skal_ikke_ferdigstille_når_inntekt_er_ugyldig() {
+        var inntektsmeldingId = 123L;
+        var foresporselUuid = UUID.randomUUID();
+        var imUuid = UUID.randomUUID();
+        var forespørselDto = lagForespørselDtoMedSkjæringstidspunkt(foresporselUuid, ForespørselStatus.UNDER_BEHANDLING);
+        var inntektsmelding = lagInntektsmeldingDtoMedForespørsel(imUuid, forespørselDto, false);
+
+        var inntektsopplysninger = new Inntektsopplysninger(BigDecimal.valueOf(46000), ORGNR, List.of(
+            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(46000), YearMonth.of(2026, 1), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
+            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(46000), YearMonth.of(2026, 2), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
+            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(46000), YearMonth.of(2026, 3), MånedslønnStatus.BRUKT_I_GJENNOMSNITT)));
+
+        when(inntektsmeldingTjeneste.hentInntektsmelding(inntektsmeldingId)).thenReturn(inntektsmelding);
+        when(personTjeneste.hentPersonInfoFraAktørId(any(), any())).thenReturn(lagPersonInfo());
+        when(fellesGrunnlagTjeneste.harJobbetHeleBeregningsperioden(any(), any(), any())).thenReturn(false);
+        when(inntektTjeneste.hentInntekt(any(), any(), any(), any(), eq(false))).thenReturn(inntektsopplysninger);
+
+        inntektsmeldingApiMottakTjeneste.kontrollerInntektsmeldingEtterNedetid(inntektsmeldingId);
+
+        verify(fellesMottakTjeneste, never()).opprettTaskForSendTilJoark(any(), any());
+        verify(fellesMottakTjeneste, never()).ferdigstillOgOppdaterEksterneSystemer(any(), any());
+    }
+
     private static ForespørselDto lagForespørselDto(UUID uuid, LocalDate startdatoOverride, ForespørselStatus status) {
         var startdato = startdatoOverride == null ? LocalDate.of(2026, 1, 10) : startdatoOverride;
         return ForespørselDto.builder()
@@ -259,6 +332,20 @@ class InntektsmeldingApiMottakTjenesteTest {
             .ytelseType(Ytelsetype.FORELDREPENGER)
             .status(status)
             .forespørselType(ForespørselType.BESTILT_AV_FAGSYSTEM)
+            .førsteUttaksdato(startdato)
+            .build();
+    }
+
+    private static ForespørselDto lagForespørselDtoMedSkjæringstidspunkt(UUID uuid, ForespørselStatus status) {
+        var startdato = LocalDate.of(2026, 1, 10);
+        return ForespørselDto.builder()
+            .uuid(uuid)
+            .arbeidsgiver(Arbeidsgiver.fra(ORGNR))
+            .aktørId(AktørId.fra(AKTØR_ID))
+            .ytelseType(Ytelsetype.FORELDREPENGER)
+            .status(status)
+            .forespørselType(ForespørselType.BESTILT_AV_FAGSYSTEM)
+            .skjæringstidspunkt(startdato)
             .førsteUttaksdato(startdato)
             .build();
     }
@@ -295,5 +382,43 @@ class InntektsmeldingApiMottakTjenesteTest {
             builder.medInntektsmeldingUuid(imUuid);
         }
         return builder.build();
+    }
+
+    private static InntektsmeldingDto lagInntektsmeldingDtoMedForespørsel(UUID imUuid, ForespørselDto forespørselDto, boolean skalHaEndringsårsak) {
+        var startdato = forespørselDto.førsteUttaksdato();
+        var builder = InntektsmeldingDto.builder()
+            .medId(123L)
+            .medAktørId(AktørId.fra(AKTØR_ID))
+            .medArbeidsgiver(Arbeidsgiver.fra(ORGNR))
+            .medStartdato(startdato)
+            .medYtelse(Ytelsetype.FORELDREPENGER)
+            .medKontaktperson(new InntektsmeldingDto.Kontaktperson("12345678", "Kontakt Person"))
+            .medInntekt(BigDecimal.valueOf(45000))
+            .medMånedRefusjon(BigDecimal.valueOf(45000))
+            .medOpphørsdatoRefusjon(startdato.plusDays(9))
+            .medSøkteRefusjonsperioder(List.of(new InntektsmeldingDto.SøktRefusjon(startdato.plusDays(5), BigDecimal.valueOf(9000))))
+            .medBortfaltNaturalytelsePerioder(List.of(
+                new InntektsmeldingDto.BortfaltNaturalytelse(startdato.plusDays(2), Tid.TIDENES_ENDE, NaturalytelseType.BIL, BigDecimal.valueOf(1200))
+            ))
+            .medKildesystem(Kildesystem.LØNN_OG_PERSONAL_SYSTEM)
+            .medAvsenderSystem(new InntektsmeldingDto.AvsenderSystem("test-lps", "1.0.0"))
+            .medForespørsel(forespørselDto);
+        if (skalHaEndringsårsak) {
+            builder.medEndringAvInntektÅrsaker(List.of(
+                new InntektsmeldingDto.Endringsårsak(EndringsårsakType.TARIFFENDRING, null, null, startdato.plusDays(1))
+            ));
+        }
+        if (imUuid != null) {
+            builder.medInntektsmeldingUuid(imUuid);
+        }
+        return builder.build();
+    }
+
+    private static no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonInfo lagPersonInfo() {
+        return new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonInfo(
+            "Ola", null, "Nordmann",
+            new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent("12345678901"),
+            AktørId.fra(AKTØR_ID),
+            LocalDate.of(1990, 1, 1), null, null);
     }
 }
