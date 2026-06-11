@@ -26,6 +26,7 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
@@ -34,6 +35,10 @@ import no.nav.vedtak.exception.TekniskException;
 @Entity(name = "InntektsmeldingEntitet")
 @Table(name = "INNTEKTSMELDING")
 public class InntektsmeldingEntitet {
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private InntektsmeldingStatus status = InntektsmeldingStatus.GODKJENT;
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "GLOBAL_PK_SEQ_GENERATOR")
@@ -164,6 +169,10 @@ public class InntektsmeldingEntitet {
 
     public UUID getUuid() {
         return uuid;
+    }
+
+    public InntektsmeldingStatus getStatus() {
+        return status;
     }
 
     public Optional<ForespørselEntitet> getForespørsel() {
@@ -320,6 +329,11 @@ public class InntektsmeldingEntitet {
 
         public Builder medKildesystem(Kildesystem kildesystem) {
             kladd.kildesystem = kildesystem;
+            return this;
+        }
+
+        public Builder medStatus(InntektsmeldingStatus status) {
+            kladd.status = status;
             return this;
         }
 

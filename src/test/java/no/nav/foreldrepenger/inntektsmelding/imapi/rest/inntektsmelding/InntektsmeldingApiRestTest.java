@@ -18,6 +18,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import no.nav.foreldrepenger.inntektsmelding.felles.InntektsmeldingStatusDto;
+
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -292,7 +294,8 @@ class InntektsmeldingApiRestTest {
             null, null, null,
             Collections.emptyList(),
             Collections.emptyList(),
-            Collections.emptyList()
+            Collections.emptyList(),
+            InntektsmeldingStatusDto.GODKJENT
         );
     }
 }

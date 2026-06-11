@@ -99,7 +99,6 @@ public class InntektsmeldingApiMottakTjeneste {
         fellesMottakTjeneste.behandlerForespørsel(forespørsel, Optional.ofNullable(lagretIm.getInntektsmeldingUuid()));
 
         MetrikkerTjeneste.loggInnsendtInntektsmelding(lagretIm);
-
         return new SendInntektsmeldingResponse(true, lagretIm.getInntektsmeldingUuid(), null);
     }
 
@@ -152,7 +151,6 @@ public class InntektsmeldingApiMottakTjeneste {
         }
 
         loggTilfellerMedLikInntektOgHarÅrsak(inntektsmelding, inntektFraAInntekt.gjennomsnitt());
-
         return new SendInntektsmeldingResponse(true, inntektsmelding.getInntektsmeldingUuid(), null);
     }
 
