@@ -165,7 +165,7 @@ public class InntektsmeldingApiMottakTjeneste {
             // TODO lag task for å kjøre på nytt
             // TODO oppdater status i dialogporten
             // TODO Oppdater status i databasen
-            fellesMottakTjeneste.lagreIMOgOpprettTaskForEtterkontroll(inntektsmelding.getId(), forespørsel);
+            fellesMottakTjeneste.lagreIMOgOpprettTaskForEtterkontroll(inntektsmelding, forespørsel);
             MetrikkerTjeneste.loggInnsendtInntektsmeldingUnderNedetid();
             return new SendInntektsmeldingResponse(false,
 >>>>>>> b0a0193 (TFP-6983: Mekanisme for å vente på etterkontroll av inntektsmelding når a-inntekt er nede)
