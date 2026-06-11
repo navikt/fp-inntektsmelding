@@ -4,8 +4,10 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.EndringsårsakType;
@@ -31,6 +33,7 @@ public class InntektsmeldingDto {
     private final List<BortfaltNaturalytelse> bortfaltNaturalytelsePerioder;
     private final List<Endringsårsak> endringAvInntektÅrsaker;
     private final String opprettetAv;
+    private final ForespørselDto forespørsel;
 
     private InntektsmeldingDto(Builder builder) {
         this.id = builder.id;
@@ -50,6 +53,7 @@ public class InntektsmeldingDto {
         this.søkteRefusjonsperioder = builder.søkteRefusjonsperioder;
         this.bortfaltNaturalytelsePerioder = builder.bortfaltNaturalytelsePerioder;
         this.endringAvInntektÅrsaker = builder.endringAvInntektÅrsaker;
+        this.forespørsel = builder.forespørsel;
     }
 
     public static Builder builder() {
@@ -124,6 +128,10 @@ public class InntektsmeldingDto {
         return endringAvInntektÅrsaker;
     }
 
+    public Optional<ForespørselDto> getForespørsel() {
+        return Optional.ofNullable(forespørsel);
+    }
+
     public static class Builder {
         private Long id;
         private UUID inntektsmeldingUuid;
@@ -142,6 +150,7 @@ public class InntektsmeldingDto {
         private List<SøktRefusjon> søkteRefusjonsperioder;
         private List<BortfaltNaturalytelse> bortfaltNaturalytelsePerioder;
         private List<Endringsårsak> endringAvInntektÅrsaker;
+        private ForespørselDto forespørsel;
 
         private Builder() {
         }
@@ -228,6 +237,11 @@ public class InntektsmeldingDto {
 
         public Builder medEndringAvInntektÅrsaker(List<Endringsårsak> endringAvInntektÅrsaker) {
             this.endringAvInntektÅrsaker = endringAvInntektÅrsaker;
+            return this;
+        }
+
+        public Builder medForespørsel(ForespørselDto forespørselDto) {
+            this.forespørsel = forespørselDto;
             return this;
         }
 

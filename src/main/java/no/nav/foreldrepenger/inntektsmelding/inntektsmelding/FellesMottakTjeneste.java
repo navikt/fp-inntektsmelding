@@ -6,6 +6,8 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.task.FerdigstillInntektsmeldingEtterNedetidTask;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,18 +41,13 @@ public class FellesMottakTjeneste {
     }
 
     public InntektsmeldingDto lagreOgJournalførInntektsmelding(InntektsmeldingDto inntektsmelding, ForespørselDto forespørsel) {
-        var imId = lagreOgLagJournalførTask(inntektsmelding, forespørsel);
-        return inntektsmeldingTjeneste.hentInntektsmelding(imId);
-    }
-
-    private Long lagreOgLagJournalførTask(InntektsmeldingDto inntektsmelding, ForespørselDto forespørsel) {
         LOG.info("Lagrer inntektsmelding for forespørsel {}", forespørsel.uuid());
         var imId = inntektsmeldingTjeneste.lagreInntektsmelding(inntektsmelding, forespørsel.uuid());
         opprettTaskForSendTilJoark(imId, forespørsel);
-        return imId;
+        return inntektsmeldingTjeneste.hentInntektsmelding(imId);
     }
 
-    private void opprettTaskForSendTilJoark(Long imId, ForespørselDto forespørsel) {
+    public void opprettTaskForSendTilJoark(Long imId, ForespørselDto forespørsel) {
         var task = ProsessTaskData.forProsessTask(SendTilJoarkTask.class);
         Optional.ofNullable(forespørsel.fagsystemSaksnummer()).map(Saksnummer::saksnummer).ifPresent(task::setSaksnummer);
         task.setProperty(SendTilJoarkTask.KEY_INNTEKTSMELDING_ID, imId.toString());
@@ -59,7 +56,16 @@ public class FellesMottakTjeneste {
         LOG.info("Opprettet task for oversending til joark");
     }
 
-    public void behandlerForespørsel(ForespørselDto forespørsel, Optional<UUID> imId) {
+    public void lagreIMOgOpprettTaskForEtterkontroll (InntektsmeldingDto inntektsmelding, ForespørselDto forespørsel) {
+        // Her må vi sende med korrekt status
+        var lagretIMId = inntektsmeldingTjeneste.lagreInntektsmelding(inntektsmelding, forespørsel.uuid());
+        var task = ProsessTaskData.forProsessTask(FerdigstillInntektsmeldingEtterNedetidTask.class);
+        task.setProperty(FerdigstillInntektsmeldingEtterNedetidTask.KEY_INNTEKTSMELDING_ID, lagretIMId.toString());
+        prosessTaskTjeneste.lagre(task);
+        LOG.info("Opprettet task for etterkontroll av inntektsmelding");
+    }
+
+    public void ferdigstillOgOppdaterEksterneSystemer(ForespørselDto forespørsel, Optional<UUID> imId) {
         var orgnummer = forespørsel.arbeidsgiver();
         //Ferdigstiller forespørsel hvis den ikke er ferdig fra før
         if (!ForespørselStatus.FERDIG.equals(forespørsel.status())) {

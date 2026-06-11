@@ -11,6 +11,9 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.inntektskomponent.Inntektsopplysninger;
+import no.nav.vedtak.exception.TekniskException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +28,6 @@ import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingTjen
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.inntektskomponent.InntektTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.metrikker.MetrikkerTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste;
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.MånedslønnStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 
 @ApplicationScoped
@@ -96,11 +98,41 @@ public class InntektsmeldingApiMottakTjeneste {
         }
 
         var lagretIm = fellesMottakTjeneste.lagreOgJournalførInntektsmelding(inntektsmelding, forespørsel);
-        fellesMottakTjeneste.behandlerForespørsel(forespørsel, Optional.ofNullable(lagretIm.getInntektsmeldingUuid()));
+        fellesMottakTjeneste.ferdigstillOgOppdaterEksterneSystemer(forespørsel, Optional.ofNullable(lagretIm.getInntektsmeldingUuid()));
 
         MetrikkerTjeneste.loggInnsendtInntektsmelding(lagretIm);
 
         return new SendInntektsmeldingResponse(true, lagretIm.getInntektsmeldingUuid(), null);
+    }
+
+    public void kontrollerInntektsmeldingEtterNedetid(Long inntektsmeldingId) {
+        var inntektsmelding = inntektsmeldingTjeneste.hentInntektsmelding(inntektsmeldingId);
+        var forespørsel = inntektsmelding.getForespørsel().orElseThrow();
+        var personInfo = personTjeneste.hentPersonInfoFraAktørId(inntektsmelding.getAktørId(), inntektsmelding.getYtelse());
+        var harJobbetHeleBeregningsperioden = fellesGrunnlagTjeneste.harJobbetHeleBeregningsperioden(personInfo,
+            forespørsel.skjæringstidspunkt(),
+            inntektsmelding.getArbeidsgiver());
+        var inntekter = inntektTjeneste.hentInntekt(inntektsmelding.getAktørId(),
+            forespørsel.skjæringstidspunkt(),
+            LocalDate.now(),
+            inntektsmelding.getArbeidsgiver(),
+            harJobbetHeleBeregningsperioden);
+
+        if (inntekter.harNedetid()) {
+            throw new TekniskException("F-523043", "Nedetid i a-inntekt, får ikke ferdigstilt inntektsmelding " + inntektsmeldingId);
+        }
+
+        var inntektErUgyldig = erOppgittInntektUgyldig(inntektsmelding, inntekter);
+
+        if (inntektErUgyldig) {
+            // TODO Oppdater databasen med korrekt status
+            // TODO Send transmission i dialogporten
+        } else {
+            // TODO Oppdater databasen
+            fellesMottakTjeneste.opprettTaskForSendTilJoark(inntektsmeldingId, forespørsel);
+            fellesMottakTjeneste.ferdigstillOgOppdaterEksterneSystemer(forespørsel, Optional.ofNullable(inntektsmelding.getInntektsmeldingUuid()));
+            MetrikkerTjeneste.loggInnsendtInntektsmelding(inntektsmelding);
+        }
     }
 
     private SendInntektsmeldingResponse sjekkMånedInntektMotRapportertInntekt(ForespørselDto forespørsel, InntektsmeldingDto inntektsmelding) {
@@ -122,14 +154,16 @@ public class InntektsmeldingApiMottakTjeneste {
             throw new IllegalStateException("InntektsmeldingApiMottakTjeneste: utviklerfeil - får tom inntekt fra A-inntekt");
         }
 
-        var nedetidAInntekt = inntektFraAInntekt.måneder() != null && inntektFraAInntekt.måneder()
-            .stream()
-            .anyMatch(status -> MånedslønnStatus.NEDETID_AINNTEKT.equals(status.status()));
-
-        if (nedetidAInntekt) {
+        if (inntektFraAInntekt.harNedetid()) {
             LOG.warn(
                 "Inntektskomponenten har nedetid, og vi kan ikke verifisere inntekt i inntektsmeldingen mot A-inntekt. inntektsmeldingId: {}",
                 inntektsmelding.getId());
+
+            // TODO lag task for å kjøre på nytt
+            // TODO oppdater status i dialogporten
+            // TODO Oppdater status i databasen
+            fellesMottakTjeneste.lagreIMOgOpprettTaskForEtterkontroll(inntektsmelding, forespørsel);
+            MetrikkerTjeneste.loggInnsendtInntektsmeldingUnderNedetid();
             return new SendInntektsmeldingResponse(false,
                 null,
                 new SendInntektsmeldingResponse.FeilInfo(FeilkodeDto.NEDETID_AINNTEKT,
@@ -137,9 +171,7 @@ public class InntektsmeldingApiMottakTjeneste {
                     forespørsel.uuid().toString()));
         }
 
-        var inntektErUlikOgIngenÅrsakOppgitt =
-            inntektFraAInntekt.gjennomsnitt().subtract(inntektsmelding.getMånedInntekt()).abs().compareTo(AKSEPTERT_AVVIK) > 0
-                && (inntektsmelding.getEndringAvInntektÅrsaker() == null || inntektsmelding.getEndringAvInntektÅrsaker().isEmpty());
+        var inntektErUlikOgIngenÅrsakOppgitt = erOppgittInntektUgyldig(inntektsmelding, inntektFraAInntekt);
 
         if (inntektErUlikOgIngenÅrsakOppgitt) {
             var feilmelding = String.format(
@@ -154,6 +186,11 @@ public class InntektsmeldingApiMottakTjeneste {
         loggTilfellerMedLikInntektOgHarÅrsak(inntektsmelding, inntektFraAInntekt.gjennomsnitt());
 
         return new SendInntektsmeldingResponse(true, inntektsmelding.getInntektsmeldingUuid(), null);
+    }
+
+    private static boolean erOppgittInntektUgyldig(InntektsmeldingDto inntektsmelding, Inntektsopplysninger inntektFraAInntekt) {
+        return inntektFraAInntekt.gjennomsnitt().subtract(inntektsmelding.getMånedInntekt()).abs().compareTo(AKSEPTERT_AVVIK) > 0
+                && (inntektsmelding.getEndringAvInntektÅrsaker() == null || inntektsmelding.getEndringAvInntektÅrsaker().isEmpty());
     }
 
     private void loggTilfellerMedLikInntektOgHarÅrsak(InntektsmeldingDto inntektsmelding, BigDecimal gjennomsnittligInntekt) {
