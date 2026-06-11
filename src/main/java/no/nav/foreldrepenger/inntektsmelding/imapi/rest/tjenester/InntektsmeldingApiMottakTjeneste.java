@@ -162,7 +162,7 @@ public class InntektsmeldingApiMottakTjeneste {
             // TODO lag task for å kjøre på nytt
             // TODO oppdater status i dialogporten
             // TODO Oppdater status i databasen
-            fellesMottakTjeneste.lagreIMOgOpprettTaskForEtterkontroll(inntektsmelding.getId(), forespørsel);
+            fellesMottakTjeneste.lagreIMOgOpprettTaskForEtterkontroll(inntektsmelding, forespørsel);
             MetrikkerTjeneste.loggInnsendtInntektsmeldingUnderNedetid();
             return new SendInntektsmeldingResponse(false,
                 null,
