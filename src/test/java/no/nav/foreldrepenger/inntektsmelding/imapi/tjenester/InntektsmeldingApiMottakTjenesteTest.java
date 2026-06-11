@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.Month;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.Optional;
@@ -109,9 +110,9 @@ class InntektsmeldingApiMottakTjenesteTest {
         var inputDto = lagInntektsmeldingDtoMedUuid(imUuid, null, false, InntektsmeldingStatus.AVVIST);
         var forespørselDto = lagForespørselDto(foresporselUuid, null, ForespørselStatus.UNDER_BEHANDLING);
         var inntektsopplysninger = new Inntektsopplysninger(BigDecimal.valueOf(46000), ORGNR, List.of(
-            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(46000), YearMonth.of(2026, 1), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
-            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(46000), YearMonth.of(2026, 2), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
-            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(46000), YearMonth.of(2026, 3), MånedslønnStatus.BRUKT_I_GJENNOMSNITT)));
+            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(46000), YearMonth.of(2026, Month.JANUARY), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
+            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(46000), YearMonth.of(2026, Month.FEBRUARY), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
+            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(46000), YearMonth.of(2026, Month.MARCH), MånedslønnStatus.BRUKT_I_GJENNOMSNITT)));
 
 
         when(forespørselBehandlingTjeneste.hentForespørsel(foresporselUuid)).thenReturn(Optional.of(forespørselDto));
@@ -135,9 +136,9 @@ class InntektsmeldingApiMottakTjenesteTest {
         var inputDto = lagInntektsmeldingDtoMedUuid(imUuid, null, false, InntektsmeldingStatus.VENTER_VURDERING);
         var forespørselDto = lagForespørselDto(foresporselUuid, null, ForespørselStatus.UNDER_BEHANDLING);
         var inntektsopplysninger = new Inntektsopplysninger(BigDecimal.ZERO, ORGNR, List.of(
-            new Inntektsopplysninger.InntektMåned(BigDecimal.ZERO, YearMonth.of(2026, 1), MånedslønnStatus.NEDETID_AINNTEKT),
-            new Inntektsopplysninger.InntektMåned(BigDecimal.ZERO, YearMonth.of(2026, 2), MånedslønnStatus.NEDETID_AINNTEKT),
-            new Inntektsopplysninger.InntektMåned(BigDecimal.ZERO, YearMonth.of(2026, 3), MånedslønnStatus.NEDETID_AINNTEKT)));
+            new Inntektsopplysninger.InntektMåned(BigDecimal.ZERO, YearMonth.of(2026, Month.JANUARY), MånedslønnStatus.NEDETID_AINNTEKT),
+            new Inntektsopplysninger.InntektMåned(BigDecimal.ZERO, YearMonth.of(2026, Month.FEBRUARY), MånedslønnStatus.NEDETID_AINNTEKT),
+            new Inntektsopplysninger.InntektMåned(BigDecimal.ZERO, YearMonth.of(2026, Month.MARCH), MånedslønnStatus.NEDETID_AINNTEKT)));
 
 
         when(forespørselBehandlingTjeneste.hentForespørsel(foresporselUuid)).thenReturn(Optional.of(forespørselDto));
@@ -162,9 +163,9 @@ class InntektsmeldingApiMottakTjenesteTest {
         var forespørselDto = lagForespørselDto(foresporselUuid, null, ForespørselStatus.UNDER_BEHANDLING);
         var lagretIm = lagInntektsmeldingDtoMedUuid(imUuid, null, true, InntektsmeldingStatus.GODKJENT);
         var inntektsopplysninger = new Inntektsopplysninger(BigDecimal.valueOf(45000), ORGNR, List.of(
-            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45000), YearMonth.of(2026, 1), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
-            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45000), YearMonth.of(2026, 2), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
-            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45000), YearMonth.of(2026, 3), MånedslønnStatus.BRUKT_I_GJENNOMSNITT)));
+            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45000), YearMonth.of(2026, Month.JANUARY), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
+            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45000), YearMonth.of(2026, Month.FEBRUARY), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
+            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45000), YearMonth.of(2026, Month.MARCH), MånedslønnStatus.BRUKT_I_GJENNOMSNITT)));
 
         when(forespørselBehandlingTjeneste.hentForespørsel(foresporselUuid)).thenReturn(Optional.of(forespørselDto));
         when(inntektsmeldingTjeneste.hentSisteInntektsmeldingForForespørsel(foresporselUuid)).thenReturn(null);
@@ -187,9 +188,9 @@ class InntektsmeldingApiMottakTjenesteTest {
         var forespørselDto = lagForespørselDto(foresporselUuid, null, ForespørselStatus.UNDER_BEHANDLING);
         var lagretIm = lagInntektsmeldingDtoMedUuid(imUuid, null, false, InntektsmeldingStatus.GODKJENT);
         var inntektsopplysninger = new Inntektsopplysninger(BigDecimal.valueOf(45550), ORGNR, List.of(
-            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45550), YearMonth.of(2026, 1), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
-            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45550), YearMonth.of(2026, 2), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
-            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45550), YearMonth.of(2026, 3), MånedslønnStatus.BRUKT_I_GJENNOMSNITT)));
+            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45550), YearMonth.of(2026, Month.JANUARY), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
+            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45550), YearMonth.of(2026, Month.FEBRUARY), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
+            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45550), YearMonth.of(2026, Month.MARCH), MånedslønnStatus.BRUKT_I_GJENNOMSNITT)));
 
         when(forespørselBehandlingTjeneste.hentForespørsel(foresporselUuid)).thenReturn(Optional.of(forespørselDto));
         when(inntektsmeldingTjeneste.hentSisteInntektsmeldingForForespørsel(foresporselUuid)).thenReturn(null);
@@ -232,9 +233,9 @@ class InntektsmeldingApiMottakTjenesteTest {
         var forrigeInnsendteIm = lagInntektsmeldingDto(null);
         var nyInnsendtIm = lagInntektsmeldingDtoMedUuid(imUuid, nyStartdato, true, InntektsmeldingStatus.GODKJENT );
         var inntektsopplysninger = new Inntektsopplysninger(BigDecimal.valueOf(45000), ORGNR, List.of(
-            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45000), YearMonth.of(2026, 1), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
-            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45000), YearMonth.of(2026, 2), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
-            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45000), YearMonth.of(2026, 3), MånedslønnStatus.BRUKT_I_GJENNOMSNITT)));
+            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45000), YearMonth.of(2026, Month.JANUARY), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
+            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45000), YearMonth.of(2026, Month.FEBRUARY), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
+            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45000), YearMonth.of(2026, Month.MARCH), MånedslønnStatus.BRUKT_I_GJENNOMSNITT)));
 
 
         when(forespørselBehandlingTjeneste.hentForespørsel(foresporselUuid)).thenReturn(Optional.of(forespørselDto));
@@ -259,9 +260,9 @@ class InntektsmeldingApiMottakTjenesteTest {
         var inntektsmelding = lagInntektsmeldingDtoMedForespørsel(imUuid, forespørselDto, false);
 
         var inntektsopplysninger = new Inntektsopplysninger(BigDecimal.ZERO, ORGNR, List.of(
-            new Inntektsopplysninger.InntektMåned(BigDecimal.ZERO, YearMonth.of(2026, 1), MånedslønnStatus.NEDETID_AINNTEKT),
-            new Inntektsopplysninger.InntektMåned(BigDecimal.ZERO, YearMonth.of(2026, 2), MånedslønnStatus.NEDETID_AINNTEKT),
-            new Inntektsopplysninger.InntektMåned(BigDecimal.ZERO, YearMonth.of(2026, 3), MånedslønnStatus.NEDETID_AINNTEKT)));
+            new Inntektsopplysninger.InntektMåned(BigDecimal.ZERO, YearMonth.of(2026, Month.JANUARY), MånedslønnStatus.NEDETID_AINNTEKT),
+            new Inntektsopplysninger.InntektMåned(BigDecimal.ZERO, YearMonth.of(2026, Month.FEBRUARY), MånedslønnStatus.NEDETID_AINNTEKT),
+            new Inntektsopplysninger.InntektMåned(BigDecimal.ZERO, YearMonth.of(2026, Month.MARCH), MånedslønnStatus.NEDETID_AINNTEKT)));
 
         when(inntektsmeldingTjeneste.hentInntektsmelding(inntektsmeldingId)).thenReturn(inntektsmelding);
         when(personTjeneste.hentPersonInfoFraAktørId(any(), any())).thenReturn(lagPersonInfo());
@@ -284,9 +285,9 @@ class InntektsmeldingApiMottakTjenesteTest {
         var inntektsmelding = lagInntektsmeldingDtoMedForespørsel(imUuid, forespørselDto, false);
 
         var inntektsopplysninger = new Inntektsopplysninger(BigDecimal.valueOf(45000), ORGNR, List.of(
-            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45000), YearMonth.of(2026, 1), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
-            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45000), YearMonth.of(2026, 2), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
-            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45000), YearMonth.of(2026, 3), MånedslønnStatus.BRUKT_I_GJENNOMSNITT)));
+            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45000), YearMonth.of(2026, Month.JANUARY), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
+            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45000), YearMonth.of(2026, Month.FEBRUARY), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
+            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45000), YearMonth.of(2026, Month.MARCH), MånedslønnStatus.BRUKT_I_GJENNOMSNITT)));
 
         when(inntektsmeldingTjeneste.hentInntektsmelding(inntektsmeldingId)).thenReturn(inntektsmelding);
         when(personTjeneste.hentPersonInfoFraAktørId(any(), any())).thenReturn(lagPersonInfo());
@@ -308,9 +309,9 @@ class InntektsmeldingApiMottakTjenesteTest {
         var inntektsmelding = lagInntektsmeldingDtoMedForespørsel(imUuid, forespørselDto, false);
 
         var inntektsopplysninger = new Inntektsopplysninger(BigDecimal.valueOf(46000), ORGNR, List.of(
-            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(46000), YearMonth.of(2026, 1), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
-            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(46000), YearMonth.of(2026, 2), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
-            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(46000), YearMonth.of(2026, 3), MånedslønnStatus.BRUKT_I_GJENNOMSNITT)));
+            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(46000), YearMonth.of(2026, Month.JANUARY), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
+            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(46000), YearMonth.of(2026, Month.FEBRUARY), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
+            new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(46000), YearMonth.of(2026, Month.MARCH), MånedslønnStatus.BRUKT_I_GJENNOMSNITT)));
 
         when(inntektsmeldingTjeneste.hentInntektsmelding(inntektsmeldingId)).thenReturn(inntektsmelding);
         when(personTjeneste.hentPersonInfoFraAktørId(any(), any())).thenReturn(lagPersonInfo());
@@ -324,7 +325,7 @@ class InntektsmeldingApiMottakTjenesteTest {
     }
 
     private static ForespørselDto lagForespørselDto(UUID uuid, LocalDate startdatoOverride, ForespørselStatus status) {
-        var startdato = startdatoOverride == null ? LocalDate.of(2026, 1, 10) : startdatoOverride;
+        var startdato = startdatoOverride == null ? LocalDate.of(2026, Month.JANUARY, 10) : startdatoOverride;
         return ForespørselDto.builder()
             .uuid(uuid)
             .arbeidsgiver(Arbeidsgiver.fra(ORGNR))
@@ -337,7 +338,7 @@ class InntektsmeldingApiMottakTjenesteTest {
     }
 
     private static ForespørselDto lagForespørselDtoMedSkjæringstidspunkt(UUID uuid, ForespørselStatus status) {
-        var startdato = LocalDate.of(2026, 1, 10);
+        var startdato = LocalDate.of(2026, Month.JANUARY, 10);
         return ForespørselDto.builder()
             .uuid(uuid)
             .arbeidsgiver(Arbeidsgiver.fra(ORGNR))
@@ -356,7 +357,7 @@ class InntektsmeldingApiMottakTjenesteTest {
 
     private static InntektsmeldingDto lagInntektsmeldingDtoMedUuid(UUID imUuid, LocalDate startdatoOverride, boolean skalHaEndringsårsak,
                                                                    InntektsmeldingStatus status) {
-        var startdato = startdatoOverride == null ? LocalDate.of(2026, 1, 10) : startdatoOverride;
+        var startdato = startdatoOverride == null ? LocalDate.of(2026, Month.JANUARY, 10) : startdatoOverride;
         var builder = InntektsmeldingDto.builder()
             .medAktørId(AktørId.fra(AKTØR_ID))
             .medArbeidsgiver(Arbeidsgiver.fra(ORGNR))
@@ -419,6 +420,6 @@ class InntektsmeldingApiMottakTjenesteTest {
             "Ola", null, "Nordmann",
             new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent("12345678901"),
             AktørId.fra(AKTØR_ID),
-            LocalDate.of(1990, 1, 1), null, null);
+            LocalDate.of(1990, Month.JANUARY, 1), null, null);
     }
 }
