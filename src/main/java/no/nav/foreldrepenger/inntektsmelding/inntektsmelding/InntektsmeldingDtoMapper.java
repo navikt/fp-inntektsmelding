@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDtoMapper;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.BortaltNaturalytelseEntitet;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.EndringsårsakEntitet;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.InntektsmeldingEntitet;
@@ -48,6 +49,7 @@ public class InntektsmeldingDtoMapper {
             .medAvsenderSystem(entitet.getLpsSystem() != null ? new InntektsmeldingDto.AvsenderSystem(entitet.getLpsSystem().getNavn(),
                 entitet.getLpsSystem().getVersjon()) : null)
             .medStatus(entitet.getStatus())
+            .medForespørsel(entitet.getForespørsel().map(ForespørselDtoMapper::mapFraEntitet).orElse(null))
             .build();
     }
 
