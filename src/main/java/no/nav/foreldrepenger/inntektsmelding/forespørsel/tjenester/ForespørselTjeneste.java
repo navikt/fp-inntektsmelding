@@ -115,13 +115,6 @@ public class ForespørselTjeneste {
         return forespørselRepository.hentForespørslerPåSak(fagsakSaksnummer.saksnummer()).stream().map(ForespørselDtoMapper::mapFraEntitet).toList();
     }
 
-    public List<ForespørselDto> finnForespørsler(AktørId aktørId, Ytelsetype ytelsetype, String orgnr) {
-        return forespørselRepository.finnForespørsler(mapTilEntitet(aktørId), ytelsetype, orgnr)
-            .stream()
-            .map(ForespørselDtoMapper::mapFraEntitet)
-            .toList();
-    }
-
     public void setDialogportenUuid(UUID forespørselUuid, UUID dialogportenUuid) {
         forespørselRepository.oppdaterDialogportenUuid(forespørselUuid, dialogportenUuid);
 

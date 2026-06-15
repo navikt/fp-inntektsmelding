@@ -226,10 +226,6 @@ public class ForespørselBehandlingTjeneste {
         return forespørselTjeneste.hentForespørsel(forespørselUUID);
     }
 
-    public List<ForespørselDto> finnForespørsler(AktørId aktørId, Ytelsetype ytelsetype, String orgnr) {
-        return forespørselTjeneste.finnForespørsler(aktørId, ytelsetype, orgnr);
-    }
-
     public List<ForespørselDto> finnForespørslerForAktørId(AktørId aktørId, Ytelsetype ytelsetype) {
         return forespørselTjeneste.finnForespørslerForAktørid(aktørId, ytelsetype);
     }

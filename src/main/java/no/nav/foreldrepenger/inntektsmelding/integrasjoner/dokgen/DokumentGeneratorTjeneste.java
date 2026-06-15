@@ -44,7 +44,7 @@ public class DokumentGeneratorTjeneste {
         this.organisasjonTjeneste = organisasjonTjeneste;
     }
 
-    public byte[] mapDataOgGenererPdf(InntektsmeldingDto inntektsmelding, ForespørselType forespørselType) {
+    public byte[] mapDataOgGenererPdf(InntektsmeldingDto inntektsmelding) {
         PersonInfo personInfo;
         String arbeidsgiverNavn;
         var arbeidsgvierIdent = inntektsmelding.getArbeidsgiver();
@@ -53,6 +53,7 @@ public class DokumentGeneratorTjeneste {
         personInfo = personTjeneste.hentPersonInfoFraAktørId(inntektsmelding.getAktørId(), Ytelsetype.valueOf(inntektsmelding.getYtelse().name()));
         arbeidsgiverNavn = finnArbeidsgiverNavn(arbeidsgvierIdent, Ytelsetype.valueOf(inntektsmelding.getYtelse().name()));
 
+        var forespørselType = inntektsmelding.getForespørsel().forespørselType();
         var imDokumentData = InntektsmeldingPdfDataMapper.mapInntektsmeldingPdfData(inntektsmelding,
             arbeidsgiverNavn,
             personInfo,

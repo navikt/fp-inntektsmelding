@@ -57,7 +57,6 @@ public class InntektsmeldingApiRest {
     private InntektsmeldingTjeneste inntektsmeldingTjeneste;
     private InntektsmeldingApiMottakTjeneste inntektsmeldingMottakTjeneste;
     private PersonTjeneste personTjeneste;
-    private InntektsmeldingKontraktMapper inntektsmeldingKontraktMapper;
 
     InntektsmeldingApiRest() {
         // CDI
@@ -66,13 +65,11 @@ public class InntektsmeldingApiRest {
     @Inject
     public InntektsmeldingApiRest(InntektsmeldingTjeneste inntektsmeldingTjeneste,
                                   InntektsmeldingApiMottakTjeneste inntektsmeldingMottakTjeneste,
-                                  PersonTjeneste personTjeneste, Tilgang tilgangskontroll,
-                                  InntektsmeldingKontraktMapper inntektsmeldingKontraktMapper) {
+                                  PersonTjeneste personTjeneste, Tilgang tilgangskontroll) {
         this.inntektsmeldingTjeneste = inntektsmeldingTjeneste;
         this.tilgangskontroll = tilgangskontroll;
         this.inntektsmeldingMottakTjeneste = inntektsmeldingMottakTjeneste;
         this.personTjeneste = personTjeneste;
-        this.inntektsmeldingKontraktMapper = inntektsmeldingKontraktMapper;
     }
 
     @GET
@@ -91,7 +88,7 @@ public class InntektsmeldingApiRest {
         }
 
 
-        var kontrakt = inntektsmeldingKontraktMapper.mapTilKontrakt(inntektsmelding, personTjeneste.finnPersonIdentForAktørId(inntektsmelding.getAktørId()));
+        var kontrakt = InntektsmeldingKontraktMapper.mapTilKontrakt(inntektsmelding, personTjeneste.finnPersonIdentForAktørId(inntektsmelding.getAktørId()));
         return Response.ok(kontrakt).build();
     }
 
@@ -129,7 +126,7 @@ public class InntektsmeldingApiRest {
 
         if (filterRequest.forespørselUuid() != null) {
             responsListe = inntektsmeldingTjeneste.hentInntektsmeldinger(filterRequest.forespørselUuid()).stream()
-                .map(inntektsmelding -> inntektsmeldingKontraktMapper.mapTilKontrakt(inntektsmelding, personTjeneste.finnPersonIdentForAktørId(inntektsmelding.getAktørId())))
+                .map(inntektsmelding -> InntektsmeldingKontraktMapper.mapTilKontrakt(inntektsmelding, personTjeneste.finnPersonIdentForAktørId(inntektsmelding.getAktørId())))
                 .toList();
         } else {
             var aktørId = Optional.ofNullable(filterRequest.fnr())
@@ -150,7 +147,7 @@ public class InntektsmeldingApiRest {
             var aktørIder = inntektsmeldinger.stream().map(InntektsmeldingDto::getAktørId).collect(Collectors.toSet());
             var aktørIdPersonIdentMap = personTjeneste.finnPersonIdentForAktørIdBolk(aktørIder);
             responsListe = inntektsmeldinger.stream()
-                .map(im -> inntektsmeldingKontraktMapper.mapTilKontrakt(im, aktørIdPersonIdentMap.get(im.getAktørId())))
+                .map(im -> InntektsmeldingKontraktMapper.mapTilKontrakt(im, aktørIdPersonIdentMap.get(im.getAktørId())))
                 .toList();
         }
 

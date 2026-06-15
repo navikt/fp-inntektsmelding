@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -63,8 +64,6 @@ class InntektsmeldingApiRestTest {
     private PersonTjeneste personTjeneste;
     @Mock
     private Tilgang tilgang;
-    @Mock
-    private InntektsmeldingKontraktMapper inntektsmeldingKontraktMapper;
 
     @BeforeEach
     void setUp() {
@@ -72,8 +71,7 @@ class InntektsmeldingApiRestTest {
             inntektsmeldingTjeneste,
             inntektsmeldingMottakTjeneste,
             personTjeneste,
-            tilgang,
-            inntektsmeldingKontraktMapper
+            tilgang
         );
     }
 
@@ -85,13 +83,16 @@ class InntektsmeldingApiRestTest {
 
         when(inntektsmeldingTjeneste.hentInntektsmelding(uuid)).thenReturn(dto);
         when(personTjeneste.finnPersonIdentForAktørId(AKTØR_ID_OBJ)).thenReturn(PERSON_IDENT);
-        when(inntektsmeldingKontraktMapper.mapTilKontrakt(dto, PERSON_IDENT)).thenReturn(response);
 
-        var resultat = inntektsmeldingApiRest.hentInntektsmelding(uuid);
+        try (var mocked = mockStatic(InntektsmeldingKontraktMapper.class)) {
+            mocked.when(() -> InntektsmeldingKontraktMapper.mapTilKontrakt(dto, PERSON_IDENT)).thenReturn(response);
 
-        assertThat(resultat.getStatus()).isEqualTo(HttpStatus.OK_200);
-        assertThat(resultat.getEntity()).isEqualTo(response);
-        verify(tilgang).sjekkErSystembruker();
+            var resultat = inntektsmeldingApiRest.hentInntektsmelding(uuid);
+
+            assertThat(resultat.getStatus()).isEqualTo(HttpStatus.OK_200);
+            assertThat(resultat.getEntity()).isEqualTo(response);
+            verify(tilgang).sjekkErSystembruker();
+        }
     }
 
 
@@ -106,15 +107,18 @@ class InntektsmeldingApiRestTest {
 
         when(inntektsmeldingTjeneste.hentInntektsmeldinger(forespørselUuid)).thenReturn(List.of(dto));
         when(personTjeneste.finnPersonIdentForAktørId(AKTØR_ID_OBJ)).thenReturn(PERSON_IDENT);
-        when(inntektsmeldingKontraktMapper.mapTilKontrakt(dto, PERSON_IDENT)).thenReturn(response);
 
-        var resultat = inntektsmeldingApiRest.hentInntektsmeldinger(filter);
+        try (var mocked = mockStatic(InntektsmeldingKontraktMapper.class)) {
+            mocked.when(() -> InntektsmeldingKontraktMapper.mapTilKontrakt(dto, PERSON_IDENT)).thenReturn(response);
 
-        assertThat(resultat.getStatus()).isEqualTo(HttpStatus.OK_200);
-        @SuppressWarnings("unchecked")
-        var liste = (List<HentInntektsmeldingResponse>) resultat.getEntity();
-        assertThat(liste).hasSize(1).containsExactly(response);
-        verify(inntektsmeldingTjeneste).hentInntektsmeldinger(forespørselUuid);
+            var resultat = inntektsmeldingApiRest.hentInntektsmeldinger(filter);
+
+            assertThat(resultat.getStatus()).isEqualTo(HttpStatus.OK_200);
+            @SuppressWarnings("unchecked")
+            var liste = (List<HentInntektsmeldingResponse>) resultat.getEntity();
+            assertThat(liste).hasSize(1).containsExactly(response);
+            verify(inntektsmeldingTjeneste).hentInntektsmeldinger(forespørselUuid);
+        }
     }
 
     @Test
@@ -150,14 +154,17 @@ class InntektsmeldingApiRestTest {
             .thenReturn(List.of(dto));
         when(personTjeneste.finnPersonIdentForAktørIdBolk(Set.of(AKTØR_ID_OBJ)))
             .thenReturn(Map.of(AKTØR_ID_OBJ, PERSON_IDENT));
-        when(inntektsmeldingKontraktMapper.mapTilKontrakt(dto, PERSON_IDENT)).thenReturn(response);
 
-        var resultat = inntektsmeldingApiRest.hentInntektsmeldinger(filter);
+        try (var mocked = mockStatic(InntektsmeldingKontraktMapper.class)) {
+            mocked.when(() -> InntektsmeldingKontraktMapper.mapTilKontrakt(dto, PERSON_IDENT)).thenReturn(response);
 
-        assertThat(resultat.getStatus()).isEqualTo(HttpStatus.OK_200);
-        @SuppressWarnings("unchecked")
-        var liste = (List<HentInntektsmeldingResponse>) resultat.getEntity();
-        assertThat(liste).hasSize(1);
+            var resultat = inntektsmeldingApiRest.hentInntektsmeldinger(filter);
+
+            assertThat(resultat.getStatus()).isEqualTo(HttpStatus.OK_200);
+            @SuppressWarnings("unchecked")
+            var liste = (List<HentInntektsmeldingResponse>) resultat.getEntity();
+            assertThat(liste).hasSize(1);
+        }
     }
 
     @Test
@@ -226,14 +233,17 @@ class InntektsmeldingApiRestTest {
             .thenReturn(List.of(dto));
         when(personTjeneste.finnPersonIdentForAktørIdBolk(Set.of(AKTØR_ID_OBJ)))
             .thenReturn(Map.of(AKTØR_ID_OBJ, PERSON_IDENT));
-        when(inntektsmeldingKontraktMapper.mapTilKontrakt(dto, PERSON_IDENT)).thenReturn(response);
 
-        var resultat = inntektsmeldingApiRest.hentInntektsmeldinger(filter);
+        try (var mocked = mockStatic(InntektsmeldingKontraktMapper.class)) {
+            mocked.when(() -> InntektsmeldingKontraktMapper.mapTilKontrakt(dto, PERSON_IDENT)).thenReturn(response);
 
-        assertThat(resultat.getStatus()).isEqualTo(HttpStatus.OK_200);
-        @SuppressWarnings("unchecked")
-        var liste = (List<HentInntektsmeldingResponse>) resultat.getEntity();
-        assertThat(liste).hasSize(1).containsExactly(response);
+            var resultat = inntektsmeldingApiRest.hentInntektsmeldinger(filter);
+
+            assertThat(resultat.getStatus()).isEqualTo(HttpStatus.OK_200);
+            @SuppressWarnings("unchecked")
+            var liste = (List<HentInntektsmeldingResponse>) resultat.getEntity();
+            assertThat(liste).hasSize(1).containsExactly(response);
+        }
     }
 
     @Test

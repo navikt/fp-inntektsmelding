@@ -25,7 +25,7 @@ public record ForespørselDto(UUID uuid,
                              String oppgaveId,
                              UUID dialogportenUuid) {
 
-    public static Builder builder() {
+    public static Builder  builder() {
         return new Builder();
     }
 
