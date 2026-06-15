@@ -63,7 +63,7 @@ public class InntektsmeldingApiMottakTjeneste {
         if (forespørsel == null) {
             LOG.info("Finner ikke forespørsel for uuid {}", forespørselUuid);
             return new SendInntektsmeldingResponse(false,
-                null,
+                null, null,
                 new SendInntektsmeldingResponse.FeilInfo(FeilkodeDto.TOM_FORESPOERSEL, "Finner ikke forespørsel for uuid " + forespørselUuid,
                     forespørselUuid.toString()));
         }
@@ -71,7 +71,7 @@ public class InntektsmeldingApiMottakTjeneste {
         if (ForespørselStatus.UTGÅTT.equals(forespørsel.status())) {
             LOG.info("Forespørsel har status utgått. Inntektsmelding kan ikke mottas. forespørselUuid: {}", forespørselUuid);
             return new SendInntektsmeldingResponse(false,
-                null,
+                null, null,
                 new SendInntektsmeldingResponse.FeilInfo(FeilkodeDto.UGYLDIG_FORESPOERSEL,
                     "Det er ikke tillatt å sende inn en inntektsmelding på en forkastet forespørsel",
                     forespørselUuid.toString()));
@@ -82,7 +82,7 @@ public class InntektsmeldingApiMottakTjeneste {
             LOG.info(
                 "Inntektsmelding avvises. Ingen endring på ny inntektsmelding sammenlignet med tidligere innsendt inntektsmelding. inntektsmeldingId: {}",
                 inntektsmelding.getId());
-            return new SendInntektsmeldingResponse(false, null,
+            return new SendInntektsmeldingResponse(false, null, null,
                 new SendInntektsmeldingResponse.FeilInfo(FeilkodeDto.DUPLIKAT,
                     "Inntektsmelding avvises. Ingen endring på ny inntektsmelding sammenlignet med tidligere innsendt inntektsmelding med id: "
                         + sisteInntektsmelding.getInntektsmeldingUuid(),
@@ -99,7 +99,7 @@ public class InntektsmeldingApiMottakTjeneste {
         fellesMottakTjeneste.behandlerForespørsel(forespørsel, Optional.ofNullable(lagretIm.getInntektsmeldingUuid()));
 
         MetrikkerTjeneste.loggInnsendtInntektsmelding(lagretIm);
-        return new SendInntektsmeldingResponse(true, lagretIm.getInntektsmeldingUuid(), null);
+        return new SendInntektsmeldingResponse(true, lagretIm.getInntektsmeldingUuid(), InntektsmeldingKontraktMapper.mapTilKontrakt(lagretIm.getStatus()), null);
     }
 
     private SendInntektsmeldingResponse sjekkMånedInntektMotRapportertInntekt(ForespørselDto forespørsel, InntektsmeldingDto inntektsmelding) {
@@ -129,7 +129,8 @@ public class InntektsmeldingApiMottakTjeneste {
             LOG.warn(
                 "Inntektskomponenten har nedetid, og vi kan ikke verifisere inntekt i inntektsmeldingen mot A-inntekt. inntektsmeldingId: {}",
                 inntektsmelding.getId());
-            return new SendInntektsmeldingResponse(false,
+            //Todo legger inn null i status inntil vi har håndtering av nedetid inntektskomponenten på plass
+            return new SendInntektsmeldingResponse(false, null,
                 null,
                 new SendInntektsmeldingResponse.FeilInfo(FeilkodeDto.NEDETID_AINNTEKT,
                     "Inntektskomponenten har nedetid, og vi kan ikke verifisere inntekt i inntektsmeldingen mot A-inntekt. Prøv igjen om litt.",
@@ -145,13 +146,14 @@ public class InntektsmeldingApiMottakTjeneste {
                 "Inntekt i inntektsmelding er ulik inntekt fra A-inntekt, og ingen endringsårsak er oppgitt. Gjennomsnittlig inntekt fra A-inntekt: %s, oppgitt inntekt i inntektsmelding: %s",
                 inntektFraAInntekt.gjennomsnitt(),
                 inntektsmelding.getMånedInntekt());
+            //Todo legger inn null i status inntil vi har håndtering av nedetid inntektskomponenten på plass
             return new SendInntektsmeldingResponse(false,
-                null,
+                null, null,
                 new SendInntektsmeldingResponse.FeilInfo(FeilkodeDto.ULIK_INNTEKT, feilmelding, forespørsel.uuid().toString()));
         }
 
         loggTilfellerMedLikInntektOgHarÅrsak(inntektsmelding, inntektFraAInntekt.gjennomsnitt());
-        return new SendInntektsmeldingResponse(true, inntektsmelding.getInntektsmeldingUuid(), null);
+        return new SendInntektsmeldingResponse(true, inntektsmelding.getInntektsmeldingUuid(), InntektsmeldingKontraktMapper.mapTilKontrakt(inntektsmelding.getStatus()), null);
     }
 
     private void loggTilfellerMedLikInntektOgHarÅrsak(InntektsmeldingDto inntektsmelding, BigDecimal gjennomsnittligInntekt) {

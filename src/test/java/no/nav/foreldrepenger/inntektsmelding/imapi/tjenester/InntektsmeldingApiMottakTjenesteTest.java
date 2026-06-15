@@ -14,6 +14,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import no.nav.foreldrepenger.inntektsmelding.felles.InntektsmeldingStatusDto;
+
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingStatus;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -102,7 +106,7 @@ class InntektsmeldingApiMottakTjenesteTest {
     void skal_avvise_inntektsmelding_når_oppgitt_inntekt_er_ulik_ainntekt() {
         var foresporselUuid = UUID.randomUUID();
         var imUuid = UUID.randomUUID();
-        var inputDto = lagInntektsmeldingDtoMedUuid(imUuid, null, false);
+        var inputDto = lagInntektsmeldingDtoMedUuid(imUuid, null, false, InntektsmeldingStatus.AVVIST);
         var forespørselDto = lagForespørselDto(foresporselUuid, null, ForespørselStatus.UNDER_BEHANDLING);
         var inntektsopplysninger = new Inntektsopplysninger(BigDecimal.valueOf(46000), ORGNR, List.of(
             new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(46000), YearMonth.of(2026, 1), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
@@ -118,6 +122,7 @@ class InntektsmeldingApiMottakTjenesteTest {
 
         assertThat(response.success()).isFalse();
         assertThat(response.inntektsmeldingUuid()).isNull();
+        assertThat(response.status()).isNull();
         assertThat(response.feilinformasjon().feilmelding()).contains("Inntekt i inntektsmelding er ulik inntekt fra A-inntekt, og ingen endringsårsak er oppgitt");
         assertThat(response.feilinformasjon().referanseId()).isEqualTo(foresporselUuid.toString());
         verify(fellesMottakTjeneste, never()).lagreOgJournalførInntektsmelding(any(), any());
@@ -127,7 +132,7 @@ class InntektsmeldingApiMottakTjenesteTest {
     void skal_avvise_inntektsmelding_når_ainntekt_har_nedetid() {
         var foresporselUuid = UUID.randomUUID();
         var imUuid = UUID.randomUUID();
-        var inputDto = lagInntektsmeldingDtoMedUuid(imUuid, null, false);
+        var inputDto = lagInntektsmeldingDtoMedUuid(imUuid, null, false, InntektsmeldingStatus.VENTER_VURDERING);
         var forespørselDto = lagForespørselDto(foresporselUuid, null, ForespørselStatus.UNDER_BEHANDLING);
         var inntektsopplysninger = new Inntektsopplysninger(BigDecimal.ZERO, ORGNR, List.of(
             new Inntektsopplysninger.InntektMåned(BigDecimal.ZERO, YearMonth.of(2026, 1), MånedslønnStatus.NEDETID_AINNTEKT),
@@ -143,6 +148,7 @@ class InntektsmeldingApiMottakTjenesteTest {
 
         assertThat(response.success()).isFalse();
         assertThat(response.inntektsmeldingUuid()).isNull();
+        assertThat(response.status()).isNull();
         assertThat(response.feilinformasjon().feilmelding()).contains("nedetid");
         assertThat(response.feilinformasjon().referanseId()).isEqualTo(foresporselUuid.toString());
         verify(fellesMottakTjeneste, never()).lagreOgJournalførInntektsmelding(any(), any());
@@ -154,7 +160,7 @@ class InntektsmeldingApiMottakTjenesteTest {
         var imUuid = UUID.randomUUID();
         var inputDto = lagInntektsmeldingDto(null);
         var forespørselDto = lagForespørselDto(foresporselUuid, null, ForespørselStatus.UNDER_BEHANDLING);
-        var lagretIm = lagInntektsmeldingDtoMedUuid(imUuid, null, true);
+        var lagretIm = lagInntektsmeldingDtoMedUuid(imUuid, null, true, InntektsmeldingStatus.GODKJENT);
         var inntektsopplysninger = new Inntektsopplysninger(BigDecimal.valueOf(45000), ORGNR, List.of(
             new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45000), YearMonth.of(2026, 1), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
             new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45000), YearMonth.of(2026, 2), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
@@ -169,6 +175,7 @@ class InntektsmeldingApiMottakTjenesteTest {
 
         assertThat(response.success()).isTrue();
         assertThat(response.inntektsmeldingUuid()).isEqualTo(imUuid);
+        assertThat(response.status()).isEqualTo(InntektsmeldingStatusDto.GODKJENT);
         verify(fellesMottakTjeneste).behandlerForespørsel(forespørselDto, Optional.of(imUuid));
     }
 
@@ -178,7 +185,7 @@ class InntektsmeldingApiMottakTjenesteTest {
         var imUuid = UUID.randomUUID();
         var inputDto = lagInntektsmeldingDto(null);
         var forespørselDto = lagForespørselDto(foresporselUuid, null, ForespørselStatus.UNDER_BEHANDLING);
-        var lagretIm = lagInntektsmeldingDtoMedUuid(imUuid, null, false);
+        var lagretIm = lagInntektsmeldingDtoMedUuid(imUuid, null, false, InntektsmeldingStatus.GODKJENT);
         var inntektsopplysninger = new Inntektsopplysninger(BigDecimal.valueOf(45550), ORGNR, List.of(
             new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45550), YearMonth.of(2026, 1), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
             new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45550), YearMonth.of(2026, 2), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
@@ -202,7 +209,7 @@ class InntektsmeldingApiMottakTjenesteTest {
         var inntektsmeldingUUid = UUID.randomUUID();
         var inputDto = lagInntektsmeldingDto(null);
         var forespørselDto = lagForespørselDto(foresporselUuid, null, ForespørselStatus.UNDER_BEHANDLING);
-        var tidligereLikIm = lagInntektsmeldingDtoMedUuid(inntektsmeldingUUid, null, true);
+        var tidligereLikIm = lagInntektsmeldingDtoMedUuid(inntektsmeldingUUid, null, true, null);
 
         when(forespørselBehandlingTjeneste.hentForespørsel(foresporselUuid)).thenReturn(Optional.of(forespørselDto));
         when(inntektsmeldingTjeneste.hentSisteInntektsmeldingForForespørsel(foresporselUuid)).thenReturn(tidligereLikIm);
@@ -223,7 +230,7 @@ class InntektsmeldingApiMottakTjenesteTest {
         var inputDto = lagInntektsmeldingDto(nyStartdato);
         var forespørselDto = lagForespørselDto(foresporselUuid, nyStartdato, ForespørselStatus.UNDER_BEHANDLING);
         var forrigeInnsendteIm = lagInntektsmeldingDto(null);
-        var nyInnsendtIm = lagInntektsmeldingDtoMedUuid(imUuid, nyStartdato, true);
+        var nyInnsendtIm = lagInntektsmeldingDtoMedUuid(imUuid, nyStartdato, true, InntektsmeldingStatus.GODKJENT );
         var inntektsopplysninger = new Inntektsopplysninger(BigDecimal.valueOf(45000), ORGNR, List.of(
             new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45000), YearMonth.of(2026, 1), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
             new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45000), YearMonth.of(2026, 2), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
@@ -239,6 +246,7 @@ class InntektsmeldingApiMottakTjenesteTest {
 
         assertThat(response.success()).isTrue();
         assertThat(response.inntektsmeldingUuid()).isEqualTo(imUuid);
+        assertThat(response.status()).isEqualTo(InntektsmeldingStatusDto.GODKJENT);
         verify(fellesMottakTjeneste).behandlerForespørsel(forespørselDto, Optional.of(imUuid));
     }
 
@@ -256,10 +264,11 @@ class InntektsmeldingApiMottakTjenesteTest {
     }
 
     private static InntektsmeldingDto lagInntektsmeldingDto(LocalDate startdatoOverride) {
-        return lagInntektsmeldingDtoMedUuid(null, startdatoOverride, true);
+        return lagInntektsmeldingDtoMedUuid(null, startdatoOverride, true, InntektsmeldingStatus.GODKJENT);
     }
 
-    private static InntektsmeldingDto lagInntektsmeldingDtoMedUuid(UUID imUuid, LocalDate startdatoOverride, boolean skalHaEndringsårsak) {
+    private static InntektsmeldingDto lagInntektsmeldingDtoMedUuid(UUID imUuid, LocalDate startdatoOverride, boolean skalHaEndringsårsak,
+                                                                   InntektsmeldingStatus status) {
         var startdato = startdatoOverride == null ? LocalDate.of(2026, 1, 10) : startdatoOverride;
         var builder = InntektsmeldingDto.builder()
             .medAktørId(AktørId.fra(AKTØR_ID))
@@ -275,7 +284,8 @@ class InntektsmeldingApiMottakTjenesteTest {
                 new InntektsmeldingDto.BortfaltNaturalytelse(startdato.plusDays(2), Tid.TIDENES_ENDE, NaturalytelseType.BIL, BigDecimal.valueOf(1200))
             ))
             .medKildesystem(Kildesystem.LØNN_OG_PERSONAL_SYSTEM)
-            .medAvsenderSystem(new InntektsmeldingDto.AvsenderSystem("test-lps", "1.0.0"));
+            .medAvsenderSystem(new InntektsmeldingDto.AvsenderSystem("test-lps", "1.0.0"))
+            .medStatus(status);
         if (skalHaEndringsårsak) {
                     builder.medEndringAvInntektÅrsaker(List.of(
                 new InntektsmeldingDto.Endringsårsak(EndringsårsakType.TARIFFENDRING, null, null, startdato.plusDays(1))

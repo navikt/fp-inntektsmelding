@@ -107,7 +107,7 @@ public class InntektsmeldingApiRest {
 
         if (aktørId.isEmpty()) {
             SECURE_LOG.error("Finner ikke aktørId for fødselsnummer {}", request.fødselsnummer());
-            return new SendInntektsmeldingResponse(false, null,
+            return new SendInntektsmeldingResponse(false, null,  null,
                 new SendInntektsmeldingResponse.FeilInfo(FeilkodeDto.INGEN_AKTØR_ID, "Finner ikke informasjon for fødselsnummer. Sjekk at fødselsnummer er korrekt",
                     request.foresporselUuid().toString()));
         }

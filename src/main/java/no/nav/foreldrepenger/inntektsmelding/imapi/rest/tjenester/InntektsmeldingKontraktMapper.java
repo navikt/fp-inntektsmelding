@@ -18,11 +18,8 @@ import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.Forespørsel
 import no.nav.foreldrepenger.inntektsmelding.imapi.inntektsmelding.HentInntektsmeldingResponse;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
-import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
-
-import static no.nav.foreldrepenger.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon.SaksStatus.MOTTATT;
 
 @ApplicationScoped
 public class InntektsmeldingKontraktMapper {
@@ -36,6 +33,15 @@ public class InntektsmeldingKontraktMapper {
     @Inject
     public InntektsmeldingKontraktMapper(ForespørselTjeneste forespørselTjeneste) {
         this.forespørselTjeneste = forespørselTjeneste;
+    }
+
+    public static InntektsmeldingStatusDto mapTilKontrakt(InntektsmeldingStatus status) {
+        return switch (status) {
+            case AVVIST -> InntektsmeldingStatusDto.AVVIST;
+            case VENTER_VURDERING -> InntektsmeldingStatusDto.VENTER_VURDERING;
+            case GODKJENT -> InntektsmeldingStatusDto.GODKJENT;
+            case UTDATERT -> InntektsmeldingStatusDto.UTDATERT;
+        };
     }
 
     public HentInntektsmeldingResponse mapTilKontrakt(InntektsmeldingDto inntektsmelding, PersonIdent personIdent) {
