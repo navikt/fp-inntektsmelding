@@ -171,19 +171,21 @@ public class ForespørselBehandlingTjeneste {
         });
         // Oppdaterer status i altinn dialogporten
         if (forespørsel.dialogportenUuid() != null) {
-            if (ENV.isDev()) {
-                try {
-                    dialogportenKlient.ferdigstillDialog(forespørsel.dialogportenUuid(),
-                        arbeidsgiver,
-                        lagSaksTittelForDialogporten(aktorId, forespørsel.ytelseType()),
-                        forespørsel.ytelseType(),
-                        forespørsel.førsteUttaksdato(),
-                        inntektsmeldingUuid,
-                        årsak);
-                } catch (Exception e) {
+            try {
+                dialogportenKlient.ferdigstillDialog(forespørsel.dialogportenUuid(),
+                    arbeidsgiver,
+                    lagSaksTittelForDialogporten(aktorId, forespørsel.ytelseType()),
+                    forespørsel.ytelseType(),
+                    forespørsel.førsteUttaksdato(),
+                    inntektsmeldingUuid,
+                    årsak);
+            } catch (Exception e) {
+                if (ENV.isProd()) {
+                    throw new IllegalStateException("Kunne ikke ferdigstille forespørsel i dialogporten, fikk feil " + e);
+                } else {
                     // Ikke alle organisasjoner som brukes av Dolly finnes i Tenor, som Altinn bruker for å slå opp bedrifter i test. Må derfor tåle å feile for enkelte kall i dev
                     LOG.warn("Feil ved kall til dialogporten: ", e);
-                }
+                    }
             }
         }
         // Re-fetch to get updated status
@@ -282,10 +284,12 @@ public class ForespørselBehandlingTjeneste {
 
         opprettForespørselMinSideArbeidsgiver(forespørselUuid, arbeidsgiver, aktørId, ytelsetype, førsteUttaksdato);
 
-        if (ENV.isDev()) {
-            try {
-                opprettForespørselDialogporten(forespørselUuid, arbeidsgiver, aktørId, ytelsetype, førsteUttaksdato);
-            } catch (Exception e) {
+        try {
+            opprettForespørselDialogporten(forespørselUuid, arbeidsgiver, aktørId, ytelsetype, førsteUttaksdato);
+        } catch (Exception e) {
+            if (ENV.isProd()) {
+                throw new IllegalStateException("Kunne ikke ferdigstille forespørsel i dialogporten, fikk feil " + e);
+            } else {
                 // Ikke alle organisasjoner som brukes av Dolly finnes i Tenor, som Altinn bruker for å slå opp bedrifter i test. Må derfor tåle å feile for enkelte kall i dev
                 LOG.warn("Feil ved kall til dialogporten: ", e);
             }
@@ -387,10 +391,12 @@ public class ForespørselBehandlingTjeneste {
 
         forespørselTjeneste.setArbeidsgiverNotifikasjonSakId(uuid, fagerSakId);
 
-        if (ENV.isDev()) {
-            try {
-                opprettForespørselDialogporten(uuid, arbeidsgiver, aktørId, ytelsetype, førsteFraværsdato);
-            } catch (Exception e) {
+        try {
+            opprettForespørselDialogporten(uuid, arbeidsgiver, aktørId, ytelsetype, førsteFraværsdato);
+        } catch (Exception e) {
+            if (ENV.isProd()) {
+                throw new IllegalStateException("Kunne ikke opprette forespørsel i dialogporten, fikk feil " + e);
+            } else {
                 // Ikke alle organisasjoner som brukes av Dolly finnes i Tenor, som Altinn bruker for å slå opp bedrifter i test. Må derfor tåle å feile for enkelte kall i dev
                 LOG.warn("Feil ved kall til dialogporten: ", e);
             }

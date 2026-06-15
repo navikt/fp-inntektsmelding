@@ -103,9 +103,4 @@ public class InntektsmeldingRepository {
         }
         return result;
     }
-
-    public void oppdaterImMedForespørsel(InntektsmeldingEntitet im, ForespørselEntitet forespørselEntitet) {
-        im.setForespørsel(forespørselEntitet);
-        entityManager.flush();
-    }
 }
