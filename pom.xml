@@ -20,7 +20,7 @@
 
         <felles.version>7.8.3</felles.version>
         <prosesstask.version>5.2.7</prosesstask.version>
-        <fp-kontrakter.version>9.4.36</fp-kontrakter.version>
+        <fp-kontrakter.version>9.4.37</fp-kontrakter.version>
         <fp-graphql.version>1.0.1</fp-graphql.version>
     </properties>
 
@@ -99,7 +99,7 @@
         <dependency>
             <groupId>no.nav.foreldrepenger.inntektsmelding</groupId>
             <artifactId>inntektsmelding-kontrakt</artifactId>
-            <version>0.1.8</version>
+            <version>0.1.9</version>
         </dependency>
 
 
