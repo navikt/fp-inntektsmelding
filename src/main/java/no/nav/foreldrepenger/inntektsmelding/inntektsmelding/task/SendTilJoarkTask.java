@@ -1,7 +1,5 @@
 package no.nav.foreldrepenger.inntektsmelding.inntektsmelding.task;
 
-import java.util.Optional;
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -12,7 +10,6 @@ import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingTjen
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.dokgen.DokumentGeneratorTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.joark.JoarkTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Saksnummer;
-import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTask;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskHandler;

@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,7 +35,7 @@ class DokumentGeneratorTjenesteTest {
     private static final String ORGNR = "999999999";
     private static final String AKTØR_ID = "1234567891011";
     private static final AktørId AKTØR_ID_OBJ = new AktørId(AKTØR_ID);
-    private static final LocalDate STARTDATO = LocalDate.of(2026, 1, 10);
+    private static final LocalDate STARTDATO = LocalDate.of(2026, Month.JANUARY, 10);
 
     private FpDokgenRestKlient dokgenKlient;
     private PersonTjeneste personTjeneste;
@@ -68,7 +69,7 @@ class DokumentGeneratorTjenesteTest {
     }
 
     private PersonInfo lagPersonInfo() {
-        return new PersonInfo("Test", "Tester", "Testesen", new PersonIdent("11111111111"), AKTØR_ID_OBJ, LocalDate.of(1990, 5, 15), null, null);
+        return new PersonInfo("Test", "Tester", "Testesen", new PersonIdent("11111111111"), AKTØR_ID_OBJ, LocalDate.of(1990, Month.MAY, 15), null, null);
     }
 
     private InntektsmeldingDto.Builder lagInntektsmeldingBuilder(UUID imUuid, UUID forespørselUuid, ForespørselType forespørselType) {
