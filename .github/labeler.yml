@@ -1,0 +1,3 @@
+kontrakt:
+  - changed-files:
+    - any-glob-to-any-file: 'kontrakter/**'
