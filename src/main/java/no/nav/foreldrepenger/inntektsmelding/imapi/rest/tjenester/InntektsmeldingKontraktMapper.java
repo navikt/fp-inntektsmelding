@@ -36,6 +36,9 @@ public class InntektsmeldingKontraktMapper {
     }
 
     public static InntektsmeldingStatusDto mapTilKontrakt(InntektsmeldingStatus status) {
+        if (status == null) {
+            return null;
+        }
         return switch (status) {
             case AVVIST -> InntektsmeldingStatusDto.AVVIST;
             case VENTER_VURDERING -> InntektsmeldingStatusDto.VENTER_VURDERING;
