@@ -12,6 +12,8 @@ import java.time.Month;
 import java.util.List;
 import java.util.UUID;
 
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -91,6 +93,7 @@ class DokumentGeneratorTjenesteTest {
             .medArbeidsgiver(Arbeidsgiver.fra(ORGNR))
             .medKontaktperson(new InntektsmeldingDto.Kontaktperson("99999999", "Kontaktesen"))
             .medStartdato(STARTDATO)
+            .medKildesystem(Kildesystem.ARBEIDSGIVERPORTAL)
             .medInntekt(BigDecimal.valueOf(40000))
             .medInnsendtTidspunkt(LocalDateTime.now())
             .medMånedRefusjon(BigDecimal.valueOf(35000))
