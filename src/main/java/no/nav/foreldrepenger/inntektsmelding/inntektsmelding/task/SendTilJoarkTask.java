@@ -43,15 +43,15 @@ public class SendTilJoarkTask implements ProsessTaskHandler {
     @Override
     public void doTask(ProsessTaskData prosessTaskData) {
         var inntektsmeldingId = Long.parseLong(prosessTaskData.getPropertyValue(KEY_INNTEKTSMELDING_ID));
-        var fagsysteSaksnummer = Saksnummer.fra(prosessTaskData.getSaksnummer());
-        LOG.info("Starter task for oversending til joark for saksnummer {}", fagsysteSaksnummer);
+        var fagsystemSaksnummer = Saksnummer.fra(prosessTaskData.getSaksnummer());
+        LOG.info("Starter task for oversending til joark for saksnummer {}", fagsystemSaksnummer);
 
         var inntektsmeldingDto = inntektsmeldingTjeneste.hentInntektsmelding(inntektsmeldingId);
         var xml = inntektsmeldingXMLTjeneste.lagXMLAvInntektsmelding(inntektsmeldingDto);
         var pdf = dokumentGeneratorTjeneste.mapDataOgGenererPdf(inntektsmeldingDto);
-        LOG.debug("Genererte XML: {} og pdf av inntektsmeldingen, journalfører på sak: {}", xml, fagsysteSaksnummer);
+        LOG.debug("Genererte XML og pdf av inntektsmeldingen, journalfører på sak: {}", fagsystemSaksnummer);
 
-        joarkTjeneste.journalførInntektsmelding(xml, inntektsmeldingDto, pdf, fagsysteSaksnummer);
+        joarkTjeneste.journalførInntektsmelding(xml, inntektsmeldingDto, pdf, fagsystemSaksnummer);
         LOG.info("Sluttfører task oversendJoark");
     }
 }
