@@ -18,7 +18,6 @@ import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingStatu
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 
 
-@ApplicationScoped
 public class InntektsmeldingKontraktMapper {
 
     private InntektsmeldingKontraktMapper() {
