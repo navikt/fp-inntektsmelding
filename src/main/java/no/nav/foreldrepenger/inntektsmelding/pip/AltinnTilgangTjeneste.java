@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -103,6 +104,9 @@ public class AltinnTilgangTjeneste {
     }
 
     private static Set<String> hentOrgNrMedGittTilgang(Map<String, List<String>> orgNrBrukerHarTilgangTilPerRessurs, String ressurs) {
-        return new HashSet<>(orgNrBrukerHarTilgangTilPerRessurs.getOrDefault(ressurs, List.of()));
+        return orgNrBrukerHarTilgangTilPerRessurs.getOrDefault(ressurs, List.of())
+            .stream()
+            .map(String::strip)
+            .collect(Collectors.toCollection(HashSet::new));
     }
 }
