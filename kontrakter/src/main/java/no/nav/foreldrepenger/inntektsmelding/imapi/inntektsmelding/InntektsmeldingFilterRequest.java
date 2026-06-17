@@ -15,5 +15,6 @@ public record InntektsmeldingFilterRequest(@NotNull @Valid OrganisasjonsnummerDt
                                            @Valid YtelseTypeDto ytelseType,
                                            @Valid UUID forespørselUuid,
                                            @Valid LocalDate fom,
-                                           @Valid LocalDate tom) {
+                                           @Valid LocalDate tom,
+                                           Long fraLoepenr) {
 }
