@@ -16,8 +16,6 @@ import no.nav.foreldrepenger.inntektsmelding.felles.AvsenderSystemDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.BortfaltNaturalytelseDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.EndringsårsakerDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.FødselsnummerDto;
-import no.nav.foreldrepenger.inntektsmelding.felles.InnsendingstypeDto;
-import no.nav.foreldrepenger.inntektsmelding.felles.InnsendingsårsakDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.InntektsmeldingStatusDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.KontaktpersonDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.OrganisasjonsnummerDto;
@@ -25,6 +23,7 @@ import no.nav.foreldrepenger.inntektsmelding.felles.SøktRefusjonDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.YtelseTypeDto;
 
 public record HentInntektsmeldingResponse(
+    Long loepenr,
     @NotNull UUID inntektsmeldingUuid,
     @NotNull UUID forespørselUuid,
     @NotNull @Valid FødselsnummerDto fnr,
