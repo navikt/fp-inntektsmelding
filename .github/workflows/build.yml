@@ -12,6 +12,7 @@ on:
       - 'LICENSE'
       - 'CODEOWNERS'
       - '.github/*.yml'
+      - '.github/workflows/**'
       - 'kontrakter/**'
 
 jobs:

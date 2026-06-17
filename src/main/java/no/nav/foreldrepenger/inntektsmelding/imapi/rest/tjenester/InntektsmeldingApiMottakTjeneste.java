@@ -153,7 +153,7 @@ public class InntektsmeldingApiMottakTjeneste {
         }
 
         loggTilfellerMedLikInntektOgHarÅrsak(inntektsmelding, inntektFraAInntekt.gjennomsnitt());
-        return new SendInntektsmeldingResponse(true, inntektsmelding.getInntektsmeldingUuid(), InntektsmeldingKontraktMapper.mapTilKontrakt(inntektsmelding.getStatus()), null);
+        return new SendInntektsmeldingResponse(true, null, null, null);
     }
 
     private void loggTilfellerMedLikInntektOgHarÅrsak(InntektsmeldingDto inntektsmelding, BigDecimal gjennomsnittligInntekt) {
