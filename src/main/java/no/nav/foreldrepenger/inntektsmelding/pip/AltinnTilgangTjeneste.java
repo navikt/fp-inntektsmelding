@@ -19,7 +19,6 @@ import no.nav.foreldrepenger.inntektsmelding.integrasjoner.altinn.ArbeidsgiverAl
 public class AltinnTilgangTjeneste {
 
     private static final Logger SECURE_LOG = LoggerFactory.getLogger("secureLogger");
-    private static final Logger LOG = LoggerFactory.getLogger(AltinnTilgangTjeneste.class);
 
     private final ArbeidsgiverAltinnTilgangerKlient arbeidsgiverAltinnTilgangerKlient;
 
