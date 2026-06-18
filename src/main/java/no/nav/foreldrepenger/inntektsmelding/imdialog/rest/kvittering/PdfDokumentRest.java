@@ -15,10 +15,11 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.dokgen.DokumentGeneratorTjeneste;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import no.nav.foreldrepenger.inntektsmelding.imdialog.tjenester.KvitteringTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.AutentisertMedTokenX;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.Tilgangskontrollert;
@@ -43,17 +44,17 @@ public class PdfDokumentRest {
 
     private Tilgang tilgang;
     private InntektsmeldingTjeneste inntektsmeldingTjeneste;
-    private KvitteringTjeneste kvitteringTjeneste;
+    private DokumentGeneratorTjeneste dokumentGeneratorTjeneste;
 
     PdfDokumentRest() {
         // CDI
     }
 
     @Inject
-    public PdfDokumentRest(Tilgang tilgang, InntektsmeldingTjeneste inntektsmeldingTjeneste, KvitteringTjeneste kvitteringTjeneste) {
+    public PdfDokumentRest(Tilgang tilgang, InntektsmeldingTjeneste inntektsmeldingTjeneste, DokumentGeneratorTjeneste dokumentgeneratorTjeneste) {
         this.tilgang = tilgang;
         this.inntektsmeldingTjeneste = inntektsmeldingTjeneste;
-        this.kvitteringTjeneste = kvitteringTjeneste;
+        this.dokumentGeneratorTjeneste = dokumentgeneratorTjeneste;
     }
 
     @GET
@@ -67,7 +68,7 @@ public class PdfDokumentRest {
             LOG.info("Finner ikke inntektsmelding med uuid {}", inntektsmeldingUuid);
             return Response.status(Response.Status.NOT_FOUND).build();
         } else {
-            var pdf = kvitteringTjeneste.hentPDF(im);
+            var pdf = dokumentGeneratorTjeneste.mapDataOgGenererPdf(im);
             var ytelsetekst = im.getYtelse().equals(Ytelsetype.FORELDREPENGER) ? "foreldrepenger" : "svangerskapspenger";
             var siste12TegnFraUuid = inntektsmeldingUuid.toString().substring(inntektsmeldingUuid.toString().length() - 12);
             var responseBuilder = Response.ok(pdf);

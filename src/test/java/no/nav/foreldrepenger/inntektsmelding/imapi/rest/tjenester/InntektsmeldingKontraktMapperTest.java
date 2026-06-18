@@ -1,9 +1,6 @@
 package no.nav.foreldrepenger.inntektsmelding.imapi.rest.tjenester;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -15,18 +12,12 @@ import no.nav.foreldrepenger.inntektsmelding.felles.InntektsmeldingStatusDto;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.EndringsårsakType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingStatus;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
-import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
-import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
@@ -35,7 +26,6 @@ import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.NaturalytelseType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.vedtak.konfig.Tid;
 
-@ExtendWith(MockitoExtension.class)
 class InntektsmeldingKontraktMapperTest {
 
     private static final String ORGNR = "999999999";
@@ -43,25 +33,13 @@ class InntektsmeldingKontraktMapperTest {
     private static final String FNR = "12345678901";
     private static final LocalDate STARTDATO = LocalDate.of(2026, 1, 10);
 
-    @Mock
-    private ForespørselTjeneste forespørselTjeneste;
-
-    private InntektsmeldingKontraktMapper mapper;
-
-    @BeforeEach
-    void setup() {
-        mapper = new InntektsmeldingKontraktMapper(forespørselTjeneste);
-    }
-
     @Test
     void skal_mappe_grunnleggende_felter() {
         var imUuid = UUID.randomUUID();
         var forespørselUuid = UUID.randomUUID();
-        var inntektsmelding = lagInntektsmeldingDto(imUuid);
+        var inntektsmelding = lagInntektsmeldingDto(imUuid, forespørselUuid);
 
-        when(forespørselTjeneste.finnForespørsler(any(), any(), eq(ORGNR)))
-            .thenReturn(List.of(lagForespørselDto(forespørselUuid)));
-        var resultat = mapper.mapTilKontrakt(inntektsmelding, new PersonIdent(FNR));
+        var resultat = InntektsmeldingKontraktMapper.mapTilKontrakt(inntektsmelding, new PersonIdent(FNR));
 
         assertThat(resultat.inntektsmeldingUuid()).isEqualTo(imUuid);
         assertThat(resultat.forespørselUuid()).isEqualTo(forespørselUuid);
@@ -77,11 +55,9 @@ class InntektsmeldingKontraktMapperTest {
     @Test
     void skal_mappe_refusjonsfelter() {
         var imUuid = UUID.randomUUID();
-        var inntektsmelding = lagInntektsmeldingDto(imUuid);
+        var inntektsmelding = lagInntektsmeldingDto(imUuid, UUID.randomUUID());
 
-        when(forespørselTjeneste.finnForespørsler(any(), any(), eq(ORGNR)))
-            .thenReturn(List.of(lagForespørselDto(UUID.randomUUID())));
-        var resultat = mapper.mapTilKontrakt(inntektsmelding, new PersonIdent(FNR));
+        var resultat = InntektsmeldingKontraktMapper.mapTilKontrakt(inntektsmelding, new PersonIdent(FNR));
 
         assertThat(resultat.refusjonPrMnd()).isEqualByComparingTo(BigDecimal.valueOf(10000));
         assertThat(resultat.opphørsdatoRefusjon()).isEqualTo(STARTDATO.plusDays(9));
@@ -93,11 +69,9 @@ class InntektsmeldingKontraktMapperTest {
     @Test
     void skal_mappe_bortfalt_naturalytelse() {
         var imUuid = UUID.randomUUID();
-        var inntektsmelding = lagInntektsmeldingDto(imUuid);
+        var inntektsmelding = lagInntektsmeldingDto(imUuid, UUID.randomUUID());
 
-        when(forespørselTjeneste.finnForespørsler(any(), any(), eq(ORGNR)))
-            .thenReturn(List.of(lagForespørselDto(UUID.randomUUID())));
-        var resultat = mapper.mapTilKontrakt(inntektsmelding, new PersonIdent(FNR));
+        var resultat = InntektsmeldingKontraktMapper.mapTilKontrakt(inntektsmelding, new PersonIdent(FNR));
 
         assertThat(resultat.bortfaltNaturalytelsePerioder()).hasSize(1);
         var bortfalt = resultat.bortfaltNaturalytelsePerioder().getFirst();
@@ -109,11 +83,9 @@ class InntektsmeldingKontraktMapperTest {
     @Test
     void skal_mappe_endringsårsaker() {
         var imUuid = UUID.randomUUID();
-        var inntektsmelding = lagInntektsmeldingDto(imUuid);
+        var inntektsmelding = lagInntektsmeldingDto(imUuid, UUID.randomUUID());
 
-        when(forespørselTjeneste.finnForespørsler(any(), any(), eq(ORGNR)))
-            .thenReturn(List.of(lagForespørselDto(UUID.randomUUID())));
-        var resultat = mapper.mapTilKontrakt(inntektsmelding, new PersonIdent(FNR));
+        var resultat = InntektsmeldingKontraktMapper.mapTilKontrakt(inntektsmelding, new PersonIdent(FNR));
 
         assertThat(resultat.endringAvInntektÅrsaker()).hasSize(1);
         var endring = resultat.endringAvInntektÅrsaker().getFirst();
@@ -124,11 +96,9 @@ class InntektsmeldingKontraktMapperTest {
     @Test
     void skal_mappe_avsendersystem() {
         var imUuid = UUID.randomUUID();
-        var inntektsmelding = lagInntektsmeldingDto(imUuid);
+        var inntektsmelding = lagInntektsmeldingDto(imUuid, UUID.randomUUID());
 
-        when(forespørselTjeneste.finnForespørsler(any(), any(), eq(ORGNR)))
-            .thenReturn(List.of(lagForespørselDto(UUID.randomUUID())));
-        var resultat = mapper.mapTilKontrakt(inntektsmelding, new PersonIdent(FNR));
+        var resultat = InntektsmeldingKontraktMapper.mapTilKontrakt(inntektsmelding, new PersonIdent(FNR));
 
         assertThat(resultat.avsenderSystem()).isNotNull();
         assertThat(resultat.avsenderSystem().systemNavn()).isEqualTo("test-lps");
@@ -138,11 +108,9 @@ class InntektsmeldingKontraktMapperTest {
     @Test
     void skal_mappe_avsendersystem_null_når_ikke_satt() {
         var imUuid = UUID.randomUUID();
-        var inntektsmelding = lagInntektsmeldingDtoUtenAvsenderSystem(imUuid);
+        var inntektsmelding = lagInntektsmeldingDtoUtenAvsenderSystem(imUuid, UUID.randomUUID());
 
-        when(forespørselTjeneste.finnForespørsler(any(), any(), eq(ORGNR)))
-            .thenReturn(List.of(lagForespørselDto(UUID.randomUUID())));
-        var resultat = mapper.mapTilKontrakt(inntektsmelding, new PersonIdent(FNR));
+        var resultat = InntektsmeldingKontraktMapper.mapTilKontrakt(inntektsmelding, new PersonIdent(FNR));
 
         assertThat(resultat.avsenderSystem().systemNavn()).isEqualTo("NAV_NO");
     }
@@ -151,9 +119,7 @@ class InntektsmeldingKontraktMapperTest {
     void skal_mappe_status_godkjent() {
         var inntektsmelding = lagInntektsmeldingMedStatus(InntektsmeldingStatus.GODKJENT);
 
-        when(forespørselTjeneste.finnForespørsler(any(), any(), eq(ORGNR)))
-            .thenReturn(List.of(lagForespørselDto(UUID.randomUUID())));
-        var resultat = mapper.mapTilKontrakt(inntektsmelding, new PersonIdent(FNR));
+        var resultat = InntektsmeldingKontraktMapper.mapTilKontrakt(inntektsmelding, new PersonIdent(FNR));
 
         assertThat(resultat.status()).isEqualTo(InntektsmeldingStatusDto.GODKJENT);
     }
@@ -162,9 +128,7 @@ class InntektsmeldingKontraktMapperTest {
     void skal_mappe_status_venter_vurdering() {
         var inntektsmelding = lagInntektsmeldingMedStatus(InntektsmeldingStatus.VENTER_VURDERING);
 
-        when(forespørselTjeneste.finnForespørsler(any(), any(), eq(ORGNR)))
-            .thenReturn(List.of(lagForespørselDto(UUID.randomUUID())));
-        var resultat = mapper.mapTilKontrakt(inntektsmelding, new PersonIdent(FNR));
+        var resultat = InntektsmeldingKontraktMapper.mapTilKontrakt(inntektsmelding, new PersonIdent(FNR));
 
         assertThat(resultat.status()).isEqualTo(InntektsmeldingStatusDto.VENTER_VURDERING);
     }
@@ -173,9 +137,7 @@ class InntektsmeldingKontraktMapperTest {
     void skal_mappe_status_avvist() {
         var inntektsmelding = lagInntektsmeldingMedStatus(InntektsmeldingStatus.AVVIST);
 
-        when(forespørselTjeneste.finnForespørsler(any(), any(), eq(ORGNR)))
-            .thenReturn(List.of(lagForespørselDto(UUID.randomUUID())));
-        var resultat = mapper.mapTilKontrakt(inntektsmelding, new PersonIdent(FNR));
+        var resultat = InntektsmeldingKontraktMapper.mapTilKontrakt(inntektsmelding, new PersonIdent(FNR));
 
         assertThat(resultat.status()).isEqualTo(InntektsmeldingStatusDto.AVVIST);
     }
@@ -184,9 +146,7 @@ class InntektsmeldingKontraktMapperTest {
     void skal_mappe_status_utdatert() {
         var inntektsmelding = lagInntektsmeldingMedStatus(InntektsmeldingStatus.UTDATERT);
 
-        when(forespørselTjeneste.finnForespørsler(any(), any(), eq(ORGNR)))
-            .thenReturn(List.of(lagForespørselDto(UUID.randomUUID())));
-        var resultat = mapper.mapTilKontrakt(inntektsmelding, new PersonIdent(FNR));
+        var resultat = InntektsmeldingKontraktMapper.mapTilKontrakt(inntektsmelding, new PersonIdent(FNR));
 
         assertThat(resultat.status()).isEqualTo(InntektsmeldingStatusDto.UTDATERT);
     }
@@ -205,6 +165,7 @@ class InntektsmeldingKontraktMapperTest {
             .medSøkteRefusjonsperioder(List.of())
             .medBortfaltNaturalytelsePerioder(List.of())
             .medEndringAvInntektÅrsaker(List.of())
+            .medForespørsel(lagForespørselDto(UUID.randomUUID()))
             .medStatus(status)
             .build();
     }
@@ -221,7 +182,7 @@ class InntektsmeldingKontraktMapperTest {
             .build();
     }
 
-    private static InntektsmeldingDto lagInntektsmeldingDto(UUID imUuid) {
+    private static InntektsmeldingDto lagInntektsmeldingDto(UUID imUuid, UUID forespørselUuid) {
         return InntektsmeldingDto.builder()
             .medInntektsmeldingUuid(imUuid)
             .medAktørId(AktørId.fra(AKTØR_ID))
@@ -242,11 +203,12 @@ class InntektsmeldingKontraktMapperTest {
             ))
             .medKildesystem(Kildesystem.FPSAK)
             .medAvsenderSystem(new InntektsmeldingDto.AvsenderSystem("test-lps", "1.0.0"))
+            .medForespørsel(lagForespørselDto(forespørselUuid))
             .medStatus(InntektsmeldingStatus.GODKJENT)
             .build();
     }
 
-    private static InntektsmeldingDto lagInntektsmeldingDtoUtenAvsenderSystem(UUID imUuid) {
+    private static InntektsmeldingDto lagInntektsmeldingDtoUtenAvsenderSystem(UUID imUuid, UUID forespørselUuid) {
         return InntektsmeldingDto.builder()
             .medInntektsmeldingUuid(imUuid)
             .medAktørId(AktørId.fra(AKTØR_ID))
@@ -260,6 +222,7 @@ class InntektsmeldingKontraktMapperTest {
             .medSøkteRefusjonsperioder(List.of())
             .medBortfaltNaturalytelsePerioder(List.of())
             .medEndringAvInntektÅrsaker(List.of())
+            .medForespørsel(lagForespørselDto(forespørselUuid))
             .medStatus(InntektsmeldingStatus.GODKJENT)
             .build();
     }

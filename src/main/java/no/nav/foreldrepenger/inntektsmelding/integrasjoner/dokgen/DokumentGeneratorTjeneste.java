@@ -8,6 +8,8 @@ import jakarta.inject.Inject;
 
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +46,7 @@ public class DokumentGeneratorTjeneste {
         this.organisasjonTjeneste = organisasjonTjeneste;
     }
 
-    public byte[] mapDataOgGenererPdf(InntektsmeldingDto inntektsmelding, ForespørselType forespørselType) {
+    public byte[] mapDataOgGenererPdf(InntektsmeldingDto inntektsmelding) {
         PersonInfo personInfo;
         String arbeidsgiverNavn;
         var arbeidsgvierIdent = inntektsmelding.getArbeidsgiver();
@@ -53,6 +55,8 @@ public class DokumentGeneratorTjeneste {
         personInfo = personTjeneste.hentPersonInfoFraAktørId(inntektsmelding.getAktørId(), Ytelsetype.valueOf(inntektsmelding.getYtelse().name()));
         arbeidsgiverNavn = finnArbeidsgiverNavn(arbeidsgvierIdent, Ytelsetype.valueOf(inntektsmelding.getYtelse().name()));
 
+        // Ved overstyring fra fpsak har vi ingen forespørsel, defaulter her til bestil av fagsystem
+        var forespørselType = inntektsmelding.getKildesystem().equals(Kildesystem.FPSAK) ? ForespørselType.BESTILT_AV_FAGSYSTEM : inntektsmelding.getForespørsel().forespørselType();
         var imDokumentData = InntektsmeldingPdfDataMapper.mapInntektsmeldingPdfData(inntektsmelding,
             arbeidsgiverNavn,
             personInfo,

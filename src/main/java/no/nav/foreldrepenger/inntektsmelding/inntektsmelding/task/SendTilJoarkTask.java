@@ -1,7 +1,5 @@
 package no.nav.foreldrepenger.inntektsmelding.inntektsmelding.task;
 
-import java.util.Optional;
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -12,7 +10,6 @@ import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingTjen
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.dokgen.DokumentGeneratorTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.joark.JoarkTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Saksnummer;
-import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTask;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskHandler;
@@ -46,15 +43,12 @@ public class SendTilJoarkTask implements ProsessTaskHandler {
     @Override
     public void doTask(ProsessTaskData prosessTaskData) {
         var inntektsmeldingId = Long.parseLong(prosessTaskData.getPropertyValue(KEY_INNTEKTSMELDING_ID));
-        var forespørselType = Optional.ofNullable(prosessTaskData.getPropertyValue(KEY_FORESPOERSEL_TYPE))
-            .map(ForespørselType::valueOf)
-            .orElse(ForespørselType.BESTILT_AV_FAGSYSTEM);
         var fagsysteSaksnummer = Saksnummer.fra(prosessTaskData.getSaksnummer());
         LOG.info("Starter task for oversending til joark for saksnummer {}", fagsysteSaksnummer);
 
         var inntektsmeldingDto = inntektsmeldingTjeneste.hentInntektsmelding(inntektsmeldingId);
         var xml = inntektsmeldingXMLTjeneste.lagXMLAvInntektsmelding(inntektsmeldingDto);
-        var pdf = dokumentGeneratorTjeneste.mapDataOgGenererPdf(inntektsmeldingDto, forespørselType);
+        var pdf = dokumentGeneratorTjeneste.mapDataOgGenererPdf(inntektsmeldingDto);
         LOG.debug("Genererte XML: {} og pdf av inntektsmeldingen, journalfører på sak: {}", xml, fagsysteSaksnummer);
 
         joarkTjeneste.journalførInntektsmelding(xml, inntektsmeldingDto, pdf, fagsysteSaksnummer);

@@ -1,8 +1,5 @@
 package no.nav.foreldrepenger.inntektsmelding.imapi.rest.tjenester;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-
 import no.nav.foreldrepenger.inntektsmelding.felles.AvsenderSystemDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.BortfaltNaturalytelseDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.EndringsårsakDto;
@@ -14,25 +11,17 @@ import no.nav.foreldrepenger.inntektsmelding.felles.NaturalytelsetypeDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.OrganisasjonsnummerDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.SøktRefusjonDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.YtelseTypeDto;
-import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.imapi.inntektsmelding.HentInntektsmeldingResponse;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 
-@ApplicationScoped
+
 public class InntektsmeldingKontraktMapper {
 
-    private ForespørselTjeneste forespørselTjeneste;
-
-    public InntektsmeldingKontraktMapper() {
-        // CDI
-    }
-
-    @Inject
-    public InntektsmeldingKontraktMapper(ForespørselTjeneste forespørselTjeneste) {
-        this.forespørselTjeneste = forespørselTjeneste;
+    private InntektsmeldingKontraktMapper() {
+        // Skjuler default
     }
 
     public static InntektsmeldingStatusDto mapTilKontrakt(InntektsmeldingStatus status) {
@@ -47,20 +36,10 @@ public class InntektsmeldingKontraktMapper {
         };
     }
 
-    public HentInntektsmeldingResponse mapTilKontrakt(InntektsmeldingDto inntektsmelding, PersonIdent personIdent) {
-        // Slå opp forespørsel basert på inntektsmeldingen's egenskaper
-        var forespørselOpt = forespørselTjeneste.finnForespørsler(
-                inntektsmelding.getAktørId(),
-                inntektsmelding.getYtelse(),
-                inntektsmelding.getArbeidsgiver().orgnr())
-            .stream()
-            .filter(f -> inntektsmelding.getStartdato().equals(f.førsteUttaksdato()))
-            .findFirst();
-        var forespørselUuid = forespørselOpt.orElseThrow(() -> new IllegalStateException("Fant ikke forespørsel for inntektsmelding med uuid " + inntektsmelding.getInntektsmeldingUuid())).uuid();
-
+    public static HentInntektsmeldingResponse mapTilKontrakt(InntektsmeldingDto inntektsmelding, PersonIdent personIdent) {
         return new HentInntektsmeldingResponse(
             inntektsmelding.getInntektsmeldingUuid(),
-            forespørselUuid,
+            inntektsmelding.getForespørsel().uuid(),
             new FødselsnummerDto(personIdent.getIdent()),
             mapKodeverk(inntektsmelding.getYtelse()),
             new OrganisasjonsnummerDto(inntektsmelding.getArbeidsgiver().orgnr()),
@@ -86,14 +65,14 @@ public class InntektsmeldingKontraktMapper {
         );
     }
 
-    private YtelseTypeDto mapKodeverk(Ytelsetype ytelse) {
+    private static YtelseTypeDto mapKodeverk(Ytelsetype ytelse) {
         return switch (ytelse) {
             case FORELDREPENGER -> YtelseTypeDto.FORELDREPENGER;
             case SVANGERSKAPSPENGER -> YtelseTypeDto.SVANGERSKAPSPENGER;
         };
     }
 
-    private InntektsmeldingStatusDto mapStatus(InntektsmeldingStatus status) {
+    private static InntektsmeldingStatusDto mapStatus(InntektsmeldingStatus status) {
         return switch (status) {
             case AVVIST -> InntektsmeldingStatusDto.AVVIST;
             case VENTER_VURDERING -> InntektsmeldingStatusDto.VENTER_VURDERING;
