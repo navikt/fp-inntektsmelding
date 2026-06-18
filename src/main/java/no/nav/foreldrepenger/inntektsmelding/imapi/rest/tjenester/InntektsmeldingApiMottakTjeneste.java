@@ -157,18 +157,13 @@ public class InntektsmeldingApiMottakTjeneste {
             LOG.warn(
                 "Inntektskomponenten har nedetid, og vi kan ikke verifisere inntekt i inntektsmeldingen mot A-inntekt. inntektsmeldingId: {}",
                 inntektsmelding.getId());
-<<<<<<< HEAD
-            //Todo legger inn null i status inntil vi har håndtering av nedetid inntektskomponenten på plass
-            return new SendInntektsmeldingResponse(false, null,
-=======
-
             // TODO lag task for å kjøre på nytt
             // TODO oppdater status i dialogporten
             // TODO Oppdater status i databasen
             fellesMottakTjeneste.lagreIMOgOpprettTaskForEtterkontroll(inntektsmelding, forespørsel);
             MetrikkerTjeneste.loggInnsendtInntektsmeldingUnderNedetid();
             return new SendInntektsmeldingResponse(false,
->>>>>>> b0a0193 (TFP-6983: Mekanisme for å vente på etterkontroll av inntektsmelding når a-inntekt er nede)
+                null,
                 null,
                 new SendInntektsmeldingResponse.FeilInfo(FeilkodeDto.NEDETID_AINNTEKT,
                     "Inntektskomponenten har nedetid, og vi kan ikke verifisere inntekt i inntektsmeldingen mot A-inntekt. Prøv igjen om litt.",
