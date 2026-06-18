@@ -1,6 +1,5 @@
 package no.nav.foreldrepenger.inntektsmelding.forvaltning;
 
-import java.time.LocalDate;
 import java.util.UUID;
 
 import jakarta.enterprise.context.RequestScoped;
@@ -26,16 +25,10 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import no.nav.foreldrepenger.inntektsmelding.forespørsel.rest.NyBeskjedRequest;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.AutentisertMedAzure;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.Tilgangskontrollert;
 import no.nav.foreldrepenger.inntektsmelding.server.tilgangsstyring.Tilgang;
-import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
-import no.nav.foreldrepenger.inntektsmelding.typer.domene.Saksnummer;
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
-import no.nav.foreldrepenger.inntektsmelding.typer.dto.SaksnummerDto;
-import no.nav.foreldrepenger.konfig.Environment;
 
 @AutentisertMedAzure
 @OpenAPIDefinition(tags = @Tag(name = "oppgaver", description = "Håndtering av feilopprettede saker / oppgaver i arbeidsgiverportalen"))
@@ -61,23 +54,6 @@ public class OppgaverForvaltningRestTjeneste {
     }
 
     @POST
-    @Path("/slettOppgave")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Operation(description = "Sletter en oppgave i arbeidsgiverportalen", summary = "Sletter en oppgave i arbeidsgiverportalen.", tags = "oppgaver", responses = {
-        @ApiResponse(responseCode = "202", description = "Oppgaven er slettet", content = @Content(mediaType = "application/json")),
-        @ApiResponse(responseCode = "500", description = "Feilet pga ukjent feil eller tekniske/funksjonelle feil")
-    })
-    @Tilgangskontrollert
-    public Response slettOppgave(
-        @Parameter(description = "Informasjon om oppgaven") @Valid SlettOppgaveRequest inputDto) {
-        sjekkAtKallerHarRollenDrift();
-        LOG.info("Sletter oppgave med saksnummer {}", inputDto.saksnummer());
-        forespørselBehandlingTjeneste.slettForespørsel(
-            Saksnummer.fra(inputDto.saksnummer().saksnr()), Arbeidsgiver.fra(inputDto.orgnr().orgnr()), inputDto.stp());
-        return Response.status(Response.Status.ACCEPTED).build();
-    }
-
-    @POST
     @Path("/settTilUtgatt/{forespoerselUuid}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Operation(description = "Setter angitt forespørsel og tilhørende sak i arbeidsgiverportalen til utgått", tags = "oppgaver", responses = {
@@ -92,35 +68,9 @@ public class OppgaverForvaltningRestTjeneste {
         var gyldigForespørselUuid = UUID.fromString(forespørselUuid);
         sjekkAtKallerHarRollenDrift();
         LOG.info("Setter forespørsel og tilhørende sak i arbeidsgiverportalen med forespørselUuid {} til utgått", forespørselUuid);
-        forespørselBehandlingTjeneste.settForespørselTilUtgått(gyldigForespørselUuid);
+        forespørselBehandlingTjeneste.settForespørselTilUtgåttForvaltning(gyldigForespørselUuid);
         return Response.status(Response.Status.ACCEPTED).build();
     }
-
-    @POST
-    @Path("/nyBeskjed")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Operation(description = "Oppretter ny beskjed i arbeidsgiverportalen", summary = "Oppretter ny beskjed i arbeidsgiverportalen.", tags = "oppgaver", responses = {
-        @ApiResponse(responseCode = "202", description = "Beskjeden er sendt", content = @Content(mediaType = "application/json")),
-        @ApiResponse(responseCode = "500", description = "Feilet pga ukjent feil eller tekniske/funksjonelle feil")
-    })
-    @Tilgangskontrollert
-    public Response nyBeskjed(
-        @Parameter(description = "Informasjon om oppgaven") @Valid NyBeskjedRequest inputDto) {
-        sjekkAtKallerHarRollenDrift();
-        if (Environment.current().isProd()) {
-            // Kun ment for test i dev
-            return Response.ok().build();
-        }
-        LOG.info("Oppretter beskjed på oppgave med saksnummer {}", inputDto.fagsakSaksnummer());
-        var resultat = forespørselBehandlingTjeneste.opprettNyBeskjedMedEksternVarsling(
-            Saksnummer.fra(inputDto.fagsakSaksnummer().saksnr()),
-            Arbeidsgiver.fra(inputDto.orgnummer().orgnr()));
-        LOG.info("Resultat for opprett beskjed {}", resultat.name());
-        return Response.ok(resultat).build();
-    }
-
-    public record SlettOppgaveRequest(@Valid @NotNull SaksnummerDto saksnummer, @Valid @NotNull OrganisasjonsnummerDto orgnr,
-                                         @Valid LocalDate stp) {}
 
     private void sjekkAtKallerHarRollenDrift() {
         tilgang.sjekkAtAnsattHarRollenDrift();
