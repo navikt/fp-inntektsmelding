@@ -9,7 +9,8 @@ import no.nav.foreldrepenger.inntektsmelding.felles.FødselsnummerDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.OrganisasjonsnummerDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.YtelseTypeDto;
 
-public record ForespørselResponse(UUID forespørselUuid,
+public record ForespørselResponse(Long loepenr,
+                                  UUID forespørselUuid,
                                   OrganisasjonsnummerDto orgnummer,
                                   FødselsnummerDto fødselsnummer,
                                   LocalDate førsteUttaksdato,
