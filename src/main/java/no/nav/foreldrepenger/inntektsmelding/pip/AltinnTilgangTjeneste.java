@@ -105,8 +105,12 @@ public class AltinnTilgangTjeneste {
     }
 
     private static Set<String> hentOrgNrMedGittTilgang(Map<String, List<String>> orgNrBrukerHarTilgangTilPerRessurs, String ressurs) {
+        // Vi får noen feilmeldinger i loggen som går på at orgnr har feil format.
+        // Hypotesen er at orgnr inneholder whitespace eller at det noen ganger mangler orgnr i arbeidsforhold vi får fra Altinn.
+        // Fjerner derfor whitespaces og filtrerer ut tomme orgnr.
         return orgNrBrukerHarTilgangTilPerRessurs.getOrDefault(ressurs, List.of())
             .stream()
+            .map(String::strip)
             .filter(Predicate.not(String::isBlank))
             .collect(Collectors.toCollection(HashSet::new));
     }
