@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -104,9 +105,13 @@ public class AltinnTilgangTjeneste {
     }
 
     private static Set<String> hentOrgNrMedGittTilgang(Map<String, List<String>> orgNrBrukerHarTilgangTilPerRessurs, String ressurs) {
+        // Vi får noen feilmeldinger i loggen som går på at orgnr har feil format.
+        // Hypotesen er at orgnr inneholder whitespace eller at det noen ganger mangler orgnr i arbeidsforhold vi får fra Altinn.
+        // Fjerner derfor whitespaces og filtrerer ut tomme orgnr.
         return orgNrBrukerHarTilgangTilPerRessurs.getOrDefault(ressurs, List.of())
             .stream()
             .map(String::strip)
+            .filter(Predicate.not(String::isBlank))
             .collect(Collectors.toCollection(HashSet::new));
     }
 }
