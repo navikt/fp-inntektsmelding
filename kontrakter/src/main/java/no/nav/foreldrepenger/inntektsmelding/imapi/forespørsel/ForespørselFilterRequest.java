@@ -15,5 +15,6 @@ public record ForespørselFilterRequest(@NotNull @Valid OrganisasjonsnummerDto o
                                        @Valid ForespørselStatusDto status,
                                        @Valid YtelseTypeDto ytelseType,
                                        LocalDate fom,
-                                       LocalDate tom) {
+                                       LocalDate tom,
+                                       Long fraLoepenr) {
 }
