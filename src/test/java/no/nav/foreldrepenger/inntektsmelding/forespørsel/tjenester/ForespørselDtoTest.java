@@ -87,7 +87,7 @@ class ForespørselDtoTest {
 
     @Test
     void skal_opprette_med_konstruktor() {
-        var dto = new ForespørselDto(UUID_1, ARBEIDSGIVER, AKTØR_ID, Ytelsetype.SVANGERSKAPSPENGER,
+        var dto = new ForespørselDto(null, UUID_1, ARBEIDSGIVER, AKTØR_ID, Ytelsetype.SVANGERSKAPSPENGER,
             ForespørselStatus.FERDIG, ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT,
             STP, FØRSTE_UTTAKSDATO, SAKSNUMMER, OPPRETTET, "sak-2", "oppgave-2", null);
 

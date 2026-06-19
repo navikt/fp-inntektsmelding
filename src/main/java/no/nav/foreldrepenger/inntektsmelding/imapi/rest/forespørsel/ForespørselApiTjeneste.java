@@ -64,7 +64,8 @@ public class ForespørselApiTjeneste {
         if (personIdent == null) {
             throw new IllegalArgumentException("Finner ikke fødselsnummer for aktørId " + fp.aktørId());
         }
-        return new ForespørselResponse(fp.uuid(),
+        return new ForespørselResponse(fp.loepenr(),
+            fp.uuid(),
             new OrganisasjonsnummerDto(fp.arbeidsgiver().orgnr()),
             new FødselsnummerDto(personIdent.getIdent()),
             fp.førsteUttaksdato(),

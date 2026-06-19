@@ -11,7 +11,8 @@ import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 
-public record ForespørselDto(UUID uuid,
+public record ForespørselDto(Long loepenr,
+                             UUID uuid,
                              Arbeidsgiver arbeidsgiver,
                              AktørId aktørId,
                              Ytelsetype ytelseType,
@@ -30,6 +31,7 @@ public record ForespørselDto(UUID uuid,
     }
 
     public static class Builder {
+        private Long loepenr;
         private UUID uuid;
         private Arbeidsgiver arbeidsgiver;
         private AktørId aktørId;
@@ -43,6 +45,11 @@ public record ForespørselDto(UUID uuid,
         private String arbeidsgiverNotifikasjonSakId;
         private String oppgaveId;
         private UUID dialogportenUuid;
+
+        public Builder loepenr(Long loepenr) {
+            this.loepenr = loepenr;
+            return this;
+        }
 
         public Builder uuid(UUID uuid) {
             this.uuid = uuid;
@@ -110,7 +117,7 @@ public record ForespørselDto(UUID uuid,
         }
 
         public ForespørselDto build() {
-            return new ForespørselDto(uuid, arbeidsgiver, aktørId, ytelseType, status, forespørselType,
+            return new ForespørselDto(loepenr, uuid, arbeidsgiver, aktørId, ytelseType, status, forespørselType,
                 skjæringstidspunkt, førsteUttaksdato, fagsystemSaksnummer, opprettetTidspunkt,
                 arbeidsgiverNotifikasjonSakId, oppgaveId, dialogportenUuid);
         }

@@ -38,6 +38,7 @@ public class InntektsmeldingKontraktMapper {
 
     public static HentInntektsmeldingResponse mapTilKontrakt(InntektsmeldingDto inntektsmelding, PersonIdent personIdent) {
         return new HentInntektsmeldingResponse(
+            inntektsmelding.getId(),
             inntektsmelding.getInntektsmeldingUuid(),
             inntektsmelding.getForespørsel().uuid(),
             new FødselsnummerDto(personIdent.getIdent()),

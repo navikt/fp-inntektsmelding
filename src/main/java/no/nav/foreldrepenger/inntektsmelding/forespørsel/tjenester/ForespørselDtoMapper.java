@@ -16,6 +16,7 @@ public class ForespørselDtoMapper {
             return null;
         }
         return ForespørselDto.builder()
+            .loepenr(entitet.getId())
             .uuid(entitet.getUuid())
             .arbeidsgiver(Arbeidsgiver.fra(entitet.getOrganisasjonsnummer()))
             .aktørId(AktørId.fra(entitet.getAktørId().getAktørId()))
