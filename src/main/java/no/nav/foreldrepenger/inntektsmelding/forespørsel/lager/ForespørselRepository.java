@@ -222,7 +222,8 @@ public class ForespørselRepository {
                                                               ForespørselStatus status,
                                                               Ytelsetype ytelseType,
                                                               LocalDate fom,
-                                                              LocalDate tom) {
+                                                              LocalDate tom,
+                                                              Long fraLoepenr) {
         var cb = entityManager.getCriteriaBuilder();
         var cq = cb.createQuery(ForespørselEntitet.class);
         var root = cq.from(ForespørselEntitet.class);
@@ -244,6 +245,9 @@ public class ForespørselRepository {
         }
         if (tom != null) {
             predicates.add(cb.lessThan(root.get(OPPRETTET_TIDSPUNKT), tom.plusDays(1).atStartOfDay()));
+        }
+        if (fraLoepenr != null) {
+            predicates.add(cb.greaterThan(root.get("id"), fraLoepenr));
         }
         cq.where(predicates.toArray(new Predicate[0]));
 

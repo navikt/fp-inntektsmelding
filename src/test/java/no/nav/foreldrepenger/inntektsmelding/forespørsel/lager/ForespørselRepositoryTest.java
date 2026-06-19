@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.LocalDate;
 import java.util.UUID;
 
+import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.InntektsmeldingEntitet;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -114,7 +116,7 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
             "123",
             LocalDate.now(), ForespørselType.BESTILT_AV_FAGSYSTEM);
 
-        var forespørsler = forespørselRepository.hentForespørslerFraFilter(orgnr, null, null, null, null, null);
+        var forespørsler = forespørselRepository.hentForespørslerFraFilter(orgnr, null, null, null, null, null, null);
 
         assertThat(forespørsler).hasSize(2);
     }
@@ -136,7 +138,7 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
             "123",
             LocalDate.now(), ForespørselType.BESTILT_AV_FAGSYSTEM);
 
-        var forespørsler = forespørselRepository.hentForespørslerFraFilter(orgnr, null, null, Ytelsetype.SVANGERSKAPSPENGER, null, null);
+        var forespørsler = forespørselRepository.hentForespørslerFraFilter(orgnr, null, null, Ytelsetype.SVANGERSKAPSPENGER, null, null, null);
 
         assertThat(forespørsler).hasSize(1);
     }
@@ -165,7 +167,7 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
             "123",
             LocalDate.now(), ForespørselType.BESTILT_AV_FAGSYSTEM);
 
-        var forespørsler = forespørselRepository.hentForespørslerFraFilter(orgnr, new AktørIdEntitet("8888888888888"), null, null, null, null);
+        var forespørsler = forespørselRepository.hentForespørslerFraFilter(orgnr, new AktørIdEntitet("8888888888888"), null, null, null, null, null);
 
         assertThat(forespørsler).hasSize(2);
     }
@@ -188,7 +190,7 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
             LocalDate.now(), ForespørselType.BESTILT_AV_FAGSYSTEM);
 
         var forespørsler = forespørselRepository.hentForespørslerFraFilter(orgnr, null, null, null,
-            Tid.TIDENES_BEGYNNELSE, Tid.TIDENES_ENDE);
+            Tid.TIDENES_BEGYNNELSE, Tid.TIDENES_ENDE, null);
 
         assertThat(forespørsler).hasSize(2);
     }
@@ -211,7 +213,7 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
             LocalDate.now(), ForespørselType.BESTILT_AV_FAGSYSTEM);
 
         var forespørsler = forespørselRepository.hentForespørslerFraFilter(orgnr, null, null, null,
-            LocalDate.now().plusDays(7), Tid.TIDENES_ENDE);
+            LocalDate.now().plusDays(7), Tid.TIDENES_ENDE, null);
 
         assertThat(forespørsler).isEmpty();
     }
@@ -241,9 +243,45 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
             LocalDate.now(), ForespørselType.BESTILT_AV_FAGSYSTEM);
 
         var forespørsler = forespørselRepository.hentForespørslerFraFilter(orgnr, null, null, null,
-            null, LocalDate.now().plusDays(7));
+            null, LocalDate.now().plusDays(7), null);
 
         assertThat(forespørsler).hasSize(3);
+    }
+
+    @Test
+    void skal_søke_på_fraLoepenr() {
+        var orgnr = "999999999";
+        lagreForespørsel(LocalDate.now(),
+            Ytelsetype.FORELDREPENGER,
+            "9999999999999",
+            orgnr,
+            "123",
+            LocalDate.now(), ForespørselType.BESTILT_AV_FAGSYSTEM);
+
+        lagreForespørsel(LocalDate.now(),
+            Ytelsetype.SVANGERSKAPSPENGER,
+            "8888888888888",
+            orgnr,
+            "111",
+            LocalDate.now(), ForespørselType.BESTILT_AV_FAGSYSTEM);
+
+        lagreForespørsel(LocalDate.now(),
+            Ytelsetype.FORELDREPENGER,
+            "7777777777777",
+            orgnr,
+            "321",
+            LocalDate.now(), ForespørselType.BESTILT_AV_FAGSYSTEM);
+
+        var lavesteDatabaseId = forespørselRepository.hentForespørslerFraFilter(orgnr, null, null, null, null, null, null).stream()
+            .map(ForespørselEntitet::getId)
+            .min(Long::compareTo)
+            .orElseThrow();
+
+        var forespørsler = forespørselRepository.hentForespørslerFraFilter(orgnr, null, null, null,
+            null, LocalDate.now().plusDays(7), lavesteDatabaseId);
+
+        assertThat(forespørsler).hasSize(2);
+        assertThat(forespørsler.stream().noneMatch(fs -> fs.getId() <= lavesteDatabaseId)).isTrue();
     }
 
 }
