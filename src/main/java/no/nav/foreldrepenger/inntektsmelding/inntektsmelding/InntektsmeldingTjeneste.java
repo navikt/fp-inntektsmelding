@@ -73,8 +73,9 @@ public class InntektsmeldingTjeneste {
                                                                     AktørIdEntitet aktørId,
                                                                     Ytelsetype ytelseType,
                                                                     LocalDate fom,
-                                                                    LocalDate tom) {
-        return inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, aktørId, ytelseType, fom, tom)
+                                                                    LocalDate tom,
+                                                                    Long fraLoepenr) {
+        return inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, aktørId, ytelseType, fom, tom, fraLoepenr)
             .stream()
             .map(InntektsmeldingDtoMapper::mapFraEntitet)
             .toList();

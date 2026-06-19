@@ -143,7 +143,8 @@ public class InntektsmeldingApiRest {
                 aktørId,
                 ytelseType,
                 filterRequest.fom(),
-                filterRequest.tom());
+                filterRequest.tom(),
+                filterRequest.fraLoepenr());
             var aktørIder = inntektsmeldinger.stream().map(InntektsmeldingDto::getAktørId).collect(Collectors.toSet());
             var aktørIdPersonIdentMap = personTjeneste.finnPersonIdentForAktørIdBolk(aktørIder);
             responsListe = inntektsmeldinger.stream()
