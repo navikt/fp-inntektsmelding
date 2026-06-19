@@ -119,7 +119,7 @@ public class ForespørselBehandlingTjeneste {
             .filter(forespørsel -> forespørsel.aktørId().equals(aktørId))
             .filter(forespørselDto -> arbeidsgiver.orgnr().equals(forespørselDto.arbeidsgiver().orgnr()))
             .filter(forespørselDto -> !ForespørselStatus.UTGÅTT.name().equals(forespørselDto.status().name()))
-            .forEach(forespørselDto -> settForespørselTilUtgått(forespørselDto));
+            .forEach(this::settForespørselTilUtgått);
     }
 
     public ForespørselDto ferdigstillForespørsel(UUID foresporselUuid,
@@ -454,7 +454,7 @@ public class ForespørselBehandlingTjeneste {
     public void settForespørselTilUtgått(Saksnummer fagsakSaksnummer, Arbeidsgiver arbeidsgiver, LocalDate skjæringstidspunkt) {
         var forespørsler = hentÅpneForespørslerForFagsak(fagsakSaksnummer, arbeidsgiver, skjæringstidspunkt);
 
-        forespørsler.forEach(it -> settForespørselTilUtgått(it));
+        forespørsler.forEach(this::settForespørselTilUtgått);
     }
 
     private List<ForespørselDto> hentÅpneForespørslerForFagsak(Saksnummer fagsakSaksnummer,
