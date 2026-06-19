@@ -44,7 +44,8 @@ class ForespørselApiRestTest {
         var førsteUttaksdato = LocalDate.now();
         var skjæringstidspunkt = LocalDate.now();
         var forespørselUuid = UUID.randomUUID();
-        var forventetForespørselDto = new ForespørselResponse(forespørselUuid,
+        var forventetForespørselDto = new ForespørselResponse(null,
+            forespørselUuid,
             orgnummer,
             new FødselsnummerDto("11111111111"),
             førsteUttaksdato,
