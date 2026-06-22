@@ -119,7 +119,7 @@ public class ForespørselBehandlingTjeneste {
             .filter(forespørsel -> forespørsel.aktørId().equals(aktørId))
             .filter(forespørselDto -> arbeidsgiver.orgnr().equals(forespørselDto.arbeidsgiver().orgnr()))
             .filter(forespørselDto -> !ForespørselStatus.UTGÅTT.name().equals(forespørselDto.status().name()))
-            .forEach(forespørselDto -> settForespørselTilUtgått(forespørselDto));
+            .forEach(this::settForespørselTilUtgått);
     }
 
     public ForespørselDto ferdigstillForespørsel(UUID foresporselUuid,
@@ -454,7 +454,7 @@ public class ForespørselBehandlingTjeneste {
     public void settForespørselTilUtgått(Saksnummer fagsakSaksnummer, Arbeidsgiver arbeidsgiver, LocalDate skjæringstidspunkt) {
         var forespørsler = hentÅpneForespørslerForFagsak(fagsakSaksnummer, arbeidsgiver, skjæringstidspunkt);
 
-        forespørsler.forEach(it -> settForespørselTilUtgått(it));
+        forespørsler.forEach(this::settForespørselTilUtgått);
     }
 
     private List<ForespørselDto> hentÅpneForespørslerForFagsak(Saksnummer fagsakSaksnummer,
@@ -529,7 +529,8 @@ public class ForespørselBehandlingTjeneste {
                                                  ForespørselStatusDto status,
                                                  YtelseTypeDto ytelseType,
                                                  LocalDate fom,
-                                                 LocalDate tom) {
+                                                 LocalDate tom,
+                                                 Long fraLoepenr) {
         var aktørId = fødselsnummer == null ? null : personTjeneste.finnAktørIdForIdent(new PersonIdent(fødselsnummer.fnr()))
             .orElseThrow(() -> new IllegalStateException("Finner ikke aktørId"));
         return forespørselTjeneste.hentForespørsler(arbeidsgiver,
@@ -537,6 +538,7 @@ public class ForespørselBehandlingTjeneste {
             status == null ? null : KodeverkMapper.mapForespørselStatus(status),
             ytelseType == null ? null : KodeverkMapper.mapYtelsetype(ytelseType),
             fom,
-            tom);
+            tom,
+            fraLoepenr);
     }
 }

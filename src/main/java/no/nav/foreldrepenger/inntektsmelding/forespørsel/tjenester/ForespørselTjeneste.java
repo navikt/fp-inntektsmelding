@@ -124,8 +124,10 @@ public class ForespørselTjeneste {
                                                  AktørId aktørId,
                                                  ForespørselStatus status,
                                                  Ytelsetype ytelseType,
-                                                 LocalDate fom, LocalDate tom) {
-        return forespørselRepository.hentForespørslerFraFilter(arbeidsgiver.orgnr(), mapTilEntitet(aktørId), status, ytelseType, fom, tom).stream()
+                                                 LocalDate fom,
+                                                 LocalDate tom,
+                                                 Long fraLoepenr) {
+        return forespørselRepository.hentForespørslerFraFilter(arbeidsgiver.orgnr(), mapTilEntitet(aktørId), status, ytelseType, fom, tom, fraLoepenr).stream()
             .map(ForespørselDtoMapper::mapFraEntitet).toList();
     }
 

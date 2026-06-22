@@ -81,10 +81,10 @@ class ForespørselApiTjenesteTest {
         var aktørId = new AktørId(aktørIdDom.getAktørId());
         when(personTjeneste.finnPersonIdentForAktørIdBolk(Set.of(aktørId))).thenReturn(
             Map.of(aktørId, fnr));
-        when(forespørselBehandlingTjeneste.hentForespørsler(Arbeidsgiver.fra(orgnr), null, null, null, null, null)).thenReturn(List.of(
+        when(forespørselBehandlingTjeneste.hentForespørsler(Arbeidsgiver.fra(orgnr), null, null, null, null, null, null)).thenReturn(List.of(
             ForespørselDtoMapper.mapFraEntitet(forespørsel)));
 
-        var dto = forespørselApiTjeneste.hentForespørslerDto(Arbeidsgiver.fra(orgnr), null, null, null, null, null);
+        var dto = forespørselApiTjeneste.hentForespørslerDto(Arbeidsgiver.fra(orgnr), null, null, null, null, null, null);
 
         assertThat(dto).hasSize(1);
         assertThat(dto.getFirst().fødselsnummer().fnr()).isEqualTo(fnr.getIdent());

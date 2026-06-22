@@ -684,7 +684,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
         clearHibernateCache();
 
-        var resultat = forespørselBehandlingTjeneste.hentForespørsler(Arbeidsgiver.fra(BRREG_ORGNUMMER), new Fødselsnummer(fnr), null, null, null, null);
+        var resultat = forespørselBehandlingTjeneste.hentForespørsler(Arbeidsgiver.fra(BRREG_ORGNUMMER), new Fødselsnummer(fnr), null, null, null, null, null);
 
         assertThat(resultat).isEmpty();
     }
@@ -698,7 +698,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
         clearHibernateCache();
 
-        var resultat = forespørselBehandlingTjeneste.hentForespørsler(Arbeidsgiver.fra(BRREG_ORGNUMMER), null, null, null, null, null);
+        var resultat = forespørselBehandlingTjeneste.hentForespørsler(Arbeidsgiver.fra(BRREG_ORGNUMMER), null, null, null, null, null, null);
 
         assertThat(resultat).hasSize(1);
         assertThat(resultat.getFirst().arbeidsgiver().orgnr()).isEqualTo(BRREG_ORGNUMMER);

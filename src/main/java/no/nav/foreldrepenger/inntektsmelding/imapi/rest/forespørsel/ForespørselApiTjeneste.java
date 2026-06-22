@@ -49,12 +49,13 @@ public class ForespørselApiTjeneste {
 
 
     public List<ForespørselResponse> hentForespørslerDto(Arbeidsgiver arbeidsgiver,
-                                                             Fødselsnummer fnr,
-                                                             no.nav.foreldrepenger.inntektsmelding.typer.dto.ForespørselStatusDto status,
-                                                             no.nav.foreldrepenger.inntektsmelding.typer.dto.YtelseTypeDto ytelseTypeDto,
-                                                             LocalDate fom,
-                                                             LocalDate tom) {
-        var resultater = forespørselBehandlingTjeneste.hentForespørsler(arbeidsgiver, fnr, status, ytelseTypeDto, fom, tom);
+                                                         Fødselsnummer fnr,
+                                                         no.nav.foreldrepenger.inntektsmelding.typer.dto.ForespørselStatusDto status,
+                                                         no.nav.foreldrepenger.inntektsmelding.typer.dto.YtelseTypeDto ytelseTypeDto,
+                                                         LocalDate fom,
+                                                         LocalDate tom,
+                                                         Long fraLoepenr) {
+        var resultater = forespørselBehandlingTjeneste.hentForespørsler(arbeidsgiver, fnr, status, ytelseTypeDto, fom, tom, fraLoepenr);
         var aktørIder = resultater.stream().map(ForespørselDto::aktørId).collect(Collectors.toSet());
         var aktørIdPersonIdentMap = personTjeneste.finnPersonIdentForAktørIdBolk(aktørIder);
         return resultater.stream().map(f -> mapTilResponseDto(f, aktørIdPersonIdentMap.get(f.aktørId()))).toList();

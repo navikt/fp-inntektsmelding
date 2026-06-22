@@ -27,7 +27,7 @@ public class InntektsmeldingDtoMapper {
 
     public static InntektsmeldingDto mapFraEntitet(InntektsmeldingEntitet entitet) {
         return InntektsmeldingDto.builder()
-            .medId(entitet.getId()) // TODO Fjern denne når frontend ikke lenger bruker den
+            .medId(entitet.getId())
             .medInntektsmeldingUuid(entitet.getUuid())
             .medAktørId(AktørId.fra(entitet.getAktørId().getAktørId()))
             .medYtelse(entitet.getYtelsetype())

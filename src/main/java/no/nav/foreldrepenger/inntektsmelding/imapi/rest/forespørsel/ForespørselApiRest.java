@@ -83,7 +83,8 @@ public class ForespørselApiRest {
             Optional.ofNullable(filterRequest.status()).map(ForespørselApiRest::mapStatus).orElse(null),
             Optional.ofNullable(filterRequest.ytelseType()).map(ForespørselApiRest::mapYtelseType).orElse(null),
             filterRequest.fom(),
-            filterRequest.tom());
+            filterRequest.tom(),
+            filterRequest.fraLoepenr());
         return Response.ok(dtoer).build();
     }
 

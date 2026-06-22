@@ -126,7 +126,7 @@ class InntektsmeldingApiRestTest {
         var filter = new InntektsmeldingFilterRequest(
             new OrganisasjonsnummerDto(ORGNR), null, null, null, null, null, null);
 
-        when(inntektsmeldingTjeneste.hentInntektsmeldingerFraFilter(eq(ORGNR), isNull(), isNull(), isNull(), isNull()))
+        when(inntektsmeldingTjeneste.hentInntektsmeldingerFraFilter(eq(ORGNR), isNull(), isNull(), isNull(), isNull(), isNull()))
             .thenReturn(Collections.emptyList());
 
         var resultat = inntektsmeldingApiRest.hentInntektsmeldinger(filter);
@@ -150,7 +150,7 @@ class InntektsmeldingApiRestTest {
         var response = lagHentResponse(UUID.randomUUID());
 
         when(inntektsmeldingTjeneste.hentInntektsmeldingerFraFilter(
-            eq(ORGNR), eq(new AktørIdEntitet(AKTØR_ID)), isNull(), isNull(), isNull()))
+            eq(ORGNR), eq(new AktørIdEntitet(AKTØR_ID)), isNull(), isNull(), isNull(), isNull()))
             .thenReturn(List.of(dto));
         when(personTjeneste.finnPersonIdentForAktørIdBolk(Set.of(AKTØR_ID_OBJ)))
             .thenReturn(Map.of(AKTØR_ID_OBJ, PERSON_IDENT));
@@ -173,14 +173,14 @@ class InntektsmeldingApiRestTest {
             new OrganisasjonsnummerDto(ORGNR), null, YtelseTypeDto.FORELDREPENGER, null, null, null, null);
 
         when(inntektsmeldingTjeneste.hentInntektsmeldingerFraFilter(
-            eq(ORGNR), isNull(), eq(Ytelsetype.FORELDREPENGER), isNull(), isNull()))
+            eq(ORGNR), isNull(), eq(Ytelsetype.FORELDREPENGER), isNull(), isNull(), isNull()))
             .thenReturn(Collections.emptyList());
 
         var resultat = inntektsmeldingApiRest.hentInntektsmeldinger(filter);
 
         assertThat(resultat.getStatus()).isEqualTo(HttpStatus.OK_200);
         verify(inntektsmeldingTjeneste).hentInntektsmeldingerFraFilter(
-            eq(ORGNR), isNull(), eq(Ytelsetype.FORELDREPENGER), isNull(), isNull());
+            eq(ORGNR), isNull(), eq(Ytelsetype.FORELDREPENGER), isNull(), isNull(), isNull());
     }
 
     @Test
@@ -189,14 +189,14 @@ class InntektsmeldingApiRestTest {
             new OrganisasjonsnummerDto(ORGNR), null, YtelseTypeDto.SVANGERSKAPSPENGER, null, null, null, null);
 
         when(inntektsmeldingTjeneste.hentInntektsmeldingerFraFilter(
-            eq(ORGNR), isNull(), eq(Ytelsetype.SVANGERSKAPSPENGER), isNull(), isNull()))
+            eq(ORGNR), isNull(), eq(Ytelsetype.SVANGERSKAPSPENGER), isNull(), isNull(), isNull()))
             .thenReturn(Collections.emptyList());
 
         var resultat = inntektsmeldingApiRest.hentInntektsmeldinger(filter);
 
         assertThat(resultat.getStatus()).isEqualTo(HttpStatus.OK_200);
         verify(inntektsmeldingTjeneste).hentInntektsmeldingerFraFilter(
-            eq(ORGNR), isNull(), eq(Ytelsetype.SVANGERSKAPSPENGER), isNull(), isNull());
+            eq(ORGNR), isNull(), eq(Ytelsetype.SVANGERSKAPSPENGER), isNull(), isNull(), isNull());
     }
 
     @Test
@@ -206,13 +206,13 @@ class InntektsmeldingApiRestTest {
         var filter = new InntektsmeldingFilterRequest(
             new OrganisasjonsnummerDto(ORGNR), null, null, null, fom, tom, null);
 
-        when(inntektsmeldingTjeneste.hentInntektsmeldingerFraFilter(eq(ORGNR), isNull(), isNull(), eq(fom), eq(tom)))
+        when(inntektsmeldingTjeneste.hentInntektsmeldingerFraFilter(eq(ORGNR), isNull(), isNull(), eq(fom), eq(tom),isNull()))
             .thenReturn(Collections.emptyList());
 
         var resultat = inntektsmeldingApiRest.hentInntektsmeldinger(filter);
 
         assertThat(resultat.getStatus()).isEqualTo(HttpStatus.OK_200);
-        verify(inntektsmeldingTjeneste).hentInntektsmeldingerFraFilter(ORGNR, null, null, fom, tom);
+        verify(inntektsmeldingTjeneste).hentInntektsmeldingerFraFilter(ORGNR, null, null, fom, tom, null);
     }
 
     @Test
@@ -221,7 +221,7 @@ class InntektsmeldingApiRestTest {
         var tom = LocalDate.of(2025, 6, 30);
         var filter = new InntektsmeldingFilterRequest(
             new OrganisasjonsnummerDto(ORGNR), new FødselsnummerDto(FNR),
-            YtelseTypeDto.FORELDREPENGER, null, fom, tom, null);
+            YtelseTypeDto.FORELDREPENGER, null, fom, tom, 1L);
 
         var aktørId = new AktørId(AKTØR_ID);
         when(personTjeneste.finnAktørIdForIdent(any(PersonIdent.class))).thenReturn(Optional.of(aktørId));
@@ -229,7 +229,7 @@ class InntektsmeldingApiRestTest {
         var dto = lagInntektsmeldingDto();
         var response = lagHentResponse(UUID.randomUUID());
         when(inntektsmeldingTjeneste.hentInntektsmeldingerFraFilter(
-            ORGNR, new AktørIdEntitet(AKTØR_ID), Ytelsetype.FORELDREPENGER, fom, tom))
+            ORGNR, new AktørIdEntitet(AKTØR_ID), Ytelsetype.FORELDREPENGER, fom, tom, 1L))
             .thenReturn(List.of(dto));
         when(personTjeneste.finnPersonIdentForAktørIdBolk(Set.of(AKTØR_ID_OBJ)))
             .thenReturn(Map.of(AKTØR_ID_OBJ, PERSON_IDENT));
@@ -252,13 +252,13 @@ class InntektsmeldingApiRestTest {
             new OrganisasjonsnummerDto(ORGNR), new FødselsnummerDto(FNR), null, null, null, null, null);
 
         when(personTjeneste.finnAktørIdForIdent(any(PersonIdent.class))).thenReturn(Optional.empty());
-        when(inntektsmeldingTjeneste.hentInntektsmeldingerFraFilter(eq(ORGNR), isNull(), isNull(), isNull(), isNull()))
+        when(inntektsmeldingTjeneste.hentInntektsmeldingerFraFilter(eq(ORGNR), isNull(), isNull(), isNull(), isNull(), isNull()))
             .thenReturn(Collections.emptyList());
 
         var resultat = inntektsmeldingApiRest.hentInntektsmeldinger(filter);
 
         assertThat(resultat.getStatus()).isEqualTo(HttpStatus.OK_200);
-        verify(inntektsmeldingTjeneste).hentInntektsmeldingerFraFilter(eq(ORGNR), isNull(), isNull(), isNull(), isNull());
+        verify(inntektsmeldingTjeneste).hentInntektsmeldingerFraFilter(eq(ORGNR), isNull(), isNull(), isNull(), isNull(), isNull());
     }
 
     @Test
@@ -282,6 +282,7 @@ class InntektsmeldingApiRestTest {
 
     private InntektsmeldingDto lagInntektsmeldingDto() {
         return InntektsmeldingDto.builder()
+            .medId(1L)
             .medInntektsmeldingUuid(UUID.randomUUID())
             .medAktørId(AKTØR_ID_OBJ)
             .medArbeidsgiver(new Arbeidsgiver(ORGNR))
@@ -294,7 +295,7 @@ class InntektsmeldingApiRestTest {
 
     private HentInntektsmeldingResponse lagHentResponse(UUID uuid) {
         return new HentInntektsmeldingResponse(
-            null,
+            1L,
             uuid, UUID.randomUUID(),
             new FødselsnummerDto(FNR),
             YtelseTypeDto.FORELDREPENGER,

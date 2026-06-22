@@ -12,8 +12,6 @@ import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.Predicate;
 
-import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,7 +67,8 @@ public class InntektsmeldingRepository {
                                                                        AktørIdEntitet aktørId,
                                                                        Ytelsetype ytelseType,
                                                                        LocalDate fom,
-                                                                       LocalDate tom) {
+                                                                       LocalDate tom,
+                                                                       Long fraLoepenr) {
         var cb = entityManager.getCriteriaBuilder();
         var cq = cb.createQuery(InntektsmeldingEntitet.class);
         var root = cq.from(InntektsmeldingEntitet.class);
@@ -88,6 +87,9 @@ public class InntektsmeldingRepository {
         }
         if (tom != null) {
             predicates.add(cb.lessThan(root.get("opprettetTidspunkt"), tom.plusDays(1).atStartOfDay()));
+        }
+        if (fraLoepenr != null) {
+            predicates.add(cb.greaterThan(root.get("id"), fraLoepenr));
         }
         cq.where(predicates.toArray(new Predicate[0]));
 

@@ -7,17 +7,16 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 
-import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
-import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselRepository;
-import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.EndringsårsakType;
-import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
-import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import no.nav.foreldrepenger.inntektsmelding.database.JpaExtension;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselRepository;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.EndringsårsakType;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
 import no.nav.vedtak.felles.testutilities.db.EntityManagerAwareTest;
@@ -313,7 +312,7 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
         lagreInntektsmelding("9999999999999", orgnr, Ytelsetype.SVANGERSKAPSPENGER);
         lagreInntektsmelding("9999999999999", annetOrgnr, Ytelsetype.FORELDREPENGER);
 
-        var resultat = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null, null, null);
+        var resultat = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null, null, null, null);
 
         assertThat(resultat).hasSize(2);
     }
@@ -324,7 +323,7 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
         lagreInntektsmelding("9999999999999", orgnr, Ytelsetype.FORELDREPENGER);
         lagreInntektsmelding("9999999999999", orgnr, Ytelsetype.SVANGERSKAPSPENGER);
 
-        var resultat = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, Ytelsetype.SVANGERSKAPSPENGER, null, null);
+        var resultat = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, Ytelsetype.SVANGERSKAPSPENGER, null, null, null);
 
         assertThat(resultat).hasSize(1);
         assertThat(resultat.getFirst().getYtelsetype()).isEqualTo(Ytelsetype.SVANGERSKAPSPENGER);
@@ -337,7 +336,7 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
         lagreInntektsmelding("8888888888888", orgnr, Ytelsetype.FORELDREPENGER);
         lagreInntektsmelding("8888888888888", orgnr, Ytelsetype.SVANGERSKAPSPENGER);
 
-        var resultat = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, new AktørIdEntitet("8888888888888"), null, null, null);
+        var resultat = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, new AktørIdEntitet("8888888888888"), null, null, null, null);
 
         assertThat(resultat).hasSize(2);
     }
@@ -349,7 +348,7 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
         lagreInntektsmelding("9999999999999", orgnr, Ytelsetype.SVANGERSKAPSPENGER);
 
         var resultat = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null,
-            Tid.TIDENES_BEGYNNELSE, Tid.TIDENES_ENDE);
+            Tid.TIDENES_BEGYNNELSE, Tid.TIDENES_ENDE, null);
 
         assertThat(resultat).hasSize(2);
     }
@@ -360,7 +359,7 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
         lagreInntektsmelding("9999999999999", orgnr, Ytelsetype.FORELDREPENGER);
 
         var resultat = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null,
-            LocalDate.now().plusDays(7), Tid.TIDENES_ENDE);
+            LocalDate.now().plusDays(7), Tid.TIDENES_ENDE, null);
 
         assertThat(resultat).isEmpty();
     }
@@ -371,9 +370,27 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
         lagreInntektsmelding("9999999999999", orgnr, Ytelsetype.FORELDREPENGER);
 
         var resultat = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null,
-            Tid.TIDENES_BEGYNNELSE, null);
+            Tid.TIDENES_BEGYNNELSE, null, null);
 
         assertThat(resultat).hasSize(1);
+    }
+    @Test
+    void skal_filtrere_på_loepenr_større_enn_fraLoepenr() {
+        var orgnr = "999999999";
+        lagreInntektsmelding("9999999999999", orgnr, Ytelsetype.FORELDREPENGER);
+        lagreInntektsmelding("8888888888888", orgnr, Ytelsetype.FORELDREPENGER);
+        lagreInntektsmelding("8888888888888", orgnr, Ytelsetype.SVANGERSKAPSPENGER);
+
+        var lavesteDatabaseId = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null, null, null, null).stream()
+            .map(InntektsmeldingEntitet::getId)
+            .min(Long::compareTo)
+            .orElseThrow();
+
+
+        var resultat = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, new AktørIdEntitet("8888888888888"), null, null, null, lavesteDatabaseId);
+
+        assertThat(resultat).hasSize(2);
+        assertThat(resultat.stream().noneMatch(im -> im.getId() <= lavesteDatabaseId)).isTrue();
     }
 
     @Test
@@ -384,7 +401,7 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
         inntektsmeldingRepository.lagreInntektsmelding(im1);
         inntektsmeldingRepository.lagreInntektsmelding(im2);
 
-        var resultat = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null, null, null);
+        var resultat = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null, null, null, null);
 
         assertThat(resultat).hasSize(2);
         assertThat(resultat.getFirst().getOpprettetTidspunkt()).isAfter(resultat.getLast().getOpprettetTidspunkt());
