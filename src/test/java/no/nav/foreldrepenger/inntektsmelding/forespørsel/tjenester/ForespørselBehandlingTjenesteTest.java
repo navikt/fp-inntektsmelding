@@ -424,46 +424,12 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
     }
 
     @Test
-    void skal_slette_oppgave_gitt_saksnummer_og_orgnr() {
-        var forespørselUuid = lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, BRREG_ORGNUMMER, SAKSNUMMER,
-            SKJÆRINGSTIDSPUNKT, ForespørselType.BESTILT_AV_FAGSYSTEM);
-        forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, SAK_ID);
-
-        when(minSideArbeidsgiverTjeneste.slettSak(SAK_ID)).thenReturn(SAK_ID);
-
-        forespørselBehandlingTjeneste.slettForespørsel(Saksnummer.fra(SAKSNUMMER), Arbeidsgiver.fra(BRREG_ORGNUMMER), null);
-
-        clearHibernateCache();
-
-        var lagret = forespørselRepository.hentForespørsel(forespørselUuid);
-        assertThat(lagret.map(ForespørselEntitet::getStatus)).isEqualTo(Optional.of(ForespørselStatus.UTGÅTT));
-        verify(minSideArbeidsgiverTjeneste, Mockito.times(1)).slettSak(SAK_ID);
-    }
-
-    @Test
-    void skal_slette_oppgave_gitt_saksnummer() {
-        var forespørselUuid = lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, BRREG_ORGNUMMER, SAKSNUMMER,
-            SKJÆRINGSTIDSPUNKT, ForespørselType.BESTILT_AV_FAGSYSTEM);
-        forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, SAK_ID);
-
-        when(minSideArbeidsgiverTjeneste.slettSak(SAK_ID)).thenReturn(SAK_ID);
-
-        forespørselBehandlingTjeneste.slettForespørsel(Saksnummer.fra(SAKSNUMMER), null, null);
-
-        clearHibernateCache();
-
-        var lagret = forespørselRepository.hentForespørsel(forespørselUuid);
-        assertThat(lagret.map(ForespørselEntitet::getStatus)).isEqualTo(Optional.of(ForespørselStatus.UTGÅTT));
-        verify(minSideArbeidsgiverTjeneste, Mockito.times(1)).slettSak(SAK_ID);
-    }
-
-    @Test
     void skal_sette_forespørsel_og_oppgave_til_gitt_forespørselUuid_til_utgått() {
         var forespørselUuid = lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, BRREG_ORGNUMMER, SAKSNUMMER,
             SKJÆRINGSTIDSPUNKT, ForespørselType.BESTILT_AV_FAGSYSTEM);
         forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, SAK_ID);
 
-        forespørselBehandlingTjeneste.settForespørselTilUtgått(forespørselUuid);
+        forespørselBehandlingTjeneste.settForespørselTilUtgåttForvaltning(forespørselUuid);
 
         clearHibernateCache();
 

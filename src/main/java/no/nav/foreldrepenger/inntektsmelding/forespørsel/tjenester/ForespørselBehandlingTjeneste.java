@@ -119,7 +119,7 @@ public class ForespørselBehandlingTjeneste {
             .filter(forespørsel -> forespørsel.aktørId().equals(aktørId))
             .filter(forespørselDto -> arbeidsgiver.orgnr().equals(forespørselDto.arbeidsgiver().orgnr()))
             .filter(forespørselDto -> !ForespørselStatus.UTGÅTT.name().equals(forespørselDto.status().name()))
-            .forEach(forespørselDto -> settForespørselTilUtgått(forespørselDto, false));
+            .forEach(forespørselDto -> settForespørselTilUtgått(forespørselDto));
     }
 
     public ForespørselDto ferdigstillForespørsel(UUID foresporselUuid,
@@ -230,16 +230,10 @@ public class ForespørselBehandlingTjeneste {
         return forespørselTjeneste.finnForespørslerForAktørid(aktørId, ytelsetype);
     }
 
-    public void settForespørselTilUtgått(ForespørselDto eksisterendeForespørsel, boolean skalOppdatereArbeidsgiverNotifikasjon) {
-        LOG.info("Verdien for skalOppdatereArbeidsgiverNotifikasjon er: {}", skalOppdatereArbeidsgiverNotifikasjon);
+    public void settForespørselTilUtgått(ForespørselDto eksisterendeForespørsel) {
 
-        if (skalOppdatereArbeidsgiverNotifikasjon) {
-            Optional.ofNullable(eksisterendeForespørsel.oppgaveId())
-                .ifPresent(oppgaveId -> minSideArbeidsgiverTjeneste.oppgaveUtgått(oppgaveId, OffsetDateTime.now()));
-            // Oppdaterer status i arbeidsgiver-notifikasjon
-            minSideArbeidsgiverTjeneste.ferdigstillSak(eksisterendeForespørsel.arbeidsgiverNotifikasjonSakId(), false);
-        }
-
+        Optional.ofNullable(eksisterendeForespørsel.oppgaveId())
+            .ifPresent(oppgaveId -> minSideArbeidsgiverTjeneste.oppgaveUtgått(oppgaveId, OffsetDateTime.now()));
         // Oppdaterer status til utgått på saken i arbeidsgiverportalen
         minSideArbeidsgiverTjeneste.oppdaterSakTilleggsinformasjon(eksisterendeForespørsel.arbeidsgiverNotifikasjonSakId(),
             ForespørselTekster.lagTilleggsInformasjon(LukkeÅrsak.UTGÅTT, eksisterendeForespørsel.førsteUttaksdato()));
@@ -460,7 +454,7 @@ public class ForespørselBehandlingTjeneste {
     public void settForespørselTilUtgått(Saksnummer fagsakSaksnummer, Arbeidsgiver arbeidsgiver, LocalDate skjæringstidspunkt) {
         var forespørsler = hentÅpneForespørslerForFagsak(fagsakSaksnummer, arbeidsgiver, skjæringstidspunkt);
 
-        forespørsler.forEach(it -> settForespørselTilUtgått(it, true));
+        forespørsler.forEach(it -> settForespørselTilUtgått(it));
     }
 
     private List<ForespørselDto> hentÅpneForespørslerForFagsak(Saksnummer fagsakSaksnummer,
@@ -472,13 +466,15 @@ public class ForespørselBehandlingTjeneste {
             .toList();
     }
 
-    public void settForespørselTilUtgått(UUID forespørselUuid) {
+    public void settForespørselTilUtgåttForvaltning(UUID forespørselUuid) {
         var forespørselDto = hentForespørsel(forespørselUuid)
             .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel med forespørselUuid: " + forespørselUuid));
 
-        // Oppdaterer status til utgått på saken i arbeidsgiverportalen
+        // Oppdaterer status til utgått på saken og oppgaven i arbeidsgiverportalen / dialogporten
         minSideArbeidsgiverTjeneste.oppdaterSakTilleggsinformasjon(forespørselDto.arbeidsgiverNotifikasjonSakId(),
             ForespørselTekster.lagTilleggsInformasjon(LukkeÅrsak.UTGÅTT, forespørselDto.førsteUttaksdato()));
+        minSideArbeidsgiverTjeneste.oppgaveUtgått(forespørselDto.oppgaveId(), OffsetDateTime.now());
+
         forespørselTjeneste.settForespørselTilUtgått(forespørselDto.arbeidsgiverNotifikasjonSakId());
         //oppdaterer status til not applicable i altinn dialogporten
         if (forespørselDto.dialogportenUuid() != null) {
@@ -492,22 +488,6 @@ public class ForespørselBehandlingTjeneste {
             forespørselDto.fagsystemSaksnummer().saksnummer(),
             forespørselDto.ytelseType());
         LOG.info(msg);
-    }
-
-    public void slettForespørsel(Saksnummer fagsakSaksnummer, Arbeidsgiver arbeidsgiver, LocalDate skjæringstidspunkt) {
-        var sakerSomSkalSlettes = forespørselTjeneste.finnForespørslerForFagsak(fagsakSaksnummer).stream()
-            .filter(f -> skjæringstidspunkt == null || skjæringstidspunkt.equals(f.skjæringstidspunkt()))
-            .filter(f -> arbeidsgiver == null || f.arbeidsgiver().equals(arbeidsgiver))
-            .filter(f -> f.status().equals(ForespørselStatus.UNDER_BEHANDLING))
-            .toList();
-
-        if (sakerSomSkalSlettes.size() != 1) {
-            var msg = String.format("Fant ikke akkurat 1 sak som skulle slettes. Fant istedet %s saker ", sakerSomSkalSlettes.size());
-            throw new IllegalStateException(msg);
-        }
-        var agPortalSakId = sakerSomSkalSlettes.getFirst().arbeidsgiverNotifikasjonSakId();
-        minSideArbeidsgiverTjeneste.slettSak(agPortalSakId);
-        forespørselTjeneste.settForespørselTilUtgått(agPortalSakId);
     }
 
     public List<InntektsmeldingForespørselDto> finnForespørslerForFagsak(Saksnummer fagsakSaksnummer) {

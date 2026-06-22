@@ -90,6 +90,9 @@ class MinSideArbeidsgiverKlient {
         var resultat = query(new GraphQLRequest(request, projection), OppgaveUtgaattMutationResponse.class).oppgaveUtgaatt();
         if (resultat instanceof OppgaveUtgaattVellykket vellykket) {
             return vellykket.getId();
+        } else if (resultat instanceof OppgavenErAlleredeUtfoert) {
+            LOG.info("Oppgave er allerede utført, kan ikke settes til utgått.");
+            return null;
         } else {
             loggFeilmelding((Error) resultat, "sett oppgave utgått");
         }
