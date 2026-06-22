@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -97,7 +98,7 @@ class ArbeidstakerTjenesteTest {
 
     @Test
     void returnerer_organisasjoner_innsender_har_tilgang_til() {
-        var organisasjoner = List.of("000000000", "000000001", "000000002");
+        var organisasjoner = Set.of("000000000", "000000001", "000000002");
         var forventetListe = organisasjoner.stream().map(Arbeidsgiver::new).toList();
 
         when(altinnTilgangTjenesteMock.hentBedrifterArbeidsgiverHarTilgangTil()).thenReturn(organisasjoner);

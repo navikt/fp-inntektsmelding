@@ -15,16 +15,9 @@ import no.nav.vedtak.felles.integrasjon.rest.RestConfig;
 import no.nav.vedtak.felles.integrasjon.rest.RestRequest;
 import no.nav.vedtak.felles.integrasjon.rest.TokenFlow;
 
-import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 // Denne klienten opererer med TokenX derfor trenger man en resource.
 @RestClientConfig(tokenConfig = TokenFlow.ADAPTIVE, endpointProperty = "arbeidsgiver.altinn.tilganger.url", scopesProperty = "arbeidsgiver.altinn.tilganger.resource")
 public class ArbeidsgiverAltinnTilgangerKlient {
-
-    private static final Logger SECURE_LOG = LoggerFactory.getLogger("secureLogger");
 
     private static final String ALTINN_TILGANGER_PATH = "/altinn-tilganger";
 
@@ -51,17 +44,11 @@ public class ArbeidsgiverAltinnTilgangerKlient {
         return inst;
     }
 
-    public ArbeidsgiverAltinnTilgangerResponse hentTilganger(boolean loggRawResponse) {
+    public ArbeidsgiverAltinnTilgangerResponse hentTilganger() {
         var uri = UriBuilder.fromUri(restConfig.endpoint()).path(ALTINN_TILGANGER_PATH).build();
         var request = RestRequest.newPOSTJson(lagRequestFilter(), uri, restConfig);
         request.otherCallId(NavHeaders.HEADER_NAV_CORRELATION_ID);
         try {
-            if (loggRawResponse) {
-                //Todo midlertidig for analyse - må fjernes når vi er over på altinn3 tilganger.
-                var loggRequest = RestRequest.newPOSTJson(lagRequestFilter(), uri, restConfig);
-                loggRequest.otherCallId(NavHeaders.HEADER_NAV_CORRELATION_ID);
-                SECURE_LOG.info("ALTINN: Raw response fra tjenesten for {} er: {}", KontekstHolder.getKontekst().getUid(), restClient.sendReturnResponseString(loggRequest).body());//NOSONAR midlertidig for analyse
-            }
             return restClient.send(request, ArbeidsgiverAltinnTilgangerResponse.class);
         } catch (RuntimeException e) {
             throw new IntegrasjonException("FP-965432",
@@ -71,13 +58,11 @@ public class ArbeidsgiverAltinnTilgangerKlient {
 
     private ArbeidsgiverAltinnTilgangerRequest lagRequestFilter() {
         return new ArbeidsgiverAltinnTilgangerRequest(new ArbeidsgiverAltinnTilgangerRequest.FilterCriteria(
-            List.of(AltinnRessurser.ALTINN_TO_TJENESTE), //TODO: Kan fjernes når Altinn 3 er på plass for alle tjenester
             List.of(AltinnRessurser.ALTINN_TRE_INNTEKTSMELDING_RESSURS)));
     }
 
     private record ArbeidsgiverAltinnTilgangerRequest(FilterCriteria filter) {
-        private record FilterCriteria(@JsonProperty("altinn2Tilganger") List<String> altinn2Tilganger, //TODO: Kan fjernes når Altinn 3 er på plass for alle tjenester
-                                     @JsonProperty("altinn3Tilganger") List<String> altinn3Tilganger) {
+        private record FilterCriteria(@JsonProperty("altinn3Tilganger") List<String> altinn3Tilganger) {
         }
     }
 
@@ -88,7 +73,6 @@ public class ArbeidsgiverAltinnTilgangerKlient {
 
         public record Organisasjon(String orgnr,
                                    @JsonProperty("altinn3Tilganger") List<String> altinn3Tilganger,
-                                   @JsonProperty("altinn2Tilganger") List<String> altinn2Tilganger, //TODO: Kan fjernes når Altinn 3 er på plass for alle tjenester
                                    List<Organisasjon> underenheter,
                                    String navn,
                                    String organisasjonsform,
