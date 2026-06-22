@@ -92,7 +92,6 @@ public class InntektsmeldingApiMottakTjeneste {
                     sisteInntektsmelding.getInntektsmeldingUuid().toString()));
         }
 
-        //Todo Avklaring: Hva skal vi gjøre om inntektskomponenten er nede og vi ikke får sjekket dette? La de sende inn, men sette til status forkastet med forklaring?
         var sendInntektsmeldingResponse = sjekkMånedInntektMotRapportertInntekt(forespørsel, inntektsmelding);
         if (!sendInntektsmeldingResponse.success()) {
             return sendInntektsmeldingResponse;
@@ -126,8 +125,11 @@ public class InntektsmeldingApiMottakTjeneste {
 
         if (inntektErUgyldig) {
             inntektsmeldingTjeneste.oppdatertStatusTilInntektsmelding(inntektsmelding.getInntektsmeldingUuid(), InntektsmeldingStatus.AVVIST);
-            // TODO Oppdater databasen med korrekt status
-            // TODO Send transmission i dialogporten
+            var feilmelding = String.format(
+                "Inntekt i inntektsmelding er ulik inntekt fra A-inntekt, og ingen endringsårsak er oppgitt. Gjennomsnittlig inntekt fra A-inntekt: %s, oppgitt inntekt i inntektsmelding: %s",
+                inntekter.gjennomsnitt(),
+                inntektsmelding.getMånedInntekt());
+            forespørselBehandlingTjeneste.sendMeldingOmAvvistInntektsmelding(forespørsel, feilmelding);
         } else {
             inntektsmeldingTjeneste.oppdatertStatusTilInntektsmelding(inntektsmelding.getInntektsmeldingUuid(), InntektsmeldingStatus.GODKJENT);
             fellesMottakTjeneste.opprettTaskForSendTilJoark(inntektsmeldingId, forespørsel);

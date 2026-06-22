@@ -106,6 +106,17 @@ public class ForespørselBehandlingTjeneste {
         return ForespørselResultat.FORESPØRSEL_OPPRETTET;
     }
 
+    public void sendMeldingOmAvvistInntektsmelding(ForespørselDto forespørselDto,
+                                                   String feiltekst) {
+        // Send tranmission til dialogporten
+        dialogportenKlient.sendMeldingOmAvvistInntektsmelding(forespørsel.dialogportenUuid(), forespørselDto.getArbeidsgiver(), feilmelding);
+        // Send melding til fager
+        var forespørselUuid = forespørselDto.uuid();
+        var skjemaUri = URI.create(inntektsmeldingSkjemaLenke + "/" + forespørselUuid);
+        minSideArbeidsgiverTjeneste.sendNyBeskjedOmAvvistInntektsmelding(forespørselUuid,
+            ForespørselTekster.finnMerkelapp(forespørsel.ytelseType()), forespørselDto.arbeidsgiver().orgnr(), feiltekst, skjemaUri)
+    }
+
     // Vi skal aldri ha mer enn en forespørsel til under_behandling eller ferdig for samme sak med samme orgnummer og aktørid
     private void settTidligereForespørslerForSaksnummerTilUtgått(Saksnummer fagsakSaksnummer,
                                                                  Arbeidsgiver arbeidsgiver,
