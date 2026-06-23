@@ -55,7 +55,7 @@ public class MetrikkerTjeneste {
     private static final String COUNTER_INNTEKTSMELDING = APP_NAME + ".inntektsmeldinger.mottatt";
 
     // Måler mottak av inntektsmeldinger som ikke kunne ferdigstille grunnet nedetid
-    private static final String COUNTER_INNTEKTSMELDING_NEDETID = APP_NAME + ".inntektsmeldinger.mottatt";
+    private static final String COUNTER_INNTEKTSMELDING_NEDETID = APP_NAME + ".inntektsmeldinger.nedetid";
 
     // Måler årsaker til endring av inntekt i inntektsmeldinger innsendt
     private static final String COUNTER_ENDRINGSÅRSAKER = APP_NAME + ".inntektsmeldinger.endringsaarsak";
