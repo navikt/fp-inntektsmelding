@@ -205,16 +205,11 @@ public class ForespørselRepository {
     }
 
     public void oppdaterDialogportenUuid(UUID forespørselUuid, UUID dialogportenUuid) {
-        var forespørselOpt = hentForespørsel(forespørselUuid);
-        if (forespørselOpt.isPresent()) {
-            LOG.info("Oppdaterer forespørsel {} med dialogportenUuid {}", forespørselUuid, dialogportenUuid);
-            var forespørsel = forespørselOpt.get();
-            forespørsel.setDialogportenUuid(dialogportenUuid);
-            entityManager.persist(forespørsel);
-            entityManager.flush();
-        } else {
-            LOG.info("Finner ikke forespørsel med id {}", forespørselUuid);
-        }
+        var forespørsel = hentForespørsel(forespørselUuid).orElseThrow();
+        LOG.info("Oppdaterer forespørsel {} med dialogportenUuid {}", forespørselUuid, dialogportenUuid);
+        forespørsel.setDialogportenUuid(dialogportenUuid);
+        entityManager.persist(forespørsel);
+        entityManager.flush();
     }
 
     public List<ForespørselEntitet> hentForespørslerFraFilter(String orgnr,

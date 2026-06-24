@@ -12,8 +12,18 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselTekster;
+import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.kvittering.PdfDokumentRest;
+import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.altinn.AltinnRessurser;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.organisasjon.OrganisasjonTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.konfig.Environment;
+import no.nav.foreldrepenger.konfig.KonfigVerdi;
+
+import org.jspecify.annotations.NonNull;
 
 @ApplicationScoped
 class MinSideArbeidsgiverTjenesteImpl implements MinSideArbeidsgiverTjeneste {
@@ -24,6 +34,10 @@ class MinSideArbeidsgiverTjenesteImpl implements MinSideArbeidsgiverTjeneste {
     static final int PÅMINNELSE_ETTER_DAGER;
     static final String ALTINN_INNTEKTSMELDING_RESSURS = AltinnRessurser.ALTINN_TRE_INNTEKTSMELDING_RESSURS;
 
+    private PersonTjeneste personTjeneste;
+    private OrganisasjonTjeneste organisasjonTjeneste;
+    private String inntektsmeldingSkjemaLenke;
+
     static {
         PÅMINNELSE_ETTER_DAGER = ENV.getProperty("paaminnelse.etter.dager", int.class, 14);
     }
@@ -31,13 +45,19 @@ class MinSideArbeidsgiverTjenesteImpl implements MinSideArbeidsgiverTjeneste {
     private final MinSideArbeidsgiverKlient minSideArbeidsgiverKlient;
 
     @Inject
-    public MinSideArbeidsgiverTjenesteImpl(MinSideArbeidsgiverKlient minSideArbeidsgiverKlient) {
+    public MinSideArbeidsgiverTjenesteImpl(PersonTjeneste personTjeneste,
+                                           OrganisasjonTjeneste organisasjonTjeneste,
+                                           @KonfigVerdi(value = "inntektsmelding.skjema.lenke", defaultVerdi = "https://arbeidsgiver.nav.no/fp-im-dialog")
+                                           String inntektsmeldingSkjemaLenke,
+                                           MinSideArbeidsgiverKlient minSideArbeidsgiverKlient) {
+        this.personTjeneste = personTjeneste;
+        this.organisasjonTjeneste = organisasjonTjeneste;
         this.minSideArbeidsgiverKlient = minSideArbeidsgiverKlient;
+        this.inntektsmeldingSkjemaLenke = inntektsmeldingSkjemaLenke;
     }
 
     @Override
     public String opprettSak(String grupperingsid, Merkelapp merkelapp, String organisasjonsnumme, String saksTittel, URI lenke) {
-
         var request = NySakMutationRequest.builder()
             .setGrupperingsid(grupperingsid)
             .setTittel(saksTittel)
@@ -59,6 +79,79 @@ class MinSideArbeidsgiverTjenesteImpl implements MinSideArbeidsgiverTjeneste {
 
         return minSideArbeidsgiverKlient.opprettSak(request.build(), projection);
     }
+
+    @Override
+    public String opprettSak(ForespørselDto forespørselDto) {
+        var person = personTjeneste.hentPersonInfoFraAktørId(forespørselDto.aktørId(), forespørselDto.ytelseType());
+
+        var merkelapp = ForespørselTekster.finnMerkelapp(forespørselDto.ytelseType());
+        var skjemaUri = getSkjemaUri(forespørselDto);
+        var sakstittel = ForespørselTekster.lagSaksTittel(person.mapFulltNavn(), person.fødselsdato());
+        var request = NySakMutationRequest.builder()
+            .setGrupperingsid(forespørselDto.uuid().toString())
+            .setTittel(sakstittel)
+            .setVirksomhetsnummer(forespørselDto.arbeidsgiver().orgnr())
+            .setMerkelapp(merkelapp.getBeskrivelse())
+            .setLenke(skjemaUri.toString())
+            .setInitiellStatus(SaksStatus.UNDER_BEHANDLING)
+            .setOverstyrStatustekstMed(SAK_STATUS_TEKST)
+            .setMottakere(List.of(lagAltinnMottakerInput()));
+
+        var projection = new NySakResultatResponseProjection().typename()
+            .onNySakVellykket(new NySakVellykketResponseProjection().id())
+            .onUgyldigMerkelapp(new UgyldigMerkelappResponseProjection().feilmelding())
+            .onUgyldigMottaker(new UgyldigMottakerResponseProjection().feilmelding())
+            .onDuplikatGrupperingsid(new DuplikatGrupperingsidResponseProjection().feilmelding())
+            .onDuplikatGrupperingsidEtterDelete(new DuplikatGrupperingsidEtterDeleteResponseProjection().feilmelding())
+            .onUkjentProdusent(new UkjentProdusentResponseProjection().feilmelding())
+            .onUkjentRolle(new UkjentRolleResponseProjection().feilmelding());
+
+        return minSideArbeidsgiverKlient.opprettSak(request.build(), projection);
+    }
+
+    @Override
+    public String opprettOppgave(ForespørselDto forespørselDto) {
+        var ytelsetype = forespørselDto.ytelseType();
+        var organisasjon = organisasjonTjeneste.finnOrganisasjon(forespørselDto.arbeidsgiver());
+
+        var merkelapp = ForespørselTekster.finnMerkelapp(ytelsetype);
+        var skjemaUri = getSkjemaUri(forespørselDto);
+
+        var orgnr = forespørselDto.arbeidsgiver().orgnr();
+        var request = NyOppgaveMutationRequest.builder()
+            .setNyOppgave(NyOppgaveInput.builder()
+                .setMottaker(lagAltinnMottakerInput())
+                .setNotifikasjon(NotifikasjonInput.builder()
+                    .setMerkelapp(merkelapp.getBeskrivelse())
+                    .setTekst(ForespørselTekster.lagOppgaveTekst(ytelsetype))
+                    .setLenke(skjemaUri.toString())
+                    .build())
+                .setMetadata(MetadataInput.builder()
+                    .setVirksomhetsnummer(orgnr)
+                    .setEksternId(forespørselDto.uuid().toString())
+                    .setGrupperingsid(forespørselDto.uuid().toString())
+                    .build())
+                .setEksterneVarsler(List.of(lagEksternVarselAltinn(ForespørselTekster.lagVarselTekst(ytelsetype, organisasjon), 15)))
+                .setPaaminnelse(PaaminnelseInput.builder()
+                    .setTidspunkt(PaaminnelseTidspunktInput.builder().setEtterOpprettelse(Duration.ofDays(PÅMINNELSE_ETTER_DAGER).toString()).build())
+                    .setEksterneVarsler(List.of(lagPåminnelseVarselAltinn(ForespørselTekster.lagPåminnelseTekst(ytelsetype, organisasjon))))
+                    .build())
+                .build())
+            .build();
+
+
+        var projection = new NyOppgaveResultatResponseProjection().typename()
+            .onNyOppgaveVellykket(new NyOppgaveVellykketResponseProjection().id())
+            .onUgyldigMerkelapp(new UgyldigMerkelappResponseProjection().feilmelding())
+            .onUgyldigMottaker(new UgyldigMottakerResponseProjection().feilmelding())
+            .onDuplikatEksternIdOgMerkelapp(new DuplikatEksternIdOgMerkelappResponseProjection().feilmelding())
+            .onUkjentProdusent(new UkjentProdusentResponseProjection().feilmelding())
+            .onUkjentRolle(new UkjentRolleResponseProjection().feilmelding())
+            .onUgyldigPaaminnelseTidspunkt(new UgyldigPaaminnelseTidspunktResponseProjection().feilmelding());
+
+        return minSideArbeidsgiverKlient.opprettOppgave(request, projection);
+    }
+
 
     @Override
     public String opprettOppgave(String grupperingsid,
@@ -254,6 +347,7 @@ class MinSideArbeidsgiverTjenesteImpl implements MinSideArbeidsgiverTjeneste {
         return minSideArbeidsgiverKlient.oppdaterSakStatus(requestBuilder.build(), projection);
     }
 
+
     @Override
     public String oppdaterSakTilleggsinformasjon(String id, String tilleggsinformasjon) {
         var request = TilleggsinformasjonSakMutationRequest.builder().setId(id).setTilleggsinformasjon(tilleggsinformasjon).build();
@@ -277,6 +371,22 @@ class MinSideArbeidsgiverTjenesteImpl implements MinSideArbeidsgiverTjeneste {
             .onUkjentProdusent(new UkjentProdusentResponseProjection().feilmelding())
             .onSakFinnesIkke(new SakFinnesIkkeResponseProjection().feilmelding());
         return minSideArbeidsgiverKlient.slettSak(request, projection);
+    }
+
+    @Override
+    public String sendNyBeskjedMedKvittering(ForespørselDto forespørselDto, UUID inntektsmeldingUuid, String beskjedTekst) {
+        var merkelapp = ForespørselTekster.finnMerkelapp(forespørselDto.ytelseType());
+
+        String url = new StringBuilder(inntektsmeldingSkjemaLenke)
+            .append("/server/api")
+            .append(PdfDokumentRest.INNTEKTSMELDING_FULL_PATH)
+            .append("/")
+            .append(inntektsmeldingUuid).toString();
+        return sendNyBeskjed(forespørselDto.uuid().toString(), merkelapp, forespørselDto.arbeidsgiver().orgnr(), beskjedTekst, Optional.empty(), URI.create(url));
+    }
+
+    private URI getSkjemaUri(ForespørselDto forespørselDto) {
+        return URI.create(inntektsmeldingSkjemaLenke + "/" + forespørselDto.uuid());
     }
 
 }

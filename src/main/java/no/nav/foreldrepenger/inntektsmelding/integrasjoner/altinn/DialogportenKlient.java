@@ -43,6 +43,8 @@ public class DialogportenKlient {
         this.restClient = restClient;
         this.restConfig = RestConfig.forClient(this.getClass());
         this.tokenKlient = AltinnExchangeTokenKlient.instance();
+
+        // TODO Disse hører ikke hjemme i en klient
         this.arbeidsgiverportalSkjemaLenke = ENV.getProperty("inntektsmelding.skjema.lenke", "https://arbeidsgiver.nav.no/fp-im-dialog");
         this.sendInntektsmeldingApiLenke = ENV.getProperty("inntektsmelding.api.lenke", "https://foreldrepenger-inntektsmelding-api.ekstern.nav.no/v1/inntektsmelding/send-inn");
         this.hentForespørselApiLenke = ENV.getProperty("foresporsel.api.lenke", "https://foreldrepenger-inntektsmelding-api.ekstern.nav.no/v1/forespoersel");
