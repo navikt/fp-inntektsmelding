@@ -14,7 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.nav.foreldrepenger.inntektsmelding.forvaltning.DialogportenForvaltningRestTjeneste;
-import no.nav.foreldrepenger.inntektsmelding.forvaltning.OppgaverForvaltningRestTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.forvaltning.ForespørselForvaltningRestTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.forvaltning.ProsessTaskRestTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.forvaltning.rest.ForespørselVtpRest;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.AutentiseringAnnoteringFilter;
@@ -57,7 +57,7 @@ public class ForvaltningApiConfig extends ResourceConfig {
     private Set<Class<?>> getApplicationClasses() {
         var classes = new HashSet<Class<?>>();
         classes.add(ProsessTaskRestTjeneste.class);
-        classes.add(OppgaverForvaltningRestTjeneste.class);
+        classes.add(ForespørselForvaltningRestTjeneste.class);
         if (!Environment.current().isProd() ) {
             // kun skal være tilgjengelig i dev for testing
             classes.add(DialogportenForvaltningRestTjeneste.class);
