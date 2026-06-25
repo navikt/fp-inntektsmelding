@@ -1,5 +1,6 @@
 package no.nav.foreldrepenger.inntektsmelding.forvaltning;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 import jakarta.enterprise.context.RequestScoped;
@@ -9,12 +10,15 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,31 +30,38 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.AutentisertMedAzure;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.Tilgangskontrollert;
 import no.nav.foreldrepenger.inntektsmelding.server.tilgangsstyring.Tilgang;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Saksnummer;
+import no.nav.foreldrepenger.inntektsmelding.typer.dto.SaksnummerDto;
 
 @AutentisertMedAzure
-@OpenAPIDefinition(tags = @Tag(name = "oppgaver", description = "Håndtering av feilopprettede saker / oppgaver i arbeidsgiverportalen"))
+@OpenAPIDefinition(tags = @Tag(name = "forespoersler", description = "Forvaltningshåndtering av forespørsler"))
 @RequestScoped
 @Transactional
 @Produces(MediaType.APPLICATION_JSON)
-@Path("/forvaltningOppgaver")
-public class OppgaverForvaltningRestTjeneste {
+@Path("/forvaltningForespoersler")
+public class ForespørselForvaltningRestTjeneste {
 
-    private static final Logger LOG = LoggerFactory.getLogger(OppgaverForvaltningRestTjeneste.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ForespørselForvaltningRestTjeneste.class);
 
     private Tilgang tilgang;
     private ForespørselBehandlingTjeneste forespørselBehandlingTjeneste;
+    private ForespørselTjeneste forespørselTjeneste;
 
-    OppgaverForvaltningRestTjeneste() {
+    ForespørselForvaltningRestTjeneste() {
         // REST CDI
     }
 
     @Inject
-    public OppgaverForvaltningRestTjeneste(Tilgang tilgang, ForespørselBehandlingTjeneste forespørselBehandlingTjeneste) {
+    public ForespørselForvaltningRestTjeneste(Tilgang tilgang,
+                                              ForespørselBehandlingTjeneste forespørselBehandlingTjeneste,
+                                              ForespørselTjeneste forespørselTjeneste) {
         this.tilgang = tilgang;
         this.forespørselBehandlingTjeneste = forespørselBehandlingTjeneste;
+        this.forespørselTjeneste = forespørselTjeneste;
     }
 
     @POST
@@ -70,6 +81,41 @@ public class OppgaverForvaltningRestTjeneste {
         LOG.info("Setter forespørsel og tilhørende sak i arbeidsgiverportalen med forespørselUuid {} til utgått", forespørselUuid);
         forespørselBehandlingTjeneste.settForespørselTilUtgåttForvaltning(gyldigForespørselUuid);
         return Response.status(Response.Status.ACCEPTED).build();
+    }
+
+    @GET
+    @Path("/hentForSak/{saksnummer}")
+    @Operation(description = "Henter alle forespørsler for et saksnummer med status og distribusjonsinformasjon", tags = "forespoersler", responses = {
+        @ApiResponse(responseCode = "200", description = "Liste over forespørsler for saksnummer"),
+        @ApiResponse(responseCode = "500", description = "Feilet pga ukjent feil eller tekniske/funksjonelle feil")
+    })
+    @Tilgangskontrollert
+    public Response hentForespørslerForSaksnummer(
+        @Parameter(description = "Saksnummer det skal hentes forespørsler for")
+        @Valid @NotNull @PathParam("saksnummer") SaksnummerDto saksnummer) {
+        sjekkAtKallerHarRollenDrift();
+        LOG.info("Henter forespørsler for saksnummer {}", saksnummer);
+        var forespørsler = forespørselTjeneste.finnForespørslerForFagsak(Saksnummer.fra(saksnummer.saksnr()));
+        var response = forespørsler.stream()
+            .map(f -> new ForvaltningForespørselDto(
+                f.uuid(),
+                f.arbeidsgiver().orgnr(),
+                f.førsteUttaksdato(),
+                f.skjæringstidspunkt(),
+                f.status(),
+                f.dialogportenUuid() != null,
+                f.arbeidsgiverNotifikasjonSakId() != null))
+            .toList();
+        return Response.ok(response).build();
+    }
+
+    public record ForvaltningForespørselDto(UUID uuid,
+                                            String organisasjonsnummer,
+                                            LocalDate førsteUttaksdato,
+                                            LocalDate skjæringstidspunkt,
+                                            ForespørselStatus status,
+                                            boolean sendtTilDialogporten,
+                                            boolean sendtTilArbeidsgiverportalen) {
     }
 
     private void sjekkAtKallerHarRollenDrift() {
