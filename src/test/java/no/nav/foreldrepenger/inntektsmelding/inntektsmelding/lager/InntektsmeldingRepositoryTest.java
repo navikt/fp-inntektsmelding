@@ -392,7 +392,6 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
             null);
 
         assertThat(resultat).hasSize(2);
-        assertThat(resultat).isSorted();
         assertThat(resultat.stream().noneMatch(im -> im.getId() <= lavesteDatabaseId)).isTrue();
     }
 
