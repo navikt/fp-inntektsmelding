@@ -130,6 +130,9 @@ public class MetrikkerTjeneste {
         tags.add(new ImmutableTag("har_oppgitt_opphoer_av_refusjon", harOppgittOpphørAvRefusjon ? JA : NEI));
         tags.add(new ImmutableTag("har_oppgitt_naturalytelse", harOppgittNaturalytelse ? JA : NEI));
         tags.add(new ImmutableTag("kilde", utledKildesystemLabel(inntektsmelding.getKildesystem())));
+        if (Kildesystem.LØNN_OG_PERSONAL_SYSTEM.equals(inntektsmelding.getKildesystem()) && inntektsmelding.getAvsenderSystem() != null) {
+            tags.add(new ImmutableTag("avsendersystem", inntektsmelding.getAvsenderSystem().navn().toUpperCase()));
+        }
         Metrics.counter(COUNTER_INNTEKTSMELDING, tags).increment();
 
         if (!inntektsmelding.getEndringAvInntektÅrsaker().isEmpty()) {
