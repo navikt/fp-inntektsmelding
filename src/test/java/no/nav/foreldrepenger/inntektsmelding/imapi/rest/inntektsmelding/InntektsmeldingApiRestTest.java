@@ -19,8 +19,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-import no.nav.foreldrepenger.inntektsmelding.felles.InntektsmeldingStatusDto;
-
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingStatus;
 
 import org.eclipse.jetty.http.HttpStatus;
@@ -31,19 +29,22 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import no.nav.foreldrepenger.inntektsmelding.felles.FødselsnummerDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.InntektsmeldingApiStatusDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.InntektsmeldingStatusDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.OrganisasjonsnummerDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.YtelseTypeDto;
 import no.nav.foreldrepenger.inntektsmelding.imapi.inntektsmelding.HentInntektsmeldingResponse;
 import no.nav.foreldrepenger.inntektsmelding.imapi.inntektsmelding.InntektsmeldingFilterRequest;
 import no.nav.foreldrepenger.inntektsmelding.imapi.rest.tjenester.InntektsmeldingApiMottakTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.imapi.rest.tjenester.InntektsmeldingKontraktMapper;
+import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
+import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste;
-import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
-import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingTjeneste;
-import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.server.tilgangsstyring.Tilgang;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingApiStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
 
@@ -80,7 +81,7 @@ class InntektsmeldingApiRestTest {
     @Test
     void skal_hente_inntektsmelding_med_uuid() {
         var uuid = UUID.randomUUID();
-        var dto = lagInntektsmeldingDto();
+        var dto = lagInntektsmeldingDto(null);
         var response = lagHentResponse(uuid);
 
         when(inntektsmeldingTjeneste.hentInntektsmelding(uuid)).thenReturn(dto);
@@ -104,7 +105,7 @@ class InntektsmeldingApiRestTest {
         var filter = new InntektsmeldingFilterRequest(
             new OrganisasjonsnummerDto(ORGNR), null, null, forespørselUuid, null, null, null, null);
 
-        var dto = lagInntektsmeldingDto();
+        var dto = lagInntektsmeldingDto(null);
         var response = lagHentResponse(UUID.randomUUID());
 
         when(inntektsmeldingTjeneste.hentInntektsmeldinger(forespørselUuid)).thenReturn(List.of(dto));
@@ -148,7 +149,7 @@ class InntektsmeldingApiRestTest {
         var aktørId = new AktørId(AKTØR_ID);
         when(personTjeneste.finnAktørIdForIdent(any(PersonIdent.class))).thenReturn(Optional.of(aktørId));
 
-        var dto = lagInntektsmeldingDto();
+        var dto = lagInntektsmeldingDto(null);
         var response = lagHentResponse(UUID.randomUUID());
 
         when(inntektsmeldingTjeneste.hentInntektsmeldingerFraFilter(
@@ -223,15 +224,15 @@ class InntektsmeldingApiRestTest {
         var tom = LocalDate.of(2025, 6, 30);
         var filter = new InntektsmeldingFilterRequest(
             new OrganisasjonsnummerDto(ORGNR), new FødselsnummerDto(FNR),
-            YtelseTypeDto.FORELDREPENGER, null, fom, tom, 1L, InntektsmeldingStatusDto.GODKJENT);
+            YtelseTypeDto.FORELDREPENGER, null, fom, tom, 1L, InntektsmeldingApiStatusDto.GODKJENT);
 
         var aktørId = new AktørId(AKTØR_ID);
         when(personTjeneste.finnAktørIdForIdent(any(PersonIdent.class))).thenReturn(Optional.of(aktørId));
 
-        var dto = lagInntektsmeldingDto();
+        var dto = lagInntektsmeldingDto(null);
         var response = lagHentResponse(UUID.randomUUID());
         when(inntektsmeldingTjeneste.hentInntektsmeldingerFraFilter(
-            ORGNR, new AktørIdEntitet(AKTØR_ID), Ytelsetype.FORELDREPENGER, fom, tom, 1L, InntektsmeldingStatus.GODKJENT))
+            ORGNR, new AktørIdEntitet(AKTØR_ID), Ytelsetype.FORELDREPENGER, fom, tom, 1L, InntektsmeldingApiStatus.GODKJENT))
             .thenReturn(List.of(dto));
         when(personTjeneste.finnPersonIdentForAktørIdBolk(Set.of(AKTØR_ID_OBJ)))
             .thenReturn(Map.of(AKTØR_ID_OBJ, PERSON_IDENT));
@@ -247,6 +248,38 @@ class InntektsmeldingApiRestTest {
             assertThat(liste).hasSize(1).containsExactly(response);
         }
     }
+
+    @Test
+    void skal_hente_riktig_statuser_når_filterer_på_mottatt_status() {
+        var fom = LocalDate.of(2025, 3, 1);
+        var tom = LocalDate.of(2025, 6, 30);
+        var filter = new InntektsmeldingFilterRequest(
+            new OrganisasjonsnummerDto(ORGNR), new FødselsnummerDto(FNR),
+            YtelseTypeDto.FORELDREPENGER, null, fom, tom, 1L, InntektsmeldingApiStatusDto.MOTTATT);
+
+        var aktørId = new AktørId(AKTØR_ID);
+        when(personTjeneste.finnAktørIdForIdent(any(PersonIdent.class))).thenReturn(Optional.of(aktørId));
+
+        var dto = lagInntektsmeldingDto(InntektsmeldingStatus.VENTER_VURDERING);
+        var response = lagHentResponse(UUID.randomUUID());
+        when(inntektsmeldingTjeneste.hentInntektsmeldingerFraFilter(
+            ORGNR, new AktørIdEntitet(AKTØR_ID), Ytelsetype.FORELDREPENGER, fom, tom, 1L, InntektsmeldingApiStatus.MOTTATT))
+            .thenReturn(List.of(dto));
+        when(personTjeneste.finnPersonIdentForAktørIdBolk(Set.of(AKTØR_ID_OBJ)))
+            .thenReturn(Map.of(AKTØR_ID_OBJ, PERSON_IDENT));
+
+        try (var mocked = mockStatic(InntektsmeldingKontraktMapper.class)) {
+            mocked.when(() -> InntektsmeldingKontraktMapper.mapTilKontrakt(dto, PERSON_IDENT)).thenReturn(response);
+
+            var resultat = inntektsmeldingApiRest.hentInntektsmeldinger(filter);
+
+            assertThat(resultat.getStatus()).isEqualTo(HttpStatus.OK_200);
+            @SuppressWarnings("unchecked")
+            var liste = (List<HentInntektsmeldingResponse>) resultat.getEntity();
+            assertThat(liste).hasSize(1).containsExactly(response);
+        }
+    }
+
 
     @Test
     void skal_sende_null_aktørId_når_fnr_ikke_finnes_i_pdl() {
@@ -282,8 +315,8 @@ class InntektsmeldingApiRestTest {
 
     // ---- Hjelpemetoder ----
 
-    private InntektsmeldingDto lagInntektsmeldingDto() {
-        return InntektsmeldingDto.builder()
+    private InntektsmeldingDto lagInntektsmeldingDto(InntektsmeldingStatus status) {
+        var builder =  InntektsmeldingDto.builder()
             .medId(1L)
             .medInntektsmeldingUuid(UUID.randomUUID())
             .medAktørId(AKTØR_ID_OBJ)
@@ -291,8 +324,11 @@ class InntektsmeldingApiRestTest {
             .medStartdato(LocalDate.now())
             .medInntekt(BigDecimal.valueOf(50000))
             .medInnsendtTidspunkt(LocalDateTime.now())
-            .medYtelse(Ytelsetype.FORELDREPENGER)
-            .build();
+            .medYtelse(Ytelsetype.FORELDREPENGER);
+        if (status != null) {
+            builder.medStatus(status);
+        }
+        return builder.build();
     }
 
     private HentInntektsmeldingResponse lagHentResponse(UUID uuid) {

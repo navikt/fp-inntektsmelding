@@ -12,10 +12,11 @@ import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.Predicate;
 
-import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingApiStatus;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
 
@@ -70,7 +71,7 @@ public class InntektsmeldingRepository {
                                                                        LocalDate fom,
                                                                        LocalDate tom,
                                                                        Long fraLoepenr,
-                                                                       InntektsmeldingStatus status) {
+                                                                       InntektsmeldingApiStatus status) {
         var cb = entityManager.getCriteriaBuilder();
         var cq = cb.createQuery(InntektsmeldingEntitet.class);
         var root = cq.from(InntektsmeldingEntitet.class);
@@ -94,6 +95,9 @@ public class InntektsmeldingRepository {
             predicates.add(cb.greaterThan(root.get("id"), fraLoepenr));
         }
         if (status != null) {
+            if (status == InntektsmeldingApiStatus.MOTTATT) {
+                predicates.add(root.get("status").in(List.of(InntektsmeldingStatus.UTDATERT, InntektsmeldingStatus.VENTER_VURDERING)));
+            }
             predicates.add(cb.equal(root.get("status"), status));
         }
         cq.where(predicates.toArray(new Predicate[0]));

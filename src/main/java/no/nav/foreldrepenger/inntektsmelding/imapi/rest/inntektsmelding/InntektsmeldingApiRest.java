@@ -19,15 +19,12 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import no.nav.foreldrepenger.inntektsmelding.felles.InntektsmeldingStatusDto;
-
-import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingStatus;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.swagger.v3.oas.annotations.Operation;
 import no.nav.foreldrepenger.inntektsmelding.felles.FeilkodeDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.InntektsmeldingApiStatusDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.YtelseTypeDto;
 import no.nav.foreldrepenger.inntektsmelding.imapi.inntektsmelding.HentInntektsmeldingResponse;
 import no.nav.foreldrepenger.inntektsmelding.imapi.inntektsmelding.InntektsmeldingFilterRequest;
@@ -43,6 +40,7 @@ import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.AutentisertMedAzure;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.Tilgangskontrollert;
 import no.nav.foreldrepenger.inntektsmelding.server.tilgangsstyring.Tilgang;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingApiStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
 import no.nav.vedtak.feil.Feilkode;
@@ -163,12 +161,11 @@ public class InntektsmeldingApiRest {
         return Response.ok(responsListe).build();
     }
 
-    private static InntektsmeldingStatus mapStatus(@Valid InntektsmeldingStatusDto inntektsmeldingStatusDto) {
+    private static InntektsmeldingApiStatus mapStatus(InntektsmeldingApiStatusDto inntektsmeldingStatusDto) {
         return switch (inntektsmeldingStatusDto) {
-            case GODKJENT -> InntektsmeldingStatus.GODKJENT;
-            case AVVIST -> InntektsmeldingStatus.AVVIST;
-            case UTDATERT -> InntektsmeldingStatus.UTDATERT;
-            case VENTER_VURDERING -> InntektsmeldingStatus.VENTER_VURDERING;
+            case GODKJENT -> InntektsmeldingApiStatus.GODKJENT;
+            case AVVIST -> InntektsmeldingApiStatus.AVVIST;
+            case MOTTATT -> InntektsmeldingApiStatus.MOTTATT;
         };
     }
 
