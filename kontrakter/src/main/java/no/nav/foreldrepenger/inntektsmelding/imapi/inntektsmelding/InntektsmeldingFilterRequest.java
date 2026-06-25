@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 
 import no.nav.foreldrepenger.inntektsmelding.felles.FødselsnummerDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.InntektsmeldingApiStatusDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.InntektsmeldingStatusDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.OrganisasjonsnummerDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.YtelseTypeDto;
@@ -18,5 +19,5 @@ public record InntektsmeldingFilterRequest(@NotNull @Valid OrganisasjonsnummerDt
                                            @Valid LocalDate fom,
                                            @Valid LocalDate tom,
                                            Long fraLoepenr,
-                                           @Valid InntektsmeldingStatusDto status) {
+                                           @Valid InntektsmeldingApiStatusDto status) {
 }
