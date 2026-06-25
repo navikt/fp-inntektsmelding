@@ -36,10 +36,6 @@ import no.nav.vedtak.exception.TekniskException;
 @Table(name = "INNTEKTSMELDING")
 public class InntektsmeldingEntitet {
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
-    private InntektsmeldingStatus status = InntektsmeldingStatus.GODKJENT;
-
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "GLOBAL_PK_SEQ_GENERATOR")
     private Long id;
@@ -98,6 +94,10 @@ public class InntektsmeldingEntitet {
     @ManyToOne
     @JoinColumn(name = "forespoersel_id")
     private ForespørselEntitet forespørsel;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private InntektsmeldingStatus status = InntektsmeldingStatus.GODKJENT;
 
     public InntektsmeldingEntitet() {
         // Hibernate

@@ -19,6 +19,10 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import no.nav.foreldrepenger.inntektsmelding.felles.InntektsmeldingStatusDto;
+
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingStatus;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -137,6 +141,9 @@ public class InntektsmeldingApiRest {
             var ytelseType = Optional.ofNullable(filterRequest.ytelseType())
                 .map(InntektsmeldingApiRest::mapYtelseType)
                 .orElse(null);
+            var status = Optional.ofNullable(filterRequest.status())
+                .map(InntektsmeldingApiRest::mapStatus)
+                .orElse(null);
 
             var inntektsmeldinger = inntektsmeldingTjeneste.hentInntektsmeldingerFraFilter(
                 filterRequest.orgnr().orgnr(),
@@ -144,7 +151,8 @@ public class InntektsmeldingApiRest {
                 ytelseType,
                 filterRequest.fom(),
                 filterRequest.tom(),
-                filterRequest.fraLoepenr());
+                filterRequest.fraLoepenr(),
+                status);
             var aktørIder = inntektsmeldinger.stream().map(InntektsmeldingDto::getAktørId).collect(Collectors.toSet());
             var aktørIdPersonIdentMap = personTjeneste.finnPersonIdentForAktørIdBolk(aktørIder);
             responsListe = inntektsmeldinger.stream()
@@ -153,6 +161,15 @@ public class InntektsmeldingApiRest {
         }
 
         return Response.ok(responsListe).build();
+    }
+
+    private static InntektsmeldingStatus mapStatus(@Valid InntektsmeldingStatusDto inntektsmeldingStatusDto) {
+        return switch (inntektsmeldingStatusDto) {
+            case GODKJENT -> InntektsmeldingStatus.GODKJENT;
+            case AVVIST -> InntektsmeldingStatus.AVVIST;
+            case UTDATERT -> InntektsmeldingStatus.UTDATERT;
+            case VENTER_VURDERING -> InntektsmeldingStatus.VENTER_VURDERING;
+        };
     }
 
     private static Ytelsetype mapYtelseType(YtelseTypeDto ytelseType) {
