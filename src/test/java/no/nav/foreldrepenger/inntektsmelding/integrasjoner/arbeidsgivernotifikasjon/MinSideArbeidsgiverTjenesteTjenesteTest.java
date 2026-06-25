@@ -1,6 +1,6 @@
 package no.nav.foreldrepenger.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon;
 
-import static no.nav.foreldrepenger.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon.MinSideArbeidsgiverTjenesteImpl.ALTINN_INNTEKTSMELDING_RESSURS;
+import static no.nav.foreldrepenger.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon.MinSideArbeidsgiverTjeneste.ALTINN_INNTEKTSMELDING_RESSURS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 
@@ -26,7 +26,7 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
 
     @BeforeEach
     void setUp() {
-        tjeneste = new MinSideArbeidsgiverTjenesteImpl(klient);
+        tjeneste = new MinSideArbeidsgiverTjeneste(klient, null, null, "https://arbeidsgiver.nav.no/fp-im-dialog");
     }
 
     @Test
@@ -193,7 +193,7 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
         assertThat(input).containsOnlyKeys("id", "overstyrStatustekstMed", "nyStatus", "idempotencyKey", "hardDelete", "tidspunkt", "nyLenkeTilSak")
             .containsEntry("id", expectedId)
             .containsEntry("nyStatus", SaksStatus.FERDIG)
-            .containsEntry("overstyrStatustekstMed", MinSideArbeidsgiverTjenesteImpl.SAK_STATUS_TEKST_ARBEIDSGIVERINITIERT);
+            .containsEntry("overstyrStatustekstMed", MinSideArbeidsgiverTjeneste.SAK_STATUS_TEKST_ARBEIDSGIVERINITIERT);
 
         assertThat(input.get("idempotencyKey")).isNull();
         assertThat(input.get("hardDelete")).isNull();

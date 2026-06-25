@@ -81,8 +81,7 @@ public class InntektsmeldingMottakTjeneste {
             lagretInntektsmelding = fellesMottakTjeneste.lagreOgJournalførInntektsmelding(inntektsmeldingDto, forespørselDto);
             //legger inn oppdatert inntektsmelding i portaler
             forespørselBehandlingTjeneste.oppdaterPortalerMedEndretInntektsmelding(forespørselDto,
-                Optional.ofNullable(lagretInntektsmelding.getInntektsmeldingUuid()),
-                arbeidsgiver
+                Optional.ofNullable(lagretInntektsmelding.getInntektsmeldingUuid())
             );
 
         } else {
