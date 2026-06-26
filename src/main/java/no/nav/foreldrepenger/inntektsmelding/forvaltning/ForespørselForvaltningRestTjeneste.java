@@ -1,6 +1,7 @@
 package no.nav.foreldrepenger.inntektsmelding.forvaltning;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import jakarta.enterprise.context.RequestScoped;
@@ -18,6 +19,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon.MinSideArbeidsgiverTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 
 import org.slf4j.Logger;
@@ -50,6 +52,7 @@ public class ForespørselForvaltningRestTjeneste {
     private Tilgang tilgang;
     private ForespørselBehandlingTjeneste forespørselBehandlingTjeneste;
     private ForespørselTjeneste forespørselTjeneste;
+    private MinSideArbeidsgiverTjeneste minSideArbeidsgiverTjeneste;
 
     ForespørselForvaltningRestTjeneste() {
         // REST CDI
@@ -58,16 +61,18 @@ public class ForespørselForvaltningRestTjeneste {
     @Inject
     public ForespørselForvaltningRestTjeneste(Tilgang tilgang,
                                               ForespørselBehandlingTjeneste forespørselBehandlingTjeneste,
-                                              ForespørselTjeneste forespørselTjeneste) {
+                                              ForespørselTjeneste forespørselTjeneste,
+                                              MinSideArbeidsgiverTjeneste minSideArbeidsgiverTjeneste) {
         this.tilgang = tilgang;
         this.forespørselBehandlingTjeneste = forespørselBehandlingTjeneste;
         this.forespørselTjeneste = forespørselTjeneste;
+        this.minSideArbeidsgiverTjeneste = minSideArbeidsgiverTjeneste;
     }
 
     @POST
     @Path("/settTilUtgatt/{forespoerselUuid}")
     @Consumes(MediaType.APPLICATION_JSON)
-    @Operation(description = "Setter angitt forespørsel og tilhørende sak i arbeidsgiverportalen til utgått", tags = "oppgaver", responses = {
+    @Operation(description = "Setter angitt forespørsel og tilhørende sak i arbeidsgiverportalen til utgått", tags = "forespoersler", responses = {
         @ApiResponse(responseCode = "202", description = "Forespørsel og oppgave er satt til utgått", content = @Content(mediaType = "application/json")),
         @ApiResponse(responseCode = "500", description = "Feilet pga ukjent feil eller tekniske/funksjonelle feil")
     })
@@ -80,6 +85,26 @@ public class ForespørselForvaltningRestTjeneste {
         sjekkAtKallerHarRollenDrift();
         LOG.info("Setter forespørsel og tilhørende sak i arbeidsgiverportalen med forespørselUuid {} til utgått", forespørselUuid);
         forespørselBehandlingTjeneste.settForespørselTilUtgåttForvaltning(gyldigForespørselUuid);
+        return Response.status(Response.Status.ACCEPTED).build();
+    }
+
+    @POST
+    @Path("/settOppgaveUtfoert/{forespoerselUuid}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Operation(description = "Setter fageroppgaven knyttet til forespørsel til utført. Må unntaksvis brukes hvis fager oppgaver ikke er lukket som forventet", tags = "forespoersler", responses = {
+        @ApiResponse(responseCode = "202", description = "Oppgave er satt til utført", content = @Content(mediaType = "application/json")),
+        @ApiResponse(responseCode = "500", description = "Feilet pga ukjent feil eller tekniske/funksjonelle feil")
+    })
+    @Tilgangskontrollert
+    public Response settOppgavePåForespørselTilLøst(
+        @Parameter(description = "UUID for forespørsel med oppgave som skal settes til utført") @Valid @NotNull @PathParam("forespoerselUuid")
+        @Pattern(regexp = "^[a-fA-F\\d]{8}(?:-[a-fA-F\\d]{4}){3}-[a-fA-F\\d]{12}$", message = "Ugyldig UUID-format")
+        String forespørselUuid) {
+        var gyldigForespørselUuid = UUID.fromString(forespørselUuid);
+        sjekkAtKallerHarRollenDrift();
+        LOG.info("Setter oppgaven for forespørselUuid {} til utført", forespørselUuid);
+        var forespørsel = forespørselTjeneste.hentForespørsel(gyldigForespørselUuid).orElseThrow();
+        minSideArbeidsgiverTjeneste.oppgaveUtført(forespørsel.oppgaveId(), OffsetDateTime.now());
         return Response.status(Response.Status.ACCEPTED).build();
     }
 
