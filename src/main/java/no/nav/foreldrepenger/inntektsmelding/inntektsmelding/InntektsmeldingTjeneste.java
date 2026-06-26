@@ -11,7 +11,7 @@ import jakarta.inject.Inject;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselRepository;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.InntektsmeldingRepository;
-import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingStatus;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingApiStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
 
@@ -74,7 +74,7 @@ public class InntektsmeldingTjeneste {
                                                                    LocalDate fom,
                                                                    LocalDate tom,
                                                                    Long fraLoepenr,
-                                                                   InntektsmeldingStatus status) {
+                                                                   InntektsmeldingApiStatus status) {
         return inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, aktørId, ytelseType, fom, tom, fraLoepenr, status)
             .stream()
             .map(InntektsmeldingDtoMapper::mapFraEntitet)
