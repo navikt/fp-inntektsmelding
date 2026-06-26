@@ -4,9 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.junit.jupiter.api.AfterEach;
@@ -21,6 +24,7 @@ import no.nav.pdl.HentIdenterBolkResult;
 import no.nav.pdl.IdentGruppe;
 import no.nav.pdl.IdentInformasjon;
 import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
+import no.nav.vedtak.util.LRUCache;
 
 @ExtendWith(MockitoExtension.class)
 class PersonTjenesteTest {
@@ -32,9 +36,19 @@ class PersonTjenesteTest {
     private PersonTjeneste personTjeneste;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         personTjeneste = new PersonTjeneste(pdlKlientMock);
         kontekstHolderMock = mockStatic(KontekstHolder.class);
+        tømCache();
+    }
+
+    private static void tømCache() throws Exception {
+        var cacheField = PersonTjeneste.class.getDeclaredField("CACHE_AKTØR_ID_TIL_IDENT");
+        cacheField.setAccessible(true);
+        var lruCache = (LRUCache<?, ?>) cacheField.get(null);
+        var mapField = LRUCache.class.getDeclaredField("cacheMap");
+        mapField.setAccessible(true);
+        ((Map<?, ?>) mapField.get(lruCache)).clear();
     }
 
     @AfterEach
@@ -91,10 +105,41 @@ class PersonTjenesteTest {
 
     @Test
     void finnPersonIdentForAktørIdBolk_skal_returnere_tomt_map_ved_tom_input() {
-        when(pdlKlientMock.hentIdenterBolkResults(any(), any())).thenReturn(List.of());
 
         var resultat = personTjeneste.finnPersonIdentForAktørIdBolk(Set.of());
-
         assertTrue(resultat.isEmpty());
+    }
+
+    @Test
+    void skal_kalle_pdl_når_cache_er_tom() {
+        var aktørId = new AktørId("9000000000001");
+        var pdlResult = new HentIdenterBolkResult();
+        pdlResult.setIdent("9000000000001");
+        pdlResult.setIdenter(List.of(new IdentInformasjon("11111111111", IdentGruppe.FOLKEREGISTERIDENT, false)));
+        pdlResult.setCode("ok");
+        when(pdlKlientMock.hentIdenterBolkResults(any(), any())).thenReturn(List.of(pdlResult));
+
+        var resultat = personTjeneste.finnPersonIdentForAktørIdBolk(Set.of(aktørId));
+
+        assertEquals(new PersonIdent("11111111111"), resultat.get(aktørId));
+        verify(pdlKlientMock, times(1)).hentIdenterBolkResults(any(), any());
+    }
+
+    @Test
+    void skal_ikke_kalle_pdl_når_alle_er_i_cache() {
+        var aktørId = new AktørId("9000000000002");
+        var pdlResult = new HentIdenterBolkResult();
+        pdlResult.setIdent("9000000000002");
+        pdlResult.setIdenter(List.of(new IdentInformasjon("22222222222", IdentGruppe.FOLKEREGISTERIDENT, false)));
+        pdlResult.setCode("ok");
+        when(pdlKlientMock.hentIdenterBolkResults(any(), any())).thenReturn(List.of(pdlResult));
+
+        // Første kall — populerer cachen
+        personTjeneste.finnPersonIdentForAktørIdBolk(Set.of(aktørId));
+        // Andre kall — skal hente fra cache, ikke kalle PDL igjen
+        var resultat = personTjeneste.finnPersonIdentForAktørIdBolk(Set.of(aktørId));
+
+        assertEquals(new PersonIdent("22222222222"), resultat.get(aktørId));
+        verify(pdlKlientMock, times(1)).hentIdenterBolkResults(any(), any());
     }
 }
