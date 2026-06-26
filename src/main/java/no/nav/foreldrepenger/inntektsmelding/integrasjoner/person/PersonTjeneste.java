@@ -14,17 +14,14 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.ProcessingException;
 
-import no.nav.pdl.HentIdenterBolkQueryRequest;
-import no.nav.pdl.HentIdenterBolkResultResponseProjection;
-
-import no.nav.vedtak.util.LRUCache;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.pdl.FoedselsdatoResponseProjection;
 import no.nav.pdl.FolkeregisteridentifikatorResponseProjection;
+import no.nav.pdl.HentIdenterBolkQueryRequest;
+import no.nav.pdl.HentIdenterBolkResultResponseProjection;
 import no.nav.pdl.HentIdenterQueryRequest;
 import no.nav.pdl.HentPersonQueryRequest;
 import no.nav.pdl.IdentGruppe;
@@ -41,6 +38,7 @@ import no.nav.vedtak.exception.IntegrasjonException;
 import no.nav.vedtak.exception.VLException;
 import no.nav.vedtak.felles.integrasjon.person.PersonMappers;
 import no.nav.vedtak.felles.integrasjon.person.Persondata;
+import no.nav.vedtak.util.LRUCache;
 
 @ApplicationScoped
 public class PersonTjeneste {
@@ -152,8 +150,11 @@ public class PersonTjeneste {
                 aktørIdentMap.put(aktør, cachetFnr);
             }
         });
-        var hentedeIdenter = hentPersonidentForAktørIdBolk(manglendeAktørIder);
-        aktørIdentMap.putAll(hentedeIdenter);
+        if (!manglendeAktørIder.isEmpty()) {
+            var hentedeIdenter = hentPersonidentForAktørIdBolk(manglendeAktørIder);
+            aktørIdentMap.putAll(hentedeIdenter);
+        }
+
         aktørIdentMap.forEach(CACHE_AKTØR_ID_TIL_IDENT::put);
         return aktørIdentMap;
     }
