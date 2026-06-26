@@ -91,18 +91,18 @@ public class ForespørselForvaltningRestTjeneste {
     @POST
     @Path("/settOppgaveUtfoert/{forespoerselUuid}")
     @Consumes(MediaType.APPLICATION_JSON)
-    @Operation(description = "Setter fageroppgaven knyttet til forespørsel til utført. Må unntaksvis brukes hvios fager oppgaver ikke er lukket som forventet", tags = "forespoersler", responses = {
+    @Operation(description = "Setter fageroppgaven knyttet til forespørsel til utført. Må unntaksvis brukes hvis fager oppgaver ikke er lukket som forventet", tags = "forespoersler", responses = {
         @ApiResponse(responseCode = "202", description = "Oppgave er satt til utført", content = @Content(mediaType = "application/json")),
         @ApiResponse(responseCode = "500", description = "Feilet pga ukjent feil eller tekniske/funksjonelle feil")
     })
     @Tilgangskontrollert
     public Response settOppgavePåForespørselTilLøst(
-        @Parameter(description = "UUID for forespørsel som skal settes til utgått") @Valid @NotNull @PathParam("forespoerselUuid")
+        @Parameter(description = "UUID for forespørsel med oppgave som skal settes til utført") @Valid @NotNull @PathParam("forespoerselUuid")
         @Pattern(regexp = "^[a-fA-F\\d]{8}(?:-[a-fA-F\\d]{4}){3}-[a-fA-F\\d]{12}$", message = "Ugyldig UUID-format")
         String forespørselUuid) {
         var gyldigForespørselUuid = UUID.fromString(forespørselUuid);
         sjekkAtKallerHarRollenDrift();
-        LOG.info("Setter forespørsel og tilhørende sak i arbeidsgiverportalen med forespørselUuid {} til utgått", forespørselUuid);
+        LOG.info("Setter oppgaven for forespørselUuid {} til utført", forespørselUuid);
         var forespørsel = forespørselTjeneste.hentForespørsel(gyldigForespørselUuid).orElseThrow();
         minSideArbeidsgiverTjeneste.oppgaveUtført(forespørsel.oppgaveId(), OffsetDateTime.now());
         return Response.status(Response.Status.ACCEPTED).build();
