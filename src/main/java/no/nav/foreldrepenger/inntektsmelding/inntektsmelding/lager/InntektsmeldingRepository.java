@@ -95,6 +95,7 @@ public class InntektsmeldingRepository {
             predicates.add(cb.greaterThan(root.get("id"), fraLoepenr));
         }
         if (status != null) {
+            /*Håndterer at vi har andre statuser internt enn ut mot konsumenter. Mottatt status kan enten være utdatert eller venter vurdering i vår database*/
             if (status == InntektsmeldingApiStatus.MOTTATT) {
                 predicates.add(root.get("status").in(List.of(InntektsmeldingStatus.UTDATERT, InntektsmeldingStatus.VENTER_VURDERING)));
             }
