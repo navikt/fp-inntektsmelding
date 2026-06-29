@@ -115,4 +115,12 @@ public class InntektsmeldingRepository {
         }
         return result;
     }
+
+    public void oppdaterStatusTilInntektsmelding(UUID inntektsmeldingUuid, InntektsmeldingStatus inntektsmeldingStatus) {
+        var inntektsmelding = finnInntektsmelding(inntektsmeldingUuid)
+            .orElseThrow();
+        inntektsmelding.setInntektsmeldingStatus(inntektsmeldingStatus);
+        entityManager.persist(inntektsmelding);
+        entityManager.flush();
+    }
 }

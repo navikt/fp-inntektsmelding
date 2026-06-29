@@ -63,6 +63,29 @@ public class InntektsmeldingDto {
         return new Builder();
     }
 
+    public static Builder builder(InntektsmeldingDto eksisterende) {
+        return new Builder()
+            .medId(eksisterende.id)
+            .medInntektsmeldingUuid(eksisterende.inntektsmeldingUuid)
+            .medAktørId(eksisterende.aktørId)
+            .medYtelse(eksisterende.ytelse)
+            .medArbeidsgiver(eksisterende.arbeidsgiver)
+            .medKontaktperson(eksisterende.kontaktperson)
+            .medStartdato(eksisterende.startdato)
+            .medInntekt(eksisterende.månedInntekt)
+            .medInnsendtTidspunkt(eksisterende.innsendtTidspunkt)
+            .medKildesystem(eksisterende.kildesystem)
+            .medOpprettetAv(eksisterende.opprettetAv)
+            .medAvsenderSystem(eksisterende.avsenderSystem)
+            .medMånedRefusjon(eksisterende.månedRefusjon)
+            .medOpphørsdatoRefusjon(eksisterende.opphørsdatoRefusjon)
+            .medSøkteRefusjonsperioder(eksisterende.søkteRefusjonsperioder)
+            .medBortfaltNaturalytelsePerioder(eksisterende.bortfaltNaturalytelsePerioder)
+            .medEndringAvInntektÅrsaker(eksisterende.endringAvInntektÅrsaker)
+            .medStatus(eksisterende.status)
+            .medForespørsel(eksisterende.forespørsel);
+    }
+
     public Long getId() {
         return id;
     }

@@ -244,6 +244,10 @@ public class InntektsmeldingEntitet {
         return new Builder();
     }
 
+    void setInntektsmeldingStatus(InntektsmeldingStatus inntektsmeldingStatus) {
+        this.status = inntektsmeldingStatus;
+    }
+
     public static class Builder {
         private final InntektsmeldingEntitet kladd = new InntektsmeldingEntitet();
 

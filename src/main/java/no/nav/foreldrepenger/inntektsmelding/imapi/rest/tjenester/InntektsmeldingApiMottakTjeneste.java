@@ -12,6 +12,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.inntektskomponent.Inntektsopplysninger;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingStatus;
 import no.nav.vedtak.exception.TekniskException;
 
 import org.slf4j.Logger;
@@ -124,10 +125,11 @@ public class InntektsmeldingApiMottakTjeneste {
         var inntektErUgyldig = erOppgittInntektUgyldig(inntektsmelding, inntekter);
 
         if (inntektErUgyldig) {
+            inntektsmeldingTjeneste.oppdatertStatusTilInntektsmelding(inntektsmelding.getInntektsmeldingUuid(), InntektsmeldingStatus.AVVIST);
             // TODO Oppdater databasen med korrekt status
             // TODO Send transmission i dialogporten
         } else {
-            // TODO Oppdater databasen
+            inntektsmeldingTjeneste.oppdatertStatusTilInntektsmelding(inntektsmelding.getInntektsmeldingUuid(), InntektsmeldingStatus.GODKJENT);
             fellesMottakTjeneste.opprettTaskForSendTilJoark(inntektsmeldingId, forespørsel);
             fellesMottakTjeneste.ferdigstillOgOppdaterEksterneSystemer(forespørsel, Optional.ofNullable(inntektsmelding.getInntektsmeldingUuid()));
             MetrikkerTjeneste.loggInnsendtInntektsmelding(inntektsmelding);
@@ -157,10 +159,10 @@ public class InntektsmeldingApiMottakTjeneste {
             LOG.warn(
                 "Inntektskomponenten har nedetid, og vi kan ikke verifisere inntekt i inntektsmeldingen mot A-inntekt. inntektsmeldingId: {}",
                 inntektsmelding.getId());
-            // TODO lag task for å kjøre på nytt
             // TODO oppdater status i dialogporten
-            // TODO Oppdater status i databasen
-            fellesMottakTjeneste.lagreIMOgOpprettTaskForEtterkontroll(inntektsmelding, forespørsel);
+            InntektsmeldingDto inntektsmeldingMedStatus = InntektsmeldingDto.builder(inntektsmelding).medStatus(InntektsmeldingStatus.VENTER_VURDERING).build();
+
+            fellesMottakTjeneste.lagreIMOgOpprettTaskForEtterkontroll(inntektsmeldingMedStatus, forespørsel);
             MetrikkerTjeneste.loggInnsendtInntektsmeldingUnderNedetid();
             return new SendInntektsmeldingResponse(false,
                 null,
