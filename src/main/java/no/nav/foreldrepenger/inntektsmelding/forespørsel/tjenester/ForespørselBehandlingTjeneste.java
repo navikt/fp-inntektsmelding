@@ -304,7 +304,10 @@ public class ForespørselBehandlingTjeneste {
         minSideArbeidsgiverTjeneste.oppdaterSakTilleggsinformasjon(arbeidsgiverNotifikasjonSakId, tilleggsinformasjon);
 
         forespørselTjeneste.setArbeidsgiverNotifikasjonSakId(forespørselUuid, arbeidsgiverNotifikasjonSakId);
-
+        if (ENV.isDev()) {
+            // Oppretter ikke oppgaver i dev for en periode for å teste hvordan det ser ut for migrerte saker
+            return;
+        }
         String oppgaveId;
         try {
             oppgaveId = minSideArbeidsgiverTjeneste.opprettOppgave(forespørselUuid.toString(),
