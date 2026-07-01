@@ -11,6 +11,7 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import no.nav.foreldrepenger.inntektsmelding.felles.InntektsmeldingStatusDto;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.inntektskomponent.Inntektsopplysninger;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingStatus;
 import no.nav.vedtak.exception.TekniskException;
@@ -118,6 +119,8 @@ public class InntektsmeldingApiMottakTjeneste {
             harJobbetHeleBeregningsperioden);
 
         if (inntekter.harNedetid()) {
+            //task feiler, vi oppdaterer status til venter vurdering
+            inntektsmeldingTjeneste.oppdatertStatusTilInntektsmelding(inntektsmelding.getInntektsmeldingUuid(), InntektsmeldingStatus.VENTER_VURDERING);
             throw new TekniskException("F-523043", "Nedetid i a-inntekt, får ikke ferdigstilt inntektsmelding " + inntektsmeldingId);
         }
 
@@ -161,16 +164,16 @@ public class InntektsmeldingApiMottakTjeneste {
             LOG.warn(
                 "Inntektskomponenten har nedetid, og vi kan ikke verifisere inntekt i inntektsmeldingen mot A-inntekt. inntektsmeldingId: {}",
                 inntektsmelding.getId());
-            // TODO oppdater status i dialogporten
             InntektsmeldingDto inntektsmeldingMedStatus = InntektsmeldingDto.builder(inntektsmelding).medStatus(InntektsmeldingStatus.VENTER_VURDERING).build();
 
+            //Todo jeg tror vi her må lagre inntektsmeldingen her for å gi tilbake succes med inntektsmeldingUuid og en inntektsmeldingsstatus
             fellesMottakTjeneste.lagreIMOgOpprettTaskForEtterkontroll(inntektsmeldingMedStatus, forespørsel);
             MetrikkerTjeneste.loggInnsendtInntektsmeldingUnderNedetid();
-            return new SendInntektsmeldingResponse(false,
+            return new SendInntektsmeldingResponse(true,
                 null,
-                null,
+                InntektsmeldingStatusDto.VENTER_VURDERING,
                 new SendInntektsmeldingResponse.FeilInfo(FeilkodeDto.NEDETID_AINNTEKT,
-                    "Inntektskomponenten har nedetid, og vi kan ikke verifisere inntekt i inntektsmeldingen mot A-inntekt. Prøv igjen om litt.",
+                    "Inntektskomponenten har nedetid, og vi kan ikke verifisere inntekt i inntektsmeldingen mot A-inntekt. Vi vil prøve igjen senere. Resultatet vil bli informert om på dialogporten(altinn) og min side arbeidsgiver på nav.no",
                     forespørsel.uuid().toString()));
         }
 
@@ -181,7 +184,7 @@ public class InntektsmeldingApiMottakTjeneste {
                 "Inntekt i inntektsmelding er ulik inntekt fra A-inntekt, og ingen endringsårsak er oppgitt. Gjennomsnittlig inntekt fra A-inntekt: %s, oppgitt inntekt i inntektsmelding: %s",
                 inntektFraAInntekt.gjennomsnitt(),
                 inntektsmelding.getMånedInntekt());
-            //Todo legger inn null i status inntil vi har håndtering av nedetid inntektskomponenten på plass
+
             return new SendInntektsmeldingResponse(false,
                 null, null,
                 new SendInntektsmeldingResponse.FeilInfo(FeilkodeDto.ULIK_INNTEKT, feilmelding, forespørsel.uuid().toString()));
