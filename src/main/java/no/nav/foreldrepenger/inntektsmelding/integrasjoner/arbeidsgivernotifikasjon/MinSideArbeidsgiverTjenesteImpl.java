@@ -2,7 +2,6 @@ package no.nav.foreldrepenger.inntektsmelding.integrasjoner.arbeidsgivernotifika
 
 import java.net.URI;
 import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
@@ -38,12 +37,6 @@ class MinSideArbeidsgiverTjenesteImpl implements MinSideArbeidsgiverTjeneste {
 
     @Override
     public String opprettSak(String grupperingsid, Merkelapp merkelapp, String organisasjonsnumme, String saksTittel, URI lenke) {
-        return opprettSak(grupperingsid, merkelapp, organisasjonsnumme, saksTittel, lenke, Optional.empty());
-    }
-
-    @Override
-    public String opprettSak(String grupperingsid, Merkelapp merkelapp, String organisasjonsnumme, String saksTittel, URI lenke,
-                             Optional<LocalDate> førsteUttaksdato) {
 
         var request = NySakMutationRequest.builder()
             .setGrupperingsid(grupperingsid)
@@ -54,10 +47,6 @@ class MinSideArbeidsgiverTjenesteImpl implements MinSideArbeidsgiverTjeneste {
             .setInitiellStatus(SaksStatus.UNDER_BEHANDLING)
             .setOverstyrStatustekstMed(SAK_STATUS_TEKST)
             .setMottakere(List.of(lagAltinnMottakerInput()));
-
-        // Når vi migrerer forespørsler for eksisterende løpende saker som ikke har forespørsel setter vi tidspunkt på saken til
-        // 4 uker før første uttaksdato slik at de havner nederst i sakslisten i arbeidsgiverportalen til arbeidsgiver
-        førsteUttaksdato.ifPresent(dato -> request.setTidspunkt(dato.minusWeeks(4).atStartOfDay().format(DateTimeFormatter.ISO_DATE_TIME)));
 
         var projection = new NySakResultatResponseProjection().typename()
             .onNySakVellykket(new NySakVellykketResponseProjection().id())
@@ -244,11 +233,6 @@ class MinSideArbeidsgiverTjenesteImpl implements MinSideArbeidsgiverTjeneste {
 
     @Override
     public String ferdigstillSak(String id, boolean arbeidsgiverInitiert) {
-        return ferdigstillSak(id, arbeidsgiverInitiert, Optional.empty());
-    }
-
-    @Override
-    public String ferdigstillSak(String id, boolean arbeidsgiverInitiert, Optional<LocalDate> førsteUttaksdato) {
 
         var requestBuilder = NyStatusSakMutationRequest.builder()
             .setId(id)
@@ -259,10 +243,6 @@ class MinSideArbeidsgiverTjenesteImpl implements MinSideArbeidsgiverTjeneste {
         } else {
             requestBuilder.setOverstyrStatustekstMed(SAK_STATUS_TEKST);
         }
-
-        // Når vi migrerer forespørsler for eksisterende løpende saker som ikke har forespørsel setter vi tidspunkt på saken til
-        // 4 uker før første uttaksdato slik at de havner nederst i sakslisten i arbeidsgiverportalen til arbeidsgiver
-        førsteUttaksdato.ifPresent(dato -> requestBuilder.setTidspunkt(dato.minusWeeks(4).atStartOfDay().format(DateTimeFormatter.ISO_DATE_TIME)));
 
         var projection = new NyStatusSakResultatResponseProjection().typename()
             .onNyStatusSakVellykket(new NyStatusSakVellykketResponseProjection().id())

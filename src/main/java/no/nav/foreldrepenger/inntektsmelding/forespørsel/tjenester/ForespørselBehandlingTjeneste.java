@@ -101,61 +101,9 @@ public class ForespørselBehandlingTjeneste {
         }
 
         settTidligereForespørslerForSaksnummerTilUtgått(fagsakSaksnummer, arbeidsgiver, aktørId);
-
-        var erMigreringGjennskaping = ENV.isDev() && arbeidsgiver.orgnr().equals("315853370");
-        if (erMigreringGjennskaping) {
-            gjennskapMigreringscase(skjæringstidspunkt,
-                ytelsetype,
-                aktørId,
-                arbeidsgiver,
-                fagsakSaksnummer,
-                førsteUttaksdato);
-        } else {
-            opprettForespørsel(ytelsetype, aktørId, fagsakSaksnummer, arbeidsgiver, skjæringstidspunkt, førsteUttaksdato);
-        }
+        opprettForespørsel(ytelsetype, aktørId, fagsakSaksnummer, arbeidsgiver, skjæringstidspunkt, førsteUttaksdato);
 
         return ForespørselResultat.FORESPØRSEL_OPPRETTET;
-    }
-
-    // Gjenskaper oppførselen fra den tidligere migreringen av gamle saker inn i Min side - arbeidsgiver: I motsetning til vanlige
-    // forespørsler fikk migrerte saker aldri opprettet en oppgave (kun sak), og saken/forespørselen ble ferdigstilt med det samme
-    // som EKSTERN_INNSENDING, siden inntektsmeldingen allerede var mottatt utenfor løsningen (Altinn/lønnssystem) før migreringen.
-    private void gjennskapMigreringscase(LocalDate skjæringstidspunkt,
-                                         Ytelsetype ytelsetype,
-                                         AktørId aktørId,
-                                         Arbeidsgiver arbeidsgiver,
-                                         Saksnummer fagsakSaksnummer,
-                                         LocalDate førsteUttaksdato) {
-        LOG.info("Oppretter migrert testforespørsel for saksnummer: {}, orgnummer: {}, skjæringstidspunkt: {}",
-            fagsakSaksnummer,
-            arbeidsgiver,
-            skjæringstidspunkt);
-
-        var forespørselUuid = forespørselTjeneste.opprettForespørsel(skjæringstidspunkt,
-            ytelsetype,
-            aktørId,
-            arbeidsgiver,
-            fagsakSaksnummer,
-            førsteUttaksdato);
-
-        var person = personTjeneste.hentPersonInfoFraAktørId(aktørId, ytelsetype);
-        var merkelapp = ForespørselTekster.finnMerkelapp(ytelsetype);
-        var skjemaUri = URI.create(inntektsmeldingSkjemaLenke + "/" + forespørselUuid);
-
-        // Migrerte saker fikk kun opprettet en sak i Min side - arbeidsgiver, aldri en tilhørende oppgave
-        var arbeidsgiverNotifikasjonSakId = minSideArbeidsgiverTjeneste.opprettSak(forespørselUuid.toString(),
-            merkelapp,
-            arbeidsgiver.orgnr(),
-            ForespørselTekster.lagSaksTittel(person.mapFulltNavn(), person.fødselsdato()),
-            skjemaUri,
-            Optional.of(førsteUttaksdato));
-        forespørselTjeneste.setArbeidsgiverNotifikasjonSakId(forespørselUuid, arbeidsgiverNotifikasjonSakId);
-
-        // Migrerte saker ble ferdigstilt med det samme, og ble aldri regnet som arbeidsgiverinitiert
-        minSideArbeidsgiverTjeneste.ferdigstillSak(arbeidsgiverNotifikasjonSakId, false, Optional.of(førsteUttaksdato));
-        minSideArbeidsgiverTjeneste.oppdaterSakTilleggsinformasjon(arbeidsgiverNotifikasjonSakId,
-            ForespørselTekster.lagTilleggsInformasjon(LukkeÅrsak.EKSTERN_INNSENDING, førsteUttaksdato));
-        forespørselTjeneste.ferdigstillForespørsel(arbeidsgiverNotifikasjonSakId);
     }
 
     // Vi skal aldri ha mer enn en forespørsel til under_behandling eller ferdig for samme sak med samme orgnummer og aktørid
