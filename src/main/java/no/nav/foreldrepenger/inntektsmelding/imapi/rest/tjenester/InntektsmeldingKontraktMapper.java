@@ -11,6 +11,7 @@ import no.nav.foreldrepenger.inntektsmelding.felles.NaturalytelsetypeDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.OrganisasjonsnummerDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.SøktRefusjonDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.YtelseTypeDto;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
 import no.nav.foreldrepenger.inntektsmelding.imapi.inntektsmelding.HentInntektsmeldingResponse;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
@@ -40,7 +41,7 @@ public class InntektsmeldingKontraktMapper {
         return new HentInntektsmeldingResponse(
             inntektsmelding.getId(),
             inntektsmelding.getInntektsmeldingUuid(),
-            inntektsmelding.getForespørsel().uuid(),
+            inntektsmelding.getForespørsel().map(ForespørselDto::uuid).orElse(null),
             new FødselsnummerDto(personIdent.getIdent()),
             mapKodeverk(inntektsmelding.getYtelse()),
             new OrganisasjonsnummerDto(inntektsmelding.getArbeidsgiver().orgnr()),

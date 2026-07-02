@@ -90,6 +90,13 @@ public class DialogportenKlient {
         sendPatchRequest(dialogUuid, patchRequestFerdig);
     }
 
+    public void sendMeldingOmAvvistInntektsmelding(UUID dialogUuid,
+                                                   Arbeidsgiver arbeidsgiver,
+                                                   String avvistTekst) {
+        var patchAvvistInntektsmelding = DialogportenRequestMapper.inntektsmeldingAvvistTransmission(arbeidsgiver, avvistTekst);
+        sendPatchRequest(dialogUuid, List.of(patchAvvistInntektsmelding));
+    }
+
     public void oppdaterDialogMedEndretInntektsmelding(UUID dialogUuid,
                                                        Arbeidsgiver arbeidsgiver,
                                                        Optional<UUID> inntektsmeldingUuid) {

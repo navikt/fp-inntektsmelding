@@ -1,7 +1,7 @@
 package no.nav.foreldrepenger.inntektsmelding.typer.kodeverk;
 
 public enum InntektsmeldingStatus {
-    /** Inntektsmeldingen avviker fra a-inntekt og ble avvist. */
+    /** Inntektsmeldingen avviker fra a-inntekt, har ikke årsak og ble avvist. */
     AVVIST,
     /** Inntektsmeldingen venter på at a-inntekt skal være tilgjengelig for kontroll. */
     VENTER_VURDERING,

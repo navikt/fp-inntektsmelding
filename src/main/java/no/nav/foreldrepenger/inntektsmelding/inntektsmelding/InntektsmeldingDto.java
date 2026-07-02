@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
@@ -60,6 +61,29 @@ public class InntektsmeldingDto {
 
     public static Builder builder() {
         return new Builder();
+    }
+
+    public static Builder builder(InntektsmeldingDto eksisterende) {
+        return new Builder()
+            .medId(eksisterende.id)
+            .medInntektsmeldingUuid(eksisterende.inntektsmeldingUuid)
+            .medAktørId(eksisterende.aktørId)
+            .medYtelse(eksisterende.ytelse)
+            .medArbeidsgiver(eksisterende.arbeidsgiver)
+            .medKontaktperson(eksisterende.kontaktperson)
+            .medStartdato(eksisterende.startdato)
+            .medInntekt(eksisterende.månedInntekt)
+            .medInnsendtTidspunkt(eksisterende.innsendtTidspunkt)
+            .medKildesystem(eksisterende.kildesystem)
+            .medOpprettetAv(eksisterende.opprettetAv)
+            .medAvsenderSystem(eksisterende.avsenderSystem)
+            .medMånedRefusjon(eksisterende.månedRefusjon)
+            .medOpphørsdatoRefusjon(eksisterende.opphørsdatoRefusjon)
+            .medSøkteRefusjonsperioder(eksisterende.søkteRefusjonsperioder)
+            .medBortfaltNaturalytelsePerioder(eksisterende.bortfaltNaturalytelsePerioder)
+            .medEndringAvInntektÅrsaker(eksisterende.endringAvInntektÅrsaker)
+            .medStatus(eksisterende.status)
+            .medForespørsel(eksisterende.forespørsel);
     }
 
     public Long getId() {
@@ -134,8 +158,8 @@ public class InntektsmeldingDto {
         return status;
     }
 
-    public ForespørselDto getForespørsel() {
-        return forespørsel;
+    public Optional<ForespørselDto> getForespørsel() {
+        return Optional.ofNullable(forespørsel);
     }
 
     public static class Builder {
