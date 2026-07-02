@@ -56,13 +56,14 @@ public class FellesMottakTjeneste {
         LOG.info("Opprettet task for oversending til joark");
     }
 
-    public void lagreIMOgOpprettTaskForEtterkontroll (InntektsmeldingDto inntektsmelding, ForespørselDto forespørsel) {
+    public InntektsmeldingDto lagreIMOgOpprettTaskForEtterkontroll (InntektsmeldingDto inntektsmelding, ForespørselDto forespørsel) {
         // Her må vi sende med korrekt status
         var lagretIMId = inntektsmeldingTjeneste.lagreInntektsmelding(inntektsmelding, forespørsel.uuid());
         var task = ProsessTaskData.forProsessTask(FerdigstillInntektsmeldingEtterNedetidTask.class);
         task.setProperty(FerdigstillInntektsmeldingEtterNedetidTask.KEY_INNTEKTSMELDING_ID, lagretIMId.toString());
         prosessTaskTjeneste.lagre(task);
         LOG.info("Opprettet task for etterkontroll av inntektsmelding");
+        return inntektsmeldingTjeneste.hentInntektsmelding(lagretIMId);
     }
 
     public void ferdigstillOgOppdaterEksterneSystemer(ForespørselDto forespørsel, Optional<UUID> imId) {

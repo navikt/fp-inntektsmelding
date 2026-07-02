@@ -166,14 +166,13 @@ public class InntektsmeldingApiMottakTjeneste {
                 inntektsmelding.getId());
             InntektsmeldingDto inntektsmeldingMedStatus = InntektsmeldingDto.builder(inntektsmelding).medStatus(InntektsmeldingStatus.VENTER_VURDERING).build();
 
-            //Todo jeg tror vi her må lagre inntektsmeldingen her for å gi tilbake succes med inntektsmeldingUuid og en inntektsmeldingsstatus
-            fellesMottakTjeneste.lagreIMOgOpprettTaskForEtterkontroll(inntektsmeldingMedStatus, forespørsel);
+            var inntektsmeldingDto = fellesMottakTjeneste.lagreIMOgOpprettTaskForEtterkontroll(inntektsmeldingMedStatus, forespørsel);
             MetrikkerTjeneste.loggInnsendtInntektsmeldingUnderNedetid();
             return new SendInntektsmeldingResponse(true,
-                null,
+                inntektsmeldingDto.getInntektsmeldingUuid(),
                 InntektsmeldingStatusDto.VENTER_VURDERING,
                 new SendInntektsmeldingResponse.FeilInfo(FeilkodeDto.NEDETID_AINNTEKT,
-                    "Inntektskomponenten har nedetid, og vi kan ikke verifisere inntekt i inntektsmeldingen mot A-inntekt. Vi vil prøve igjen senere. Resultatet vil bli informert om på dialogporten(altinn) og min side arbeidsgiver på nav.no",
+                    "Inntektskomponenten har nedetid, og vi kan ikke verifisere inntekt i inntektsmeldingen mot A-inntekt. Vi prøver igjen om litt. Resultatet vil publiseres i altinn og på arbeidsgivers side på nav.no når a-inntekt er oppe igjen.",
                     forespørsel.uuid().toString()));
         }
 
