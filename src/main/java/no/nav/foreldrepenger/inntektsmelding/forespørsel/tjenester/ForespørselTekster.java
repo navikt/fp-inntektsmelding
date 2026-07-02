@@ -11,7 +11,7 @@ import no.nav.foreldrepenger.inntektsmelding.integrasjoner.arbeidsgivernotifikas
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.organisasjon.Organisasjon;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 
-class ForespørselTekster {
+public class ForespørselTekster {
     protected static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yy");
 
     static final String SAKSTITTEL = "Inntektsmelding for %s (%s)";
