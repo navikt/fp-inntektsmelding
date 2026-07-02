@@ -44,6 +44,6 @@ public class UregistrertValiderer {
     }
 
     private static boolean førsteUttaksdatoErEtterGrense(LocalDate førsteUttaksdato, LocalDate søktForTidligGrense) {
-        return førsteUttaksdato != Tid.TIDENES_ENDE && førsteUttaksdato.isAfter(søktForTidligGrense);
+        return !Tid.TIDENES_ENDE.equals(førsteUttaksdato) && førsteUttaksdato.isAfter(søktForTidligGrense);
     }
 }
