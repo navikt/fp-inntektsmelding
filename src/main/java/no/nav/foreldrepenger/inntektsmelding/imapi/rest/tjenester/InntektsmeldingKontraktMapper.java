@@ -5,16 +5,20 @@ import no.nav.foreldrepenger.inntektsmelding.felles.BortfaltNaturalytelseDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.EndringsårsakDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.EndringsårsakerDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.FødselsnummerDto;
+import no.nav.foreldrepenger.inntektsmelding.felles.InnsendingstypeDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.InntektsmeldingStatusDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.KontaktpersonDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.NaturalytelsetypeDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.OrganisasjonsnummerDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.SøktRefusjonDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.YtelseTypeDto;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
 import no.nav.foreldrepenger.inntektsmelding.imapi.inntektsmelding.HentInntektsmeldingResponse;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingStatus;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 
 
@@ -62,8 +66,24 @@ public class InntektsmeldingKontraktMapper {
             inntektsmelding.getEndringAvInntektÅrsaker().stream()
                 .map(e -> new EndringsårsakerDto(EndringsårsakDto.valueOf(e.årsak().name()), e.fom(), e.tom(), e.bleKjentFom()))
                 .toList(),
-            mapStatus(inntektsmelding.getStatus())
+            mapStatus(inntektsmelding.getStatus()),
+            mapInnsendingstype(inntektsmelding.getKildesystem(), inntektsmelding.getForespørsel(), inntektsmelding.getId())
         );
+    }
+
+    private static InnsendingstypeDto mapInnsendingstype(Kildesystem kildesystem, ForespørselDto forespørsel, Long inntektsmeldingId ) {
+        if (forespørsel == null) {
+            throw new IllegalStateException("InntektsmeldingDtoMapper: Finner ikke forespørsel for inntektsmelding med id:" + inntektsmeldingId);
+        }
+
+        if (ForespørselType.ARBEIDSGIVERINITIERT_UREGISTRERT.equals(forespørsel.forespørselType()) || ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT.equals(
+            forespørsel.forespørselType())) {
+            return InnsendingstypeDto.ARBEIDSGIVER_INITIERT;
+        }  else if (Kildesystem.LØNN_OG_PERSONAL_SYSTEM.equals(kildesystem)) {
+            return InnsendingstypeDto.FORESPURT_EKSTERN;
+        } else {
+            return InnsendingstypeDto.FORESPURT;
+        }
     }
 
     private static YtelseTypeDto mapKodeverk(Ytelsetype ytelse) {
