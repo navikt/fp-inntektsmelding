@@ -1,12 +1,10 @@
 name-template: $NEXT_PATCH_VERSION
 tag-template: $NEXT_PATCH_VERSION
 change-template: '- $TITLE (#$NUMBER) @$AUTHOR'
-include-labels:
-  - 'kontrakt'
 categories:
-  - title: '📦 Kontrakt-endringer'
+  - title: '⬆️ Dependency upgrades'
     labels:
-      - 'kontrakt'
+      - 'dependencies'
 template: |
   ## What's Changed
   $CHANGES
