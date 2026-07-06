@@ -347,7 +347,8 @@ class InntektsmeldingApiRestTest {
             Collections.emptyList(),
             Collections.emptyList(),
             InntektsmeldingStatusDto.GODKJENT,
-            InnsendingstypeDto.FORESPURT_EKSTERN
+            InnsendingstypeDto.FORESPURT_EKSTERN,
+            LocalDate.now()
         );
     }
 }
