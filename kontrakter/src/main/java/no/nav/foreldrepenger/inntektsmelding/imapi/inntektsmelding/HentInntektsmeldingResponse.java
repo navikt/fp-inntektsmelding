@@ -41,7 +41,8 @@ public record HentInntektsmeldingResponse(
     @NotNull List<@Valid BortfaltNaturalytelseDto> bortfaltNaturalytelsePerioder,
     @NotNull List<@Valid EndringsårsakerDto> endringAvInntektÅrsaker,
     @NotNull @Valid InntektsmeldingStatusDto status,
-    @NotNull @Valid InnsendingstypeDto typeInnsending
+    @NotNull @Valid InnsendingstypeDto typeInnsending,
+    LocalDate skjæringstidspunkt
 ) {
 
 }
