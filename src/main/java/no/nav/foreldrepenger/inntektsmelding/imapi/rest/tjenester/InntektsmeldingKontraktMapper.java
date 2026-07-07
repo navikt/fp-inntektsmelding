@@ -67,7 +67,8 @@ public class InntektsmeldingKontraktMapper {
                 .map(e -> new EndringsårsakerDto(EndringsårsakDto.valueOf(e.årsak().name()), e.fom(), e.tom(), e.bleKjentFom()))
                 .toList(),
             mapStatus(inntektsmelding.getStatus()),
-            mapInnsendingstype(inntektsmelding.getKildesystem(), inntektsmelding.getForespørsel(), inntektsmelding.getId())
+            mapInnsendingstype(inntektsmelding.getKildesystem(), inntektsmelding.getForespørsel(), inntektsmelding.getId()),
+            inntektsmelding.getForespørsel().skjæringstidspunkt()
         );
     }
 
