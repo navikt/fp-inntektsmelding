@@ -130,11 +130,12 @@ class InntektsmeldingApiMottakTjenesteTest {
     }
 
     @Test
-    void skal_avvise_inntektsmelding_når_ainntekt_har_nedetid() {
+    void skal_lagre_inntektsmelding_og_returnere_venter_vurdering_når_ainntekt_har_nedetid() {
         var foresporselUuid = UUID.randomUUID();
         var imUuid = UUID.randomUUID();
         var inputDto = lagInntektsmeldingDtoMedUuid(imUuid, null, false, InntektsmeldingStatus.VENTER_VURDERING);
         var forespørselDto = lagForespørselDto(foresporselUuid, null, ForespørselStatus.UNDER_BEHANDLING);
+        var lagretIm = lagInntektsmeldingDtoMedUuid(imUuid, null, false, InntektsmeldingStatus.VENTER_VURDERING);
         var inntektsopplysninger = new Inntektsopplysninger(BigDecimal.ZERO, ORGNR, List.of(
             new Inntektsopplysninger.InntektMåned(BigDecimal.ZERO, YearMonth.of(2026, Month.JANUARY), MånedslønnStatus.NEDETID_AINNTEKT),
             new Inntektsopplysninger.InntektMåned(BigDecimal.ZERO, YearMonth.of(2026, Month.FEBRUARY), MånedslønnStatus.NEDETID_AINNTEKT),
@@ -144,14 +145,16 @@ class InntektsmeldingApiMottakTjenesteTest {
         when(forespørselBehandlingTjeneste.hentForespørsel(foresporselUuid)).thenReturn(Optional.of(forespørselDto));
         when(inntektsmeldingTjeneste.hentSisteInntektsmeldingForForespørsel(foresporselUuid)).thenReturn(null);
         when(inntektTjeneste.hentInntekt(any(), any(), any(), any(), eq(false))).thenReturn(inntektsopplysninger);
+        when(fellesMottakTjeneste.lagreIMOgOpprettTaskForEtterkontroll(any(), any())).thenReturn(lagretIm);
 
         var response = inntektsmeldingApiMottakTjeneste.mottaInntektsmelding(inputDto, foresporselUuid);
 
-        assertThat(response.success()).isFalse();
-        assertThat(response.inntektsmeldingUuid()).isNull();
-        assertThat(response.status()).isNull();
+        assertThat(response.success()).isTrue();
+        assertThat(response.inntektsmeldingUuid()).isEqualTo(imUuid);
+        assertThat(response.status()).isEqualTo(InntektsmeldingStatusDto.VENTER_VURDERING);
         assertThat(response.feilinformasjon().feilmelding()).contains("nedetid");
         assertThat(response.feilinformasjon().referanseId()).isEqualTo(foresporselUuid.toString());
+        verify(fellesMottakTjeneste).lagreIMOgOpprettTaskForEtterkontroll(any(), any());
         verify(fellesMottakTjeneste, never()).lagreOgJournalførInntektsmelding(any(), any());
     }
 

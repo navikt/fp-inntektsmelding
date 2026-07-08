@@ -94,7 +94,9 @@ public class InntektsmeldingApiMottakTjeneste {
         }
 
         var sendInntektsmeldingResponse = sjekkMånedInntektMotRapportertInntekt(forespørsel, inntektsmelding);
-        if (!sendInntektsmeldingResponse.success()) {
+        // Både avvisning (ulik inntekt) og nedetid i a-inntekt (venter vurdering) er allerede ferdigbehandlet av
+        // sjekkMånedInntektMotRapportertInntekt og gir feilinformasjon tilbake - da skal vi ikke fortsette videre.
+        if (sendInntektsmeldingResponse.feilinformasjon() != null) {
             return sendInntektsmeldingResponse;
         }
 
