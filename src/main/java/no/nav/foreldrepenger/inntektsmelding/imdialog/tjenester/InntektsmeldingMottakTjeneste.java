@@ -73,7 +73,7 @@ public class InntektsmeldingMottakTjeneste {
                 .orElseThrow(this::manglerForespørselFeil);
 
             if (agInitiertÅrsak == ArbeidsgiverinitiertÅrsak.NYANSATT &&
-                inntektsmeldingDto.getStartdato() != forespørselDto.førsteUttaksdato()) {
+                !inntektsmeldingDto.getStartdato().equals(forespørselDto.førsteUttaksdato())) {
                 forespørselDto = forespørselBehandlingTjeneste.oppdaterFørsteUttaksdato(forespørselDto,
                     inntektsmeldingDto.getStartdato());
             }
@@ -121,7 +121,7 @@ public class InntektsmeldingMottakTjeneste {
             arbeidsgiver,
             startdato,
             arbeidsgiverinitiertÅrsak,
-            skjæringstidspunkt == Tid.TIDENES_ENDE ? null : skjæringstidspunkt);
+            Tid.TIDENES_ENDE.equals(skjæringstidspunkt) ? null : skjæringstidspunkt);
 
         return forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid)
             .orElseThrow(this::manglerForespørselFeil);

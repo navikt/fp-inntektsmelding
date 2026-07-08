@@ -99,7 +99,7 @@
         <dependency>
             <groupId>no.nav.foreldrepenger.inntektsmelding</groupId>
             <artifactId>inntektsmelding-kontrakt</artifactId>
-            <version>0.1.13</version>
+            <version>0.1.16</version>
         </dependency>
 
 

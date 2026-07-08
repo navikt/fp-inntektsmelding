@@ -19,6 +19,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import no.nav.foreldrepenger.inntektsmelding.felles.InnsendingstypeDto;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingStatus;
 
 import org.eclipse.jetty.http.HttpStatus;
@@ -345,7 +346,9 @@ class InntektsmeldingApiRestTest {
             Collections.emptyList(),
             Collections.emptyList(),
             Collections.emptyList(),
-            InntektsmeldingStatusDto.GODKJENT
+            InntektsmeldingStatusDto.GODKJENT,
+            InnsendingstypeDto.FORESPURT_EKSTERN,
+            LocalDate.now()
         );
     }
 }

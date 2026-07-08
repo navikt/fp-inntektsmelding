@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import no.nav.foreldrepenger.inntektsmelding.felles.InnsendingstypeDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.InntektsmeldingStatusDto;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.EndringsårsakType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingStatus;
@@ -50,6 +51,7 @@ class InntektsmeldingKontraktMapperTest {
         assertThat(resultat.kontaktperson().telefonnummer()).isEqualTo("12345678");
         assertThat(resultat.startdato()).isEqualTo(STARTDATO);
         assertThat(resultat.inntekt()).isEqualByComparingTo(BigDecimal.valueOf(45000));
+        assertThat(resultat.typeInnsending()).isEqualTo(InnsendingstypeDto.FORESPURT);
     }
 
     @Test
@@ -117,7 +119,8 @@ class InntektsmeldingKontraktMapperTest {
 
     @Test
     void skal_mappe_status_godkjent() {
-        var inntektsmelding = lagInntektsmeldingMedStatus(InntektsmeldingStatus.GODKJENT);
+        var forespørselDto = lagForespørselDto(UUID.randomUUID(), ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var inntektsmelding = lagInntektsmeldingMedStatus(InntektsmeldingStatus.GODKJENT, Kildesystem.FPSAK, forespørselDto);
 
         var resultat = InntektsmeldingKontraktMapper.mapTilKontrakt(inntektsmelding, new PersonIdent(FNR));
 
@@ -126,7 +129,8 @@ class InntektsmeldingKontraktMapperTest {
 
     @Test
     void skal_mappe_status_venter_vurdering() {
-        var inntektsmelding = lagInntektsmeldingMedStatus(InntektsmeldingStatus.VENTER_VURDERING);
+        var forespørselDto = lagForespørselDto(UUID.randomUUID(), ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var inntektsmelding = lagInntektsmeldingMedStatus(InntektsmeldingStatus.VENTER_VURDERING, Kildesystem.FPSAK, forespørselDto);
 
         var resultat = InntektsmeldingKontraktMapper.mapTilKontrakt(inntektsmelding, new PersonIdent(FNR));
 
@@ -135,7 +139,8 @@ class InntektsmeldingKontraktMapperTest {
 
     @Test
     void skal_mappe_status_avvist() {
-        var inntektsmelding = lagInntektsmeldingMedStatus(InntektsmeldingStatus.AVVIST);
+        var forespørselDto = lagForespørselDto(UUID.randomUUID(), ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var inntektsmelding = lagInntektsmeldingMedStatus(InntektsmeldingStatus.AVVIST, Kildesystem.FPSAK, forespørselDto);
 
         var resultat = InntektsmeldingKontraktMapper.mapTilKontrakt(inntektsmelding, new PersonIdent(FNR));
 
@@ -144,14 +149,36 @@ class InntektsmeldingKontraktMapperTest {
 
     @Test
     void skal_mappe_status_utdatert() {
-        var inntektsmelding = lagInntektsmeldingMedStatus(InntektsmeldingStatus.UTDATERT);
+        var forespørselDto = lagForespørselDto(UUID.randomUUID(), ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var inntektsmelding = lagInntektsmeldingMedStatus(InntektsmeldingStatus.UTDATERT, Kildesystem.FPSAK, forespørselDto);
 
         var resultat = InntektsmeldingKontraktMapper.mapTilKontrakt(inntektsmelding, new PersonIdent(FNR));
 
         assertThat(resultat.status()).isEqualTo(InntektsmeldingStatusDto.UTDATERT);
     }
 
-    private static InntektsmeldingDto lagInntektsmeldingMedStatus(InntektsmeldingStatus status) {
+    @Test
+    void skal_mappe_innsendingstype_ekstern() {
+        var forespørselDto = lagForespørselDto(UUID.randomUUID(), ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var inntektsmelding = lagInntektsmeldingMedStatus(InntektsmeldingStatus.UTDATERT, Kildesystem.LØNN_OG_PERSONAL_SYSTEM, forespørselDto);
+
+        var resultat = InntektsmeldingKontraktMapper.mapTilKontrakt(inntektsmelding, new PersonIdent(FNR));
+
+        assertThat(resultat.typeInnsending()).isEqualTo(InnsendingstypeDto.FORESPURT_EKSTERN);
+    }
+
+    @Test
+    void skal_mappe_innsendingstype_arbeidsgiverinitiert() {
+        var forespørselDto = lagForespørselDto(UUID.randomUUID(), ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT);
+        var inntektsmelding = lagInntektsmeldingMedStatus(InntektsmeldingStatus.UTDATERT, Kildesystem.FPSAK, forespørselDto);
+
+        var resultat = InntektsmeldingKontraktMapper.mapTilKontrakt(inntektsmelding, new PersonIdent(FNR));
+
+        assertThat(resultat.typeInnsending()).isEqualTo(InnsendingstypeDto.ARBEIDSGIVER_INITIERT);
+    }
+
+    private static InntektsmeldingDto lagInntektsmeldingMedStatus(InntektsmeldingStatus status, Kildesystem kildesystem,
+                                                                  ForespørselDto forespørselDto) {
         return InntektsmeldingDto.builder()
             .medInntektsmeldingUuid(UUID.randomUUID())
             .medAktørId(AktørId.fra(AKTØR_ID))
@@ -161,23 +188,23 @@ class InntektsmeldingKontraktMapperTest {
             .medKontaktperson(new InntektsmeldingDto.Kontaktperson("12345678", "Kontakt Person"))
             .medInntekt(BigDecimal.valueOf(45000))
             .medInnsendtTidspunkt(LocalDateTime.of(2026, 1, 10, 12, 0))
-            .medKildesystem(Kildesystem.FPSAK)
+            .medKildesystem(kildesystem)
             .medSøkteRefusjonsperioder(List.of())
             .medBortfaltNaturalytelsePerioder(List.of())
             .medEndringAvInntektÅrsaker(List.of())
-            .medForespørsel(lagForespørselDto(UUID.randomUUID()))
+            .medForespørsel(forespørselDto)
             .medStatus(status)
             .build();
     }
 
-    private static ForespørselDto lagForespørselDto(UUID uuid) {
+    private static ForespørselDto lagForespørselDto(UUID uuid, ForespørselType forespørselType) {
         return ForespørselDto.builder()
             .uuid(uuid)
             .arbeidsgiver(Arbeidsgiver.fra(ORGNR))
             .aktørId(AktørId.fra(AKTØR_ID))
             .ytelseType(Ytelsetype.FORELDREPENGER)
             .status(ForespørselStatus.UNDER_BEHANDLING)
-            .forespørselType(ForespørselType.BESTILT_AV_FAGSYSTEM)
+            .forespørselType(forespørselType)
             .førsteUttaksdato(STARTDATO)
             .build();
     }
@@ -203,7 +230,7 @@ class InntektsmeldingKontraktMapperTest {
             ))
             .medKildesystem(Kildesystem.FPSAK)
             .medAvsenderSystem(new InntektsmeldingDto.AvsenderSystem("test-lps", "1.0.0"))
-            .medForespørsel(lagForespørselDto(forespørselUuid))
+            .medForespørsel(lagForespørselDto(forespørselUuid, ForespørselType.BESTILT_AV_FAGSYSTEM))
             .medStatus(InntektsmeldingStatus.GODKJENT)
             .build();
     }
@@ -222,7 +249,7 @@ class InntektsmeldingKontraktMapperTest {
             .medSøkteRefusjonsperioder(List.of())
             .medBortfaltNaturalytelsePerioder(List.of())
             .medEndringAvInntektÅrsaker(List.of())
-            .medForespørsel(lagForespørselDto(forespørselUuid))
+            .medForespørsel(lagForespørselDto(forespørselUuid, ForespørselType.BESTILT_AV_FAGSYSTEM))
             .medStatus(InntektsmeldingStatus.GODKJENT)
             .build();
     }
