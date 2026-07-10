@@ -44,7 +44,7 @@ public class InntektsmeldingKontraktMapper {
         return new HentInntektsmeldingResponse(
             inntektsmelding.getId(),
             inntektsmelding.getInntektsmeldingUuid(),
-            inntektsmelding.getForespørsel().uuid(),
+            inntektsmelding.getForespørsel().map(ForespørselDto::uuid).orElse(null),
             new FødselsnummerDto(personIdent.getIdent()),
             mapKodeverk(inntektsmelding.getYtelse()),
             new OrganisasjonsnummerDto(inntektsmelding.getArbeidsgiver().orgnr()),
@@ -67,8 +67,8 @@ public class InntektsmeldingKontraktMapper {
                 .map(e -> new EndringsårsakerDto(EndringsårsakDto.valueOf(e.årsak().name()), e.fom(), e.tom(), e.bleKjentFom()))
                 .toList(),
             mapStatus(inntektsmelding.getStatus()),
-            mapInnsendingstype(inntektsmelding.getKildesystem(), inntektsmelding.getForespørsel(), inntektsmelding.getId()),
-            inntektsmelding.getForespørsel().skjæringstidspunkt()
+            mapInnsendingstype(inntektsmelding.getKildesystem(), inntektsmelding.getForespørsel().orElse(null), inntektsmelding.getId()),
+            inntektsmelding.getForespørsel().map(ForespørselDto::skjæringstidspunkt).orElse(null)
         );
     }
 

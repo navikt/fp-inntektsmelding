@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.dokgen.v1.FpDokgenRequest;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.dokgen.v1.FpDokgenRestKlient;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.organisasjon.OrganisasjonTjeneste;
@@ -56,7 +57,7 @@ public class DokumentGeneratorTjeneste {
         arbeidsgiverNavn = finnArbeidsgiverNavn(arbeidsgvierIdent, Ytelsetype.valueOf(inntektsmelding.getYtelse().name()));
 
         // Ved overstyring fra fpsak har vi ingen forespørsel, defaulter her til bestil av fagsystem
-        var forespørselType = inntektsmelding.getKildesystem().equals(Kildesystem.FPSAK) ? ForespørselType.BESTILT_AV_FAGSYSTEM : inntektsmelding.getForespørsel().forespørselType();
+        var forespørselType = inntektsmelding.getKildesystem().equals(Kildesystem.FPSAK) ? ForespørselType.BESTILT_AV_FAGSYSTEM : inntektsmelding.getForespørsel().map(ForespørselDto::forespørselType).orElse(ForespørselType.BESTILT_AV_FAGSYSTEM);
         var imDokumentData = InntektsmeldingPdfDataMapper.mapInntektsmeldingPdfData(inntektsmelding,
             arbeidsgiverNavn,
             personInfo,

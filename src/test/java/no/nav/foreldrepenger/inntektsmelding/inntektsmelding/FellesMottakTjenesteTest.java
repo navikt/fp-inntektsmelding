@@ -21,7 +21,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.LukkeÅrsak;
+import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.task.FerdigstillInntektsmeldingEtterNedetidTask;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.task.SendTilJoarkTask;
+import no.nav.vedtak.felles.prosesstask.api.TaskType;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Saksnummer;
@@ -159,7 +161,7 @@ class FellesMottakTjenesteTest {
         )).thenReturn(ferdigstiltForespørselDto);
 
         // Act
-        fellesMottakTjeneste.behandlerForespørsel(forespørselDto, Optional.of(imUuid));
+        fellesMottakTjeneste.ferdigstillOgOppdaterEksterneSystemer(forespørselDto, Optional.of(imUuid));
 
         // Assert
         verify(forespørselBehandlingTjeneste).ferdigstillForespørsel(
@@ -180,7 +182,7 @@ class FellesMottakTjenesteTest {
         var forespørselDto = lagForespørselDto(forespørselUuid, ForespørselStatus.FERDIG);
 
         // Act
-        fellesMottakTjeneste.behandlerForespørsel(forespørselDto, Optional.of(imUuid));
+        fellesMottakTjeneste.ferdigstillOgOppdaterEksterneSystemer(forespørselDto, Optional.of(imUuid));
 
         // Assert
         verify(forespørselBehandlingTjeneste).oppdaterPortalerMedEndretInntektsmelding(
@@ -190,6 +192,41 @@ class FellesMottakTjenesteTest {
         );
     }
 
+
+    @Test
+    void lagreIMOgOpprettTaskForEtterkontroll_skal_opprette_task_med_riktig_inntektsmeldingId() {
+        var imId = 456L;
+        var forespørselUuid = UUID.randomUUID();
+        var inntektsmeldingDto = lagInntektsmeldingDto();
+        var forespørselDto = lagForespørselDto(forespørselUuid, ForespørselStatus.UNDER_BEHANDLING);
+
+        when(inntektsmeldingTjeneste.lagreInntektsmelding(any(), any())).thenReturn(imId);
+
+        fellesMottakTjeneste.lagreIMOgOpprettTaskForEtterkontroll(inntektsmeldingDto, forespørselDto);
+
+        ArgumentCaptor<ProsessTaskData> taskCaptor = ArgumentCaptor.forClass(ProsessTaskData.class);
+        verify(prosessTaskTjeneste).lagre(taskCaptor.capture());
+        var task = taskCaptor.getValue();
+        assertThat(task.getPropertyValue(FerdigstillInntektsmeldingEtterNedetidTask.KEY_INNTEKTSMELDING_ID))
+            .isEqualTo(String.valueOf(imId));
+    }
+
+    @Test
+    void lagreIMOgOpprettTaskForEtterkontroll_skal_opprette_task_av_riktig_type() {
+        var imId = 456L;
+        var forespørselUuid = UUID.randomUUID();
+        var inntektsmeldingDto = lagInntektsmeldingDto();
+        var forespørselDto = lagForespørselDto(forespørselUuid, ForespørselStatus.UNDER_BEHANDLING);
+
+        when(inntektsmeldingTjeneste.lagreInntektsmelding(any(), any())).thenReturn(imId);
+
+        fellesMottakTjeneste.lagreIMOgOpprettTaskForEtterkontroll(inntektsmeldingDto, forespørselDto);
+
+        ArgumentCaptor<ProsessTaskData> taskCaptor = ArgumentCaptor.forClass(ProsessTaskData.class);
+        verify(prosessTaskTjeneste).lagre(taskCaptor.capture());
+        assertThat(taskCaptor.getValue().taskType())
+            .isEqualTo(TaskType.forProsessTask(FerdigstillInntektsmeldingEtterNedetidTask.class));
+    }
 
     private static ForespørselDto lagForespørselDto(UUID uuid, ForespørselStatus status) {
         return ForespørselDto.builder()

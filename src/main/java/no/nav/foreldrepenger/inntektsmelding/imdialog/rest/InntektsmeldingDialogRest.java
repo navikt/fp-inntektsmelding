@@ -90,7 +90,7 @@ public class InntektsmeldingDialogRest {
         var forespørselEntitet = forespørselTjeneste.hentForespørsel(forespørselUuid).orElseThrow(() -> new IllegalStateException("Finner ingen forespørsel for id: " + forespørselUuid));
         LOG.info("Henter inntektsmeldinger for forespørsel {}", forespørselUuid);
         var dto = inntektsmeldingTjeneste.hentInntektsmeldinger(forespørselUuid).stream()
-            .filter(im -> Kildesystem.ARBEIDSGIVERPORTAL.equals(im.getKildesystem())) // Vi skal ikke vise inntektsmeldinger som er overstyrt av driftstilganger / saksbehandlere
+            .filter(im -> !Kildesystem.FPSAK.equals(im.getKildesystem())) // Vi skal ikke vise inntektsmeldinger som er overstyrt av driftstilganger / saksbehandlere
             .map(im -> InntektsmeldingMapper.mapFraDomene(im, forespørselEntitet))
             .toList();
         return Response.ok(dto).build();

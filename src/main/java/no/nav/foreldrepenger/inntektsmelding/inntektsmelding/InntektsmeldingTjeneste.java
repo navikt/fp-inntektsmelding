@@ -11,6 +11,7 @@ import jakarta.inject.Inject;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselRepository;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.InntektsmeldingRepository;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingApiStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
@@ -66,6 +67,10 @@ public class InntektsmeldingTjeneste {
 
     public Long lagreInntektsmelding(InntektsmeldingDto inntektsmeldingDto, UUID forespørselUuid) {
         return inntektsmeldingRepository.lagreInntektsmelding(InntektsmeldingDtoMapper.mapTilEntitet(inntektsmeldingDto, forespørselRepository.hentForespørsel(forespørselUuid).orElseThrow()));
+    }
+
+    public void oppdatertStatusTilInntektsmelding(UUID inntektsmeldingUuid, InntektsmeldingStatus inntektsmeldingStatus) {
+        inntektsmeldingRepository.oppdaterStatusTilInntektsmelding(inntektsmeldingUuid, inntektsmeldingStatus);
     }
 
     public List<InntektsmeldingDto> hentInntektsmeldingerFraFilter(String orgnr,

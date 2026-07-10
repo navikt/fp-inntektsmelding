@@ -33,6 +33,13 @@ public interface MinSideArbeidsgiverTjeneste {
                                            String beskjedTekst,
                                            URI kvitteringLenke);
 
+    String sendNyBeskjedOmAvvistInntektsmelding(String grupperingsid,
+                                                Merkelapp merkelapp,
+                                                String virksomhetsnummer,
+                                                String beskjedTekst,
+                                                URI skjemaLenke);
+
+
     String sendNyBeskjedMedEksternVarsling(String grupperingsid,
                                            Merkelapp merkelapp,
                                            String eksternId,

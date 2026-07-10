@@ -125,6 +125,15 @@ class MinSideArbeidsgiverTjenesteImpl implements MinSideArbeidsgiverTjeneste {
         return sendNyBeskjed(grupperingsid, beskjedMerkelapp, organisasjonsnummer, beskjedTekst, Optional.empty(), lenke);
     }
 
+    @Override
+    public String sendNyBeskjedOmAvvistInntektsmelding(String grupperingsid,
+                                                       Merkelapp merkelapp,
+                                                       String virksomhetsnummer,
+                                                       String beskjedTekst,
+                                                       URI lenke) {
+        return sendNyBeskjed(grupperingsid, merkelapp, virksomhetsnummer, beskjedTekst,  Optional.empty(), lenke);
+    }
+
 
     private String sendNyBeskjed(String grupperingsid,
                                  Merkelapp beskjedMerkelapp,
