@@ -102,6 +102,7 @@ spec:
         - application: fpsak
           namespace: teamforeldrepenger
           cluster: {{environment}}-fss
+        - application: fpinntektsmelding-api
       {{#if devOnly}}
         - application: azure-token-generator
           namespace: nais
@@ -109,7 +110,6 @@ spec:
         - application: tokenx-token-generator
           namespace: nais
           cluster: dev-gcp
-        - application: fpinntektsmelding-api
       {{/if}}
     outbound:
       rules:
