@@ -271,8 +271,9 @@ public class GrunnlagDtoTjeneste {
         var organisasjonerArbeidsgiverHarTilgangTil = arbeidstakerTjeneste.finnOrganisasjonerArbeidsgiverHarTilgangTil(personInfo.fødselsnummer());
 
         var organisasjoner = organisasjonerArbeidsgiverHarTilgangTil.stream()
-            .map(orgnrDto -> new SlåOppArbeidstakerResponseDto.ArbeidsforholdDto(organisasjonTjeneste.finnOrganisasjon(orgnrDto).navn(),
-                orgnrDto.orgnr()))
+            .flatMap(orgnrDto -> organisasjonTjeneste.finnOrganisasjonOptional(orgnrDto)
+                .map(org -> new SlåOppArbeidstakerResponseDto.ArbeidsforholdDto(org.navn(), orgnrDto.orgnr()))
+                .stream())
             .collect(Collectors.toSet());
         return Optional.of(new SlåOppArbeidstakerResponseDto(personInfo.fornavn(),
             personInfo.mellomnavn(),

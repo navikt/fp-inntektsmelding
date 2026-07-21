@@ -255,8 +255,8 @@ class GrunnlagDtoTjenesteTest {
         var navn1 = "Organisasjon 1";
         var navn2 = "Organisasjon 2";
         when(arbeidstakerTjeneste.finnOrganisasjonerArbeidsgiverHarTilgangTil(fnr)).thenReturn(List.of(orgnr1, orgnr2));
-        when(organisasjonTjeneste.finnOrganisasjon(Arbeidsgiver.fra(orgnr1.orgnr()))).thenReturn(new Organisasjon(navn1, orgnr1.orgnr()));
-        when(organisasjonTjeneste.finnOrganisasjon(Arbeidsgiver.fra(orgnr2.orgnr()))).thenReturn(new Organisasjon(navn2, orgnr2.orgnr()));
+        when(organisasjonTjeneste.finnOrganisasjonOptional(Arbeidsgiver.fra(orgnr1.orgnr()))).thenReturn(Optional.of(new Organisasjon(navn1, orgnr1.orgnr())));
+        when(organisasjonTjeneste.finnOrganisasjonOptional(Arbeidsgiver.fra(orgnr2.orgnr()))).thenReturn(Optional.of(new Organisasjon(navn2, orgnr2.orgnr())));
         // Act
         var response = grunnlagDtoTjeneste.hentSøkerinfoOgOrganisasjonerArbeidsgiverHarTilgangTil(personInfo).orElse(null);
 
