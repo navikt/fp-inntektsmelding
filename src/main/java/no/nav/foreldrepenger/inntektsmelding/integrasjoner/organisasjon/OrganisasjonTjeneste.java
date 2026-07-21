@@ -13,6 +13,7 @@ import no.nav.foreldrepenger.inntektsmelding.utils.OrganisasjonsnummerValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import no.nav.vedtak.exception.IntegrasjonException;
 import no.nav.vedtak.util.LRUCache;
 
 @ApplicationScoped
@@ -54,7 +55,12 @@ public class OrganisasjonTjeneste {
             LOG.info("Ugyldig orgnummer: {}", arbeidsgiver);
             return Optional.empty();
         }
-        return Optional.of(hent(arbeidsgiver));
+        try {
+            return Optional.of(hent(arbeidsgiver));
+        } catch (IntegrasjonException e) {
+            LOG.warn("Fant ikke organisasjon i EREG for orgnr {}, hopper over: {}", arbeidsgiver.orgnr(), e.getMessage());
+            return Optional.empty();
+        }
     }
 
     private Organisasjon hent(Arbeidsgiver arbeidsgiver) {
