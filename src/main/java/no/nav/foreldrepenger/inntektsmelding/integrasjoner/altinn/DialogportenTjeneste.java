@@ -80,6 +80,17 @@ public class DialogportenTjeneste {
             inntektsmeldingUuid);
     }
 
+    public void sendMeldingOmAvvistInntektsmelding(ForespørselDto forespørselDto,
+                                                   String avvistTekst) {
+        if (forespørselDto.dialogportenUuid() == null) {
+            return;
+        }
+
+        dialogportenKlient.sendMeldingOmAvvistInntektsmelding(forespørselDto.dialogportenUuid(),
+            forespørselDto.arbeidsgiver(),
+            avvistTekst);
+    }
+
     public void utførMedFeiltoleranse(Runnable handling) {
         try {
             handling.run();

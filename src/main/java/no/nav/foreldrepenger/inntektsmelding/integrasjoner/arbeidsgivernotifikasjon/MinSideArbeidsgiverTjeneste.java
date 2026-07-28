@@ -125,7 +125,6 @@ public class MinSideArbeidsgiverTjeneste {
             var url = lagKvitteringUrl(imUuid);
             sendNyBeskjedMedKvittering(forespørsel.uuid().toString(),
                 merkelapp,
-                forespørsel.uuid().toString(),
                 forespørsel.arbeidsgiver().orgnr(),
                 beskjedTekst,
                 URI.create(url));
@@ -152,11 +151,19 @@ public class MinSideArbeidsgiverTjeneste {
 
         sendNyBeskjedMedEksternVarsling(forespørsel.uuid().toString(),
             merkelapp,
-            forespørsel.uuid().toString(),
             arbeidsgiver.orgnr(),
             beskjedTekst,
             varselTekst,
             skjemaUri);
+    }
+
+    public void sendNyBeskjedOmAvvistInntektsmelding(ForespørselDto forespørselDto, String feiltekst) {
+        sendNyBeskjedOmAvvistInntektsmelding(
+            forespørselDto.uuid().toString(),
+            ForespørselTekster.finnMerkelapp(forespørselDto.ytelseType()),
+            forespørselDto.arbeidsgiver().orgnr(),
+            feiltekst,
+            URI.create(inntektsmeldingSkjemaLenke + "/" + forespørselDto.uuid()));
     }
 
     public void sendBeskjedOmOppdatertInntektsmelding(ForespørselDto forespørsel, UUID inntektsmeldingUuid) {
@@ -165,7 +172,6 @@ public class MinSideArbeidsgiverTjeneste {
         var url = lagKvitteringUrl(inntektsmeldingUuid);
         sendNyBeskjedMedKvittering(forespørsel.uuid().toString(),
             merkelapp,
-            forespørsel.uuid().toString(),
             forespørsel.arbeidsgiver().orgnr(),
             beskjedTekst,
             URI.create(url));
@@ -306,13 +312,20 @@ public class MinSideArbeidsgiverTjeneste {
             .onSakFinnesIkke(new SakFinnesIkkeResponseProjection().feilmelding());
         return minSideArbeidsgiverKlient.slettSak(request, projection);
     }
+    public String sendNyBeskjedOmAvvistInntektsmelding(String grupperingsid,
+                                                       Merkelapp merkelapp,
+                                                       String virksomhetsnummer,
+                                                       String beskjedTekst,
+                                                       URI lenke) {
+        return sendNyBeskjed(grupperingsid, merkelapp, virksomhetsnummer, beskjedTekst, Optional.empty(), lenke);
+    }
 
-    public String sendNyBeskjedMedKvittering(String grupperingsid, Merkelapp merkelapp, String eksternId,
+    public String sendNyBeskjedMedKvittering(String grupperingsid, Merkelapp merkelapp,
                                              String virksomhetsnummer, String beskjedTekst, URI kvitteringLenke) {
         return sendNyBeskjed(grupperingsid, merkelapp, virksomhetsnummer, beskjedTekst, Optional.empty(), kvitteringLenke);
     }
 
-    public String sendNyBeskjedMedEksternVarsling(String grupperingsid, Merkelapp merkelapp, String eksternId,
+    public String sendNyBeskjedMedEksternVarsling(String grupperingsid, Merkelapp merkelapp,
                                                   String virksomhetsnummer, String beskjedTekst, String varselTekst, URI lenke) {
         return sendNyBeskjed(grupperingsid, merkelapp, virksomhetsnummer, beskjedTekst, Optional.of(varselTekst), lenke);
     }
