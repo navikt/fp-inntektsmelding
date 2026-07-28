@@ -77,7 +77,7 @@ public class FellesMottakTjeneste {
             MetrikkerTjeneste.loggForespørselLukkIntern(ferdigstiltForespørsel);
         } else {
             //legger inn oppdatert inntektsmelding i portaler
-            forespørselBehandlingTjeneste.oppdaterPortalerMedEndretInntektsmelding(forespørsel, imId, orgnummer);
+            forespørselBehandlingTjeneste.oppdaterPortalerMedEndretInntektsmelding(forespørsel, imId);
         }
     }
 }

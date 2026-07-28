@@ -187,8 +187,7 @@ class FellesMottakTjenesteTest {
         // Assert
         verify(forespørselBehandlingTjeneste).oppdaterPortalerMedEndretInntektsmelding(
             forespørselDto,
-            Optional.of(imUuid),
-            forespørselDto.arbeidsgiver()
+            Optional.of(imUuid)
         );
     }
 
