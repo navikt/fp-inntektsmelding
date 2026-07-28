@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.net.URI;
@@ -19,7 +20,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
@@ -96,7 +96,7 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
 
         tjeneste.opprettSak(expectedGrupperingsid, expectedMerkelapp, expectedVirksomhetsnummer, expectedTittel, URI.create(expectedLenke));
 
-        Mockito.verify(klient).opprettSak(requestCaptor.capture(), any(NySakResultatResponseProjection.class));
+        verify(klient).opprettSak(requestCaptor.capture(), any(NySakResultatResponseProjection.class));
 
         var request = requestCaptor.getValue();
 
@@ -147,7 +147,7 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
             expectedPåminnelseTekst,
             URI.create(expectedNotifikasjonsLenke));
 
-        Mockito.verify(klient).opprettOppgave(requestCaptor.capture(), any(NyOppgaveResultatResponseProjection.class));
+        verify(klient).opprettOppgave(requestCaptor.capture(), any(NyOppgaveResultatResponseProjection.class));
 
         var input = requestCaptor.getValue().getInput();
 
@@ -193,7 +193,7 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
 
         tjeneste.oppgaveUtført(expectedId, expectedTidspunkt);
 
-        Mockito.verify(klient).oppgaveUtført(requestCaptor.capture(), any(OppgaveUtfoertResultatResponseProjection.class));
+        verify(klient).oppgaveUtført(requestCaptor.capture(), any(OppgaveUtfoertResultatResponseProjection.class));
 
         var input = requestCaptor.getValue().getInput();
 
@@ -213,7 +213,7 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
 
         tjeneste.ferdigstillSak(expectedId, false);
 
-        Mockito.verify(klient).oppdaterSakStatus(requestCaptor.capture(), any(NyStatusSakResultatResponseProjection.class));
+        verify(klient).oppdaterSakStatus(requestCaptor.capture(), any(NyStatusSakResultatResponseProjection.class));
 
         var request = requestCaptor.getValue();
 
@@ -238,7 +238,7 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
 
         tjeneste.ferdigstillSak(expectedId, true);
 
-        Mockito.verify(klient).oppdaterSakStatus(requestCaptor.capture(), any(NyStatusSakResultatResponseProjection.class));
+        verify(klient).oppdaterSakStatus(requestCaptor.capture(), any(NyStatusSakResultatResponseProjection.class));
 
         var request = requestCaptor.getValue();
 
@@ -264,7 +264,7 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
 
         tjeneste.oppdaterSakTilleggsinformasjon(expectedId, expectedTilleggsinformasjon);
 
-        Mockito.verify(klient).oppdaterSakTilleggsinformasjon(requestCaptor.capture(), any(TilleggsinformasjonSakResultatResponseProjection.class));
+        verify(klient).oppdaterSakTilleggsinformasjon(requestCaptor.capture(), any(TilleggsinformasjonSakResultatResponseProjection.class));
 
         var request = requestCaptor.getValue();
 
@@ -298,7 +298,7 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
         var forventetTittel = ForespørselTekster.lagSaksTittel(personInfo.mapFulltNavn(), personInfo.fødselsdato());
 
         var sakCaptor = ArgumentCaptor.forClass(NySakMutationRequest.class);
-        Mockito.verify(klient).opprettSak(sakCaptor.capture(), any(NySakResultatResponseProjection.class));
+        verify(klient).opprettSak(sakCaptor.capture(), any(NySakResultatResponseProjection.class));
         var sakInput = sakCaptor.getValue().getInput();
         assertThat(sakInput).containsEntry("grupperingsid", uuid.toString())
             .containsEntry("tittel", forventetTittel)
@@ -307,13 +307,13 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
             .containsEntry("merkelapp", Merkelapp.INNTEKTSMELDING_FP.getBeskrivelse());
 
         var tilleggsinfoCaptor = ArgumentCaptor.forClass(TilleggsinformasjonSakMutationRequest.class);
-        Mockito.verify(klient).oppdaterSakTilleggsinformasjon(tilleggsinfoCaptor.capture(), any(TilleggsinformasjonSakResultatResponseProjection.class));
+        verify(klient).oppdaterSakTilleggsinformasjon(tilleggsinfoCaptor.capture(), any(TilleggsinformasjonSakResultatResponseProjection.class));
         assertThat(tilleggsinfoCaptor.getValue().getInput())
             .containsEntry("id", "sak-1")
             .containsEntry("tilleggsinformasjon", ForespørselTekster.lagTilleggsInformasjon(LukkeÅrsak.ORDINÆR_INNSENDING, førsteUttaksdato));
 
         var oppgaveCaptor = ArgumentCaptor.forClass(NyOppgaveMutationRequest.class);
-        Mockito.verify(klient).opprettOppgave(oppgaveCaptor.capture(), any(NyOppgaveResultatResponseProjection.class));
+        verify(klient).opprettOppgave(oppgaveCaptor.capture(), any(NyOppgaveResultatResponseProjection.class));
         var nyOppgave = (NyOppgaveInput) oppgaveCaptor.getValue().getInput().get("nyOppgave");
         assertThat(nyOppgave.getMetadata().getGrupperingsid()).isEqualTo(uuid.toString());
         assertThat(nyOppgave.getMetadata().getEksternId()).isEqualTo(uuid.toString());
@@ -338,7 +338,7 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
         assertThatThrownBy(() -> tjeneste.opprettSakOgOppgave(forespørsel)).isInstanceOf(IllegalStateException.class);
 
         var slettCaptor = ArgumentCaptor.forClass(HardDeleteSakMutationRequest.class);
-        Mockito.verify(klient).slettSak(slettCaptor.capture(), any(HardDeleteSakResultatResponseProjection.class));
+        verify(klient).slettSak(slettCaptor.capture(), any(HardDeleteSakResultatResponseProjection.class));
         assertThat(slettCaptor.getValue().getInput()).containsEntry("id", "sak-1");
     }
 
@@ -353,9 +353,9 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
         var sakId = tjeneste.opprettSakUtenOppgave(forespørsel);
 
         assertThat(sakId).isEqualTo("sak-1");
-        Mockito.verify(klient, never()).opprettOppgave(any(), any());
+        verify(klient, never()).opprettOppgave(any(), any());
         var tilleggsinfoCaptor = ArgumentCaptor.forClass(TilleggsinformasjonSakMutationRequest.class);
-        Mockito.verify(klient).oppdaterSakTilleggsinformasjon(tilleggsinfoCaptor.capture(), any(TilleggsinformasjonSakResultatResponseProjection.class));
+        verify(klient).oppdaterSakTilleggsinformasjon(tilleggsinfoCaptor.capture(), any(TilleggsinformasjonSakResultatResponseProjection.class));
         assertThat(tilleggsinfoCaptor.getValue().getInput())
             .containsEntry("id", "sak-1")
             .containsEntry("tilleggsinformasjon", ForespørselTekster.lagTilleggsInformasjon(LukkeÅrsak.ORDINÆR_INNSENDING, førsteUttaksdato));
@@ -371,23 +371,23 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
         tjeneste.ferdigstillSak(forespørsel, LukkeÅrsak.EKSTERN_INNSENDING, Optional.of(imUuid), true);
 
         var oppgaveUtførtCaptor = ArgumentCaptor.forClass(OppgaveUtfoertMutationRequest.class);
-        Mockito.verify(klient).oppgaveUtført(oppgaveUtførtCaptor.capture(), any(OppgaveUtfoertResultatResponseProjection.class));
+        verify(klient).oppgaveUtført(oppgaveUtførtCaptor.capture(), any(OppgaveUtfoertResultatResponseProjection.class));
         assertThat(oppgaveUtførtCaptor.getValue().getInput()).containsEntry("id", "oppgave-1");
 
         var statusCaptor = ArgumentCaptor.forClass(NyStatusSakMutationRequest.class);
-        Mockito.verify(klient).oppdaterSakStatus(statusCaptor.capture(), any(NyStatusSakResultatResponseProjection.class));
+        verify(klient).oppdaterSakStatus(statusCaptor.capture(), any(NyStatusSakResultatResponseProjection.class));
         assertThat(statusCaptor.getValue().getInput())
             .containsEntry("id", "sak-1")
             .containsEntry("overstyrStatustekstMed", MinSideArbeidsgiverTjeneste.SAK_STATUS_TEKST);
 
         var tilleggsinfoCaptor = ArgumentCaptor.forClass(TilleggsinformasjonSakMutationRequest.class);
-        Mockito.verify(klient).oppdaterSakTilleggsinformasjon(tilleggsinfoCaptor.capture(), any(TilleggsinformasjonSakResultatResponseProjection.class));
+        verify(klient).oppdaterSakTilleggsinformasjon(tilleggsinfoCaptor.capture(), any(TilleggsinformasjonSakResultatResponseProjection.class));
         assertThat(tilleggsinfoCaptor.getValue().getInput())
             .containsEntry("id", "sak-1")
             .containsEntry("tilleggsinformasjon", ForespørselTekster.lagTilleggsInformasjon(LukkeÅrsak.EKSTERN_INNSENDING, førsteUttaksdato));
 
         var beskjedCaptor = ArgumentCaptor.forClass(NyBeskjedMutationRequest.class);
-        Mockito.verify(klient).opprettBeskjedOgVarsling(beskjedCaptor.capture(), any(NyBeskjedResultatResponseProjection.class));
+        verify(klient).opprettBeskjedOgVarsling(beskjedCaptor.capture(), any(NyBeskjedResultatResponseProjection.class));
         var nyBeskjed = (NyBeskjedInput) beskjedCaptor.getValue().getInput().get("nyBeskjed");
         assertThat(nyBeskjed.getNotifikasjon().getTekst()).isEqualTo(ForespørselTekster.lagBeskjedOmKvitteringFørsteInnsendingTekst());
         assertThat(nyBeskjed.getNotifikasjon().getLenke())
@@ -405,7 +405,7 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
         tjeneste.ferdigstillSak(forespørsel, LukkeÅrsak.EKSTERN_INNSENDING, Optional.of(imUuid), false);
 
         var beskjedCaptor = ArgumentCaptor.forClass(NyBeskjedMutationRequest.class);
-        Mockito.verify(klient).opprettBeskjedOgVarsling(beskjedCaptor.capture(), any(NyBeskjedResultatResponseProjection.class));
+        verify(klient).opprettBeskjedOgVarsling(beskjedCaptor.capture(), any(NyBeskjedResultatResponseProjection.class));
         var nyBeskjed = (NyBeskjedInput) beskjedCaptor.getValue().getInput().get("nyBeskjed");
         assertThat(nyBeskjed.getNotifikasjon().getTekst()).isEqualTo(ForespørselTekster.lagBeskjedOmOppdatertInntektsmelding());
     }
@@ -417,11 +417,11 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
 
         tjeneste.ferdigstillSak(forespørsel, LukkeÅrsak.ORDINÆR_INNSENDING, Optional.empty(), true);
 
-        Mockito.verify(klient, never()).oppgaveUtført(any(), any());
-        Mockito.verify(klient, never()).opprettBeskjedOgVarsling(any(), any());
+        verify(klient, never()).oppgaveUtført(any(), any());
+        verify(klient, never()).opprettBeskjedOgVarsling(any(), any());
 
         var statusCaptor = ArgumentCaptor.forClass(NyStatusSakMutationRequest.class);
-        Mockito.verify(klient).oppdaterSakStatus(statusCaptor.capture(), any(NyStatusSakResultatResponseProjection.class));
+        verify(klient).oppdaterSakStatus(statusCaptor.capture(), any(NyStatusSakResultatResponseProjection.class));
         assertThat(statusCaptor.getValue().getInput())
             .containsEntry("id", "sak-1")
             .containsEntry("overstyrStatustekstMed", MinSideArbeidsgiverTjeneste.SAK_STATUS_TEKST_ARBEIDSGIVERINITIERT);
@@ -436,11 +436,11 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
         tjeneste.settSakTilUtgått(forespørsel);
 
         var oppgaveUtgåttCaptor = ArgumentCaptor.forClass(OppgaveUtgaattMutationRequest.class);
-        Mockito.verify(klient).oppgaveUtgått(oppgaveUtgåttCaptor.capture(), any(OppgaveUtgaattResultatResponseProjection.class));
+        verify(klient).oppgaveUtgått(oppgaveUtgåttCaptor.capture(), any(OppgaveUtgaattResultatResponseProjection.class));
         assertThat(oppgaveUtgåttCaptor.getValue().getInput()).containsEntry("id", "oppgave-1");
 
         var tilleggsinfoCaptor = ArgumentCaptor.forClass(TilleggsinformasjonSakMutationRequest.class);
-        Mockito.verify(klient).oppdaterSakTilleggsinformasjon(tilleggsinfoCaptor.capture(), any(TilleggsinformasjonSakResultatResponseProjection.class));
+        verify(klient).oppdaterSakTilleggsinformasjon(tilleggsinfoCaptor.capture(), any(TilleggsinformasjonSakResultatResponseProjection.class));
         assertThat(tilleggsinfoCaptor.getValue().getInput())
             .containsEntry("id", "sak-1")
             .containsEntry("tilleggsinformasjon", ForespørselTekster.lagTilleggsInformasjon(LukkeÅrsak.UTGÅTT, førsteUttaksdato));
@@ -453,8 +453,8 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
 
         tjeneste.settSakTilUtgått(forespørsel);
 
-        Mockito.verify(klient, never()).oppgaveUtgått(any(), any());
-        Mockito.verify(klient).oppdaterSakTilleggsinformasjon(any(TilleggsinformasjonSakMutationRequest.class), any(TilleggsinformasjonSakResultatResponseProjection.class));
+        verify(klient, never()).oppgaveUtgått(any(), any());
+        verify(klient).oppdaterSakTilleggsinformasjon(any(TilleggsinformasjonSakMutationRequest.class), any(TilleggsinformasjonSakResultatResponseProjection.class));
     }
 
     @Test
@@ -470,7 +470,7 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
         tjeneste.sendNyBeskjedMedEksternVarsling(forespørsel);
 
         var beskjedCaptor = ArgumentCaptor.forClass(NyBeskjedMutationRequest.class);
-        Mockito.verify(klient).opprettBeskjedOgVarsling(beskjedCaptor.capture(), any(NyBeskjedResultatResponseProjection.class));
+        verify(klient).opprettBeskjedOgVarsling(beskjedCaptor.capture(), any(NyBeskjedResultatResponseProjection.class));
         var nyBeskjed = (NyBeskjedInput) beskjedCaptor.getValue().getInput().get("nyBeskjed");
 
         assertThat(nyBeskjed.getNotifikasjon().getTekst())
@@ -490,7 +490,7 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
         tjeneste.sendNyBeskjedOmAvvistInntektsmelding(forespørsel, feiltekst);
 
         var beskjedCaptor = ArgumentCaptor.forClass(NyBeskjedMutationRequest.class);
-        Mockito.verify(klient).opprettBeskjedOgVarsling(beskjedCaptor.capture(), any(NyBeskjedResultatResponseProjection.class));
+        verify(klient).opprettBeskjedOgVarsling(beskjedCaptor.capture(), any(NyBeskjedResultatResponseProjection.class));
         var nyBeskjed = (NyBeskjedInput) beskjedCaptor.getValue().getInput().get("nyBeskjed");
 
         assertThat(nyBeskjed.getNotifikasjon().getTekst()).isEqualTo(feiltekst);
@@ -509,7 +509,7 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
         tjeneste.sendBeskjedOmOppdatertInntektsmelding(forespørsel, imUuid);
 
         var beskjedCaptor = ArgumentCaptor.forClass(NyBeskjedMutationRequest.class);
-        Mockito.verify(klient).opprettBeskjedOgVarsling(beskjedCaptor.capture(), any(NyBeskjedResultatResponseProjection.class));
+        verify(klient).opprettBeskjedOgVarsling(beskjedCaptor.capture(), any(NyBeskjedResultatResponseProjection.class));
         var nyBeskjed = (NyBeskjedInput) beskjedCaptor.getValue().getInput().get("nyBeskjed");
 
         assertThat(nyBeskjed.getNotifikasjon().getTekst()).isEqualTo(ForespørselTekster.lagBeskjedOmOppdatertInntektsmelding());
