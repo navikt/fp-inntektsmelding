@@ -51,8 +51,8 @@ class InntektsmeldingMapperTest {
         assertThat(dto.getMånedInntekt()).isEqualByComparingTo(request.inntekt());
         assertThat(dto.getStartdato()).isEqualTo(request.startdato());
         assertThat(dto.getYtelse()).isEqualTo(KodeverkMapper.mapYtelsetype(request.ytelse()));
-        assertThat(dto.getKontaktperson().navn()).isEqualTo(request.kontaktperson().navn());
-        assertThat(dto.getKontaktperson().telefonnummer()).isEqualTo(request.kontaktperson().telefonnummer());
+        assertThat(dto.getKontaktperson().map(InntektsmeldingDto.Kontaktperson::navn)).contains(request.kontaktperson().navn());
+        assertThat(dto.getKontaktperson().map(InntektsmeldingDto.Kontaktperson::telefonnummer)).contains(request.kontaktperson().telefonnummer());
         assertThat(dto.getBortfaltNaturalytelsePerioder()).isEmpty();
         assertThat(dto.getMånedRefusjon()).isNull();
         assertThat(dto.getOpphørsdatoRefusjon()).isNull();
@@ -86,8 +86,8 @@ class InntektsmeldingMapperTest {
         assertThat(dto.getYtelse()).isEqualTo(KodeverkMapper.mapYtelsetype(request.ytelse()));
         assertThat(dto.getMånedRefusjon()).isEqualByComparingTo(BigDecimal.valueOf(5000));
         assertThat(dto.getOpphørsdatoRefusjon()).isEqualTo(LocalDate.now().plusDays(9));
-        assertThat(dto.getKontaktperson().navn()).isEqualTo(request.kontaktperson().navn());
-        assertThat(dto.getKontaktperson().telefonnummer()).isEqualTo(request.kontaktperson().telefonnummer());
+        assertThat(dto.getKontaktperson().map(InntektsmeldingDto.Kontaktperson::navn)).contains(request.kontaktperson().navn());
+        assertThat(dto.getKontaktperson().map(InntektsmeldingDto.Kontaktperson::telefonnummer)).contains(request.kontaktperson().telefonnummer());
         assertThat(dto.getSøkteRefusjonsperioder()).isEmpty();
     }
 
@@ -119,8 +119,8 @@ class InntektsmeldingMapperTest {
         assertThat(dto.getYtelse()).isEqualTo(KodeverkMapper.mapYtelsetype(request.ytelse()));
         assertThat(dto.getMånedRefusjon()).isEqualByComparingTo(BigDecimal.valueOf(5000));
         assertThat(dto.getOpphørsdatoRefusjon()).isEqualTo(LocalDate.now().plusDays(9));
-        assertThat(dto.getKontaktperson().navn()).isEqualTo(request.kontaktperson().navn());
-        assertThat(dto.getKontaktperson().telefonnummer()).isEqualTo(request.kontaktperson().telefonnummer());
+        assertThat(dto.getKontaktperson().map(InntektsmeldingDto.Kontaktperson::navn)).contains(request.kontaktperson().navn());
+        assertThat(dto.getKontaktperson().map(InntektsmeldingDto.Kontaktperson::telefonnummer)).contains(request.kontaktperson().telefonnummer());
         assertThat(dto.getSøkteRefusjonsperioder()).hasSize(1);
         assertThat(dto.getSøkteRefusjonsperioder().getFirst().fom()).isEqualTo(LocalDate.now().plusDays(5));
         assertThat(dto.getSøkteRefusjonsperioder().getFirst().beløp()).isEqualByComparingTo(BigDecimal.valueOf(4000));
@@ -159,8 +159,8 @@ class InntektsmeldingMapperTest {
         assertThat(dto.getYtelse()).isEqualTo(KodeverkMapper.mapYtelsetype(request.ytelse()));
         assertThat(dto.getMånedRefusjon()).isEqualByComparingTo(BigDecimal.valueOf(5000));
         assertThat(dto.getOpphørsdatoRefusjon()).isEqualTo(LocalDate.now().plusDays(9));
-        assertThat(dto.getKontaktperson().navn()).isEqualTo(request.kontaktperson().navn());
-        assertThat(dto.getKontaktperson().telefonnummer()).isEqualTo(request.kontaktperson().telefonnummer());
+        assertThat(dto.getKontaktperson().map(InntektsmeldingDto.Kontaktperson::navn)).contains(request.kontaktperson().navn());
+        assertThat(dto.getKontaktperson().map(InntektsmeldingDto.Kontaktperson::telefonnummer)).contains(request.kontaktperson().telefonnummer());
 
         assertThat(dto.getEndringAvInntektÅrsaker()).hasSize(1);
         assertThat(dto.getEndringAvInntektÅrsaker().get(0).årsak()).isEqualTo(EndringsårsakType.TARIFFENDRING);
@@ -239,6 +239,38 @@ class InntektsmeldingMapperTest {
         assertThat(result.endringAvInntektÅrsaker().get(0).årsak()).isEqualTo(EndringsårsakDto.FERIE);
         assertThat(result.endringAvInntektÅrsaker().get(1).årsak()).isEqualTo(EndringsårsakDto.TARIFFENDRING);
         assertThat(result.arbeidsgiverinitiertÅrsak()).isNull();
+    }
+
+    @Test
+    void skal_falle_tilbake_til_ukjent_kontaktperson_når_kontaktperson_mangler_i_mapFraDomene() {
+        // Arrange
+        var imDto = InntektsmeldingDto.builder()
+            .medAktørId(new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId("9999999999999"))
+            .medKontaktperson(null)
+            .medYtelse(Ytelsetype.FORELDREPENGER)
+            .medInntekt(BigDecimal.valueOf(5000))
+            .medStartdato(LocalDate.now())
+            .medArbeidsgiver(new Arbeidsgiver("999999999"))
+            .medInnsendtTidspunkt(LocalDateTime.now())
+            .medBortfaltNaturalytelsePerioder(List.of())
+            .medEndringAvInntektÅrsaker(List.of())
+            .medSøkteRefusjonsperioder(List.of())
+            .build();
+
+        var forespørselEntitet = new ForespørselEntitet("999999999",
+            LocalDate.now(),
+            new AktørIdEntitet("9999999999999"),
+            Ytelsetype.FORELDREPENGER,
+            "123",
+            LocalDate.now(),
+            ForespørselType.BESTILT_AV_FAGSYSTEM);
+
+        // Act
+        var result = InntektsmeldingMapper.mapFraDomene(imDto, ForespørselDtoMapper.mapFraEntitet(forespørselEntitet));
+
+        // Assert
+        assertThat(result.kontaktperson().navn()).isEqualTo("Ukjent");
+        assertThat(result.kontaktperson().telefonnummer()).isEqualTo("Ukjent");
     }
 
     @Test

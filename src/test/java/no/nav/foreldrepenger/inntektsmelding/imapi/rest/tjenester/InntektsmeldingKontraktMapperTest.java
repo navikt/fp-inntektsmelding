@@ -118,6 +118,20 @@ class InntektsmeldingKontraktMapperTest {
     }
 
     @Test
+    void skal_falle_tilbake_til_ukjent_kontaktperson_når_kontaktperson_mangler() {
+        var imUuid = UUID.randomUUID();
+        var forespørselUuid = UUID.randomUUID();
+        var inntektsmelding = InntektsmeldingDto.builder(lagInntektsmeldingDto(imUuid, forespørselUuid))
+            .medKontaktperson(null)
+            .build();
+
+        var resultat = InntektsmeldingKontraktMapper.mapTilKontrakt(inntektsmelding, new PersonIdent(FNR));
+
+        assertThat(resultat.kontaktperson().navn()).isEqualTo("Ukjent");
+        assertThat(resultat.kontaktperson().telefonnummer()).isEqualTo("Ukjent");
+    }
+
+    @Test
     void skal_mappe_status_godkjent() {
         var forespørselDto = lagForespørselDto(UUID.randomUUID(), ForespørselType.BESTILT_AV_FAGSYSTEM);
         var inntektsmelding = lagInntektsmeldingMedStatus(InntektsmeldingStatus.GODKJENT, Kildesystem.FPSAK, forespørselDto);

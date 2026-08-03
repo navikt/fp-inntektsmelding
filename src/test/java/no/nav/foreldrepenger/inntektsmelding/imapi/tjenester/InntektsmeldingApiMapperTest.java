@@ -22,6 +22,7 @@ import no.nav.foreldrepenger.inntektsmelding.felles.SøktRefusjonDto;
 import no.nav.foreldrepenger.inntektsmelding.felles.YtelseTypeDto;
 import no.nav.foreldrepenger.inntektsmelding.imapi.inntektsmelding.SendInntektsmeldingRequest;
 import no.nav.foreldrepenger.inntektsmelding.imapi.rest.tjenester.InntektsmeldingApiMapper;
+import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.EndringsårsakType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
@@ -69,8 +70,8 @@ class InntektsmeldingApiMapperTest {
         assertThat(dto.getEndringAvInntektÅrsaker()).hasSize(1);
         assertThat(dto.getEndringAvInntektÅrsaker().getFirst().årsak()).isEqualTo(EndringsårsakType.TARIFFENDRING);
         assertThat(dto.getEndringAvInntektÅrsaker().getFirst().bleKjentFom()).isEqualTo(startdato.plusDays(1));
-        assertThat(dto.getKontaktperson().navn()).isEqualTo("Kontakt Person");
-        assertThat(dto.getKontaktperson().telefonnummer()).isEqualTo("12345678");
+        assertThat(dto.getKontaktperson().map(InntektsmeldingDto.Kontaktperson::navn)).contains("Kontakt Person");
+        assertThat(dto.getKontaktperson().map(InntektsmeldingDto.Kontaktperson::telefonnummer)).contains("12345678");
     }
 
     @Test
