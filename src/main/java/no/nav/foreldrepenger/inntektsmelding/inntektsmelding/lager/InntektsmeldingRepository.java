@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingApiStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingStatus;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
 
@@ -78,7 +79,12 @@ public class InntektsmeldingRepository {
 
         var predicates = new ArrayList<Predicate>();
 
+        //Vi skal ikke vise inntektsmeldinger som er overstyrt av saksbehandler/driftstilganger via fp-sak (swagger) til konsumenter
+        //Legger inn filtrering her pga begrensningen på 1000 stk
+        predicates.add(cb.notEqual(root.get("kildesystem"), Kildesystem.FPSAK));
+
         predicates.add(cb.equal(root.get("arbeidsgiverIdent"), Objects.requireNonNull(orgnr)));
+
         if (aktørId != null) {
             predicates.add(cb.equal(root.get("aktørId"), aktørId));
         }

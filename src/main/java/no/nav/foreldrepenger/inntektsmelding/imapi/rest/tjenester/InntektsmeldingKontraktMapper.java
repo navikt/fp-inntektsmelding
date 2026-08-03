@@ -41,10 +41,12 @@ public class InntektsmeldingKontraktMapper {
     }
 
     public static HentInntektsmeldingResponse mapTilKontrakt(InntektsmeldingDto inntektsmelding, PersonIdent personIdent) {
+        var forespørsel = inntektsmelding.getForespørsel()
+            .orElseThrow(() -> new IllegalStateException("InntektsmeldingKontraktMapper: Finner ikke forespørsel for inntektsmelding med id:" + inntektsmelding.getId()));
         return new HentInntektsmeldingResponse(
             inntektsmelding.getId(),
             inntektsmelding.getInntektsmeldingUuid(),
-            inntektsmelding.getForespørsel().map(ForespørselDto::uuid).orElse(null),
+            forespørsel.uuid(),
             new FødselsnummerDto(personIdent.getIdent()),
             mapKodeverk(inntektsmelding.getYtelse()),
             new OrganisasjonsnummerDto(inntektsmelding.getArbeidsgiver().orgnr()),
@@ -67,16 +69,12 @@ public class InntektsmeldingKontraktMapper {
                 .map(e -> new EndringsårsakerDto(EndringsårsakDto.valueOf(e.årsak().name()), e.fom(), e.tom(), e.bleKjentFom()))
                 .toList(),
             mapStatus(inntektsmelding.getStatus()),
-            mapInnsendingstype(inntektsmelding.getKildesystem(), inntektsmelding.getForespørsel().orElse(null), inntektsmelding.getId()),
-            inntektsmelding.getForespørsel().map(ForespørselDto::skjæringstidspunkt).orElse(null)
+            mapInnsendingstype(inntektsmelding.getKildesystem(), forespørsel),
+            forespørsel.skjæringstidspunkt()
         );
     }
 
-    private static InnsendingstypeDto mapInnsendingstype(Kildesystem kildesystem, ForespørselDto forespørsel, Long inntektsmeldingId ) {
-        if (forespørsel == null) {
-            throw new IllegalStateException("InntektsmeldingDtoMapper: Finner ikke forespørsel for inntektsmelding med id:" + inntektsmeldingId);
-        }
-
+    private static InnsendingstypeDto mapInnsendingstype(Kildesystem kildesystem, ForespørselDto forespørsel) {
         if (ForespørselType.ARBEIDSGIVERINITIERT_UREGISTRERT.equals(forespørsel.forespørselType()) || ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT.equals(
             forespørsel.forespørselType())) {
             return InnsendingstypeDto.ARBEIDSGIVER_INITIERT;
