@@ -48,7 +48,7 @@ public class InntektsmeldingKontraktMapper {
             new FødselsnummerDto(personIdent.getIdent()),
             mapKodeverk(inntektsmelding.getYtelse()),
             new OrganisasjonsnummerDto(inntektsmelding.getArbeidsgiver().orgnr()),
-            new KontaktpersonDto(inntektsmelding.getKontaktperson().navn(), inntektsmelding.getKontaktperson().telefonnummer()),
+            mapKontaktperson(inntektsmelding),
             inntektsmelding.getStartdato(),
             inntektsmelding.getMånedInntekt(),
             inntektsmelding.getInnsendtTidspunkt(),
@@ -101,5 +101,12 @@ public class InntektsmeldingKontraktMapper {
             case GODKJENT -> InntektsmeldingStatusDto.GODKJENT;
             case UTDATERT -> InntektsmeldingStatusDto.UTDATERT;
         };
+    }
+
+    private static KontaktpersonDto mapKontaktperson(InntektsmeldingDto inntektsmelding) {
+        // Kontaktperson kan mangle for eldre inntektsmeldinger i en overgangsperiode.
+        return inntektsmelding.getKontaktperson()
+            .map(k -> new KontaktpersonDto(k.navn(), k.telefonnummer()))
+            .orElseGet(() -> new KontaktpersonDto("Ukjent", "Ukjent"));
     }
 }

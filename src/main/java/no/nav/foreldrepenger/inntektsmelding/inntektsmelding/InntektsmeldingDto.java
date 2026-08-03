@@ -106,8 +106,12 @@ public class InntektsmeldingDto {
         return arbeidsgiver;
     }
 
-    public Kontaktperson getKontaktperson() {
-        return kontaktperson;
+    /**
+     * NB: Kontaktperson kan mangle for eldre inntektsmeldinger i en overgangsperiode
+     * Vil alltid være satt for nye inntektsmeldinger.
+     */
+    public Optional<Kontaktperson> getKontaktperson() {
+        return Optional.ofNullable(kontaktperson);
     }
 
     public LocalDate getStartdato() {

@@ -124,14 +124,13 @@ public class InntektsmeldingDtoMapper {
         return builder.build();
     }
 
-    private static Optional<KontaktpersonEntitet> mapKontaktperson(InntektsmeldingDto.Kontaktperson kontaktperson) {
-        if (kontaktperson == null) {
-            return Optional.empty();
-        }
-        if (kontaktperson.navn() == null || kontaktperson.telefonnummer() == null) {
-            throw new IllegalArgumentException("Kontaktperson må ha både navn og telefonnummer");
-        }
-        return Optional.of(new KontaktpersonEntitet(kontaktperson.navn(), kontaktperson.telefonnummer()));
+    private static Optional<KontaktpersonEntitet> mapKontaktperson(Optional<InntektsmeldingDto.Kontaktperson> kontaktperson) {
+        return kontaktperson.map(k -> {
+            if (k.navn() == null || k.telefonnummer() == null) {
+                throw new IllegalArgumentException("Kontaktperson må ha både navn og telefonnummer");
+            }
+            return new KontaktpersonEntitet(k.navn(), k.telefonnummer());
+        });
     }
 
     private static Optional<LpsSystemInfoEntitet> mapLpsSystemInformasjon(InntektsmeldingDto.AvsenderSystem avsenderSystem) {
