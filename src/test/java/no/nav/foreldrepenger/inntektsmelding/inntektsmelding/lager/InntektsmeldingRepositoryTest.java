@@ -409,6 +409,18 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
         assertThat(resultat.getFirst().getOpprettetTidspunkt()).isAfter(resultat.getLast().getOpprettetTidspunkt());
     }
 
+    @Test
+    void skal_filtrere_bort_inntektsmeldinger_overstyrt_av_saksbehandler_med_kildesystem_fpsak() {
+        var orgnr = "999999999";
+        lagreInntektsmelding("9999999999999", orgnr, Ytelsetype.FORELDREPENGER);
+        lagreOverstyrtInntektsmeldingUtenForespørsel("9999999999999", orgnr, Ytelsetype.FORELDREPENGER);
+
+        var resultat = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null, null, null, null, null);
+
+        assertThat(resultat).hasSize(1);
+        assertThat(resultat.getFirst().getKildesystem()).isNotEqualTo(Kildesystem.FPSAK);
+    }
+
     private void lagreInntektsmelding(String aktørId, String orgnr, Ytelsetype ytelsetype) {
         var entitet = InntektsmeldingEntitet.builder()
             .medAktørId(new AktørIdEntitet(aktørId))
@@ -447,6 +459,19 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
             ForespørselType.BESTILT_AV_FAGSYSTEM);
         forespørselRepository.lagreForespørsel(forespørselEntitet);
         return forespørselEntitet;
+    }
+
+    private void lagreOverstyrtInntektsmeldingUtenForespørsel(String aktørId, String orgnr, Ytelsetype ytelsetype) {
+        var entitet = InntektsmeldingEntitet.builder()
+            .medAktørId(new AktørIdEntitet(aktørId))
+            .medYtelsetype(ytelsetype)
+            .medMånedInntekt(BigDecimal.valueOf(4000))
+            .medStartDato(LocalDate.now())
+            .medArbeidsgiverIdent(orgnr)
+            .medKildesystem(Kildesystem.FPSAK)
+            .medOpprettetAv("Z999999")
+            .build();
+        inntektsmeldingRepository.lagreInntektsmelding(entitet);
     }
 
 }
