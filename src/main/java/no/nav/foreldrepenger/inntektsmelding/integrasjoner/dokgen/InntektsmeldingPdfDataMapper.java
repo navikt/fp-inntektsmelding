@@ -76,7 +76,9 @@ class InntektsmeldingPdfDataMapper {
         if (Kildesystem.FPSAK.equals(inntektsmelding.getKildesystem())) {
             return new Kontaktperson(inntektsmelding.getOpprettetAv(), inntektsmelding.getOpprettetAv());
         } else {
-            return new Kontaktperson(inntektsmelding.getKontaktperson().navn(), inntektsmelding.getKontaktperson().telefonnummer());
+            var kontaktperson = inntektsmelding.getKontaktperson()
+                .orElseThrow(() -> new IllegalStateException("Kontaktperson skal alltid være satt ved innsending av inntektsmelding"));
+            return new Kontaktperson(kontaktperson.navn(), kontaktperson.telefonnummer());
         }
     }
 

@@ -146,7 +146,7 @@ public class InntektsmeldingMapper {
             new AktørIdDto(dto.getAktørId().getAktørId()),
             KodeverkMapper.mapYtelsetype(dto.getYtelse()),
             new OrganisasjonsnummerDto(dto.getArbeidsgiver().orgnr()),
-            new SendInntektsmeldingRequestDto.KontaktpersonRequestDto(dto.getKontaktperson().navn(), dto.getKontaktperson().telefonnummer()),
+            mapKontaktperson(dto),
             dto.getStartdato(),
             dto.getMånedInntekt(),
             dto.getInnsendtTidspunkt(),
@@ -183,6 +183,13 @@ public class InntektsmeldingMapper {
         return refusjonsendringRequestDtos.stream()
             .filter(r -> !r.fom().equals(startdato))
             .max(Comparator.comparing(SendInntektsmeldingRequestDto.Refusjon::fom));
+    }
+
+    private static SendInntektsmeldingRequestDto.KontaktpersonRequestDto mapKontaktperson(InntektsmeldingDto dto) {
+        // Kontaktperson kan mangle for eldre inntektsmeldinger fra en overgangsperiode der feltet ikke var påkrevd.
+        return dto.getKontaktperson()
+            .map(k -> new SendInntektsmeldingRequestDto.KontaktpersonRequestDto(k.navn(), k.telefonnummer()))
+            .orElseGet(() -> new SendInntektsmeldingRequestDto.KontaktpersonRequestDto("Ukjent", "Ukjent"));
     }
 
 }

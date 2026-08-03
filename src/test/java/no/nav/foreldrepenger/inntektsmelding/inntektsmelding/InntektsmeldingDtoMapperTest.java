@@ -288,8 +288,8 @@ class InntektsmeldingDtoMapperTest {
         assertThat(dto.getAktørId()).isEqualTo(aktørId);
         assertThat(dto.getYtelse()).isEqualTo(Ytelsetype.FORELDREPENGER);
         assertThat(dto.getArbeidsgiver().orgnr()).isEqualTo(ARBEIDSGIVER_IDENT);
-        assertThat(dto.getKontaktperson().navn()).isEqualTo("Test Testesen");
-        assertThat(dto.getKontaktperson().telefonnummer()).isEqualTo("11111111");
+        assertThat(dto.getKontaktperson().map(InntektsmeldingDto.Kontaktperson::navn)).contains("Test Testesen");
+        assertThat(dto.getKontaktperson().map(InntektsmeldingDto.Kontaktperson::telefonnummer)).contains("11111111");
         assertThat(dto.getStartdato()).isEqualTo(START_DATO);
         assertThat(dto.getMånedInntekt()).isEqualByComparingTo(MÅNED_INNTEKT);
         assertThat(dto.getInnsendtTidspunkt()).isEqualTo(tidspunkt);
@@ -311,7 +311,7 @@ class InntektsmeldingDtoMapperTest {
         assertThat(dto.getAktørId()).isNull();
         assertThat(dto.getYtelse()).isNull();
         assertThat(dto.getArbeidsgiver()).isNull();
-        assertThat(dto.getKontaktperson()).isNull();
+        assertThat(dto.getKontaktperson()).isEmpty();
         assertThat(dto.getStartdato()).isNull();
         assertThat(dto.getMånedInntekt()).isNull();
         assertThat(dto.getMånedRefusjon()).isNull();
@@ -358,8 +358,8 @@ class InntektsmeldingDtoMapperTest {
         assertThat(dto.getKildesystem()).isEqualTo(Kildesystem.ARBEIDSGIVERPORTAL);
         assertThat(dto.getInnsendtTidspunkt()).isEqualTo(opprettetTidspunkt);
         assertThat(dto.getInntektsmeldingUuid()).isNotNull();
-        assertThat(dto.getKontaktperson().navn()).isEqualTo("Kari Nordmann");
-        assertThat(dto.getKontaktperson().telefonnummer()).isEqualTo("87654321");
+        assertThat(dto.getKontaktperson().map(InntektsmeldingDto.Kontaktperson::navn)).contains("Kari Nordmann");
+        assertThat(dto.getKontaktperson().map(InntektsmeldingDto.Kontaktperson::telefonnummer)).contains("87654321");
         assertThat(dto.getSøkteRefusjonsperioder()).hasSize(1);
         assertThat(dto.getSøkteRefusjonsperioder().getFirst().fom()).isEqualTo(START_DATO.plusMonths(1));
         assertThat(dto.getBortfaltNaturalytelsePerioder()).hasSize(1);
@@ -374,7 +374,7 @@ class InntektsmeldingDtoMapperTest {
 
         var dto = InntektsmeldingDtoMapper.mapFraEntitet(entitet);
 
-        assertThat(dto.getKontaktperson()).isNull();
+        assertThat(dto.getKontaktperson()).isEmpty();
         assertThat(dto.getMånedRefusjon()).isNull();
         assertThat(dto.getOpphørsdatoRefusjon()).isNull();
         assertThat(dto.getSøkteRefusjonsperioder()).isEmpty();
@@ -478,8 +478,7 @@ class InntektsmeldingDtoMapperTest {
         assertThat(roundtripped.getMånedInntekt()).isEqualByComparingTo(original.getMånedInntekt());
         assertThat(roundtripped.getKildesystem()).isEqualTo(original.getKildesystem());
         assertThat(roundtripped.getOpprettetAv()).isEqualTo(original.getOpprettetAv());
-        assertThat(roundtripped.getKontaktperson().navn()).isEqualTo(original.getKontaktperson().navn());
-        assertThat(roundtripped.getKontaktperson().telefonnummer()).isEqualTo(original.getKontaktperson().telefonnummer());
+        assertThat(roundtripped.getKontaktperson()).isEqualTo(original.getKontaktperson());
     }
 
     @Test

@@ -25,7 +25,8 @@ import no.seres.xsd.nav.inntektsmelding_m._20181211.OpphoerAvNaturalytelseListe;
 import no.seres.xsd.nav.inntektsmelding_m._20181211.Refusjon;
 import no.seres.xsd.nav.inntektsmelding_m._20181211.Skjemainnhold;
 
-class InntektsmeldingXMLMapper {
+class
+InntektsmeldingXMLMapper {
 
     private static final ObjectFactory of = new ObjectFactory();
 
@@ -154,7 +155,8 @@ class InntektsmeldingXMLMapper {
             ki.setTelefonnummer(inntektsmelding.getOpprettetAv());
             ki.setKontaktinformasjonNavn(inntektsmelding.getOpprettetAv());
         } else {
-            var kontaktPerson = inntektsmelding.getKontaktperson();
+            var kontaktPerson = inntektsmelding.getKontaktperson()
+                .orElseThrow(() -> new IllegalStateException("Kontaktperson skal alltid være satt ved innsending av inntektsmelding"));
             ki.setTelefonnummer(kontaktPerson.telefonnummer());
             ki.setKontaktinformasjonNavn(kontaktPerson.navn());
         }
