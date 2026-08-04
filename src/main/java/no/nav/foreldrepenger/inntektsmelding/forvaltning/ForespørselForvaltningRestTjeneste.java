@@ -2,6 +2,8 @@ package no.nav.foreldrepenger.inntektsmelding.forvaltning;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import jakarta.enterprise.context.RequestScoped;
@@ -11,11 +13,13 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
@@ -132,6 +136,55 @@ public class ForespørselForvaltningRestTjeneste {
                 f.arbeidsgiverNotifikasjonSakId() != null))
             .toList();
         return Response.ok(response).build();
+    }
+
+    @POST
+    @Path("/ryddOppArbeidsgiverportalSaker")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Operation(description = "Går gjennom en liste med saker opprettet hos arbeidsgiverportalen og sletter de som ikke har "
+        + "en tilhørende forespørsel (grupperingsId = forespørsel-uuid) i fp-inntektsmelding. Brukes til opprydding etter feil "
+        + "der det er opprettet saker hos arbeidsgiverportalen uten tilhørende forespørsel her.", tags = "forespoersler", responses = {
+        @ApiResponse(responseCode = "200", description = "Oppsummering av kjøringen", content = @Content(mediaType = "application/json")),
+        @ApiResponse(responseCode = "500", description = "Feilet pga ukjent feil eller tekniske/funksjonelle feil")
+    })
+    @Tilgangskontrollert
+    public Response ryddOppArbeidsgiverportalSaker(
+        @Parameter(description = "Saker fra arbeidsgiverportalen (sakId og tilhørende grupperingsId) som skal sjekkes")
+        @Valid @NotNull List<SakGrupperingDto> saker,
+        @Parameter(description = "Hvis true (default) gjøres ingen sletting, kun logging/rapportering av hva som ville blitt slettet")
+        @QueryParam("dryRun") @DefaultValue("true") boolean dryRun) {
+        sjekkAtKallerHarRollenDrift();
+        LOG.info("Starter opprydding av arbeidsgiverportal-saker. Antall saker å sjekke: {}, dryRun={}", saker.size(), dryRun);
+
+        var slettedeEllerSomVilleBlittSlettet = new ArrayList<String>();
+        for (var sak : saker) {
+            var grupperingsIdSomUuid = UUID.fromString(sak.grupperingsId());
+            var forespørsel = forespørselTjeneste.hentForespørsel(grupperingsIdSomUuid);
+            if (forespørsel.isPresent()) {
+                continue;
+            }
+            LOG.info("Fant ingen forespørsel for grupperingsId {} (sakId {}), sletter tilhørende sak hos arbeidsgiverportalen",
+                sak.grupperingsId(), sak.sakId());
+            if (!dryRun) {
+                minSideArbeidsgiverTjeneste.slettSak(sak.sakId());
+            }
+            slettedeEllerSomVilleBlittSlettet.add(sak.sakId());
+        }
+
+        LOG.info("Fullført opprydding av arbeidsgiverportal-saker. Antall sjekket: {}, antall slettet/villet blitt slettet: {}, dryRun={}",
+            saker.size(), slettedeEllerSomVilleBlittSlettet.size(), dryRun);
+
+        return Response.ok(new RyddOppArbeidsgiverportalSakerResultatDto(saker.size(), slettedeEllerSomVilleBlittSlettet.size(), dryRun,
+            slettedeEllerSomVilleBlittSlettet)).build();
+    }
+
+    public record SakGrupperingDto(@NotNull String sakId, @NotNull String grupperingsId) {
+    }
+
+    public record RyddOppArbeidsgiverportalSakerResultatDto(int antallSjekket,
+                                                            int antallSlettetEllerVilleBlittSlettet,
+                                                            boolean dryRun,
+                                                            List<String> sakIderSlettetEllerVilleBlittSlettet) {
     }
 
     public record ForvaltningForespørselDto(UUID uuid,
