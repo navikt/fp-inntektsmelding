@@ -4,6 +4,7 @@ import static no.nav.foreldrepenger.inntektsmelding.integrasjoner.arbeidsgiverno
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -338,7 +339,7 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
         assertThatThrownBy(() -> tjeneste.opprettSakOgOppgave(forespørsel)).isInstanceOf(IllegalStateException.class);
 
         var slettCaptor = ArgumentCaptor.forClass(HardDeleteSakMutationRequest.class);
-        verify(klient).slettSak(slettCaptor.capture(), any(HardDeleteSakResultatResponseProjection.class));
+        verify(klient).slettSak(slettCaptor.capture(), any(HardDeleteSakResultatResponseProjection.class), eq("sak-1"));
         assertThat(slettCaptor.getValue().getInput()).containsEntry("id", "sak-1");
     }
 

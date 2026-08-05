@@ -110,13 +110,13 @@ class MinSideArbeidsgiverKlient {
         throw ulovligTilstandException();
     }
 
-    public String slettSak(HardDeleteSakMutationRequest request, HardDeleteSakResultatResponseProjection projection) {
+    public String slettSak(HardDeleteSakMutationRequest request, HardDeleteSakResultatResponseProjection projection, String sakId) {
         LOG.info("FAGER: Utfører hard delete");
         var resultat = query(new GraphQLRequest(request, projection), HardDeleteSakMutationResponse.class).hardDeleteSak();
         if (resultat instanceof HardDeleteSakVellykket vellykket) {
             return vellykket.getId();
         } else if (resultat instanceof SakFinnesIkke) {
-            LOG.info("Sak finnes ikke, kan ikke slette {}.", request.getInput().get("id") );
+            LOG.info("Sak finnes ikke, kan ikke slette {}.", sakId );
             return null;
         } else {
             loggFeilmelding((Error) resultat, "hard delete sak");
