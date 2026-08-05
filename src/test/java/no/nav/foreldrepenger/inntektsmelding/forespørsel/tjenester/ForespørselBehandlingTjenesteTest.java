@@ -39,6 +39,7 @@ import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
+import no.nav.vedtak.felles.prosesstask.api.ProsessTaskGruppe;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskTjeneste;
 import no.nav.vedtak.felles.prosesstask.api.TaskType;
 import no.nav.vedtak.felles.testutilities.db.EntityManagerAwareTest;
@@ -109,9 +110,15 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         assertThat(lagret.getFirst().getArbeidsgiverNotifikasjonSakId()).isNull();
         assertThat(lagret.getFirst().getOppgaveId()).isEmpty();
 
-        var taskCaptor = ArgumentCaptor.forClass(ProsessTaskData.class);
-        verify(prosessTaskTjeneste, Mockito.times(2)).lagre(taskCaptor.capture());
-        var opprettedeTasks = taskCaptor.getAllValues();
+        var taskGruppeCaptor = ArgumentCaptor.forClass(ProsessTaskGruppe.class);
+        verify(prosessTaskTjeneste).lagre(taskGruppeCaptor.capture());
+        var opprettedeTasks = taskGruppeCaptor.getValue().getTasks().stream().map(ProsessTaskGruppe.Entry::task).toList();
+
+        // Verifiserer at task for sak/oppgave kommer før task for dialog i den sekvensielle gruppen, siden
+        // dialogporten-oppdateringen forutsetter at saken allerede finnes hos arbeidsgiverportalen
+        assertThat(opprettedeTasks).hasSize(2);
+        assertThat(opprettedeTasks.getFirst().taskType()).isEqualTo(TaskType.forProsessTask(OpprettSakOgOppgaveTask.class));
+        assertThat(opprettedeTasks.getLast().taskType()).isEqualTo(TaskType.forProsessTask(OpprettDialogTask.class));
 
         var sakOgOppgaveTask = opprettedeTasks.stream()
             .filter(task -> TaskType.forProsessTask(OpprettSakOgOppgaveTask.class).equals(task.taskType()))

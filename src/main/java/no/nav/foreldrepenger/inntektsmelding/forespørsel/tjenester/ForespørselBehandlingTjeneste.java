@@ -8,6 +8,8 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import no.nav.vedtak.felles.prosesstask.api.ProsessTaskGruppe;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -186,25 +188,21 @@ public class ForespørselBehandlingTjeneste {
             fagsakSaksnummer,
             førsteUttaksdato);
 
-        // Oppretter sak/oppgave hos arbeidsgiverportalen og dialog hos Dialogporten som egne, uavhengige prosesstasks.
-        // Dette gjøres for at forespørselen garantert er lagret/committet før de eksterne kallene gjøres, slik at en
-        // feilende/tidsavbrutt ekstern integrasjon prøves på nytt automatisk av prosesstask-rammeverket, i stedet for
-        // å risikere at forespørselen rulles tilbake (f.eks. pga en feil lenger nede) mens saken likevel er opprettet
-        // hos arbeidsgiverportalen - noe som gir en foreldreløs sak uten tilhørende forespørsel hos oss.
-        opprettTaskForOpprettSakOgOppgave(forespørselUuid);
-        opprettTaskForOpprettDialog(forespørselUuid);
-    }
+        // Oppretter sak/oppgave hos arbeidsgiverportalen og deretter dialog hos Dialogporten som en sekvensiell
+        // prosesstask-gruppe. Sekvensielt fordi Dialogporten-oppdateringen forutsetter at saken allerede finnes hos
+        // arbeidsgiverportalen (fager). Tasks kjøres først etter at forespørselen garantert er lagret/committet, slik
+        // at en feilende/tidsavbrutt ekstern integrasjon prøves på nytt automatisk av prosesstask-rammeverket, i
+        // stedet for å risikere at forespørselen rulles tilbake (f.eks. pga en feil lenger nede) mens saken likevel
+        // er opprettet hos arbeidsgiverportalen - noe som gir en foreldreløs sak uten tilhørende forespørsel hos oss.
+        var opprettSakOgOppgaveTask = ProsessTaskData.forProsessTask(OpprettSakOgOppgaveTask.class);
+        opprettSakOgOppgaveTask.setProperty(OpprettSakOgOppgaveTask.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
+        var opprettDialogTask = ProsessTaskData.forProsessTask(OpprettDialogTask.class);
+        opprettDialogTask.setProperty(OpprettDialogTask.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
 
-    private void opprettTaskForOpprettSakOgOppgave(UUID forespørselUuid) {
-        var task = ProsessTaskData.forProsessTask(OpprettSakOgOppgaveTask.class);
-        task.setProperty(OpprettSakOgOppgaveTask.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
-        prosessTaskTjeneste.lagre(task);
-    }
-
-    private void opprettTaskForOpprettDialog(UUID forespørselUuid) {
-        var task = ProsessTaskData.forProsessTask(OpprettDialogTask.class);
-        task.setProperty(OpprettDialogTask.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
-        prosessTaskTjeneste.lagre(task);
+        var taskGruppe = new ProsessTaskGruppe();
+        taskGruppe.addNesteSekvensiell(opprettSakOgOppgaveTask);
+        taskGruppe.addNesteSekvensiell(opprettDialogTask);
+        prosessTaskTjeneste.lagre(taskGruppe);
     }
 
     public UUID opprettForespørselForArbeidsgiverInitiertIm(Ytelsetype ytelsetype,
