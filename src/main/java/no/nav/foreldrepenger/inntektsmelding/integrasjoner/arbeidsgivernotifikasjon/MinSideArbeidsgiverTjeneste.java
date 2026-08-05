@@ -310,7 +310,7 @@ public class MinSideArbeidsgiverTjeneste {
             .onUgyldigMerkelapp(new UgyldigMerkelappResponseProjection().feilmelding())
             .onUkjentProdusent(new UkjentProdusentResponseProjection().feilmelding())
             .onSakFinnesIkke(new SakFinnesIkkeResponseProjection().feilmelding());
-        return minSideArbeidsgiverKlient.slettSak(request, projection);
+        return minSideArbeidsgiverKlient.slettSak(request, projection, id);
     }
     public String sendNyBeskjedOmAvvistInntektsmelding(String grupperingsid,
                                                        Merkelapp merkelapp,
