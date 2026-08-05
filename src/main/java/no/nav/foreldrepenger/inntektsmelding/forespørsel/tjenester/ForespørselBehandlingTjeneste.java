@@ -188,12 +188,7 @@ public class ForespørselBehandlingTjeneste {
             fagsakSaksnummer,
             førsteUttaksdato);
 
-        // Oppretter sak/oppgave hos arbeidsgiverportalen og deretter dialog hos Dialogporten som en sekvensiell
-        // prosesstask-gruppe. Sekvensielt fordi Dialogporten-oppdateringen forutsetter at saken allerede finnes hos
-        // arbeidsgiverportalen (fager). Tasks kjøres først etter at forespørselen garantert er lagret/committet, slik
-        // at en feilende/tidsavbrutt ekstern integrasjon prøves på nytt automatisk av prosesstask-rammeverket, i
-        // stedet for å risikere at forespørselen rulles tilbake (f.eks. pga en feil lenger nede) mens saken likevel
-        // er opprettet hos arbeidsgiverportalen - noe som gir en foreldreløs sak uten tilhørende forespørsel hos oss.
+        // oppretter tasker for eksterne kall
         var opprettSakOgOppgaveTask = ProsessTaskData.forProsessTask(OpprettSakOgOppgaveTask.class);
         opprettSakOgOppgaveTask.setProperty(OpprettSakOgOppgaveTask.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
         var opprettDialogTask = ProsessTaskData.forProsessTask(OpprettDialogTask.class);
