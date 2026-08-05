@@ -15,6 +15,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -22,6 +23,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import no.nav.foreldrepenger.inntektsmelding.database.JpaExtension;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselRepository;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettDialogTask;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettSakOgOppgaveTask;
 import no.nav.foreldrepenger.inntektsmelding.forvaltning.rest.InntektsmeldingForespørselDto;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.altinn.DialogportenTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon.MinSideArbeidsgiverTjeneste;
@@ -35,6 +38,9 @@ import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
+import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
+import no.nav.vedtak.felles.prosesstask.api.ProsessTaskTjeneste;
+import no.nav.vedtak.felles.prosesstask.api.TaskType;
 import no.nav.vedtak.felles.testutilities.db.EntityManagerAwareTest;
 
 @ExtendWith({JpaExtension.class, MockitoExtension.class})
@@ -53,21 +59,35 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
     private MinSideArbeidsgiverTjeneste minSideArbeidsgiverTjeneste;
     @Mock
     private DialogportenTjeneste dialogportenTjeneste;
+    @Mock
+    private ProsessTaskTjeneste prosessTaskTjeneste;
 
     private ForespørselRepository forespørselRepository;
+    private ForespørselTjeneste forespørselTjeneste;
     private ForespørselBehandlingTjeneste forespørselBehandlingTjeneste;
 
     @BeforeEach
     void setUp() {
         this.forespørselRepository = new ForespørselRepository(getEntityManager());
-        this.forespørselBehandlingTjeneste = new ForespørselBehandlingTjeneste(new ForespørselTjeneste(forespørselRepository),
+        this.forespørselTjeneste = new ForespørselTjeneste(forespørselRepository);
+        this.forespørselBehandlingTjeneste = new ForespørselBehandlingTjeneste(forespørselTjeneste,
             minSideArbeidsgiverTjeneste,
-            dialogportenTjeneste);
+            dialogportenTjeneste,
+            prosessTaskTjeneste);
+    }
+
+    // Simulerer at prosesstasken for å opprette sak/oppgave hos arbeidsgiverportalen har kjørt, slik den ville gjort
+    // kort tid etter i produksjon. Nødvendig i disse testene fordi enkelte påfølgende operasjoner (f.eks. ferdigstille/
+    // sette utgått) fortsatt slår opp forespørselen på arbeidsgiverNotifikasjonSakId.
+    private void kjørOpprettSakOgOppgaveTask(UUID forespørselUuid) {
+        var task = new OpprettSakOgOppgaveTask(forespørselTjeneste, minSideArbeidsgiverTjeneste);
+        var taskData = ProsessTaskData.forProsessTask(OpprettSakOgOppgaveTask.class);
+        taskData.setProperty(OpprettSakOgOppgaveTask.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
+        task.doTask(taskData);
     }
 
     @Test
-    void skal_opprette_forespørsel_og_sette_sak_og_oppgave() {
-        mockInfoForOpprettelse(SAK_ID);
+    void skal_opprette_forespørsel_og_opprette_tasks_for_sak_oppgave_og_dialog() {
         var arbeidsgiver = Arbeidsgiver.fra(BRREG_ORGNUMMER);
 
         var resultat = forespørselBehandlingTjeneste.håndterInnkommendeForespørsel(SKJÆRINGSTIDSPUNKT,
@@ -84,8 +104,28 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
         assertThat(resultat).isEqualTo(ForespørselResultat.FORESPØRSEL_OPPRETTET);
         assertThat(lagret).hasSize(1);
-        assertThat(lagret.getFirst().getArbeidsgiverNotifikasjonSakId()).isEqualTo(SAK_ID);
-        assertThat(lagret.getFirst().getOppgaveId()).isEqualTo(Optional.of(OPPGAVE_ID));
+        // Sak/oppgave hos arbeidsgiverportalen og dialog hos Dialogporten opprettes nå asynkront via prosesstasks,
+        // og skal derfor ikke være satt synkront på forespørselen ennå
+        assertThat(lagret.getFirst().getArbeidsgiverNotifikasjonSakId()).isNull();
+        assertThat(lagret.getFirst().getOppgaveId()).isEmpty();
+
+        var taskCaptor = ArgumentCaptor.forClass(ProsessTaskData.class);
+        verify(prosessTaskTjeneste, Mockito.times(2)).lagre(taskCaptor.capture());
+        var opprettedeTasks = taskCaptor.getAllValues();
+
+        var sakOgOppgaveTask = opprettedeTasks.stream()
+            .filter(task -> TaskType.forProsessTask(OpprettSakOgOppgaveTask.class).equals(task.taskType()))
+            .findFirst()
+            .orElseThrow(() -> new AssertionError("Fant ikke task for opprettelse av sak og oppgave"));
+        assertThat(sakOgOppgaveTask.getPropertyValue(OpprettSakOgOppgaveTask.KEY_FORESPOERSEL_UUID))
+            .isEqualTo(lagret.getFirst().getUuid().toString());
+
+        var dialogTask = opprettedeTasks.stream()
+            .filter(task -> TaskType.forProsessTask(OpprettDialogTask.class).equals(task.taskType()))
+            .findFirst()
+            .orElseThrow(() -> new AssertionError("Fant ikke task for opprettelse av dialog"));
+        assertThat(dialogTask.getPropertyValue(OpprettDialogTask.KEY_FORESPOERSEL_UUID))
+            .isEqualTo(lagret.getFirst().getUuid().toString());
     }
 
     @Test
@@ -126,6 +166,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         clearHibernateCache();
 
         var lagret = forespørselRepository.hentForespørslerPåSak(SAKSNUMMER).getFirst();
+        kjørOpprettSakOgOppgaveTask(lagret.getUuid());
         var fpEntitet = forespørselBehandlingTjeneste.ferdigstillForespørsel(lagret.getUuid(),
             AktørId.fra(lagret.getAktørId().getAktørId()),
             Arbeidsgiver.fra(lagret.getOrganisasjonsnummer()),
@@ -161,6 +202,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         clearHibernateCache();
 
         var lagret = forespørselRepository.hentForespørslerPåSak(SAKSNUMMER).getFirst();
+        kjørOpprettSakOgOppgaveTask(lagret.getUuid());
 
         var fpEntitet = forespørselBehandlingTjeneste.ferdigstillForespørsel(lagret.getUuid(),
             AktørId.fra(lagret.getAktørId().getAktørId()),
@@ -197,6 +239,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         );
 
         var lagret = forespørselRepository.hentForespørslerPåSak(saksnummer.saksnummer()).getFirst();
+        kjørOpprettSakOgOppgaveTask(lagret.getUuid());
 
         var fpEntitet = forespørselBehandlingTjeneste.ferdigstillForespørsel(lagret.getUuid(),
             AktørId.fra(lagret.getAktørId().getAktørId()),
@@ -237,6 +280,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         );
 
         var lagret = forespørselRepository.hentForespørslerPåSak(saksnummer.saksnummer()).getFirst();
+        kjørOpprettSakOgOppgaveTask(lagret.getUuid());
 
         assertThat(lagret.getStatus()).isEqualTo(ForespørselStatus.UNDER_BEHANDLING);
 

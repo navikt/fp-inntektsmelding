@@ -12,6 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.nav.foreldrepenger.inntektsmelding.forvaltning.rest.InntektsmeldingForespørselDto;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettDialogTask;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettSakOgOppgaveTask;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.altinn.DialogportenTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon.MinSideArbeidsgiverTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.metrikker.MetrikkerTjeneste;
@@ -27,6 +29,8 @@ import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Arbeidsgiverinitiert
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
+import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
+import no.nav.vedtak.felles.prosesstask.api.ProsessTaskTjeneste;
 
 
 /**
@@ -39,6 +43,7 @@ public class ForespørselBehandlingTjeneste {
     private ForespørselTjeneste forespørselTjeneste;
     private MinSideArbeidsgiverTjeneste minSideArbeidsgiverTjeneste;
     private DialogportenTjeneste dialogportenTjeneste;
+    private ProsessTaskTjeneste prosessTaskTjeneste;
 
     public ForespørselBehandlingTjeneste() {
         // CDI
@@ -47,10 +52,12 @@ public class ForespørselBehandlingTjeneste {
     @Inject
     public ForespørselBehandlingTjeneste(ForespørselTjeneste forespørselTjeneste,
                                          MinSideArbeidsgiverTjeneste minSideArbeidsgiverTjeneste,
-                                         DialogportenTjeneste dialogportenTjeneste) {
+                                         DialogportenTjeneste dialogportenTjeneste,
+                                         ProsessTaskTjeneste prosessTaskTjeneste) {
         this.forespørselTjeneste = forespørselTjeneste;
         this.minSideArbeidsgiverTjeneste = minSideArbeidsgiverTjeneste;
         this.dialogportenTjeneste = dialogportenTjeneste;
+        this.prosessTaskTjeneste = prosessTaskTjeneste;
     }
 
     public ForespørselResultat håndterInnkommendeForespørsel(LocalDate skjæringstidspunkt,
@@ -179,18 +186,25 @@ public class ForespørselBehandlingTjeneste {
             fagsakSaksnummer,
             førsteUttaksdato);
 
-        var forespørsel = forespørselTjeneste.hentForespørsel(forespørselUuid)
-            .orElseThrow(() -> new IllegalStateException("Finner ikke opprettet forespørsel"));
-        var resultat = minSideArbeidsgiverTjeneste.opprettSakOgOppgave(forespørsel);
-        forespørselTjeneste.setArbeidsgiverNotifikasjonSakId(forespørselUuid, resultat.arbeidsgiverNotifikasjonSakId());
-        forespørselTjeneste.setOppgaveId(forespørselUuid, resultat.oppgaveId());
+        // Oppretter sak/oppgave hos arbeidsgiverportalen og dialog hos Dialogporten som egne, uavhengige prosesstasks.
+        // Dette gjøres for at forespørselen garantert er lagret/committet før de eksterne kallene gjøres, slik at en
+        // feilende/tidsavbrutt ekstern integrasjon prøves på nytt automatisk av prosesstask-rammeverket, i stedet for
+        // å risikere at forespørselen rulles tilbake (f.eks. pga en feil lenger nede) mens saken likevel er opprettet
+        // hos arbeidsgiverportalen - noe som gir en foreldreløs sak uten tilhørende forespørsel hos oss.
+        opprettTaskForOpprettSakOgOppgave(forespørselUuid);
+        opprettTaskForOpprettDialog(forespørselUuid);
+    }
 
-        var oppdatertForespørsel = forespørselTjeneste.hentForespørsel(forespørselUuid)
-            .orElseThrow(() -> new IllegalStateException("Finner ikke opprettet forespørsel etter oppdatering mot arbeidsgiverportalen"));
-        dialogportenTjeneste.utførMedFeiltoleranse(() -> {
-            var dialogportenUuid = dialogportenTjeneste.opprettDialog(oppdatertForespørsel);
-            forespørselTjeneste.setDialogportenUuid(forespørselUuid, dialogportenUuid);
-        });
+    private void opprettTaskForOpprettSakOgOppgave(UUID forespørselUuid) {
+        var task = ProsessTaskData.forProsessTask(OpprettSakOgOppgaveTask.class);
+        task.setProperty(OpprettSakOgOppgaveTask.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
+        prosessTaskTjeneste.lagre(task);
+    }
+
+    private void opprettTaskForOpprettDialog(UUID forespørselUuid) {
+        var task = ProsessTaskData.forProsessTask(OpprettDialogTask.class);
+        task.setProperty(OpprettDialogTask.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
+        prosessTaskTjeneste.lagre(task);
     }
 
     public UUID opprettForespørselForArbeidsgiverInitiertIm(Ytelsetype ytelsetype,
