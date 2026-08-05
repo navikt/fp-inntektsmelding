@@ -116,7 +116,7 @@ class MinSideArbeidsgiverKlient {
         if (resultat instanceof HardDeleteSakVellykket vellykket) {
             return vellykket.getId();
         } else if (resultat instanceof SakFinnesIkke) {
-            LOG.info("Sak finnes ikke, kan ikke slette.");
+            LOG.info("Sak finnes ikke, kan ikke slette {}.", request.getInput().get("id") );
             return null;
         } else {
             loggFeilmelding((Error) resultat, "hard delete sak");
