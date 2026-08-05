@@ -150,15 +150,16 @@ public class ForespørselForvaltningRestTjeneste {
     @Tilgangskontrollert
     public Response ryddOppArbeidsgiverportalSaker(
         @Parameter(description = "Saker fra arbeidsgiverportalen (sakId og tilhørende grupperingsId) som skal sjekkes")
-        @Valid @NotNull List<SakGrupperingDto> saker,
+        @NotNull @Valid List<@Valid SakGrupperingDto> saker,
         @Parameter(description = "Hvis true (default) gjøres ingen sletting, kun logging/rapportering av hva som ville blitt slettet")
-        @QueryParam("dryRun") @DefaultValue("true") boolean dryRun) {
+        @QueryParam("dryRun") @DefaultValue("true") @Valid boolean dryRun) {
         sjekkAtKallerHarRollenDrift();
         LOG.info("Starter opprydding av arbeidsgiverportal-saker. Antall saker å sjekke: {}, dryRun={}", saker.size(), dryRun);
 
-        var slettedeEllerSomVilleBlittSlettet = new ArrayList<String>();
+        var slettedeEllerSomVilleBlittSlettet = new ArrayList<UUID>();
+        var sakerSomIkkeBleSlettet = new ArrayList<SakGrupperingDto>();
         for (var sak : saker) {
-            var grupperingsIdSomUuid = UUID.fromString(sak.grupperingsId());
+            var grupperingsIdSomUuid = sak.grupperingsId();
             var forespørsel = forespørselTjeneste.hentForespørsel(grupperingsIdSomUuid);
             if (forespørsel.isPresent()) {
                 continue;
@@ -166,25 +167,30 @@ public class ForespørselForvaltningRestTjeneste {
             LOG.info("Fant ingen forespørsel for grupperingsId {} (sakId {}), sletter tilhørende sak hos arbeidsgiverportalen",
                 sak.grupperingsId(), sak.sakId());
             if (!dryRun) {
-                minSideArbeidsgiverTjeneste.slettSak(sak.sakId());
+                try {
+                    minSideArbeidsgiverTjeneste.slettSak(sak.sakId().toString());
+                } catch (Exception e) {
+                    sakerSomIkkeBleSlettet.add(sak);
+                }
             }
             slettedeEllerSomVilleBlittSlettet.add(sak.sakId());
         }
 
-        LOG.info("Fullført opprydding av arbeidsgiverportal-saker. Antall sjekket: {}, antall slettet/villet blitt slettet: {}, dryRun={}",
+        LOG.info("Fullført opprydding av arbeidsgiverportal-saker. Antall sjekket: {}, antall slettet/ville blitt slettet: {}, dryRun={}",
             saker.size(), slettedeEllerSomVilleBlittSlettet.size(), dryRun);
 
         return Response.ok(new RyddOppArbeidsgiverportalSakerResultatDto(saker.size(), slettedeEllerSomVilleBlittSlettet.size(), dryRun,
-            slettedeEllerSomVilleBlittSlettet)).build();
+            slettedeEllerSomVilleBlittSlettet, sakerSomIkkeBleSlettet)).build();
     }
 
-    public record SakGrupperingDto(@NotNull String sakId, @NotNull String grupperingsId) {
+    public record SakGrupperingDto(@NotNull @Valid UUID sakId, @NotNull @Valid UUID grupperingsId) {
     }
 
     public record RyddOppArbeidsgiverportalSakerResultatDto(int antallSjekket,
                                                             int antallSlettetEllerVilleBlittSlettet,
                                                             boolean dryRun,
-                                                            List<String> sakIderSlettetEllerVilleBlittSlettet) {
+                                                            List<UUID> sakIderSlettetEllerVilleBlittSlettet,
+                                                            List<SakGrupperingDto> sakerSomIkkeBleSlettet) {
     }
 
     public record ForvaltningForespørselDto(UUID uuid,

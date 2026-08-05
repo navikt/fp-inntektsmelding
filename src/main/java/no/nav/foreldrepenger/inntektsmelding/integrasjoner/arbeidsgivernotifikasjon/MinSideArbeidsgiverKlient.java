@@ -115,6 +115,9 @@ class MinSideArbeidsgiverKlient {
         var resultat = query(new GraphQLRequest(request, projection), HardDeleteSakMutationResponse.class).hardDeleteSak();
         if (resultat instanceof HardDeleteSakVellykket vellykket) {
             return vellykket.getId();
+        } else if (resultat instanceof SakFinnesIkke) {
+            LOG.info("Sak finnes ikke, kan ikke slette.");
+            return null;
         } else {
             loggFeilmelding((Error) resultat, "hard delete sak");
         }
