@@ -5,6 +5,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
@@ -52,6 +53,7 @@ import no.nav.foreldrepenger.inntektsmelding.typer.dto.SaksnummerDto;
 public class ForespørselForvaltningRestTjeneste {
 
     private static final Logger LOG = LoggerFactory.getLogger(ForespørselForvaltningRestTjeneste.class);
+    private static final Pattern NON_ALNUM = Pattern.compile("[^\\p{Alnum}]");
 
     private Tilgang tilgang;
     private ForespørselBehandlingTjeneste forespørselBehandlingTjeneste;
@@ -123,7 +125,7 @@ public class ForespørselForvaltningRestTjeneste {
         @Parameter(description = "Saksnummer det skal hentes forespørsler for")
         @Valid @NotNull @PathParam("saksnummer") SaksnummerDto saksnummer) {
         sjekkAtKallerHarRollenDrift();
-        LOG.info("Henter forespørsler for saksnummer {}", saksnummer.saksnr().replaceAll("[^\\p{Alnum}]", ""));
+        LOG.info("Henter forespørsler for saksnummer {}", NON_ALNUM.matcher(saksnummer.saksnr()).replaceAll(""));
         var forespørsler = forespørselTjeneste.finnForespørslerForFagsak(Saksnummer.fra(saksnummer.saksnr()));
         var response = forespørsler.stream()
             .map(f -> new ForvaltningForespørselDto(
