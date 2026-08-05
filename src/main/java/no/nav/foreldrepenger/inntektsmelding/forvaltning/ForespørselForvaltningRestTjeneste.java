@@ -123,7 +123,7 @@ public class ForespørselForvaltningRestTjeneste {
         @Parameter(description = "Saksnummer det skal hentes forespørsler for")
         @Valid @NotNull @PathParam("saksnummer") SaksnummerDto saksnummer) {
         sjekkAtKallerHarRollenDrift();
-        LOG.info("Henter forespørsler for saksnummer {}", saksnummer);
+        LOG.info("Henter forespørsler for saksnummer {}", saksnummer.saksnr().replaceAll("[\r\n]", ""));
         var forespørsler = forespørselTjeneste.finnForespørslerForFagsak(Saksnummer.fra(saksnummer.saksnr()));
         var response = forespørsler.stream()
             .map(f -> new ForvaltningForespørselDto(
