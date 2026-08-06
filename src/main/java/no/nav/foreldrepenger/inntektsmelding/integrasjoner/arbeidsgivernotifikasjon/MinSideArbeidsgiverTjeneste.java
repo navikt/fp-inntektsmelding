@@ -69,11 +69,11 @@ public class MinSideArbeidsgiverTjeneste {
 
         var sakId = opprettSak(forespørsel.uuid().toString(), merkelapp, arbeidsgiver.orgnr(), saksTittel, skjemaUri);
 
-        var tilleggsinformasjon = ForespørselTekster.lagTilleggsInformasjon(LukkeÅrsak.ORDINÆR_INNSENDING, forespørsel.førsteUttaksdato());
-        oppdaterSakTilleggsinformasjon(sakId, tilleggsinformasjon);
-
         String oppgaveId;
         try {
+            var tilleggsinformasjon = ForespørselTekster.lagTilleggsInformasjon(LukkeÅrsak.ORDINÆR_INNSENDING, forespørsel.førsteUttaksdato());
+            oppdaterSakTilleggsinformasjon(sakId, tilleggsinformasjon);
+
             oppgaveId = opprettOppgave(forespørsel.uuid().toString(),
                 merkelapp,
                 forespørsel.uuid().toString(),
