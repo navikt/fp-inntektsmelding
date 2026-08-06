@@ -24,7 +24,6 @@ import no.nav.vedtak.felles.prosesstask.api.ProsessTaskHandler;
 @ApplicationScoped
 @ProsessTask(value = "forespørsel.opprettSakOgOppgave", maxFailedRuns = 5)
 public class OpprettSakOgOppgaveTask implements ProsessTaskHandler {
-    public static final String KEY_FORESPOERSEL_UUID = "forespoerselUuid";
     private static final Logger LOG = LoggerFactory.getLogger(OpprettSakOgOppgaveTask.class);
 
     private ForespørselTjeneste forespørselTjeneste;
@@ -42,7 +41,7 @@ public class OpprettSakOgOppgaveTask implements ProsessTaskHandler {
 
     @Override
     public void doTask(ProsessTaskData prosessTaskData) {
-        var forespørselUuid = UUID.fromString(prosessTaskData.getPropertyValue(KEY_FORESPOERSEL_UUID));
+        var forespørselUuid = UUID.fromString(prosessTaskData.getPropertyValue(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID));
         var forespørsel = forespørselTjeneste.hentForespørsel(forespørselUuid)
             .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel " + forespørselUuid + " ved opprettelse av sak/oppgave"));
 

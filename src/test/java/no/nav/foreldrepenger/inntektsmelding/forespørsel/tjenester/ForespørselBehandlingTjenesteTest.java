@@ -23,6 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import no.nav.foreldrepenger.inntektsmelding.database.JpaExtension;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselRepository;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.ForespørselTaskProperties;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettDialogTask;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettSakOgOppgaveTask;
 import no.nav.foreldrepenger.inntektsmelding.forvaltning.rest.InntektsmeldingForespørselDto;
@@ -83,7 +84,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
     private void kjørOpprettSakOgOppgaveTask(UUID forespørselUuid) {
         var task = new OpprettSakOgOppgaveTask(forespørselTjeneste, minSideArbeidsgiverTjeneste);
         var taskData = ProsessTaskData.forProsessTask(OpprettSakOgOppgaveTask.class);
-        taskData.setProperty(OpprettSakOgOppgaveTask.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
+        taskData.setProperty(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
         task.doTask(taskData);
     }
 
@@ -124,14 +125,14 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             .filter(task -> TaskType.forProsessTask(OpprettSakOgOppgaveTask.class).equals(task.taskType()))
             .findFirst()
             .orElseThrow(() -> new AssertionError("Fant ikke task for opprettelse av sak og oppgave"));
-        assertThat(sakOgOppgaveTask.getPropertyValue(OpprettSakOgOppgaveTask.KEY_FORESPOERSEL_UUID))
+        assertThat(sakOgOppgaveTask.getPropertyValue(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID))
             .isEqualTo(lagret.getFirst().getUuid().toString());
 
         var dialogTask = opprettedeTasks.stream()
             .filter(task -> TaskType.forProsessTask(OpprettDialogTask.class).equals(task.taskType()))
             .findFirst()
             .orElseThrow(() -> new AssertionError("Fant ikke task for opprettelse av dialog"));
-        assertThat(dialogTask.getPropertyValue(OpprettDialogTask.KEY_FORESPOERSEL_UUID))
+        assertThat(dialogTask.getPropertyValue(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID))
             .isEqualTo(lagret.getFirst().getUuid().toString());
     }
 
@@ -308,7 +309,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
     }
 
     @Test
-    void skal_opprette_opprette_arbeidsgiverinitert_forespørsel_uten_oppgave() {
+    void skal_opprette_arbeidsgiverinitert_forespørsel_uten_oppgave() {
         mockInfoForOpprettelse(SAK_ID);
 
         var uuid = forespørselBehandlingTjeneste.opprettForespørselForArbeidsgiverInitiertIm(YTELSETYPE,
@@ -326,7 +327,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
     }
 
     @Test
-    void skal_opprette_opprette_arbeidsgiverinitert_forespørsel_med_skjæringstidspunkt() {
+    void skal_opprette_arbeidsgiverinitert_forespørsel_med_skjæringstidspunkt() {
         mockInfoForOpprettelse(SAK_ID);
         var forventetSkjæringstidspunkt = FØRSTE_UTTAKSDATO.minusDays(1);
         var uuid = forespørselBehandlingTjeneste.opprettForespørselForArbeidsgiverInitiertIm(YTELSETYPE,
@@ -556,7 +557,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
 
     @Test
-    void skal_oppdatere_førsteUttaksdto_for_arbeidsgiverinitert() {
+    void skal_oppdatere_førsteUttaksdato_for_arbeidsgiverinitert() {
         var forespørselUuid = lagreForespørsel(SKJÆRINGSTIDSPUNKT,
             Ytelsetype.FORELDREPENGER,
             AKTØR_ID,
