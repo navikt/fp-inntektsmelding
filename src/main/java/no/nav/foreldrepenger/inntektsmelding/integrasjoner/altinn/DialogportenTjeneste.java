@@ -34,6 +34,22 @@ public class DialogportenTjeneste {
         this.personTjeneste = personTjeneste;
     }
 
+    /**
+     * Kjører en handling mot Dialogporten med toleranse for feil i dev-miljø. Alle arbeidsgivere/testbrukere er ikke
+     * satt opp mot Dialogporten i dev, så kall feiler der jevnlig av grunner som ikke er reelle bugs hos oss. I prod
+     * kastes feilen videre uendret, slik at prosesstask-rammeverket kan prøve tasken på nytt automatisk
+     */
+    public void utførMotDialogportenMedDevToleranse(Runnable handling) {
+        try {
+            handling.run();
+        } catch (Exception e) {
+            if (ENV.isProd()) {
+                throw e;
+            }
+            LOG.warn("Feil ved kall mot Dialogporten i dev-miljø, ignoreres pga. ufullstendig testoppsett for visse organisasjoner: {}", e.getMessage(), e);
+        }
+    }
+
     public UUID opprettDialog(ForespørselDto forespørsel) {
         var saksTittel = lagSaksTittel(forespørsel);
 
@@ -89,18 +105,6 @@ public class DialogportenTjeneste {
         dialogportenKlient.sendMeldingOmAvvistInntektsmelding(forespørselDto.dialogportenUuid(),
             forespørselDto.arbeidsgiver(),
             avvistTekst);
-    }
-
-    public void utførMedFeiltoleranse(Runnable handling) {
-        try {
-            handling.run();
-        } catch (Exception e) {
-            if (ENV.isProd()) {
-                throw new IllegalStateException("Feil ved kall til dialogporten: " + e.getMessage(), e);
-            } else {
-                LOG.warn("Feil ved kall til dialogporten: ", e);
-            }
-        }
     }
 
     private String lagSaksTittel(ForespørselDto forespørsel) {

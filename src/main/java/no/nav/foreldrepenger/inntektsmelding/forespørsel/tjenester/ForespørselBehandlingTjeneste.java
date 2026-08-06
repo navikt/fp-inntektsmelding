@@ -14,9 +14,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.nav.foreldrepenger.inntektsmelding.forvaltning.rest.InntektsmeldingForespørselDto;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.FerdigstillDialogTask;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.FerdigstillSakTask;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.ForespørselTaskProperties;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettDialogTask;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettSakOgOppgaveTask;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.SettDialogTilUtgåttTask;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.SettSakTilUtgåttTask;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.altinn.DialogportenTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon.MinSideArbeidsgiverTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.metrikker.MetrikkerTjeneste;
@@ -130,12 +134,23 @@ public class ForespørselBehandlingTjeneste {
 
         var erFørstegangsinnsending = ForespørselStatus.UNDER_BEHANDLING.equals(forespørsel.status());
 
-        minSideArbeidsgiverTjeneste.ferdigstillSak(forespørsel, årsak, inntektsmeldingUuid, erFørstegangsinnsending);
-
-        // Oppdaterer status i forespørsel
         forespørselTjeneste.ferdigstillForespørsel(forespørsel.arbeidsgiverNotifikasjonSakId());
 
-        dialogportenTjeneste.utførMedFeiltoleranse(() -> dialogportenTjeneste.ferdigstillDialog(forespørsel, årsak, inntektsmeldingUuid));
+        var ferdigstillSakTask = ProsessTaskData.forProsessTask(FerdigstillSakTask.class);
+        ferdigstillSakTask.setProperty(FerdigstillSakTask.KEY_LUKKE_AARSAK, årsak.name());
+        ferdigstillSakTask.setProperty(FerdigstillSakTask.KEY_ER_FØRSTEGANGSINNSENDING, Boolean.toString(erFørstegangsinnsending));
+        inntektsmeldingUuid.ifPresent(uuid -> ferdigstillSakTask.setProperty(FerdigstillSakTask.KEY_INNTEKTSMELDING_UUID, uuid.toString()));
+
+        var ferdigstillDialogTask = ProsessTaskData.forProsessTask(FerdigstillDialogTask.class);
+        ferdigstillDialogTask.setProperty(FerdigstillDialogTask.KEY_LUKKE_AARSAK, årsak.name());
+        inntektsmeldingUuid.ifPresent(uuid -> ferdigstillDialogTask.setProperty(FerdigstillDialogTask.KEY_INNTEKTSMELDING_UUID, uuid.toString()));
+
+        var taskGruppe = new ProsessTaskGruppe();
+        taskGruppe.setProperty(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID, foresporselUuid.toString());
+        taskGruppe.addNesteSekvensiell(ferdigstillSakTask);
+        taskGruppe.addNesteSekvensiell(ferdigstillDialogTask);
+        prosessTaskTjeneste.lagre(taskGruppe);
+
         // Re-fetch to get updated status
         return forespørselTjeneste.hentForespørsel(foresporselUuid)
             .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel etter ferdigstilling"));
@@ -156,9 +171,8 @@ public class ForespørselBehandlingTjeneste {
     }
 
     public void settForespørselTilUtgått(ForespørselDto eksisterendeForespørsel) {
-        minSideArbeidsgiverTjeneste.settSakTilUtgått(eksisterendeForespørsel);
         forespørselTjeneste.settForespørselTilUtgått(eksisterendeForespørsel.arbeidsgiverNotifikasjonSakId());
-        dialogportenTjeneste.utførMedFeiltoleranse(() -> dialogportenTjeneste.settDialogTilUtgått(eksisterendeForespørsel));
+        leggTilSettUtgåttTasks(eksisterendeForespørsel.uuid());
 
         var msg = String.format("Setter forespørsel til utgått, orgnr: %s, stp: %s, saksnummer: %s, ytelse: %s",
             eksisterendeForespørsel.arbeidsgiver(),
@@ -223,14 +237,24 @@ public class ForespørselBehandlingTjeneste {
         var fagerSakId = minSideArbeidsgiverTjeneste.opprettSakUtenOppgave(forespørsel);
         forespørselTjeneste.setArbeidsgiverNotifikasjonSakId(uuid, fagerSakId);
 
-        var oppdatertForespørsel = forespørselTjeneste.hentForespørsel(uuid)
-            .orElseThrow(() -> new IllegalStateException("Finner ikke opprettet arbeidsgiverinitiert forespørsel etter oppdatering mot arbeidsgiverportalen"));
-        dialogportenTjeneste.utførMedFeiltoleranse(() -> {
-            var dialogportenUuid = dialogportenTjeneste.opprettDialog(oppdatertForespørsel);
-            forespørselTjeneste.setDialogportenUuid(uuid, dialogportenUuid);
-        });
+        var opprettDialogTask = ProsessTaskData.forProsessTask(OpprettDialogTask.class);
+        opprettDialogTask.setProperty(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID, uuid.toString());
+        prosessTaskTjeneste.lagre(opprettDialogTask);
 
         return uuid;
+    }
+
+    // Delt av settForespørselTilUtgått og settForespørselTilUtgåttForvaltning, som begge skal utføre samme
+    // handlinger hos arbeidsgiverportalen og Dialogporten asynkront via prosesstask.
+    private void leggTilSettUtgåttTasks(UUID forespørselUuid) {
+        var settSakTilUtgåttTask = ProsessTaskData.forProsessTask(SettSakTilUtgåttTask.class);
+        var settDialogTilUtgåttTask = ProsessTaskData.forProsessTask(SettDialogTilUtgåttTask.class);
+
+        var taskGruppe = new ProsessTaskGruppe();
+        taskGruppe.setProperty(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
+        taskGruppe.addNesteSekvensiell(settSakTilUtgåttTask);
+        taskGruppe.addNesteSekvensiell(settDialogTilUtgåttTask);
+        prosessTaskTjeneste.lagre(taskGruppe);
     }
 
     private ForespørselType utledForespørselType(ArbeidsgiverinitiertÅrsak arbeidsgiverinitiertÅrsak) {
@@ -294,9 +318,8 @@ public class ForespørselBehandlingTjeneste {
         var forespørselDto = hentForespørsel(forespørselUuid)
             .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel med forespørselUuid: " + forespørselUuid));
 
-        minSideArbeidsgiverTjeneste.settSakTilUtgått(forespørselDto);
         forespørselTjeneste.settForespørselTilUtgått(forespørselDto.arbeidsgiverNotifikasjonSakId());
-        dialogportenTjeneste.utførMedFeiltoleranse(() -> dialogportenTjeneste.settDialogTilUtgått(forespørselDto));
+        leggTilSettUtgåttTasks(forespørselUuid);
 
         var msg = String.format("Setter forespørsel til utgått, orgnr: %s, stp: %s, saksnummer: %s, ytelse: %s",
             forespørselDto.arbeidsgiver().orgnr(),

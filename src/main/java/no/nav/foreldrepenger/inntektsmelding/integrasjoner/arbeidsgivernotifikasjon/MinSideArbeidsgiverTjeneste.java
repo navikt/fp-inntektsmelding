@@ -121,7 +121,8 @@ public class MinSideArbeidsgiverTjeneste {
                 merkelapp,
                 forespørsel.arbeidsgiver().orgnr(),
                 beskjedTekst,
-                URI.create(url));
+                URI.create(url),
+                imUuid);
         });
     }
 
@@ -168,7 +169,8 @@ public class MinSideArbeidsgiverTjeneste {
             merkelapp,
             forespørsel.arbeidsgiver().orgnr(),
             beskjedTekst,
-            URI.create(url));
+            URI.create(url),
+            inntektsmeldingUuid);
     }
 
     private String lagKvitteringUrl(UUID inntektsmeldingUuid) {
@@ -228,7 +230,8 @@ public class MinSideArbeidsgiverTjeneste {
             .onUgyldigMerkelapp(new UgyldigMerkelappResponseProjection().feilmelding())
             .onKonflikt(new KonfliktResponseProjection().feilmelding())
             .onUkjentProdusent(new UkjentProdusentResponseProjection().feilmelding())
-            .onSakFinnesIkke(new SakFinnesIkkeResponseProjection().feilmelding());
+            .onSakFinnesIkke(new SakFinnesIkkeResponseProjection().feilmelding())
+            ;
 
         return minSideArbeidsgiverKlient.oppdaterSakStatus(requestBuilder.build(), projection);
     }
@@ -312,17 +315,24 @@ public class MinSideArbeidsgiverTjeneste {
                                                        String virksomhetsnummer,
                                                        String beskjedTekst,
                                                        URI lenke) {
-        return sendNyBeskjed(grupperingsid, merkelapp, virksomhetsnummer, beskjedTekst, Optional.empty(), lenke);
+        return sendNyBeskjed(grupperingsid, merkelapp, virksomhetsnummer, beskjedTekst, Optional.empty(), lenke, UUID.randomUUID().toString());
     }
 
+    /**
+     * Sender beskjed til arbeidsgiver om mottatt/endret inntektsmelding. EksternId er utledet av
+     * inntektsmeldingUuid, slik at gjentatte kall (f.eks. ved retry av prosesstask) ikke forårsaker
+     * dupliserte meldinger.
+     */
     public String sendNyBeskjedMedKvittering(String grupperingsid, Merkelapp merkelapp,
-                                             String virksomhetsnummer, String beskjedTekst, URI kvitteringLenke) {
-        return sendNyBeskjed(grupperingsid, merkelapp, virksomhetsnummer, beskjedTekst, Optional.empty(), kvitteringLenke);
+                                             String virksomhetsnummer, String beskjedTekst, URI kvitteringLenke,
+                                             UUID inntektsmeldingUuid) {
+        var eksternId = "kvittering-" + inntektsmeldingUuid;
+        return sendNyBeskjed(grupperingsid, merkelapp, virksomhetsnummer, beskjedTekst, Optional.empty(), kvitteringLenke, eksternId);
     }
 
     public String sendNyBeskjedMedEksternVarsling(String grupperingsid, Merkelapp merkelapp,
                                                   String virksomhetsnummer, String beskjedTekst, String varselTekst, URI lenke) {
-        return sendNyBeskjed(grupperingsid, merkelapp, virksomhetsnummer, beskjedTekst, Optional.of(varselTekst), lenke);
+        return sendNyBeskjed(grupperingsid, merkelapp, virksomhetsnummer, beskjedTekst, Optional.of(varselTekst), lenke, UUID.randomUUID().toString());
     }
 
     private String sendNyBeskjed(String grupperingsid,
@@ -330,7 +340,8 @@ public class MinSideArbeidsgiverTjeneste {
                                  String organisasjonsnummer,
                                  String beskjedTekst,
                                  Optional<String> varselTekst,
-                                 URI oppgaveLenke) {
+                                 URI oppgaveLenke,
+                                 String eksternId) {
         var beskjedInput = NyBeskjedInput.builder()
             .setNotifikasjon(NotifikasjonInput.builder()
                 .setMerkelapp(beskjedMerkelapp.getBeskrivelse())
@@ -340,7 +351,7 @@ public class MinSideArbeidsgiverTjeneste {
             .setMottaker(lagAltinnMottakerInput())
             .setMetadata(MetadataInput.builder()
                 .setVirksomhetsnummer(organisasjonsnummer)
-                .setEksternId(UUID.randomUUID().toString())
+                .setEksternId(eksternId)
                 .setGrupperingsid(grupperingsid)
                 .build())
             .setEksterneVarsler(varselTekst.map(tekst -> List.of(lagEksternVarselAltinn(tekst, 0))).orElse(List.of()))
