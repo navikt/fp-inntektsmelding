@@ -66,14 +66,12 @@ public class MinSideArbeidsgiverTjeneste {
         var merkelapp = ForespørselTekster.finnMerkelapp(forespørsel.ytelseType());
         var skjemaUri = URI.create(inntektsmeldingSkjemaLenke + "/" + forespørsel.uuid());
         var saksTittel = ForespørselTekster.lagSaksTittel(person.mapFulltNavn(), person.fødselsdato());
+        var tilleggsinformasjon  = ForespørselTekster.lagTilleggsInformasjon(LukkeÅrsak.ORDINÆR_INNSENDING, forespørsel.førsteUttaksdato());
 
-        var sakId = opprettSak(forespørsel.uuid().toString(), merkelapp, arbeidsgiver.orgnr(), saksTittel, skjemaUri);
+        var sakId = opprettSak(forespørsel.uuid().toString(), merkelapp, arbeidsgiver.orgnr(), saksTittel, skjemaUri, tilleggsinformasjon);
 
         String oppgaveId;
         try {
-            var tilleggsinformasjon = ForespørselTekster.lagTilleggsInformasjon(LukkeÅrsak.ORDINÆR_INNSENDING, forespørsel.førsteUttaksdato());
-            oppdaterSakTilleggsinformasjon(sakId, tilleggsinformasjon);
-
             oppgaveId = opprettOppgave(forespørsel.uuid().toString(),
                 merkelapp,
                 forespørsel.uuid().toString(),
@@ -96,13 +94,9 @@ public class MinSideArbeidsgiverTjeneste {
         var merkelapp = ForespørselTekster.finnMerkelapp(forespørsel.ytelseType());
         var skjemaUri = URI.create(inntektsmeldingSkjemaLenke + "/" + forespørsel.uuid());
         var saksTittel = ForespørselTekster.lagSaksTittel(person.mapFulltNavn(), person.fødselsdato());
-
-        var sakId = opprettSak(forespørsel.uuid().toString(), merkelapp, forespørsel.arbeidsgiver().orgnr(), saksTittel, skjemaUri);
-
         var tilleggsinformasjon = ForespørselTekster.lagTilleggsInformasjon(LukkeÅrsak.ORDINÆR_INNSENDING, forespørsel.førsteUttaksdato());
-        oppdaterSakTilleggsinformasjon(sakId, tilleggsinformasjon);
 
-        return sakId;
+        return opprettSak(forespørsel.uuid().toString(), merkelapp, forespørsel.arbeidsgiver().orgnr(), saksTittel, skjemaUri, tilleggsinformasjon);
     }
 
     public void ferdigstillSak(ForespørselDto forespørsel, LukkeÅrsak årsak, Optional<UUID> inntektsmeldingUuid, boolean erFørstegangsinnsending) {
@@ -181,7 +175,7 @@ public class MinSideArbeidsgiverTjeneste {
         return inntektsmeldingSkjemaLenke + "/server/api" + PdfDokumentRest.INNTEKTSMELDING_FULL_PATH + "/" + inntektsmeldingUuid;
     }
 
-    public String opprettSak(String grupperingsid, Merkelapp merkelapp, String virksomhetsnummer, String saksTittel, URI lenke) {
+    public String opprettSak(String grupperingsid, Merkelapp merkelapp, String virksomhetsnummer, String saksTittel, URI lenke, String tilleggsinformasjon) {
         var request = NySakMutationRequest.builder()
             .setGrupperingsid(grupperingsid)
             .setTittel(saksTittel)
@@ -190,7 +184,8 @@ public class MinSideArbeidsgiverTjeneste {
             .setLenke(lenke.toString())
             .setInitiellStatus(SaksStatus.UNDER_BEHANDLING)
             .setOverstyrStatustekstMed(SAK_STATUS_TEKST)
-            .setMottakere(List.of(lagAltinnMottakerInput()));
+            .setMottakere(List.of(lagAltinnMottakerInput()))
+            .setTilleggsinformasjon(tilleggsinformasjon);
 
         var projection = new NySakResultatResponseProjection().typename()
             .onNySakVellykket(new NySakVellykketResponseProjection().id())

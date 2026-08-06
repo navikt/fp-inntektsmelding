@@ -92,10 +92,11 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
         var expectedTittel = "Inntektsmelding for person";
         var expectedLenke = "https://inntektsmelding-innsendings-dialog.com";
         var expectedMerkelapp = Merkelapp.INNTEKTSMELDING_FP;
+        var expectedTilleggsinformasjon = ForespørselTekster.lagTilleggsInformasjonOrdinær(LocalDate.of(2024, 6, 1));
 
         var requestCaptor = ArgumentCaptor.forClass(NySakMutationRequest.class);
 
-        tjeneste.opprettSak(expectedGrupperingsid, expectedMerkelapp, expectedVirksomhetsnummer, expectedTittel, URI.create(expectedLenke));
+        tjeneste.opprettSak(expectedGrupperingsid, expectedMerkelapp, expectedVirksomhetsnummer, expectedTittel, URI.create(expectedLenke), expectedTilleggsinformasjon);
 
         verify(klient).opprettSak(requestCaptor.capture(), any(NySakResultatResponseProjection.class));
 
@@ -120,7 +121,8 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
             .containsEntry("merkelapp", expectedMerkelapp.getBeskrivelse())
             .containsEntry("tittel", expectedTittel)
             .containsEntry("virksomhetsnummer", expectedVirksomhetsnummer)
-            .containsEntry("overstyrStatustekstMed", "");
+            .containsEntry("overstyrStatustekstMed", "")
+            .containsEntry("tilleggsinformasjon", expectedTilleggsinformasjon);
         assertThat(input.get("mottakere")).isNotNull();
     }
 
@@ -297,6 +299,7 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
 
         var forventetSkjemaUri = URI.create(INNTEKTSMELDING_SKJEMA_LENKE + "/" + uuid);
         var forventetTittel = ForespørselTekster.lagSaksTittel(personInfo.mapFulltNavn(), personInfo.fødselsdato());
+        var forventetTilleggsinformasjon = ForespørselTekster.lagTilleggsInformasjonOrdinær(førsteUttaksdato);
 
         var sakCaptor = ArgumentCaptor.forClass(NySakMutationRequest.class);
         verify(klient).opprettSak(sakCaptor.capture(), any(NySakResultatResponseProjection.class));
@@ -305,13 +308,8 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
             .containsEntry("tittel", forventetTittel)
             .containsEntry("lenke", forventetSkjemaUri.toString())
             .containsEntry("virksomhetsnummer", ORGNR)
-            .containsEntry("merkelapp", Merkelapp.INNTEKTSMELDING_FP.getBeskrivelse());
-
-        var tilleggsinfoCaptor = ArgumentCaptor.forClass(TilleggsinformasjonSakMutationRequest.class);
-        verify(klient).oppdaterSakTilleggsinformasjon(tilleggsinfoCaptor.capture(), any(TilleggsinformasjonSakResultatResponseProjection.class));
-        assertThat(tilleggsinfoCaptor.getValue().getInput())
-            .containsEntry("id", "sak-1")
-            .containsEntry("tilleggsinformasjon", ForespørselTekster.lagTilleggsInformasjon(LukkeÅrsak.ORDINÆR_INNSENDING, førsteUttaksdato));
+            .containsEntry("merkelapp", Merkelapp.INNTEKTSMELDING_FP.getBeskrivelse())
+            .containsEntry("tilleggsinformasjon", forventetTilleggsinformasjon);
 
         var oppgaveCaptor = ArgumentCaptor.forClass(NyOppgaveMutationRequest.class);
         verify(klient).opprettOppgave(oppgaveCaptor.capture(), any(NyOppgaveResultatResponseProjection.class));
@@ -355,11 +353,6 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
 
         assertThat(sakId).isEqualTo("sak-1");
         verify(klient, never()).opprettOppgave(any(), any());
-        var tilleggsinfoCaptor = ArgumentCaptor.forClass(TilleggsinformasjonSakMutationRequest.class);
-        verify(klient).oppdaterSakTilleggsinformasjon(tilleggsinfoCaptor.capture(), any(TilleggsinformasjonSakResultatResponseProjection.class));
-        assertThat(tilleggsinfoCaptor.getValue().getInput())
-            .containsEntry("id", "sak-1")
-            .containsEntry("tilleggsinformasjon", ForespørselTekster.lagTilleggsInformasjon(LukkeÅrsak.ORDINÆR_INNSENDING, førsteUttaksdato));
     }
 
     @Test
