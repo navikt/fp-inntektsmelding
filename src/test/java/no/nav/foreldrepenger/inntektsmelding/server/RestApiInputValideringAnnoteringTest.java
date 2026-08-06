@@ -2,8 +2,11 @@ package no.nav.foreldrepenger.inntektsmelding.server;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.lang.reflect.AnnotatedParameterizedType;
+import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.util.Arrays;
 import java.util.function.Function;
 
 import jakarta.validation.Valid;
@@ -34,20 +37,24 @@ class RestApiInputValideringAnnoteringTest extends RestApiTester {
                     "REST-metoder skal ikke har parameter som er String eller mer generelt uten at @Pattern brukes. Bruk DTO-er og valider. "
                         + printKlasseOgMetodeNavn.apply(method)).isFalse();
                 assertThat(isRequiredAnnotationPresent(parameter)).as(
-                        "Alle parameter for REST-metoder skal være annotert med @Valid. Var ikke det for " + printKlasseOgMetodeNavn.apply(method))
-                    .withFailMessage("Fant parametere som mangler @Valid annotation '" + parameter.toString() + "'")
+                        "Alle parameter for REST-metoder skal være annotert riktig med @Valid. Var ikke det for " + printKlasseOgMetodeNavn.apply(method))
+                    .withFailMessage("Fant parametere som mangler @Valid annotation '" + parameter + "'")
                     .isTrue();
             }
         }
     }
 
     private boolean isRequiredAnnotationPresent(Parameter parameter) {
-        final Valid validAnnotation = parameter.getAnnotation(Valid.class);
-        if (validAnnotation == null) {
-            final Context contextAnnotation = parameter.getAnnotation(Context.class);
-            return contextAnnotation != null;
+        if (parameter.getAnnotation(Context.class) != null) {
+            return true;
         }
-        return true;
+        // For parameteriserte typer (List, Set, etc.) skal @Valid ligge inni <>, ikke på utsiden
+        AnnotatedType annotatedType = parameter.getAnnotatedType();
+        if (annotatedType instanceof AnnotatedParameterizedType apt) {
+            return Arrays.stream(apt.getAnnotatedActualTypeArguments())
+                .anyMatch(typeArg -> typeArg.getAnnotation(Valid.class) != null);
+        }
+        return parameter.getAnnotation(Valid.class) != null;
     }
 
 }

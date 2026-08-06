@@ -150,7 +150,7 @@ public class ForespørselForvaltningRestTjeneste {
     @Tilgangskontrollert
     public Response ryddOppArbeidsgiverportalSaker(
         @Parameter(description = "Saker fra arbeidsgiverportalen (sakId og tilhørende grupperingsId) som skal sjekkes")
-        @NotNull @Valid List<@Valid SakGrupperingDto> saker,
+        @NotNull List<@Valid SakGrupperingDto> saker,
         @Parameter(description = "Hvis true (default) gjøres ingen sletting, kun logging/rapportering av hva som ville blitt slettet")
         @QueryParam("dryRun") @DefaultValue("true") @Valid boolean dryRun) {
         sjekkAtKallerHarRollenDrift();
