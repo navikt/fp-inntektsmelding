@@ -11,6 +11,8 @@ import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.FerdigstillDialogTask;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.FerdigstillSakTask;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.ForespørselTaskProperties;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettDialogTask;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettOppgaveTask;
@@ -134,8 +136,20 @@ public class ForespørselBehandlingTjeneste {
 
         forespørselTjeneste.ferdigstillForespørsel(forespørsel.arbeidsgiverNotifikasjonSakId());
 
-        minSideArbeidsgiverTjeneste.ferdigstillSak(forespørsel, årsak, inntektsmeldingUuid, erFørstegangsinnsending);
-        dialogportenTjeneste.utførMotDialogportenMedDevToleranse(() -> dialogportenTjeneste.ferdigstillDialog(forespørsel, årsak, inntektsmeldingUuid));
+        var ferdigstillSakTask = ProsessTaskData.forProsessTask(FerdigstillSakTask.class);
+        ferdigstillSakTask.setProperty(FerdigstillSakTask.KEY_LUKKE_AARSAK, årsak.name());
+        ferdigstillSakTask.setProperty(FerdigstillSakTask.KEY_ER_FØRSTEGANGSINNSENDING, Boolean.toString(erFørstegangsinnsending));
+        inntektsmeldingUuid.ifPresent(uuid -> ferdigstillSakTask.setProperty(FerdigstillSakTask.KEY_INNTEKTSMELDING_UUID, uuid.toString()));
+
+        var ferdigstillDialogTask = ProsessTaskData.forProsessTask(FerdigstillDialogTask.class);
+        ferdigstillDialogTask.setProperty(FerdigstillDialogTask.KEY_LUKKE_AARSAK, årsak.name());
+        inntektsmeldingUuid.ifPresent(uuid -> ferdigstillDialogTask.setProperty(FerdigstillDialogTask.KEY_INNTEKTSMELDING_UUID, uuid.toString()));
+
+        var taskGruppe = new ProsessTaskGruppe();
+        taskGruppe.setProperty(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID, foresporselUuid.toString());
+        taskGruppe.addNesteSekvensiell(ferdigstillSakTask);
+        taskGruppe.addNesteSekvensiell(ferdigstillDialogTask);
+        prosessTaskTjeneste.lagre(taskGruppe);
 
         // Re-fetch to get updated status
         return forespørselTjeneste.hentForespørsel(foresporselUuid)
@@ -232,6 +246,8 @@ public class ForespørselBehandlingTjeneste {
         return uuid;
     }
 
+    // Delt av settForespørselTilUtgått og settForespørselTilUtgåttForvaltning, som begge skal utføre samme
+    // handlinger hos arbeidsgiverportalen og Dialogporten asynkront via prosesstask.
     private void leggTilSettUtgåttTasks(UUID forespørselUuid) {
         var settSakTilUtgåttTask = ProsessTaskData.forProsessTask(SettSakTilUtgåttTask.class);
         var settDialogTilUtgåttTask = ProsessTaskData.forProsessTask(SettDialogTilUtgåttTask.class);
