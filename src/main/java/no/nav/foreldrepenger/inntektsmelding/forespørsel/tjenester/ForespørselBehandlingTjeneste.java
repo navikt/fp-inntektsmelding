@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.nav.foreldrepenger.inntektsmelding.forvaltning.rest.InntektsmeldingForespørselDto;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.ForespørselTaskProperties;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettDialogTask;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettSakOgOppgaveTask;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.altinn.DialogportenTjeneste;
@@ -190,11 +191,10 @@ public class ForespørselBehandlingTjeneste {
 
         // oppretter tasker for eksterne kall
         var opprettSakOgOppgaveTask = ProsessTaskData.forProsessTask(OpprettSakOgOppgaveTask.class);
-        opprettSakOgOppgaveTask.setProperty(OpprettSakOgOppgaveTask.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
         var opprettDialogTask = ProsessTaskData.forProsessTask(OpprettDialogTask.class);
-        opprettDialogTask.setProperty(OpprettDialogTask.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
 
         var taskGruppe = new ProsessTaskGruppe();
+        taskGruppe.setProperty(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
         taskGruppe.addNesteSekvensiell(opprettSakOgOppgaveTask);
         taskGruppe.addNesteSekvensiell(opprettDialogTask);
         prosessTaskTjeneste.lagre(taskGruppe);
