@@ -383,7 +383,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         var ferdigstillDialogTask = tasks.getLast();
         assertThat(ferdigstillSakTask.taskType()).isEqualTo(TaskType.forProsessTask(FerdigstillSakTask.class));
         assertThat(ferdigstillSakTask.getPropertyValue(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid.toString());
-        assertThat(ferdigstillSakTask.getPropertyValue(FerdigstillSakTask.KEY_LUKKE_AARSAK)).isEqualTo(LukkeÅrsak.EKSTERN_INNSENDING.name());
+        assertThat(ferdigstillSakTask.getPropertyValue(ForespørselTaskProperties.KEY_LUKKE_AARSAK)).isEqualTo(LukkeÅrsak.EKSTERN_INNSENDING.name());
         assertThat(ferdigstillSakTask.getPropertyValue(FerdigstillSakTask.KEY_ER_FØRSTEGANGSINNSENDING)).isEqualTo("true");
         assertThat(ferdigstillSakTask.getPropertyValue(FerdigstillSakTask.KEY_INNTEKTSMELDING_UUID)).isNull();
 
@@ -574,7 +574,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         verify(prosessTaskTjeneste).lagre(taskGruppeCaptor.capture());
         var ferdigstillSakTask = taskGruppeCaptor.getValue().getTasks().getFirst().task();
         assertThat(ferdigstillSakTask.taskType()).isEqualTo(TaskType.forProsessTask(FerdigstillSakTask.class));
-        assertThat(ferdigstillSakTask.getPropertyValue(FerdigstillSakTask.KEY_LUKKE_AARSAK)).isEqualTo(LukkeÅrsak.EKSTERN_INNSENDING.name());
+        assertThat(ferdigstillSakTask.getPropertyValue(ForespørselTaskProperties.KEY_LUKKE_AARSAK)).isEqualTo(LukkeÅrsak.EKSTERN_INNSENDING.name());
         assertThat(ferdigstillSakTask.getPropertyValue(FerdigstillSakTask.KEY_INNTEKTSMELDING_UUID)).isEqualTo(imUuid.toString());
         assertThat(ferdigstillSakTask.getPropertyValue(FerdigstillSakTask.KEY_ER_FØRSTEGANGSINNSENDING)).isEqualTo("true");
     }
@@ -604,7 +604,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         verify(prosessTaskTjeneste).lagre(taskGruppeCaptor.capture());
         var ferdigstillSakTask = taskGruppeCaptor.getValue().getTasks().getFirst().task();
         assertThat(ferdigstillSakTask.taskType()).isEqualTo(TaskType.forProsessTask(FerdigstillSakTask.class));
-        assertThat(ferdigstillSakTask.getPropertyValue(FerdigstillSakTask.KEY_LUKKE_AARSAK)).isEqualTo(LukkeÅrsak.EKSTERN_INNSENDING.name());
+        assertThat(ferdigstillSakTask.getPropertyValue(ForespørselTaskProperties.KEY_LUKKE_AARSAK)).isEqualTo(LukkeÅrsak.EKSTERN_INNSENDING.name());
         assertThat(ferdigstillSakTask.getPropertyValue(FerdigstillSakTask.KEY_INNTEKTSMELDING_UUID)).isEqualTo(imUuid.toString());
         assertThat(ferdigstillSakTask.getPropertyValue(FerdigstillSakTask.KEY_ER_FØRSTEGANGSINNSENDING)).isEqualTo("false");
     }
