@@ -22,7 +22,7 @@ import no.nav.vedtak.felles.prosesstask.api.ProsessTaskHandler;
  * likevel kan ha blitt opprettet hos arbeidsgiverportalen (som gir en foreldreløs sak uten tilhørende forespørsel).
  */
 @ApplicationScoped
-@ProsessTask(value = "forespørsel.opprettSakOgOppgave")
+@ProsessTask(value = "forespørsel.opprettSakOgOppgave", maxFailedRuns = 5)
 public class OpprettSakOgOppgaveTask implements ProsessTaskHandler {
     private static final Logger LOG = LoggerFactory.getLogger(OpprettSakOgOppgaveTask.class);
 
