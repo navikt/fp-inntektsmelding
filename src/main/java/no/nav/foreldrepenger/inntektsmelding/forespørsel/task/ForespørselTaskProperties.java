@@ -8,7 +8,6 @@ package no.nav.foreldrepenger.inntektsmelding.forespørsel.task;
 public final class ForespørselTaskProperties {
 
     public static final String KEY_FORESPOERSEL_UUID = "forespoerselUuid";
-    public static final String KEY_LUKKE_AARSAK = "lukkeAarsak";
 
     private ForespørselTaskProperties() {
         // Skal ikke instansieres
