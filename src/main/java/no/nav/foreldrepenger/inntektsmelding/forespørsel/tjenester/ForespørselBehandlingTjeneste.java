@@ -8,6 +8,7 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.altinn.DialogportenTjeneste;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskGruppe;
 
 import org.slf4j.Logger;
