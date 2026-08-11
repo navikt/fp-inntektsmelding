@@ -8,15 +8,14 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import no.nav.vedtak.felles.prosesstask.api.ProsessTaskGruppe;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import no.nav.foreldrepenger.inntektsmelding.forvaltning.rest.InntektsmeldingForespørselDto;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.ForespørselTaskProperties;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettDialogTask;
-import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettSakOgOppgaveTask;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettOppgaveTask;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettSakTask;
+import no.nav.foreldrepenger.inntektsmelding.forvaltning.rest.InntektsmeldingForespørselDto;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.altinn.DialogportenTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon.MinSideArbeidsgiverTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.metrikker.MetrikkerTjeneste;
@@ -33,6 +32,7 @@ import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
+import no.nav.vedtak.felles.prosesstask.api.ProsessTaskGruppe;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskTjeneste;
 
 
@@ -190,12 +190,14 @@ public class ForespørselBehandlingTjeneste {
             førsteUttaksdato);
 
         // oppretter tasker for eksterne kall
-        var opprettSakOgOppgaveTask = ProsessTaskData.forProsessTask(OpprettSakOgOppgaveTask.class);
+        var opprettSakTask = ProsessTaskData.forProsessTask(OpprettSakTask.class);
+        var opprettOppgaveTask = ProsessTaskData.forProsessTask(OpprettOppgaveTask.class);
         var opprettDialogTask = ProsessTaskData.forProsessTask(OpprettDialogTask.class);
 
         var taskGruppe = new ProsessTaskGruppe();
         taskGruppe.setProperty(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
-        taskGruppe.addNesteSekvensiell(opprettSakOgOppgaveTask);
+        taskGruppe.addNesteSekvensiell(opprettSakTask);
+        taskGruppe.addNesteSekvensiell(opprettOppgaveTask);
         taskGruppe.addNesteSekvensiell(opprettDialogTask);
         prosessTaskTjeneste.lagre(taskGruppe);
     }
@@ -220,7 +222,7 @@ public class ForespørselBehandlingTjeneste {
 
         var forespørsel = forespørselTjeneste.hentForespørsel(uuid)
             .orElseThrow(() -> new IllegalStateException("Finner ikke opprettet arbeidsgiverinitiert forespørsel"));
-        var fagerSakId = minSideArbeidsgiverTjeneste.opprettSakUtenOppgave(forespørsel);
+        var fagerSakId = minSideArbeidsgiverTjeneste.opprettSak(forespørsel);
         forespørselTjeneste.setArbeidsgiverNotifikasjonSakId(uuid, fagerSakId);
 
         var oppdatertForespørsel = forespørselTjeneste.hentForespørsel(uuid)

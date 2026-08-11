@@ -52,10 +52,10 @@ public class OpprettSakOgOppgaveTask implements ProsessTaskHandler {
         }
 
         LOG.info("Oppretter sak og oppgave hos arbeidsgiverportalen for forespørsel {}", forespørselUuid);
-        var resultat = minSideArbeidsgiverTjeneste.opprettSakOgOppgave(forespørsel);
-        forespørselTjeneste.setArbeidsgiverNotifikasjonSakId(forespørselUuid, resultat.arbeidsgiverNotifikasjonSakId());
-        forespørselTjeneste.setOppgaveId(forespørselUuid, resultat.oppgaveId());
-        LOG.info("Opprettet sak {} og oppgave {} hos arbeidsgiverportalen for forespørsel {}",
-            resultat.arbeidsgiverNotifikasjonSakId(), resultat.oppgaveId(), forespørselUuid);
+        var sakId = minSideArbeidsgiverTjeneste.opprettSak(forespørsel);
+        var oppgaveId = minSideArbeidsgiverTjeneste.opprettOppgave(forespørsel);
+        forespørselTjeneste.setArbeidsgiverNotifikasjonSakId(forespørselUuid, sakId);
+        forespørselTjeneste.setOppgaveId(forespørselUuid, oppgaveId);
+        LOG.info("Opprettet sak {} og oppgave {} hos arbeidsgiverportalen for forespørsel {}", sakId, oppgaveId, forespørselUuid);
     }
 }

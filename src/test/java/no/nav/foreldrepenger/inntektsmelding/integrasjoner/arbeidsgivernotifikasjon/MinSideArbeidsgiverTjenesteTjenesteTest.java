@@ -2,9 +2,7 @@ package no.nav.foreldrepenger.inntektsmelding.integrasjoner.arbeidsgivernotifika
 
 import static no.nav.foreldrepenger.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon.MinSideArbeidsgiverTjeneste.ALTINN_INNTEKTSMELDING_RESSURS;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -86,23 +84,19 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
 
     @Test
     void opprett_sak() {
+        var uuid = UUID.randomUUID();
+        var førsteUttaksdato = LocalDate.of(2024, 6, 1);
+        var forespørsel = lagForespørsel(uuid, null, null, førsteUttaksdato);
+        var personInfo = lagPersonInfo();
+        when(personTjeneste.hentPersonInfoFraAktørId(forespørsel.aktørId(), Ytelsetype.FORELDREPENGER)).thenReturn(personInfo);
+        when(klient.opprettSak(any(), any())).thenReturn("sak-1");
 
-        var expectedGrupperingsid = "id-som-knytter-sak-til-notifikasjon";
-        var expectedVirksomhetsnummer = "2342342334";
-        var expectedTittel = "Inntektsmelding for person";
-        var expectedLenke = "https://inntektsmelding-innsendings-dialog.com";
-        var expectedMerkelapp = Merkelapp.INNTEKTSMELDING_FP;
-        var expectedTilleggsinformasjon = ForespørselTekster.lagTilleggsInformasjonOrdinær(LocalDate.of(2024, 6, 1));
+        tjeneste.opprettSak(forespørsel);
 
         var requestCaptor = ArgumentCaptor.forClass(NySakMutationRequest.class);
-
-        tjeneste.opprettSak(expectedGrupperingsid, expectedMerkelapp, expectedVirksomhetsnummer, expectedTittel, URI.create(expectedLenke), expectedTilleggsinformasjon);
-
         verify(klient).opprettSak(requestCaptor.capture(), any(NySakResultatResponseProjection.class));
 
-        var request = requestCaptor.getValue();
-
-        var input = request.getInput();
+        var input = requestCaptor.getValue().getInput();
         assertThat(input).containsOnlyKeys("grupperingsid",
             "initiellStatus",
             "lenke",
@@ -115,73 +109,53 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
             "tidspunkt",
             "tilleggsinformasjon",
             "hardDelete")
-            .containsEntry("grupperingsid", expectedGrupperingsid)
+            .containsEntry("grupperingsid", uuid.toString())
             .containsEntry("initiellStatus", SaksStatus.UNDER_BEHANDLING)
-            .containsEntry("lenke", expectedLenke)
-            .containsEntry("merkelapp", expectedMerkelapp.getBeskrivelse())
-            .containsEntry("tittel", expectedTittel)
-            .containsEntry("virksomhetsnummer", expectedVirksomhetsnummer)
+            .containsEntry("lenke", INNTEKTSMELDING_SKJEMA_LENKE + "/" + uuid)
+            .containsEntry("merkelapp", Merkelapp.INNTEKTSMELDING_FP.getBeskrivelse())
+            .containsEntry("tittel", ForespørselTekster.lagSaksTittel(personInfo.mapFulltNavn(), personInfo.fødselsdato()))
+            .containsEntry("virksomhetsnummer", ORGNR)
             .containsEntry("overstyrStatustekstMed", "")
-            .containsEntry("tilleggsinformasjon", expectedTilleggsinformasjon);
+            .containsEntry("tilleggsinformasjon", ForespørselTekster.lagTilleggsInformasjonOrdinær(førsteUttaksdato));
         assertThat(input.get("mottakere")).isNotNull();
     }
 
     @Test
     void opprett_oppgave() {
+        var uuid = UUID.randomUUID();
+        var forespørsel = lagForespørsel(uuid, null, null, LocalDate.now());
+        var organisasjon = new Organisasjon("Test A/S", ORGNR);
+        when(organisasjonTjeneste.finnOrganisasjon(forespørsel.arbeidsgiver())).thenReturn(organisasjon);
+        when(klient.opprettOppgave(any(), any())).thenReturn("oppgave-1");
 
-        var expectedEksternId = "TestId";
-        var expectedGrupperingsid = "id-som-knytter-sak-til-notifikasjon";
-        var expectedVirksomhetsnummer = "2342342334";
-        var expectedNotifikasjonsTekst = "Du har en ny oppgave i AG-portalen";
-        var expectedTittel = "Nav trenger inntektsmelding";
-        var expectedEksternvarselTekst = "En ansatt har søkt foreldrepenger";
-        var expectedPåminnelseTekst = "Påmminnelse: En ansatt har søkt foreldrepenger";
-        var expectedNotifikasjonsLenke = "https://arbeidsgiver-portal.com";
-        var expectedNotifikasjonsMerkelapp = Merkelapp.INNTEKTSMELDING_FP;
+        tjeneste.opprettOppgave(forespørsel);
 
         var requestCaptor = ArgumentCaptor.forClass(NyOppgaveMutationRequest.class);
-
-        tjeneste.opprettOppgave(expectedGrupperingsid,
-            expectedNotifikasjonsMerkelapp,
-            expectedEksternId,
-            expectedVirksomhetsnummer,
-            expectedNotifikasjonsTekst,
-            expectedEksternvarselTekst,
-            expectedPåminnelseTekst,
-            URI.create(expectedNotifikasjonsLenke));
-
         verify(klient).opprettOppgave(requestCaptor.capture(), any(NyOppgaveResultatResponseProjection.class));
 
         var input = requestCaptor.getValue().getInput();
-
-        assertThat(input).isNotNull().hasSize(1);
-        var inputKey = "nyOppgave";
-        assertThat(input).containsKey(inputKey);
-        assertThat(input.get(inputKey)).isInstanceOf(NyOppgaveInput.class);
-        var nyOppgave = (NyOppgaveInput) input.get(inputKey);
+        assertThat(input).isNotNull().hasSize(1).containsKey("nyOppgave");
+        var nyOppgave = (NyOppgaveInput) input.get("nyOppgave");
 
         assertThat(nyOppgave.getMottaker()).isNotNull();
         assertThat(nyOppgave.getMottaker().getAltinnRessurs().getRessursId()).isEqualTo(ALTINN_INNTEKTSMELDING_RESSURS);
-        assertThat(nyOppgave.getMetadata()).isNotNull();
-        assertThat(nyOppgave.getMetadata().getEksternId()).isNotNull().isEqualTo(expectedEksternId);
-        assertThat(nyOppgave.getMetadata().getGrupperingsid()).isNotNull().isEqualTo(expectedGrupperingsid);
-        assertThat(nyOppgave.getMetadata().getVirksomhetsnummer()).isNotNull().isEqualTo(expectedVirksomhetsnummer);
+        assertThat(nyOppgave.getMetadata().getEksternId()).isEqualTo(uuid.toString());
+        assertThat(nyOppgave.getMetadata().getGrupperingsid()).isEqualTo(uuid.toString());
+        assertThat(nyOppgave.getMetadata().getVirksomhetsnummer()).isEqualTo(ORGNR);
         assertThat(nyOppgave.getMetadata().getOpprettetTidspunkt()).isNull();
 
-        assertThat(nyOppgave.getNotifikasjon()).isNotNull();
-        assertThat(nyOppgave.getNotifikasjon().getTekst()).isEqualTo(expectedNotifikasjonsTekst);
-        assertThat(nyOppgave.getNotifikasjon().getLenke()).isEqualTo(expectedNotifikasjonsLenke);
-        assertThat(nyOppgave.getNotifikasjon().getMerkelapp()).isEqualTo(expectedNotifikasjonsMerkelapp.getBeskrivelse());
+        assertThat(nyOppgave.getNotifikasjon().getTekst()).isEqualTo(ForespørselTekster.lagOppgaveTekst(Ytelsetype.FORELDREPENGER));
+        assertThat(nyOppgave.getNotifikasjon().getLenke()).isEqualTo(INNTEKTSMELDING_SKJEMA_LENKE + "/" + uuid);
+        assertThat(nyOppgave.getNotifikasjon().getMerkelapp()).isEqualTo(Merkelapp.INNTEKTSMELDING_FP.getBeskrivelse());
 
         assertThat(nyOppgave.getEksterneVarsler()).hasSize(1);
-        assertThat(nyOppgave.getEksterneVarsler().getFirst().getAltinnressurs()).isNotNull();
-        assertThat(nyOppgave.getEksterneVarsler().getFirst().getAltinnressurs().getEpostTittel()).isEqualTo(expectedTittel);
-        assertThat(nyOppgave.getEksterneVarsler().getFirst().getAltinnressurs().getEpostHtmlBody()).isEqualTo(expectedEksternvarselTekst);
+        assertThat(nyOppgave.getEksterneVarsler().getFirst().getAltinnressurs().getEpostTittel()).isEqualTo("Nav trenger inntektsmelding");
+        assertThat(nyOppgave.getEksterneVarsler().getFirst().getAltinnressurs().getEpostHtmlBody())
+            .isEqualTo(ForespørselTekster.lagVarselTekst(Ytelsetype.FORELDREPENGER, organisasjon));
 
-        assertThat(nyOppgave.getPaaminnelse()).isNotNull();
-        assertThat(nyOppgave.getPaaminnelse().getEksterneVarsler()).isNotNull().hasSize(1);
-        assertThat(nyOppgave.getPaaminnelse().getEksterneVarsler().getFirst().getAltinnressurs()).isNotNull();
-        assertThat(nyOppgave.getPaaminnelse().getEksterneVarsler().getFirst().getAltinnressurs().getEpostHtmlBody()).isEqualTo(expectedPåminnelseTekst);
+        assertThat(nyOppgave.getPaaminnelse().getEksterneVarsler()).hasSize(1);
+        assertThat(nyOppgave.getPaaminnelse().getEksterneVarsler().getFirst().getAltinnressurs().getEpostHtmlBody())
+            .isEqualTo(ForespørselTekster.lagPåminnelseTekst(Ytelsetype.FORELDREPENGER, organisasjon));
 
         assertThat(nyOppgave.getFrist()).isNull();
         assertThat(nyOppgave.getMottakere()).isEmpty();
@@ -280,36 +254,19 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
     }
 
     @Test
-    void opprett_sak_og_oppgave_skal_generere_riktige_tekster_og_lenker() {
+    void opprett_oppgave_for_forespørsel_skal_generere_riktige_tekster_og_lenker() {
         var uuid = UUID.randomUUID();
-        var førsteUttaksdato = LocalDate.now().minusYears(1).plusDays(1);
-        var forespørsel = lagForespørsel(uuid, null, null, førsteUttaksdato);
+        var forespørsel = lagForespørsel(uuid, null, null, LocalDate.now().minusYears(1).plusDays(1));
         var organisasjon = new Organisasjon("Test A/S", ORGNR);
-        var personInfo = lagPersonInfo();
 
         when(organisasjonTjeneste.finnOrganisasjon(forespørsel.arbeidsgiver())).thenReturn(organisasjon);
-        when(personTjeneste.hentPersonInfoFraAktørId(forespørsel.aktørId(), Ytelsetype.FORELDREPENGER)).thenReturn(personInfo);
-        when(klient.opprettSak(any(), any())).thenReturn("sak-1");
         when(klient.opprettOppgave(any(), any())).thenReturn("oppgave-1");
 
-        var resultat = tjeneste.opprettSakOgOppgave(forespørsel);
+        var oppgaveId = tjeneste.opprettOppgave(forespørsel);
 
-        assertThat(resultat.arbeidsgiverNotifikasjonSakId()).isEqualTo("sak-1");
-        assertThat(resultat.oppgaveId()).isEqualTo("oppgave-1");
+        assertThat(oppgaveId).isEqualTo("oppgave-1");
 
         var forventetSkjemaUri = URI.create(INNTEKTSMELDING_SKJEMA_LENKE + "/" + uuid);
-        var forventetTittel = ForespørselTekster.lagSaksTittel(personInfo.mapFulltNavn(), personInfo.fødselsdato());
-        var forventetTilleggsinformasjon = ForespørselTekster.lagTilleggsInformasjonOrdinær(førsteUttaksdato);
-
-        var sakCaptor = ArgumentCaptor.forClass(NySakMutationRequest.class);
-        verify(klient).opprettSak(sakCaptor.capture(), any(NySakResultatResponseProjection.class));
-        var sakInput = sakCaptor.getValue().getInput();
-        assertThat(sakInput).containsEntry("grupperingsid", uuid.toString())
-            .containsEntry("tittel", forventetTittel)
-            .containsEntry("lenke", forventetSkjemaUri.toString())
-            .containsEntry("virksomhetsnummer", ORGNR)
-            .containsEntry("merkelapp", Merkelapp.INNTEKTSMELDING_FP.getBeskrivelse())
-            .containsEntry("tilleggsinformasjon", forventetTilleggsinformasjon);
 
         var oppgaveCaptor = ArgumentCaptor.forClass(NyOppgaveMutationRequest.class);
         verify(klient).opprettOppgave(oppgaveCaptor.capture(), any(NyOppgaveResultatResponseProjection.class));
@@ -326,30 +283,14 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
     }
 
     @Test
-    void opprett_sak_og_oppgave_skal_slette_sak_hvis_oppgave_feiler() {
-        var uuid = UUID.randomUUID();
-        var forespørsel = lagForespørsel(uuid, null, null, LocalDate.now());
-        when(organisasjonTjeneste.finnOrganisasjon(forespørsel.arbeidsgiver())).thenReturn(new Organisasjon("Test A/S", ORGNR));
-        when(personTjeneste.hentPersonInfoFraAktørId(forespørsel.aktørId(), Ytelsetype.FORELDREPENGER)).thenReturn(lagPersonInfo());
-        when(klient.opprettSak(any(), any())).thenReturn("sak-1");
-        when(klient.opprettOppgave(any(), any())).thenThrow(new IllegalStateException("feil ved opprettelse av oppgave"));
-
-        assertThatThrownBy(() -> tjeneste.opprettSakOgOppgave(forespørsel)).isInstanceOf(IllegalStateException.class);
-
-        var slettCaptor = ArgumentCaptor.forClass(HardDeleteSakMutationRequest.class);
-        verify(klient).slettSak(slettCaptor.capture(), any(HardDeleteSakResultatResponseProjection.class), eq("sak-1"));
-        assertThat(slettCaptor.getValue().getInput()).containsEntry("id", "sak-1");
-    }
-
-    @Test
-    void opprett_sak_uten_oppgave_skal_ikke_opprette_oppgave() {
+    void opprett_sak_skal_ikke_opprette_oppgave() {
         var uuid = UUID.randomUUID();
         var førsteUttaksdato = LocalDate.now().minusYears(1).plusDays(1);
         var forespørsel = lagForespørsel(uuid, null, null, førsteUttaksdato);
         when(personTjeneste.hentPersonInfoFraAktørId(forespørsel.aktørId(), Ytelsetype.FORELDREPENGER)).thenReturn(lagPersonInfo());
         when(klient.opprettSak(any(), any())).thenReturn("sak-1");
 
-        var sakId = tjeneste.opprettSakUtenOppgave(forespørsel);
+        var sakId = tjeneste.opprettSak(forespørsel);
 
         assertThat(sakId).isEqualTo("sak-1");
         verify(klient, never()).opprettOppgave(any(), any());
