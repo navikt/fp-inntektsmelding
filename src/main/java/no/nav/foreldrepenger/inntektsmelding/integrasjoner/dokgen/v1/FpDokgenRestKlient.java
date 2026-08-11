@@ -6,7 +6,7 @@ import jakarta.ws.rs.core.UriBuilder;
 
 import no.nav.vedtak.exception.TekniskException;
 import no.nav.vedtak.felles.integrasjon.rest.FpApplication;
-import no.nav.vedtak.felles.integrasjon.rest.RestClient;
+import no.nav.vedtak.felles.integrasjon.rest.Jackson3RestClient;
 import no.nav.vedtak.felles.integrasjon.rest.RestClientConfig;
 import no.nav.vedtak.felles.integrasjon.rest.RestConfig;
 import no.nav.vedtak.felles.integrasjon.rest.RestRequest;
@@ -18,14 +18,14 @@ public class FpDokgenRestKlient {
 
     protected static final String API_PATH = "/api";
 
-    private final RestClient restClient;
+    private final Jackson3RestClient restClient;
     private final RestConfig restConfig;
 
     public FpDokgenRestKlient() {
-        this(RestClient.client());
+        this(Jackson3RestClient.client());
     }
 
-    public FpDokgenRestKlient(RestClient restClient) {
+    public FpDokgenRestKlient(Jackson3RestClient restClient) {
         this.restClient = restClient;
         this.restConfig = RestConfig.forClient(FpDokgenRestKlient.class);
     }
