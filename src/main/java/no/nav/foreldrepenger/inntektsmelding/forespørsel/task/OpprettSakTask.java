@@ -14,7 +14,7 @@ import no.nav.vedtak.felles.prosesstask.api.ProsessTask;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskHandler;
 
-import static no.nav.foreldrepenger.inntektsmelding.forespørsel.task.ForespørselTaskProperties.KEY_FORESPOERSEL_UUID;
+import static no.nav.foreldrepenger.inntektsmelding.forespørsel.task.FellesTaskProperties.KEY_FORESPOERSEL_UUID;
 
 /**
  * Oppretter sak hos arbeidsgiverportalen (min side arbeidsgiver) for en allerede lagret forespørsel.

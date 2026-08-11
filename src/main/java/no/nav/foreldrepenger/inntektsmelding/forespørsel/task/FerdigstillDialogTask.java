@@ -25,7 +25,6 @@ import no.nav.vedtak.felles.prosesstask.api.ProsessTaskHandler;
 @ProsessTask(value = "forespørsel.ferdigstillDialog")
 public class FerdigstillDialogTask implements ProsessTaskHandler {
     public static final String KEY_LUKKE_AARSAK = "lukkeAarsak";
-    public static final String KEY_INNTEKTSMELDING_UUID = "inntektsmeldingUuid";
     private static final Logger LOG = LoggerFactory.getLogger(FerdigstillDialogTask.class);
 
     private ForespørselTjeneste forespørselTjeneste;
@@ -43,12 +42,12 @@ public class FerdigstillDialogTask implements ProsessTaskHandler {
 
     @Override
     public void doTask(ProsessTaskData prosessTaskData) {
-        var forespørselUuid = UUID.fromString(prosessTaskData.getPropertyValue(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID));
+        var forespørselUuid = UUID.fromString(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID));
         var forespørsel = forespørselTjeneste.hentForespørsel(forespørselUuid)
             .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel " + forespørselUuid + " ved ferdigstilling av dialog"));
 
         var årsak = LukkeÅrsak.valueOf(prosessTaskData.getPropertyValue(KEY_LUKKE_AARSAK));
-        var inntektsmeldingUuid = Optional.ofNullable(prosessTaskData.getPropertyValue(KEY_INNTEKTSMELDING_UUID)).map(UUID::fromString);
+        var inntektsmeldingUuid = Optional.ofNullable(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_INNTEKTSMELDING_UUID)).map(UUID::fromString);
 
         LOG.info("Ferdigstiller dialog hos Dialogporten for forespørsel {}", forespørselUuid);
         dialogportenTjeneste.utførMotDialogportenMedDevToleranse(() -> dialogportenTjeneste.ferdigstillDialog(forespørsel, årsak, inntektsmeldingUuid));

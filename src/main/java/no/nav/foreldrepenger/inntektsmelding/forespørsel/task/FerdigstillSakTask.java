@@ -20,7 +20,6 @@ import no.nav.vedtak.felles.prosesstask.api.ProsessTaskHandler;
 @ApplicationScoped
 @ProsessTask(value = "forespørsel.ferdigstillSak")
 public class FerdigstillSakTask implements ProsessTaskHandler {
-    public static final String KEY_INNTEKTSMELDING_UUID = "inntektsmeldingUuid";
     public static final String KEY_ER_FØRSTEGANGSINNSENDING = "erFoerstegangsinnsending";
     private static final Logger LOG = LoggerFactory.getLogger(FerdigstillSakTask.class);
 
@@ -39,12 +38,12 @@ public class FerdigstillSakTask implements ProsessTaskHandler {
 
     @Override
     public void doTask(ProsessTaskData prosessTaskData) {
-        var forespørselUuid = UUID.fromString(prosessTaskData.getPropertyValue(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID));
+        var forespørselUuid = UUID.fromString(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID));
         var forespørsel = forespørselTjeneste.hentForespørsel(forespørselUuid)
             .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel " + forespørselUuid + " ved ferdigstilling av sak"));
 
-        var årsak = LukkeÅrsak.valueOf(prosessTaskData.getPropertyValue(ForespørselTaskProperties.KEY_LUKKE_AARSAK));
-        var inntektsmeldingUuid = Optional.ofNullable(prosessTaskData.getPropertyValue(KEY_INNTEKTSMELDING_UUID)).map(UUID::fromString);
+        var årsak = LukkeÅrsak.valueOf(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_LUKKE_AARSAK));
+        var inntektsmeldingUuid = Optional.ofNullable(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_INNTEKTSMELDING_UUID)).map(UUID::fromString);
         var erFørstegangsinnsending = Boolean.parseBoolean(prosessTaskData.getPropertyValue(KEY_ER_FØRSTEGANGSINNSENDING));
 
         LOG.info("Ferdigstiller sak hos arbeidsgiverportalen for forespørsel {}", forespørselUuid);
