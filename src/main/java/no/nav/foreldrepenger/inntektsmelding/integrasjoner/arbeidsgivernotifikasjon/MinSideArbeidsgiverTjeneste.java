@@ -56,39 +56,7 @@ public class MinSideArbeidsgiverTjeneste {
         this.inntektsmeldingSkjemaLenke = inntektsmeldingSkjemaLenke;
     }
 
-    public record OpprettSakResultat(String arbeidsgiverNotifikasjonSakId, String oppgaveId) {}
-
-    public OpprettSakResultat opprettSakOgOppgave(ForespørselDto forespørsel) {
-        var arbeidsgiver = forespørsel.arbeidsgiver();
-        var organisasjon = organisasjonTjeneste.finnOrganisasjon(arbeidsgiver);
-        var person = personTjeneste.hentPersonInfoFraAktørId(forespørsel.aktørId(), forespørsel.ytelseType());
-
-        var merkelapp = ForespørselTekster.finnMerkelapp(forespørsel.ytelseType());
-        var skjemaUri = URI.create(inntektsmeldingSkjemaLenke + "/" + forespørsel.uuid());
-        var saksTittel = ForespørselTekster.lagSaksTittel(person.mapFulltNavn(), person.fødselsdato());
-        var tilleggsinformasjon  = ForespørselTekster.lagTilleggsInformasjon(LukkeÅrsak.ORDINÆR_INNSENDING, forespørsel.førsteUttaksdato());
-
-        var sakId = opprettSak(forespørsel.uuid().toString(), merkelapp, arbeidsgiver.orgnr(), saksTittel, skjemaUri, tilleggsinformasjon);
-
-        String oppgaveId;
-        try {
-            oppgaveId = opprettOppgave(forespørsel.uuid().toString(),
-                merkelapp,
-                forespørsel.uuid().toString(),
-                arbeidsgiver.orgnr(),
-                ForespørselTekster.lagOppgaveTekst(forespørsel.ytelseType()),
-                ForespørselTekster.lagVarselTekst(forespørsel.ytelseType(), organisasjon),
-                ForespørselTekster.lagPåminnelseTekst(forespørsel.ytelseType(), organisasjon),
-                skjemaUri);
-        } catch (Exception e) {
-            slettSak(sakId);
-            throw e;
-        }
-
-        return new OpprettSakResultat(sakId, oppgaveId);
-    }
-
-    public String opprettSakUtenOppgave(ForespørselDto forespørsel) {
+    public String opprettSak(ForespørselDto forespørsel) {
         var person = personTjeneste.hentPersonInfoFraAktørId(forespørsel.aktørId(), forespørsel.ytelseType());
 
         var merkelapp = ForespørselTekster.finnMerkelapp(forespørsel.ytelseType());
@@ -97,6 +65,21 @@ public class MinSideArbeidsgiverTjeneste {
         var tilleggsinformasjon = ForespørselTekster.lagTilleggsInformasjon(LukkeÅrsak.ORDINÆR_INNSENDING, forespørsel.førsteUttaksdato());
 
         return opprettSak(forespørsel.uuid().toString(), merkelapp, forespørsel.arbeidsgiver().orgnr(), saksTittel, skjemaUri, tilleggsinformasjon);
+    }
+
+    public String opprettOppgave(ForespørselDto forespørsel) {
+        var arbeidsgiver = forespørsel.arbeidsgiver();
+        var organisasjon = organisasjonTjeneste.finnOrganisasjon(arbeidsgiver);
+        var merkelapp = ForespørselTekster.finnMerkelapp(forespørsel.ytelseType());
+        var skjemaUri = URI.create(inntektsmeldingSkjemaLenke + "/" + forespørsel.uuid());
+        return opprettOppgave(forespørsel.uuid().toString(),
+            merkelapp,
+            forespørsel.uuid().toString(),
+            arbeidsgiver.orgnr(),
+            ForespørselTekster.lagOppgaveTekst(forespørsel.ytelseType()),
+            ForespørselTekster.lagVarselTekst(forespørsel.ytelseType(), organisasjon),
+            ForespørselTekster.lagPåminnelseTekst(forespørsel.ytelseType(), organisasjon),
+            skjemaUri);
     }
 
     public void ferdigstillSak(ForespørselDto forespørsel, LukkeÅrsak årsak, Optional<UUID> inntektsmeldingUuid, boolean erFørstegangsinnsending) {
@@ -177,7 +160,7 @@ public class MinSideArbeidsgiverTjeneste {
         return inntektsmeldingSkjemaLenke + "/server/api" + PdfDokumentRest.INNTEKTSMELDING_FULL_PATH + "/" + inntektsmeldingUuid;
     }
 
-    public String opprettSak(String grupperingsid, Merkelapp merkelapp, String virksomhetsnummer, String saksTittel, URI lenke, String tilleggsinformasjon) {
+    private String opprettSak(String grupperingsid, Merkelapp merkelapp, String virksomhetsnummer, String saksTittel, URI lenke, String tilleggsinformasjon) {
         var request = NySakMutationRequest.builder()
             .setGrupperingsid(grupperingsid)
             .setTittel(saksTittel)
@@ -236,7 +219,7 @@ public class MinSideArbeidsgiverTjeneste {
         return minSideArbeidsgiverKlient.oppdaterSakStatus(requestBuilder.build(), projection);
     }
 
-    public String opprettOppgave(String grupperingsid, Merkelapp merkelapp, String eksternId, String virksomhetsnummer,
+    private String opprettOppgave(String grupperingsid, Merkelapp merkelapp, String eksternId, String virksomhetsnummer,
                                  String oppgaveTekst, String varselTekst, String påminnelseTekst, URI lenke) {
         var request = NyOppgaveMutationRequest.builder()
             .setNyOppgave(NyOppgaveInput.builder()

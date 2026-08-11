@@ -24,7 +24,8 @@ import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEnti
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselRepository;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.ForespørselTaskProperties;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettDialogTask;
-import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettSakOgOppgaveTask;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettOppgaveTask;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettSakTask;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.SettDialogTilUtgåttTask;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.SettSakTilUtgåttTask;
 import no.nav.foreldrepenger.inntektsmelding.forvaltning.rest.InntektsmeldingForespørselDto;
@@ -89,10 +90,17 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
     // Simulerer at prosesstasken for å opprette sak/oppgave hos arbeidsgiverportalen har kjørt, slik den ville gjort
     // kort tid etter i produksjon. Nødvendig i disse testene fordi enkelte påfølgende operasjoner (f.eks. ferdigstille/
-    // sette utgått) fortsatt slår opp forespørselen på arbeidsgiverNotifikasjonSakId.
-    private void kjørOpprettSakOgOppgaveTask(UUID forespørselUuid) {
-        var task = new OpprettSakOgOppgaveTask(forespørselTjeneste, minSideArbeidsgiverTjeneste);
-        var taskData = ProsessTaskData.forProsessTask(OpprettSakOgOppgaveTask.class);
+    // sette utgått) fortsatt slår opp forespørselen på arbeidsgiverNotifikasjonSakId og oppgaveId
+    private void kjørOpprettSakTask(UUID forespørselUuid) {
+        var task = new OpprettSakTask(forespørselTjeneste, minSideArbeidsgiverTjeneste);
+        var taskData = ProsessTaskData.forProsessTask(OpprettSakTask.class);
+        taskData.setProperty(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
+        task.doTask(taskData);
+    }
+
+    private void kjørOpprettOppgaveTask(UUID forespørselUuid) {
+        var task = new OpprettOppgaveTask(forespørselTjeneste, minSideArbeidsgiverTjeneste);
+        var taskData = ProsessTaskData.forProsessTask(OpprettOppgaveTask.class);
         taskData.setProperty(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
         task.doTask(taskData);
     }
@@ -115,7 +123,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
         assertThat(resultat).isEqualTo(ForespørselResultat.FORESPØRSEL_OPPRETTET);
         assertThat(lagret).hasSize(1);
-        // Sak/oppgave hos arbeidsgiverportalen og dialog hos Dialogporten opprettes nå asynkront via prosesstasks,
+        // Sak/oppgave hos arbeidsgiverportalen og dialog hos Dialogporten opprettes asynkront via prosesstasks,
         // og skal derfor ikke være satt synkront på forespørselen ennå
         assertThat(lagret.getFirst().getArbeidsgiverNotifikasjonSakId()).isNull();
         assertThat(lagret.getFirst().getOppgaveId()).isEmpty();
@@ -124,25 +132,17 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         verify(prosessTaskTjeneste).lagre(taskGruppeCaptor.capture());
         var opprettedeTasks = taskGruppeCaptor.getValue().getTasks().stream().map(ProsessTaskGruppe.Entry::task).toList();
 
-        // Verifiserer at task for sak/oppgave kommer før task for dialog i den sekvensielle gruppen, siden
-        // dialogporten-oppdateringen forutsetter at saken allerede finnes hos arbeidsgiverportalen
-        assertThat(opprettedeTasks).hasSize(2);
-        assertThat(opprettedeTasks.getFirst().taskType()).isEqualTo(TaskType.forProsessTask(OpprettSakOgOppgaveTask.class));
-        assertThat(opprettedeTasks.getLast().taskType()).isEqualTo(TaskType.forProsessTask(OpprettDialogTask.class));
+        // Verifiserer at taskene kjøres i riktig sekvens: sak → oppgave → dialog
+        // Siden dialogporten-oppdateringen forutsetter at saken allerede finnes hos arbeidsgiverportalen
+        assertThat(opprettedeTasks).hasSize(3);
+        assertThat(opprettedeTasks.get(0).taskType()).isEqualTo(TaskType.forProsessTask(OpprettSakTask.class));
+        assertThat(opprettedeTasks.get(1).taskType()).isEqualTo(TaskType.forProsessTask(OpprettOppgaveTask.class));
+        assertThat(opprettedeTasks.get(2).taskType()).isEqualTo(TaskType.forProsessTask(OpprettDialogTask.class));
 
-        var sakOgOppgaveTask = opprettedeTasks.stream()
-            .filter(task -> TaskType.forProsessTask(OpprettSakOgOppgaveTask.class).equals(task.taskType()))
-            .findFirst()
-            .orElseThrow(() -> new AssertionError("Fant ikke task for opprettelse av sak og oppgave"));
-        assertThat(sakOgOppgaveTask.getPropertyValue(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID))
-            .isEqualTo(lagret.getFirst().getUuid().toString());
-
-        var dialogTask = opprettedeTasks.stream()
-            .filter(task -> TaskType.forProsessTask(OpprettDialogTask.class).equals(task.taskType()))
-            .findFirst()
-            .orElseThrow(() -> new AssertionError("Fant ikke task for opprettelse av dialog"));
-        assertThat(dialogTask.getPropertyValue(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID))
-            .isEqualTo(lagret.getFirst().getUuid().toString());
+        var forespørselUuid = lagret.getFirst().getUuid().toString();
+        assertThat(opprettedeTasks.get(0).getPropertyValue(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid);
+        assertThat(opprettedeTasks.get(1).getPropertyValue(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid);
+        assertThat(opprettedeTasks.get(2).getPropertyValue(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid);
     }
 
     @Test
@@ -183,7 +183,8 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         clearHibernateCache();
 
         var lagret = forespørselRepository.hentForespørslerPåSak(SAKSNUMMER).getFirst();
-        kjørOpprettSakOgOppgaveTask(lagret.getUuid());
+        kjørOpprettSakTask(lagret.getUuid());
+        kjørOpprettOppgaveTask(lagret.getUuid());
         var fpEntitet = forespørselBehandlingTjeneste.ferdigstillForespørsel(lagret.getUuid(),
             AktørId.fra(lagret.getAktørId().getAktørId()),
             Arbeidsgiver.fra(lagret.getOrganisasjonsnummer()),
@@ -219,7 +220,8 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         clearHibernateCache();
 
         var lagret = forespørselRepository.hentForespørslerPåSak(SAKSNUMMER).getFirst();
-        kjørOpprettSakOgOppgaveTask(lagret.getUuid());
+        kjørOpprettSakTask(lagret.getUuid());
+        kjørOpprettOppgaveTask(lagret.getUuid());
 
         var fpEntitet = forespørselBehandlingTjeneste.ferdigstillForespørsel(lagret.getUuid(),
             AktørId.fra(lagret.getAktørId().getAktørId()),
@@ -256,7 +258,8 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         );
 
         var lagret = forespørselRepository.hentForespørslerPåSak(saksnummer.saksnummer()).getFirst();
-        kjørOpprettSakOgOppgaveTask(lagret.getUuid());
+        kjørOpprettSakTask(lagret.getUuid());
+        kjørOpprettOppgaveTask(lagret.getUuid());
 
         var fpEntitet = forespørselBehandlingTjeneste.ferdigstillForespørsel(lagret.getUuid(),
             AktørId.fra(lagret.getAktørId().getAktørId()),
@@ -297,7 +300,8 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         );
 
         var lagret = forespørselRepository.hentForespørslerPåSak(saksnummer.saksnummer()).getFirst();
-        kjørOpprettSakOgOppgaveTask(lagret.getUuid());
+        kjørOpprettSakTask(lagret.getUuid());
+        kjørOpprettOppgaveTask(lagret.getUuid());
 
         assertThat(lagret.getStatus()).isEqualTo(ForespørselStatus.UNDER_BEHANDLING);
 
@@ -741,8 +745,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
     }
 
     private void mockInfoForOpprettelse(String sakId) {
-        lenient().when(minSideArbeidsgiverTjeneste.opprettSakOgOppgave(any(ForespørselDto.class)))
-            .thenReturn(new MinSideArbeidsgiverTjeneste.OpprettSakResultat(sakId, OPPGAVE_ID));
-        lenient().when(minSideArbeidsgiverTjeneste.opprettSakUtenOppgave(any(ForespørselDto.class))).thenReturn(sakId);
+        lenient().when(minSideArbeidsgiverTjeneste.opprettSak(any(ForespørselDto.class))).thenReturn(sakId);
+        lenient().when(minSideArbeidsgiverTjeneste.opprettOppgave(any(ForespørselDto.class))).thenReturn(OPPGAVE_ID);
     }
 }
