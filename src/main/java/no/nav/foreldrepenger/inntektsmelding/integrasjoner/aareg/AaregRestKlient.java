@@ -13,13 +13,13 @@ import jakarta.ws.rs.core.UriBuilderException;
 
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.aareg.dto.ArbeidsforholdDto;
 import no.nav.vedtak.exception.IntegrasjonException;
+import no.nav.vedtak.felles.integrasjon.rest.Jackson3RestClient;
 import no.nav.vedtak.felles.integrasjon.rest.NavHeaders;
-import no.nav.vedtak.felles.integrasjon.rest.RestClient;
 import no.nav.vedtak.felles.integrasjon.rest.RestClientConfig;
 import no.nav.vedtak.felles.integrasjon.rest.RestConfig;
 import no.nav.vedtak.felles.integrasjon.rest.RestRequest;
 import no.nav.vedtak.felles.integrasjon.rest.TokenFlow;
-import no.nav.vedtak.mapper.json.DefaultJsonMapper;
+import no.nav.vedtak.mapper.json.DefaultJson3Mapper;
 
 /*
  * Dokumentasjon https://confluence.adeo.no/display/FEL/AAREG+-+Tjeneste+REST+aareg.api
@@ -33,14 +33,14 @@ import no.nav.vedtak.mapper.json.DefaultJsonMapper;
     scopesProperty = "aareg.scopes", scopesDefault = "api://dev-fss.arbeidsforhold.aareg-services-nais/.default")
 public class AaregRestKlient {
 
-    private final RestClient restClient; // Setter på consumer-token fra STS
+    private final Jackson3RestClient restClient; // Setter på consumer-token fra STS
     private final RestConfig restConfig;
 
     public AaregRestKlient() {
-        this(RestClient.client());
+        this(Jackson3RestClient.client());
     }
 
-    public AaregRestKlient(RestClient restClient) {
+    public AaregRestKlient(Jackson3RestClient restClient) {
         this.restClient = restClient;
         this.restConfig = RestConfig.forClient(this.getClass());
     }
@@ -60,7 +60,7 @@ public class AaregRestKlient {
                 throw new IntegrasjonException("FP-12345", "Feil ved henting av arbeidsforhold for person: " + response.body());
             }
 
-            var arbeidsforhold = DefaultJsonMapper.fromJson(response.body(), ArbeidsforholdDto[].class);
+            var arbeidsforhold = DefaultJson3Mapper.fromJson(response.body(), ArbeidsforholdDto[].class);
             return Arrays.asList(arbeidsforhold);
         } catch (IntegrasjonException e) {
             if (e.getMessage().contains("404")) {

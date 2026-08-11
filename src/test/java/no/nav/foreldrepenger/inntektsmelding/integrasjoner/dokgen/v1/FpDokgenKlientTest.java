@@ -7,11 +7,11 @@ import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
 
-import no.nav.vedtak.felles.integrasjon.rest.RestClient;
+import no.nav.vedtak.felles.integrasjon.rest.Jackson3RestClient;
 
 class FpDokgenKlientTest {
 
-    RestClient restClient = mock(RestClient.class);
+    Jackson3RestClient restClient = mock(Jackson3RestClient.class);
 
     @Test
     void skal_generere_pdf() {

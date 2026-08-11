@@ -252,6 +252,7 @@
                             <modelPackageName>no.nav.foreldrepenger.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon</modelPackageName>
                             <generateBuilder>true</generateBuilder>
                             <generateJacksonTypeIdResolver>true</generateJacksonTypeIdResolver>
+                            <generateJackson3>true</generateJackson3>
                         </configuration>
                     </execution>
                 </executions>
