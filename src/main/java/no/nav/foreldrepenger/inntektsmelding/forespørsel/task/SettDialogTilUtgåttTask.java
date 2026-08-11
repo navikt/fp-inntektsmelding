@@ -20,19 +20,19 @@ import no.nav.vedtak.felles.prosesstask.api.ProsessTaskHandler;
  * feilet der, mens feil i prod fortsatt kastes videre slik at prosesstask-rammeverket prøver på nytt som normalt.
  */
 @ApplicationScoped
-@ProsessTask(value = "forespørsel.opprettDialog")
-public class OpprettDialogTask implements ProsessTaskHandler {
-    private static final Logger LOG = LoggerFactory.getLogger(OpprettDialogTask.class);
+@ProsessTask(value = "forespørsel.dialog.utgått")
+public class SettDialogTilUtgåttTask implements ProsessTaskHandler {
+    private static final Logger LOG = LoggerFactory.getLogger(SettDialogTilUtgåttTask.class);
 
     private ForespørselTjeneste forespørselTjeneste;
     private DialogportenTjeneste dialogportenTjeneste;
 
-    OpprettDialogTask() {
+    SettDialogTilUtgåttTask() {
         // CDI
     }
 
     @Inject
-    public OpprettDialogTask(ForespørselTjeneste forespørselTjeneste, DialogportenTjeneste dialogportenTjeneste) {
+    public SettDialogTilUtgåttTask(ForespørselTjeneste forespørselTjeneste, DialogportenTjeneste dialogportenTjeneste) {
         this.forespørselTjeneste = forespørselTjeneste;
         this.dialogportenTjeneste = dialogportenTjeneste;
     }
@@ -41,19 +41,10 @@ public class OpprettDialogTask implements ProsessTaskHandler {
     public void doTask(ProsessTaskData prosessTaskData) {
         var forespørselUuid = UUID.fromString(prosessTaskData.getPropertyValue(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID));
         var forespørsel = forespørselTjeneste.hentForespørsel(forespørselUuid)
-            .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel " + forespørselUuid + " ved opprettelse av dialog"));
+            .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel " + forespørselUuid + " ved setting av dialog til utgått"));
 
-        if (forespørsel.dialogportenUuid() != null) {
-            // Idempotens: unngår å opprette en ny dialog dersom et tidligere (delvis) forsøk allerede har lykkes
-            LOG.info("Dialog er allerede opprettet for forespørsel {}, hopper over", forespørselUuid);
-            return;
-        }
-
-        LOG.info("Oppretter dialog hos Dialogporten for forespørsel {}", forespørselUuid);
-        dialogportenTjeneste.utførMotDialogportenMedDevToleranse(() -> {
-            var dialogportenUuid = dialogportenTjeneste.opprettDialog(forespørsel);
-            forespørselTjeneste.setDialogportenUuid(forespørselUuid, dialogportenUuid);
-            LOG.info("Opprettet dialog {} hos Dialogporten for forespørsel {}", dialogportenUuid, forespørselUuid);
-        });
+        LOG.info("Setter dialog hos Dialogporten til utgått for forespørsel {}", forespørselUuid);
+        dialogportenTjeneste.utførMotDialogportenMedDevToleranse(() -> dialogportenTjeneste.settDialogTilUtgått(forespørsel));
+        LOG.info("Satte dialog hos Dialogporten til utgått for forespørsel {}", forespørselUuid);
     }
 }
