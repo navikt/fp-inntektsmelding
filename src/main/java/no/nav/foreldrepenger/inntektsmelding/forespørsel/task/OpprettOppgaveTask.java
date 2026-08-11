@@ -19,7 +19,7 @@ import no.nav.vedtak.felles.prosesstask.api.ProsessTaskHandler;
  * Kjøres sekvensielt etter {@link OpprettSakTask}.
  */
 @ApplicationScoped
-@ProsessTask(value = "forespørsel.opprettOppgave")
+@ProsessTask(value = "forespørsel.opprett.oppgave")
 public class OpprettOppgaveTask implements ProsessTaskHandler {
     private static final Logger LOG = LoggerFactory.getLogger(OpprettOppgaveTask.class);
 

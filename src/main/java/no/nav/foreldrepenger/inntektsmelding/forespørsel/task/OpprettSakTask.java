@@ -21,7 +21,7 @@ import static no.nav.foreldrepenger.inntektsmelding.forespørsel.task.Forespørs
  * Forutsetter at forespørselen er lagret/committet. Kjøres sekvensielt før {@link OpprettOppgaveTask}.
  */
 @ApplicationScoped
-@ProsessTask(value = "forespørsel.opprettSak")
+@ProsessTask(value = "forespørsel.opprett.sak")
 public class OpprettSakTask implements ProsessTaskHandler {
     private static final Logger LOG = LoggerFactory.getLogger(OpprettSakTask.class);
 
