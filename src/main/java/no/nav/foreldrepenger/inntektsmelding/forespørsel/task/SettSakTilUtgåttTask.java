@@ -14,12 +14,6 @@ import no.nav.vedtak.felles.prosesstask.api.ProsessTask;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskHandler;
 
-/**
- * Setter saken hos arbeidsgiverportalen (min side arbeidsgiver) til utgått for en forespørsel som allerede er satt
- * til utgått lokalt. Kjøres som egen task av samme grunn som {@link FerdigstillSakTask}: den lokale statusendringen
- * skal alltid committes uavhengig av arbeidsgiverportalens tilgjengelighet, og en feilende/tidsavbrutt kall prøves
- * automatisk på nytt av prosesstask-rammeverket.
- */
 @ApplicationScoped
 @ProsessTask(value = "forespørsel.settSakTilUtgått")
 public class SettSakTilUtgåttTask implements ProsessTaskHandler {

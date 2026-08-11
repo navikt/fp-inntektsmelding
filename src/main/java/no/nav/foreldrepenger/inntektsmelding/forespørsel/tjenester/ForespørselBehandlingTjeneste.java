@@ -14,8 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.nav.foreldrepenger.inntektsmelding.forvaltning.rest.InntektsmeldingForespørselDto;
-import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.FerdigstillDialogTask;
-import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.FerdigstillSakTask;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.ForespørselTaskProperties;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettDialogTask;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettSakOgOppgaveTask;
@@ -136,19 +134,8 @@ public class ForespørselBehandlingTjeneste {
 
         forespørselTjeneste.ferdigstillForespørsel(forespørsel.arbeidsgiverNotifikasjonSakId());
 
-        var ferdigstillSakTask = ProsessTaskData.forProsessTask(FerdigstillSakTask.class);
-        ferdigstillSakTask.setProperty(FerdigstillSakTask.KEY_ER_FØRSTEGANGSINNSENDING, Boolean.toString(erFørstegangsinnsending));
-        inntektsmeldingUuid.ifPresent(uuid -> ferdigstillSakTask.setProperty(FerdigstillSakTask.KEY_INNTEKTSMELDING_UUID, uuid.toString()));
-
-        var ferdigstillDialogTask = ProsessTaskData.forProsessTask(FerdigstillDialogTask.class);
-        inntektsmeldingUuid.ifPresent(uuid -> ferdigstillDialogTask.setProperty(FerdigstillDialogTask.KEY_INNTEKTSMELDING_UUID, uuid.toString()));
-
-        var taskGruppe = new ProsessTaskGruppe();
-        taskGruppe.setProperty(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID, foresporselUuid.toString());
-        taskGruppe.setProperty(ForespørselTaskProperties.KEY_LUKKE_AARSAK, årsak.name());
-        taskGruppe.addNesteSekvensiell(ferdigstillSakTask);
-        taskGruppe.addNesteSekvensiell(ferdigstillDialogTask);
-        prosessTaskTjeneste.lagre(taskGruppe);
+        minSideArbeidsgiverTjeneste.ferdigstillSak(forespørsel, årsak, inntektsmeldingUuid, erFørstegangsinnsending);
+        dialogportenTjeneste.utførMotDialogportenMedDevToleranse(() -> dialogportenTjeneste.ferdigstillDialog(forespørsel, årsak, inntektsmeldingUuid));
 
         // Re-fetch to get updated status
         return forespørselTjeneste.hentForespørsel(foresporselUuid)
