@@ -20,7 +20,7 @@ import no.nav.vedtak.felles.prosesstask.api.ProsessTaskHandler;
  * feilet der, mens feil i prod fortsatt kastes videre slik at prosesstask-rammeverket prøver på nytt som normalt.
  */
 @ApplicationScoped
-@ProsessTask(value = "forespørsel.settDialogTilUtgått")
+@ProsessTask(value = "forespørsel.dialog.utgått")
 public class SettDialogTilUtgåttTask implements ProsessTaskHandler {
     private static final Logger LOG = LoggerFactory.getLogger(SettDialogTilUtgåttTask.class);
 

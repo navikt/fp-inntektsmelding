@@ -15,7 +15,7 @@ import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskHandler;
 
 @ApplicationScoped
-@ProsessTask(value = "forespørsel.settSakTilUtgått")
+@ProsessTask(value = "forespørsel.sak.utgått")
 public class SettSakTilUtgåttTask implements ProsessTaskHandler {
     private static final Logger LOG = LoggerFactory.getLogger(SettSakTilUtgåttTask.class);
 
