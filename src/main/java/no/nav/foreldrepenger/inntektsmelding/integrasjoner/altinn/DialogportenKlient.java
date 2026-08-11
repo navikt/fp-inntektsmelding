@@ -15,18 +15,18 @@ import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.konfig.Environment;
 import no.nav.vedtak.exception.IntegrasjonException;
-import no.nav.vedtak.felles.integrasjon.rest.Jackson3RestClient;
+import no.nav.vedtak.felles.integrasjon.rest.RestClient;
 import no.nav.vedtak.felles.integrasjon.rest.RestClientConfig;
 import no.nav.vedtak.felles.integrasjon.rest.RestConfig;
 import no.nav.vedtak.felles.integrasjon.rest.RestRequest;
 import no.nav.vedtak.felles.integrasjon.rest.TokenFlow;
-import no.nav.vedtak.mapper.json.DefaultJson3Mapper;
+import no.nav.vedtak.mapper.json.DefaultJsonMapper;
 
 @ApplicationScoped
 @RestClientConfig(tokenConfig = TokenFlow.NO_AUTH_NEEDED, endpointProperty = "altinn.tre.base.url", scopesProperty = "maskinporten.dialogporten.scope")
 public class DialogportenKlient {
     private static final Environment ENV = Environment.current();
-    private final Jackson3RestClient restClient;
+    private final RestClient restClient;
     private final RestConfig restConfig;
     private final AltinnExchangeTokenKlient tokenKlient;
     private final String arbeidsgiverportalSkjemaLenke;
@@ -36,10 +36,10 @@ public class DialogportenKlient {
     private final String hentInntektsmeldingApiLenke;
 
     DialogportenKlient() {
-        this(Jackson3RestClient.client());
+        this(RestClient.client());
     }
 
-    public DialogportenKlient(Jackson3RestClient restClient) {
+    public DialogportenKlient(RestClient restClient) {
         this.restClient = restClient;
         this.restConfig = RestConfig.forClient(this.getClass());
         this.tokenKlient = AltinnExchangeTokenKlient.instance();
@@ -117,7 +117,7 @@ public class DialogportenKlient {
         var target = URI.create(restConfig.endpoint().toString() + "/dialogporten/api/v1/serviceowner/dialogs/" + dialogUuid);
 
         var method = new RestRequest.Method(RestRequest.WebMethod.PATCH,
-            HttpRequest.BodyPublishers.ofString(DefaultJson3Mapper.toJson(oppdateringer)));
+            HttpRequest.BodyPublishers.ofString(DefaultJsonMapper.toJson(oppdateringer)));
         var restRequest = RestRequest.newRequest(method, target, restConfig)
             .otherAuthorizationSupplier(() -> tokenKlient.hentAltinnToken(this.restConfig.scopes()));
 

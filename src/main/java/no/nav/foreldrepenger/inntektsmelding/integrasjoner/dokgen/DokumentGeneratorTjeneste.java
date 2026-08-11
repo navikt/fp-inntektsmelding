@@ -6,23 +6,25 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
+
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.dokgen.v1.FpDokgenRequest;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.dokgen.v1.FpDokgenRestKlient;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.organisasjon.OrganisasjonTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonInfo;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste;
-import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
-import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.inntektsmelding.utils.OrganisasjonsnummerValidator;
-import no.nav.vedtak.mapper.json.DefaultJson3Mapper;
+import no.nav.vedtak.mapper.json.DefaultJsonMapper;
 
 @ApplicationScoped
 public class DokumentGeneratorTjeneste {
@@ -79,7 +81,7 @@ public class DokumentGeneratorTjeneste {
     private byte[] genererPdf(InntektsmeldingPdfData metadata, ForespørselType forespørselType) {
         var template = utledMal(forespørselType);
         var requestDto = new FpDokgenRequest(template, null, FpDokgenRequest.CssStyling.INNTEKTSMELDING_PDF,
-            DefaultJson3Mapper.toJson(metadata));
+            DefaultJsonMapper.toJson(metadata));
 
         return dokgenKlient.genererPdf(requestDto);
     }
