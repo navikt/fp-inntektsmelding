@@ -167,6 +167,9 @@ public class ForespørselBehandlingTjeneste {
             taskGruppe.addNesteSekvensiell(oppdaterSakTask);
         });
 
+        // Oppdatering av dialog hos Dialogporten opprettes uansett, i motsetning til sak-oppdateringen over.
+        // OppdaterDialogMedEndretInntektsmeldingTask håndterer manglende inntektsmeldingUuid (Optional), mens
+        // OppdaterSakMedEndretInntektsmeldingTask krever en verdi og vil feile uten
         var oppdaterDialogTask = ProsessTaskData.forProsessTask(OppdaterDialogMedEndretInntektsmeldingTask.class);
         inntektsmeldingUuid.ifPresent(imUuid -> oppdaterDialogTask.setProperty(FellesTaskProperties.KEY_INNTEKTSMELDING_UUID, imUuid.toString()));
         taskGruppe.addNesteSekvensiell(oppdaterDialogTask);
