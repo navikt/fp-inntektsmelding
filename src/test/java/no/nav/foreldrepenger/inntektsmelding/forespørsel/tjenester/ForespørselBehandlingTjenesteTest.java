@@ -79,14 +79,6 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             minSideArbeidsgiverTjeneste,
             dialogportenTjeneste,
             prosessTaskTjeneste);
-
-        // dialogportenTjeneste er en mock, så uten denne stubbingen vil ikke Runnable-en som sendes inn til
-        // utførMotDialogportenMedDevToleranse faktisk bli kjørt (default no-op for void-metoder på mocks)
-        lenient().doAnswer(invocation -> {
-            Runnable handling = invocation.getArgument(0);
-            handling.run();
-            return null;
-        }).when(dialogportenTjeneste).utførMotDialogportenMedDevToleranse(any());
     }
 
     // Simulerer at prosesstasken for å opprette sak/oppgave hos arbeidsgiverportalen har kjørt, slik den ville gjort

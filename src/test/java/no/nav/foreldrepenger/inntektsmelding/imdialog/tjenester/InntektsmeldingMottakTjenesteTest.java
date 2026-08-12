@@ -110,7 +110,7 @@ class InntektsmeldingMottakTjenesteTest {
         var im = lagInntektsmeldingDto(aktørId, Arbeidsgiver.fra(orgnr), startdato, BigDecimal.valueOf(100), List.of(),List.of(), List.of(), BigDecimal.valueOf(100), Tid.TIDENES_ENDE);
 
         when(forespørselBehandlingTjeneste.hentForespørsel(forespørselDto.uuid())).thenReturn(Optional.of(forespørselDto));
-        when(fellesMottakTjeneste.lagreOgJournalførInntektsmelding(any(), any())).thenReturn(im);
+        when(fellesMottakTjeneste.lagreImOgOpprettJournalførTask(any(), any())).thenReturn(im);
 
         // Act
         var responseDto = inntektsmeldingMottakTjeneste.mottaInntektsmelding(im, forespørselDto.uuid());
@@ -140,7 +140,7 @@ class InntektsmeldingMottakTjenesteTest {
             ArbeidsgiverinitiertÅrsak.NYANSATT,
             null)).thenReturn(uuid);
         when(forespørselBehandlingTjeneste.hentForespørsel(uuid)).thenReturn(Optional.of(forespørselDto));
-        when(fellesMottakTjeneste.lagreOgJournalførInntektsmelding(any(), any())).thenReturn(im);
+        when(fellesMottakTjeneste.lagreImOgOpprettJournalførTask(any(), any())).thenReturn(im);
 
         // Act
         var responseDto = inntektsmeldingMottakTjeneste.mottaArbeidsgiverinitiertInntektsmelding(im, null, ArbeidsgiverinitiertÅrsak.NYANSATT);
@@ -168,7 +168,7 @@ class InntektsmeldingMottakTjenesteTest {
 
         when(forespørselBehandlingTjeneste.hentForespørsel(eksisterendeForespørselDto.uuid())).thenReturn(Optional.of(eksisterendeForespørselDto));
         when(forespørselBehandlingTjeneste.oppdaterFørsteUttaksdato(any(), any())).thenReturn(forespørselMedNyDatoDto);
-        when(fellesMottakTjeneste.lagreOgJournalførInntektsmelding(any(), any())).thenReturn(im);
+        when(fellesMottakTjeneste.lagreImOgOpprettJournalførTask(any(), any())).thenReturn(im);
 
         // Act
         var responseDto = inntektsmeldingMottakTjeneste.mottaArbeidsgiverinitiertInntektsmelding(im, eksisterendeForespørselDto.uuid(), ArbeidsgiverinitiertÅrsak.NYANSATT);
@@ -203,7 +203,7 @@ class InntektsmeldingMottakTjenesteTest {
             skjæringstidspunkt)).thenReturn(uuid);
         when(forespørselBehandlingTjeneste.hentForespørsel(uuid)).thenReturn(Optional.of(forespørselDto));
 
-        when(fellesMottakTjeneste.lagreOgJournalførInntektsmelding(any(), any())).thenReturn(im);
+        when(fellesMottakTjeneste.lagreImOgOpprettJournalførTask(any(), any())).thenReturn(im);
 
         // Act
         var responseDto = inntektsmeldingMottakTjeneste.mottaArbeidsgiverinitiertInntektsmelding(im, null,
@@ -235,7 +235,7 @@ class InntektsmeldingMottakTjenesteTest {
 
         var nyIm = lagInntektsmeldingDto(aktørId, Arbeidsgiver.fra(orgnr), startdato, nyInntekt, List.of(), List.of(), endringsårsaker, nyInntekt, opphørsdato.minusDays(1));
 
-        when(fellesMottakTjeneste.lagreOgJournalførInntektsmelding(any(), any())).thenReturn(nyIm);
+        when(fellesMottakTjeneste.lagreImOgOpprettJournalførTask(any(), any())).thenReturn(nyIm);
 
         // Act
         var responseDto = inntektsmeldingMottakTjeneste.mottaArbeidsgiverinitiertInntektsmelding(nyIm, uuid,

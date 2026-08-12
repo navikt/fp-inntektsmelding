@@ -40,7 +40,7 @@ public class FellesMottakTjeneste {
         this.forespørselBehandlingTjeneste = forespørselBehandlingTjeneste;
     }
 
-    public InntektsmeldingDto lagreOgJournalførInntektsmelding(InntektsmeldingDto inntektsmelding, ForespørselDto forespørsel) {
+    public InntektsmeldingDto lagreImOgOpprettJournalførTask(InntektsmeldingDto inntektsmelding, ForespørselDto forespørsel) {
         LOG.info("Lagrer inntektsmelding for forespørsel {}", forespørsel.uuid());
         var imId = inntektsmeldingTjeneste.lagreInntektsmelding(inntektsmelding, forespørsel.uuid());
         opprettTaskForSendTilJoark(imId, forespørsel);
@@ -56,7 +56,7 @@ public class FellesMottakTjeneste {
         LOG.info("Opprettet task for oversending til joark");
     }
 
-    public InntektsmeldingDto lagreIMOgOpprettTaskForEtterkontroll (InntektsmeldingDto inntektsmelding, ForespørselDto forespørsel) {
+    public InntektsmeldingDto lagreImOgOpprettTaskForEtterkontroll(InntektsmeldingDto inntektsmelding, ForespørselDto forespørsel) {
         // Her må vi sende med korrekt status
         var lagretIMId = inntektsmeldingTjeneste.lagreInntektsmelding(inntektsmelding, forespørsel.uuid());
         var task = ProsessTaskData.forProsessTask(FerdigstillInntektsmeldingEtterNedetidTask.class);
@@ -77,7 +77,7 @@ public class FellesMottakTjeneste {
             MetrikkerTjeneste.loggForespørselLukkIntern(ferdigstiltForespørsel);
         } else {
             //legger inn oppdatert inntektsmelding i portaler
-            forespørselBehandlingTjeneste.oppdaterPortalerMedEndretInntektsmelding(forespørsel, imId);
+            forespørselBehandlingTjeneste.opprettTasksForÅOppdaterePortaler(forespørsel, imId);
         }
     }
 }

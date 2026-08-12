@@ -45,11 +45,15 @@ public class InntektsmeldingMottakTjeneste {
         var forespørsel = forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid)
             .orElseThrow(this::manglerForespørselFeil);
 
+        //Validering
         if (ForespørselStatus.UTGÅTT.equals(forespørsel.status())) {
             throw new IllegalStateException("Kan ikke motta nye inntektsmeldinger på utgåtte forespørsler");
         }
+        forespørselBehandlingTjeneste.validerAktør(forespørsel, mottattInntektsmeldingDto.getAktørId());
+        forespørselBehandlingTjeneste.validerOrganisasjon(forespørsel, mottattInntektsmeldingDto.getArbeidsgiver());
+        forespørselBehandlingTjeneste.validerStartdato(forespørsel, mottattInntektsmeldingDto.getStartdato());
 
-        var lagretIm = fellesMottakTjeneste.lagreOgJournalførInntektsmelding(mottattInntektsmeldingDto, forespørsel);
+        var lagretIm = fellesMottakTjeneste.lagreImOgOpprettJournalførTask(mottattInntektsmeldingDto, forespørsel);
         fellesMottakTjeneste.ferdigstillOgOppdaterEksterneSystemer(forespørsel, Optional.ofNullable(lagretIm.getInntektsmeldingUuid()));
 
         MetrikkerTjeneste.loggInnsendtInntektsmelding(lagretIm);
@@ -71,6 +75,10 @@ public class InntektsmeldingMottakTjeneste {
         if (finnesForespørselFraFør) {
             forespørselDto = forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid)
                 .orElseThrow(this::manglerForespørselFeil);
+            //Validering
+            forespørselBehandlingTjeneste.validerAktør(forespørselDto, inntektsmeldingDto.getAktørId());
+            forespørselBehandlingTjeneste.validerOrganisasjon(forespørselDto, inntektsmeldingDto.getArbeidsgiver());
+            forespørselBehandlingTjeneste.validerStartdato(forespørselDto, inntektsmeldingDto.getStartdato());
 
             if (agInitiertÅrsak == ArbeidsgiverinitiertÅrsak.NYANSATT &&
                 !inntektsmeldingDto.getStartdato().equals(forespørselDto.førsteUttaksdato())) {
@@ -78,9 +86,9 @@ public class InntektsmeldingMottakTjeneste {
                     inntektsmeldingDto.getStartdato());
             }
 
-            lagretInntektsmelding = fellesMottakTjeneste.lagreOgJournalførInntektsmelding(inntektsmeldingDto, forespørselDto);
+            lagretInntektsmelding = fellesMottakTjeneste.lagreImOgOpprettJournalførTask(inntektsmeldingDto, forespørselDto);
             //legger inn oppdatert inntektsmelding i portaler
-            forespørselBehandlingTjeneste.oppdaterPortalerMedEndretInntektsmelding(forespørselDto,
+            forespørselBehandlingTjeneste.opprettTasksForÅOppdaterePortaler(forespørselDto,
                 Optional.ofNullable(lagretInntektsmelding.getInntektsmeldingUuid())
             );
 
@@ -91,7 +99,7 @@ public class InntektsmeldingMottakTjeneste {
                 agInitiertÅrsak,
                 inntektsmeldingDto.getStartdato());
 
-            lagretInntektsmelding = fellesMottakTjeneste.lagreOgJournalførInntektsmelding(inntektsmeldingDto, forespørselDto);
+            lagretInntektsmelding = fellesMottakTjeneste.lagreImOgOpprettJournalførTask(inntektsmeldingDto, forespørselDto);
             forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørselDto.uuid(), aktørId, arbeidsgiver,
                 inntektsmeldingDto.getStartdato(), LukkeÅrsak.ORDINÆR_INNSENDING, Optional.ofNullable(lagretInntektsmelding.getInntektsmeldingUuid()));
         }

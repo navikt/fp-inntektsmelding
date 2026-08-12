@@ -130,9 +130,6 @@ public class ForespørselBehandlingTjeneste {
                                                  Optional<UUID> inntektsmeldingUuid) {
         var forespørsel = forespørselTjeneste.hentForespørsel(foresporselUuid)
             .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel for inntektsmelding, ugyldig tilstand"));
-        validerAktør(forespørsel, aktorId);
-        validerOrganisasjon(forespørsel, arbeidsgiver);
-        validerStartdato(forespørsel, startdato);
 
         var erFørstegangsinnsending = ForespørselStatus.UNDER_BEHANDLING.equals(forespørsel.status());
 
@@ -158,8 +155,8 @@ public class ForespørselBehandlingTjeneste {
             .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel etter ferdigstilling"));
     }
 
-    public void oppdaterPortalerMedEndretInntektsmelding(ForespørselDto forespørsel,
-                                                         Optional<UUID> inntektsmeldingUuid) {
+    public void opprettTasksForÅOppdaterePortaler(ForespørselDto forespørsel,
+                                                  Optional<UUID> inntektsmeldingUuid) {
         var taskGruppe = new ProsessTaskGruppe();
         taskGruppe.setProperty(FellesTaskProperties.KEY_FORESPOERSEL_UUID, forespørsel.uuid().toString());
 
@@ -356,19 +353,19 @@ public class ForespørselBehandlingTjeneste {
             .toList();
     }
 
-    private void validerStartdato(ForespørselDto forespørsel, LocalDate startdato) {
+    public void validerStartdato(ForespørselDto forespørsel, LocalDate startdato) {
         if (!forespørsel.førsteUttaksdato().equals(startdato)) {
             throw new IllegalStateException("Startdato var ikke like");
         }
     }
 
-    private void validerOrganisasjon(ForespørselDto forespørsel, Arbeidsgiver arbeidsgiver) {
+    public void validerOrganisasjon(ForespørselDto forespørsel, Arbeidsgiver arbeidsgiver) {
         if (!forespørsel.arbeidsgiver().equals(arbeidsgiver)) {
             throw new IllegalStateException("Organisasjonsnummer var ikke like");
         }
     }
 
-    private void validerAktør(ForespørselDto forespørsel, AktørId aktorId) {
+    public void validerAktør(ForespørselDto forespørsel, AktørId aktorId) {
         if (!forespørsel.aktørId().equals(aktorId)) {
             throw new IllegalStateException("AktørId for bruker var ikke like");
         }
