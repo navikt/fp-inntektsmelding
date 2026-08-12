@@ -89,7 +89,7 @@ InntektsmeldingXMLMapper {
         return switch (kildesystem) {
             case FPSAK -> Systemnavn.OVERSTYRING_FPSAK;
             case ARBEIDSGIVERPORTAL -> Systemnavn.NAV_NO;
-            case LØNN_OG_PERSONAL_SYSTEM -> throw new IllegalStateException("Skal ikke mappe LØNN_OG_PERSONAL_SYSTEM til generell enum, bruk eller faktisk avsendersystem");
+            case LØNN_OG_PERSONAL_SYSTEM -> throw new IllegalStateException("Skal ikke mappe LØNN_OG_PERSONAL_SYSTEM til generell enum, bruk istedenfor det faktiske avsendersystemet fra inntektsmeldingen");
         };
     }
 
