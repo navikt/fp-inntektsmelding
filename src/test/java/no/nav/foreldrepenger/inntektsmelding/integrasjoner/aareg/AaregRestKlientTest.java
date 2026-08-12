@@ -21,7 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.aareg.dto.ArbeidsforholdDto;
 import no.nav.vedtak.exception.IntegrasjonException;
-import no.nav.vedtak.felles.integrasjon.rest.RestClient;
+import no.nav.vedtak.felles.integrasjon.rest.Jackson3RestClient;
 import no.nav.vedtak.felles.integrasjon.rest.RestRequest;
 import no.nav.vedtak.mapper.json.DefaultJsonMapper;
 
@@ -29,7 +29,7 @@ import no.nav.vedtak.mapper.json.DefaultJsonMapper;
 class AaregRestKlientTest {
 
     @Mock
-    private RestClient restClient;
+    private Jackson3RestClient restClient;
 
     private AaregRestKlient aaregRestKlient;
 

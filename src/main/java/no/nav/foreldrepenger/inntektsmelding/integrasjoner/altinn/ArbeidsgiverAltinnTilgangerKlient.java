@@ -8,8 +8,8 @@ import jakarta.ws.rs.core.UriBuilder;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import no.nav.vedtak.exception.IntegrasjonException;
+import no.nav.vedtak.felles.integrasjon.rest.Jackson3RestClient;
 import no.nav.vedtak.felles.integrasjon.rest.NavHeaders;
-import no.nav.vedtak.felles.integrasjon.rest.RestClient;
 import no.nav.vedtak.felles.integrasjon.rest.RestClientConfig;
 import no.nav.vedtak.felles.integrasjon.rest.RestConfig;
 import no.nav.vedtak.felles.integrasjon.rest.RestRequest;
@@ -23,14 +23,14 @@ public class ArbeidsgiverAltinnTilgangerKlient {
 
     private static ArbeidsgiverAltinnTilgangerKlient instance = new ArbeidsgiverAltinnTilgangerKlient();
 
-    private final RestClient restClient;
+    private final Jackson3RestClient restClient;
     private final RestConfig restConfig;
 
     private ArbeidsgiverAltinnTilgangerKlient() {
-        this(RestClient.client());
+        this(Jackson3RestClient.client());
     }
 
-    ArbeidsgiverAltinnTilgangerKlient(RestClient restClient) {
+    ArbeidsgiverAltinnTilgangerKlient(Jackson3RestClient restClient) {
         this.restClient = restClient;
         this.restConfig = RestConfig.forClient(this.getClass());
     }
