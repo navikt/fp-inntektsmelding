@@ -1,6 +1,7 @@
 package no.nav.foreldrepenger.inntektsmelding.inntektsmelding.task;
 
 import java.util.List;
+import java.util.Objects;
 
 import jakarta.xml.bind.JAXBElement;
 
@@ -72,9 +73,15 @@ InntektsmeldingXMLMapper {
 
     private static Avsendersystem lagAvsendersysem(InntektsmeldingDto inntektsmelding) {
         var as = new Avsendersystem();
-        as.setSystemnavn(mapTilSystem(inntektsmelding.getKildesystem()).name());
-        as.setSystemversjon("1.0");
         as.setInnsendingstidspunkt(of.createAvsendersystemInnsendingstidspunkt(inntektsmelding.getInnsendtTidspunkt()));
+        if (Kildesystem.LØNN_OG_PERSONAL_SYSTEM.equals(inntektsmelding.getKildesystem())) {
+            var avsenderSystem = Objects.requireNonNull(inntektsmelding.getAvsenderSystem(), "avsendersystem");
+            as.setSystemnavn(avsenderSystem.navn());
+            as.setSystemversjon(avsenderSystem.versjon());
+        } else {
+            as.setSystemnavn(mapTilSystem(inntektsmelding.getKildesystem()).name());
+            as.setSystemversjon("1.0");
+        }
         return as;
     }
 
@@ -82,7 +89,7 @@ InntektsmeldingXMLMapper {
         return switch (kildesystem) {
             case FPSAK -> Systemnavn.OVERSTYRING_FPSAK;
             case ARBEIDSGIVERPORTAL -> Systemnavn.NAV_NO;
-            case LØNN_OG_PERSONAL_SYSTEM -> Systemnavn.HR_SYSTEM_API;
+            case LØNN_OG_PERSONAL_SYSTEM -> throw new IllegalStateException("Skal ikke mappe LØNN_OG_PERSONAL_SYSTEM til generell enum, bruk eller faktisk avsendersystem");
         };
     }
 
@@ -198,6 +205,5 @@ InntektsmeldingXMLMapper {
     enum Systemnavn {
         OVERSTYRING_FPSAK,
         NAV_NO,
-        HR_SYSTEM_API
     }
 }
