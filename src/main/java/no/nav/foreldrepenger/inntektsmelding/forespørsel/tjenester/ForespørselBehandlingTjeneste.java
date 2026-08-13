@@ -207,7 +207,8 @@ public class ForespørselBehandlingTjeneste {
                                                             Arbeidsgiver arbeidsgiver,
                                                             LocalDate førsteFraværsdato,
                                                             ArbeidsgiverinitiertÅrsak arbeidsgiverinitiertÅrsak,
-                                                            LocalDate skjæringstidspunkt) {
+                                                            LocalDate skjæringstidspunkt,
+                                                            Saksnummer fagsystemSaksnummer) {
         var msg = String.format("Oppretter forespørsel for arbeidsgiverinitiert, orgnr: %s, ytelse: %s",
             arbeidsgiver,
             ytelsetype);
@@ -218,7 +219,8 @@ public class ForespørselBehandlingTjeneste {
             arbeidsgiver,
             førsteFraværsdato,
             forespørselType,
-            skjæringstidspunkt);
+            skjæringstidspunkt,
+            fagsystemSaksnummer);
 
         var forespørsel = forespørselTjeneste.hentForespørsel(uuid)
             .orElseThrow(() -> new IllegalStateException("Finner ikke opprettet arbeidsgiverinitiert forespørsel"));

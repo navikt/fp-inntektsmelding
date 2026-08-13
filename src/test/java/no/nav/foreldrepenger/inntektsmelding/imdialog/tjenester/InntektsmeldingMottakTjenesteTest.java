@@ -16,6 +16,7 @@ import java.util.UUID;
 
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.FellesMottakTjeneste;
 
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Saksnummer;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.EndringsårsakType;
 
 import org.junit.jupiter.api.AfterAll;
@@ -30,7 +31,7 @@ import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.Forespørsel
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.LukkeÅrsak;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
-import no.nav.foreldrepenger.inntektsmelding.integrasjoner.fpsak.FpsakKlient;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.fpsak.FpsakFagsak;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.fpsak.FpsakTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
@@ -138,6 +139,7 @@ class InntektsmeldingMottakTjenesteTest {
             Arbeidsgiver.fra(orgnr),
             startdato,
             ArbeidsgiverinitiertÅrsak.NYANSATT,
+            null,
             null)).thenReturn(uuid);
         when(forespørselBehandlingTjeneste.hentForespørsel(uuid)).thenReturn(Optional.of(forespørselDto));
         when(fellesMottakTjeneste.lagreOgJournalførInntektsmelding(any(), any())).thenReturn(im);
@@ -193,14 +195,15 @@ class InntektsmeldingMottakTjenesteTest {
         var im =lagInntektsmeldingDto(aktørId, Arbeidsgiver.fra(orgnr), startdato, BigDecimal.valueOf(100), List.of(), List.of(), List.of(), BigDecimal.valueOf(100),Tid.TIDENES_ENDE);
 
         var skjæringstidspunkt = startdato.minusDays(2);
-        var infoOmSak = new FpsakKlient.InfoOmSakInntektsmeldingResponse(FpsakKlient.StatusSakInntektsmelding.ÅPEN_FOR_BEHANDLING, startdato, skjæringstidspunkt);
-        when(fpsakTjeneste.henterInfoOmSakIFagsystem(aktørId, Ytelsetype.FORELDREPENGER)).thenReturn(infoOmSak);
+        var infoOmSak = new FpsakFagsak(FpsakFagsak.StatusSakInntektsmelding.ÅPEN_FOR_BEHANDLING, startdato, skjæringstidspunkt, new Saksnummer("12345"));
+        when(fpsakTjeneste.henterInfoOmSakIFagsystem(aktørId, Ytelsetype.FORELDREPENGER)).thenReturn(List.of(infoOmSak));
         when(forespørselBehandlingTjeneste.opprettForespørselForArbeidsgiverInitiertIm(ytelse,
             aktørId,
             Arbeidsgiver.fra(orgnr),
             startdato,
             ArbeidsgiverinitiertÅrsak.UREGISTRERT,
-            skjæringstidspunkt)).thenReturn(uuid);
+            skjæringstidspunkt,
+            new Saksnummer("12345"))).thenReturn(uuid);
         when(forespørselBehandlingTjeneste.hentForespørsel(uuid)).thenReturn(Optional.of(forespørselDto));
 
         when(fellesMottakTjeneste.lagreOgJournalførInntektsmelding(any(), any())).thenReturn(im);

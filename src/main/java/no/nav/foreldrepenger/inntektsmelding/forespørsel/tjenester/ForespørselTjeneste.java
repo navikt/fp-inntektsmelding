@@ -51,12 +51,13 @@ public class ForespørselTjeneste {
                                                        Arbeidsgiver arbeidsgiver,
                                                        LocalDate førsteUttaksdato,
                                                        ForespørselType forespørselType,
-                                                       LocalDate skjæringstidspunkt) {
+                                                       LocalDate skjæringstidspunkt,
+                                                       Saksnummer fagsystemSaksnummer) {
         return forespørselRepository.lagreForespørsel(new ForespørselEntitet(arbeidsgiver.orgnr(),
             skjæringstidspunkt,
             new AktørIdEntitet(brukerAktørId.getAktørId()),
             ytelseType,
-            null,
+            fagsystemSaksnummer == null ? null : fagsystemSaksnummer.saksnummer(),
             førsteUttaksdato,
             forespørselType));
     }

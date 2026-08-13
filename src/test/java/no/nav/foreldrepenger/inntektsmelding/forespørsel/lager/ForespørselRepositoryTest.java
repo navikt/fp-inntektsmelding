@@ -38,7 +38,7 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
             Ytelsetype.FORELDREPENGER,
             "9999999999999",
             "999999999",
-            null,
+            "123",
             LocalDate.now(),
             ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT);
 
@@ -49,7 +49,7 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
         assertThat(hentet.getOrganisasjonsnummer()).isEqualTo("999999999");
         assertThat(hentet.getAktørId().getAktørId()).isEqualTo("9999999999999");
         assertThat(hentet.getYtelseType()).isEqualTo(Ytelsetype.FORELDREPENGER);
-        assertThat(hentet.getFagsystemSaksnummer()).isEmpty();
+        assertThat(hentet.getFagsystemSaksnummer()).contains("123");
         assertThat(hentet.getFørsteUttaksdato()).isEqualTo(LocalDate.now());
     }
 

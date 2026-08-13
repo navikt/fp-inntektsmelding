@@ -1,6 +1,7 @@
 package no.nav.foreldrepenger.inntektsmelding.integrasjoner.fpsak;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import jakarta.enterprise.context.Dependent;
 import jakarta.validation.Valid;
@@ -26,7 +27,7 @@ import no.nav.vedtak.felles.integrasjon.rest.TokenFlow;
 public class FpsakKlient {
     private static final Logger LOG = LoggerFactory.getLogger(FpsakKlient.class);
 
-    private static final String FPSAK_STATUS_API = "/api/fordel/infoOmSakInntektsmelding";
+    private static final String FPSAK_SAKSOVERSIKT = "/api/fordel/inntektsmeldingSaksoversikt";
 
     private final Jackson3RestClient restClient;
     private final RestConfig restConfig;
@@ -40,18 +41,16 @@ public class FpsakKlient {
         this.restConfig = RestConfig.forClient(this.getClass());
     }
 
-
-    public InfoOmSakInntektsmeldingResponse hentInfoOmSak(AktørId aktørId, Ytelsetype ytelsetype) {
-        var uri = UriBuilder.fromUri(restConfig.endpoint()).path(FPSAK_STATUS_API).build();
-        LOG.info("Henter sakstatus for aktør {}", aktørId);
+    public List<InfoOmSakInntektsmeldingResponse> hentSaksoversiktRelevantForInntektsmeldinger(AktørId aktørId, Ytelsetype ytelsetype) {
+        var uri = UriBuilder.fromUri(restConfig.endpoint()).path(FPSAK_SAKSOVERSIKT).build();
+        LOG.info("Henter saksoversikt for aktør {}", aktørId);
         var ytelseDto = ytelsetype.equals(Ytelsetype.FORELDREPENGER) ? InntektsmeldingSakRequest.Ytelse.FORELDREPENGER : InntektsmeldingSakRequest.Ytelse.SVANGERSKAPSPENGER;
         var requestDto = new InntektsmeldingSakRequest(new InntektsmeldingSakRequest.AktørId(aktørId.getAktørId()), ytelseDto);
         var request = RestRequest.newPOSTJson(requestDto, uri, restConfig);
         try {
-            return restClient.sendReturnOptional(request, InfoOmSakInntektsmeldingResponse.class)
-                .orElseThrow(() -> new IllegalStateException("Klarte ikke hente sakstatus fra fpsak"));
+            return restClient.sendReturnList(request, InfoOmSakInntektsmeldingResponse.class);
         } catch (Exception e) {
-            throw new IntegrasjonException("FPINNTEKTSMELDING-694578", "Integrasjonsfeil mot fpsak. Klarte ikke hente sakstatus. Fikk feil: " + e);
+            throw new IntegrasjonException("FPINNTEKTSMELDING-694578", "Integrasjonsfeil mot fpsak. Klarte ikke hente saksoversikt. Fikk feil: " + e);
         }
     }
 
@@ -60,8 +59,7 @@ public class FpsakKlient {
         protected enum Ytelse{FORELDREPENGER, SVANGERSKAPSPENGER}
     }
 
-    public record InfoOmSakInntektsmeldingResponse(StatusSakInntektsmelding statusInntektsmelding, LocalDate førsteUttaksdato, LocalDate skjæringstidspunkt) {}
-
+    public record InfoOmSakInntektsmeldingResponse(@NotNull @Valid StatusSakInntektsmelding statusInntektsmelding, @NotNull LocalDate førsteUttaksdato, @NotNull LocalDate skjæringstidspunkt, @NotNull String saksnummer) {}
     public enum StatusSakInntektsmelding {
         ÅPEN_FOR_BEHANDLING,
         SØKT_FOR_TIDLIG,

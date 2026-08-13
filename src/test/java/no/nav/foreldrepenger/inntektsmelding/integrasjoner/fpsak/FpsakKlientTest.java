@@ -5,7 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
-import java.util.Optional;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,11 +38,13 @@ class FpsakKlientTest {
         var førsteUttaksdato = LocalDate.now();
         var skjæringstidspunkt = førsteUttaksdato.plusDays(1);
 
-        when(restClient.sendReturnOptional(any(),
-            any())).thenReturn(Optional.of(new FpsakKlient.InfoOmSakInntektsmeldingResponse(FpsakKlient.StatusSakInntektsmelding.ÅPEN_FOR_BEHANDLING,
-            førsteUttaksdato, skjæringstidspunkt)));
-        var resultat = fpsakKlient.hentInfoOmSak(aktørId, ytelse);
+        when(restClient.sendReturnList(any(),
+            any())).thenReturn(List.of(new FpsakKlient.InfoOmSakInntektsmeldingResponse(FpsakKlient.StatusSakInntektsmelding.ÅPEN_FOR_BEHANDLING,
+            førsteUttaksdato, skjæringstidspunkt, "12345")));
+        var resultatListe = fpsakKlient.hentSaksoversiktRelevantForInntektsmeldinger(aktørId, ytelse);
 
+        assertThat(resultatListe).hasSize(1);
+        var resultat = resultatListe.getFirst();
         assertThat(resultat.statusInntektsmelding()).isEqualTo(FpsakKlient.StatusSakInntektsmelding.ÅPEN_FOR_BEHANDLING);
         assertThat(resultat.førsteUttaksdato()).isEqualTo(førsteUttaksdato);
         assertThat(resultat.skjæringstidspunkt()).isEqualTo(skjæringstidspunkt);
