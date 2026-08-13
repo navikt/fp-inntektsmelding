@@ -393,7 +393,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
         assertThat(ferdigstillDialogTask.taskType()).isEqualTo(TaskType.forProsessTask(FerdigstillDialogTask.class));
         assertThat(ferdigstillDialogTask.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid.toString());
-        assertThat(ferdigstillDialogTask.getPropertyValue(FerdigstillDialogTask.KEY_LUKKE_AARSAK)).isEqualTo(LukkeÅrsak.EKSTERN_INNSENDING.name());
+        assertThat(ferdigstillDialogTask.getPropertyValue(FellesTaskProperties.KEY_LUKKE_AARSAK)).isEqualTo(LukkeÅrsak.EKSTERN_INNSENDING.name());
         assertThat(ferdigstillDialogTask.getPropertyValue(FellesTaskProperties.KEY_INNTEKTSMELDING_UUID)).isNull();
     }
 

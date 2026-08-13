@@ -356,24 +356,6 @@ public class ForespørselBehandlingTjeneste {
             .toList();
     }
 
-    public void validerStartdato(ForespørselDto forespørsel, LocalDate startdato) {
-        if (!forespørsel.førsteUttaksdato().equals(startdato)) {
-            throw new IllegalStateException("Startdato var ikke like");
-        }
-    }
-
-    public void validerOrganisasjon(ForespørselDto forespørsel, Arbeidsgiver arbeidsgiver) {
-        if (!forespørsel.arbeidsgiver().equals(arbeidsgiver)) {
-            throw new IllegalStateException("Organisasjonsnummer var ikke like");
-        }
-    }
-
-    public void validerAktør(ForespørselDto forespørsel, AktørId aktorId) {
-        if (!forespørsel.aktørId().equals(aktorId)) {
-            throw new IllegalStateException("AktørId for bruker var ikke like");
-        }
-    }
-
     public ForespørselDto oppdaterFørsteUttaksdato(ForespørselDto forespørselEnitet, LocalDate startdato) {
         return forespørselTjeneste.setFørsteUttaksdato(forespørselEnitet.uuid(), startdato);
     }

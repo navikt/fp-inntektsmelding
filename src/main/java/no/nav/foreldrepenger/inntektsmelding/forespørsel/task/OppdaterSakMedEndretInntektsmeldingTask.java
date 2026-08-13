@@ -15,7 +15,7 @@ import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskHandler;
 
 @ApplicationScoped
-@ProsessTask(value = "forespørsel.oppdaterSakMedEndretInntektsmelding")
+@ProsessTask(value = "forespørsel.sak.oppdater")
 public class OppdaterSakMedEndretInntektsmeldingTask implements ProsessTaskHandler {
     private static final Logger LOG = LoggerFactory.getLogger(OppdaterSakMedEndretInntektsmeldingTask.class);
 

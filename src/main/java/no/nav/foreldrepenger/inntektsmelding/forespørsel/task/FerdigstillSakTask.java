@@ -18,7 +18,7 @@ import no.nav.vedtak.felles.prosesstask.api.ProsessTaskHandler;
 
 
 @ApplicationScoped
-@ProsessTask(value = "forespørsel.ferdigstillSak")
+@ProsessTask(value = "forespørsel.sak.ferdigstill")
 public class FerdigstillSakTask implements ProsessTaskHandler {
     public static final String KEY_ER_FØRSTEGANGSINNSENDING = "erFoerstegangsinnsending";
     private static final Logger LOG = LoggerFactory.getLogger(FerdigstillSakTask.class);

@@ -22,9 +22,8 @@ import no.nav.vedtak.felles.prosesstask.api.ProsessTaskHandler;
  * feilet der, mens feil i prod fortsatt kastes videre slik at prosesstask-rammeverket prøver på nytt som normalt.
  */
 @ApplicationScoped
-@ProsessTask(value = "forespørsel.ferdigstillDialog")
+@ProsessTask(value = "forespørsel.dialog.ferdigstill")
 public class FerdigstillDialogTask implements ProsessTaskHandler {
-    public static final String KEY_LUKKE_AARSAK = "lukkeAarsak";
     private static final Logger LOG = LoggerFactory.getLogger(FerdigstillDialogTask.class);
 
     private ForespørselTjeneste forespørselTjeneste;
@@ -46,7 +45,7 @@ public class FerdigstillDialogTask implements ProsessTaskHandler {
         var forespørsel = forespørselTjeneste.hentForespørsel(forespørselUuid)
             .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel " + forespørselUuid + " ved ferdigstilling av dialog"));
 
-        var årsak = LukkeÅrsak.valueOf(prosessTaskData.getPropertyValue(KEY_LUKKE_AARSAK));
+        var årsak = LukkeÅrsak.valueOf(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_LUKKE_AARSAK));
         var inntektsmeldingUuid = Optional.ofNullable(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_INNTEKTSMELDING_UUID)).map(UUID::fromString);
 
         LOG.info("Ferdigstiller dialog hos Dialogporten for forespørsel {}", forespørselUuid);

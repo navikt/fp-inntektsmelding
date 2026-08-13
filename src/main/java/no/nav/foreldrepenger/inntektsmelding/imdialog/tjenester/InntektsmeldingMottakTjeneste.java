@@ -9,6 +9,7 @@ import jakarta.inject.Inject;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselValiderer;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.LukkeÅrsak;
 import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.InntektsmeldingResponseDto;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.FellesMottakTjeneste;
@@ -49,9 +50,9 @@ public class InntektsmeldingMottakTjeneste {
         if (ForespørselStatus.UTGÅTT.equals(forespørsel.status())) {
             throw new IllegalStateException("Kan ikke motta nye inntektsmeldinger på utgåtte forespørsler");
         }
-        forespørselBehandlingTjeneste.validerAktør(forespørsel, mottattInntektsmeldingDto.getAktørId());
-        forespørselBehandlingTjeneste.validerOrganisasjon(forespørsel, mottattInntektsmeldingDto.getArbeidsgiver());
-        forespørselBehandlingTjeneste.validerStartdato(forespørsel, mottattInntektsmeldingDto.getStartdato());
+        ForespørselValiderer.validerAktør(forespørsel, mottattInntektsmeldingDto.getAktørId());
+        ForespørselValiderer.validerOrganisasjon(forespørsel, mottattInntektsmeldingDto.getArbeidsgiver());
+        ForespørselValiderer.validerStartdato(forespørsel, mottattInntektsmeldingDto.getStartdato());
 
         var lagretIm = fellesMottakTjeneste.lagreImOgOpprettJournalførTask(mottattInntektsmeldingDto, forespørsel);
         fellesMottakTjeneste.ferdigstillOgOppdaterEksterneSystemer(forespørsel, Optional.ofNullable(lagretIm.getInntektsmeldingUuid()));
@@ -76,14 +77,17 @@ public class InntektsmeldingMottakTjeneste {
             forespørselDto = forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid)
                 .orElseThrow(this::manglerForespørselFeil);
             //Validering
-            forespørselBehandlingTjeneste.validerAktør(forespørselDto, inntektsmeldingDto.getAktørId());
-            forespørselBehandlingTjeneste.validerOrganisasjon(forespørselDto, inntektsmeldingDto.getArbeidsgiver());
-            forespørselBehandlingTjeneste.validerStartdato(forespørselDto, inntektsmeldingDto.getStartdato());
+            ForespørselValiderer.validerAktør(forespørselDto, inntektsmeldingDto.getAktørId());
+            ForespørselValiderer.validerOrganisasjon(forespørselDto, inntektsmeldingDto.getArbeidsgiver());
 
             if (agInitiertÅrsak == ArbeidsgiverinitiertÅrsak.NYANSATT &&
                 !inntektsmeldingDto.getStartdato().equals(forespørselDto.førsteUttaksdato())) {
+                // Ved arbeidsgiverinitiert innsending for nyansatt er det tillatt å endre startdato,
+                // derfor valideres ikke startdato mot forespørselen før den er oppdatert med den nye datoen
                 forespørselDto = forespørselBehandlingTjeneste.oppdaterFørsteUttaksdato(forespørselDto,
                     inntektsmeldingDto.getStartdato());
+            } else {
+                ForespørselValiderer.validerStartdato(forespørselDto, inntektsmeldingDto.getStartdato());
             }
 
             lagretInntektsmelding = fellesMottakTjeneste.lagreImOgOpprettJournalførTask(inntektsmeldingDto, forespørselDto);
