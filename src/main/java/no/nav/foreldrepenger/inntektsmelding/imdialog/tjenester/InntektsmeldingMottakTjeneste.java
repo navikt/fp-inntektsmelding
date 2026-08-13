@@ -89,7 +89,9 @@ public class InntektsmeldingMottakTjeneste {
             );
 
         } else {
-            var muligeRelevanteFagsaker = fpsakTjeneste.henterInfoOmSakIFagsystem(aktørId, ytelseType);
+            var muligeRelevanteFagsaker = fpsakTjeneste.henterInfoOmSakIFagsystem(aktørId, ytelseType).stream()
+                .filter(a -> a.statusInntektsmelding().equals(FpsakFagsak.StatusSakInntektsmelding.ÅPEN_FOR_BEHANDLING))
+                .toList();
             var saksnummer = muligeRelevanteFagsaker.size() == 1 ? muligeRelevanteFagsaker.getFirst().saksnummer() : null;
             forespørselDto = oppretterArbeidsgiverinitiertForespørsel(ytelseType,
                 aktørId,
