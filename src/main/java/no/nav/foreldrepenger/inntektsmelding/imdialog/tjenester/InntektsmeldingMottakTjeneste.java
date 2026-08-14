@@ -9,6 +9,7 @@ import jakarta.inject.Inject;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselValiderer;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.LukkeÅrsak;
 import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.InntektsmeldingResponseDto;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.FellesMottakTjeneste;
@@ -45,11 +46,15 @@ public class InntektsmeldingMottakTjeneste {
         var forespørsel = forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid)
             .orElseThrow(this::manglerForespørselFeil);
 
+        //Validering
         if (ForespørselStatus.UTGÅTT.equals(forespørsel.status())) {
             throw new IllegalStateException("Kan ikke motta nye inntektsmeldinger på utgåtte forespørsler");
         }
+        ForespørselValiderer.validerAktør(forespørsel, mottattInntektsmeldingDto.getAktørId());
+        ForespørselValiderer.validerOrganisasjon(forespørsel, mottattInntektsmeldingDto.getArbeidsgiver());
+        ForespørselValiderer.validerStartdato(forespørsel, mottattInntektsmeldingDto.getStartdato());
 
-        var lagretIm = fellesMottakTjeneste.lagreOgJournalførInntektsmelding(mottattInntektsmeldingDto, forespørsel);
+        var lagretIm = fellesMottakTjeneste.lagreImOgOpprettJournalførTask(mottattInntektsmeldingDto, forespørsel);
         fellesMottakTjeneste.ferdigstillOgOppdaterEksterneSystemer(forespørsel, Optional.ofNullable(lagretIm.getInntektsmeldingUuid()));
 
         MetrikkerTjeneste.loggInnsendtInntektsmelding(lagretIm);
@@ -71,16 +76,23 @@ public class InntektsmeldingMottakTjeneste {
         if (finnesForespørselFraFør) {
             forespørselDto = forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid)
                 .orElseThrow(this::manglerForespørselFeil);
+            //Validering
+            ForespørselValiderer.validerAktør(forespørselDto, inntektsmeldingDto.getAktørId());
+            ForespørselValiderer.validerOrganisasjon(forespørselDto, inntektsmeldingDto.getArbeidsgiver());
 
             if (agInitiertÅrsak == ArbeidsgiverinitiertÅrsak.NYANSATT &&
                 !inntektsmeldingDto.getStartdato().equals(forespørselDto.førsteUttaksdato())) {
+                // Ved arbeidsgiverinitiert innsending for nyansatt er det tillatt å endre startdato,
+                // derfor valideres ikke startdato mot forespørselen før den er oppdatert med den nye datoen
                 forespørselDto = forespørselBehandlingTjeneste.oppdaterFørsteUttaksdato(forespørselDto,
                     inntektsmeldingDto.getStartdato());
+            } else {
+                ForespørselValiderer.validerStartdato(forespørselDto, inntektsmeldingDto.getStartdato());
             }
 
-            lagretInntektsmelding = fellesMottakTjeneste.lagreOgJournalførInntektsmelding(inntektsmeldingDto, forespørselDto);
+            lagretInntektsmelding = fellesMottakTjeneste.lagreImOgOpprettJournalførTask(inntektsmeldingDto, forespørselDto);
             //legger inn oppdatert inntektsmelding i portaler
-            forespørselBehandlingTjeneste.oppdaterPortalerMedEndretInntektsmelding(forespørselDto,
+            forespørselBehandlingTjeneste.opprettTasksForÅOppdaterePortaler(forespørselDto,
                 Optional.ofNullable(lagretInntektsmelding.getInntektsmeldingUuid())
             );
 
@@ -91,7 +103,7 @@ public class InntektsmeldingMottakTjeneste {
                 agInitiertÅrsak,
                 inntektsmeldingDto.getStartdato());
 
-            lagretInntektsmelding = fellesMottakTjeneste.lagreOgJournalførInntektsmelding(inntektsmeldingDto, forespørselDto);
+            lagretInntektsmelding = fellesMottakTjeneste.lagreImOgOpprettJournalførTask(inntektsmeldingDto, forespørselDto);
             forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørselDto.uuid(), aktørId, arbeidsgiver,
                 inntektsmeldingDto.getStartdato(), LukkeÅrsak.ORDINÆR_INNSENDING, Optional.ofNullable(lagretInntektsmelding.getInntektsmeldingUuid()));
         }

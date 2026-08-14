@@ -2,7 +2,6 @@ package no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 
@@ -22,7 +21,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import no.nav.foreldrepenger.inntektsmelding.database.JpaExtension;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselRepository;
-import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.ForespørselTaskProperties;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.FerdigstillDialogTask;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.FerdigstillSakTask;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.FellesTaskProperties;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettDialogTask;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettOppgaveTask;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettSakTask;
@@ -78,14 +79,6 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             minSideArbeidsgiverTjeneste,
             dialogportenTjeneste,
             prosessTaskTjeneste);
-
-        // dialogportenTjeneste er en mock, så uten denne stubbingen vil ikke Runnable-en som sendes inn til
-        // utførMotDialogportenMedDevToleranse faktisk bli kjørt (default no-op for void-metoder på mocks)
-        lenient().doAnswer(invocation -> {
-            Runnable handling = invocation.getArgument(0);
-            handling.run();
-            return null;
-        }).when(dialogportenTjeneste).utførMotDialogportenMedDevToleranse(any());
     }
 
     // Simulerer at prosesstasken for å opprette sak/oppgave hos arbeidsgiverportalen har kjørt, slik den ville gjort
@@ -94,14 +87,14 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
     private void kjørOpprettSakTask(UUID forespørselUuid) {
         var task = new OpprettSakTask(forespørselTjeneste, minSideArbeidsgiverTjeneste);
         var taskData = ProsessTaskData.forProsessTask(OpprettSakTask.class);
-        taskData.setProperty(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
+        taskData.setProperty(FellesTaskProperties.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
         task.doTask(taskData);
     }
 
     private void kjørOpprettOppgaveTask(UUID forespørselUuid) {
         var task = new OpprettOppgaveTask(forespørselTjeneste, minSideArbeidsgiverTjeneste);
         var taskData = ProsessTaskData.forProsessTask(OpprettOppgaveTask.class);
-        taskData.setProperty(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
+        taskData.setProperty(FellesTaskProperties.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
         task.doTask(taskData);
     }
 
@@ -140,9 +133,9 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         assertThat(opprettedeTasks.get(2).taskType()).isEqualTo(TaskType.forProsessTask(OpprettDialogTask.class));
 
         var forespørselUuid = lagret.getFirst().getUuid().toString();
-        assertThat(opprettedeTasks.get(0).getPropertyValue(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid);
-        assertThat(opprettedeTasks.get(1).getPropertyValue(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid);
-        assertThat(opprettedeTasks.get(2).getPropertyValue(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid);
+        assertThat(opprettedeTasks.get(0).getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid);
+        assertThat(opprettedeTasks.get(1).getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid);
+        assertThat(opprettedeTasks.get(2).getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid);
     }
 
     @Test
@@ -343,7 +336,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         verify(prosessTaskTjeneste).lagre(taskCaptor.capture());
         var opprettDialogTask = taskCaptor.getValue();
         assertThat(opprettDialogTask.taskType()).isEqualTo(TaskType.forProsessTask(OpprettDialogTask.class));
-        assertThat(opprettDialogTask.getPropertyValue(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(uuid.toString());
+        assertThat(opprettDialogTask.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(uuid.toString());
     }
 
     @Test
@@ -383,9 +376,25 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         var lagret = forespørselRepository.hentForespørsel(forespørselUuid);
         assertThat(lagret.map(ForespørselEntitet::getStatus)).isEqualTo(Optional.of(ForespørselStatus.FERDIG));
 
-        // Ferdigstilling av sak hos arbeidsgiverportalen og dialog hos Dialogporten skjer synkront
-        verify(minSideArbeidsgiverTjeneste).ferdigstillSak(any(ForespørselDto.class), eq(LukkeÅrsak.EKSTERN_INNSENDING), eq(Optional.empty()), eq(true));
-        verify(dialogportenTjeneste).ferdigstillDialog(any(ForespørselDto.class), eq(LukkeÅrsak.EKSTERN_INNSENDING), eq(Optional.empty()));
+        // Ferdigstilling av sak hos arbeidsgiverportalen og dialog hos Dialogporten skal skje asynkront via
+        // prosesstask, i sekvens (sak/oppgave hos arbeidsgiverportalen først, deretter dialog)
+        var taskGruppeCaptor = ArgumentCaptor.forClass(ProsessTaskGruppe.class);
+        verify(prosessTaskTjeneste).lagre(taskGruppeCaptor.capture());
+        var tasks = taskGruppeCaptor.getValue().getTasks().stream().map(ProsessTaskGruppe.Entry::task).toList();
+
+        assertThat(tasks).hasSize(2);
+        var ferdigstillSakTask = tasks.getFirst();
+        var ferdigstillDialogTask = tasks.getLast();
+        assertThat(ferdigstillSakTask.taskType()).isEqualTo(TaskType.forProsessTask(FerdigstillSakTask.class));
+        assertThat(ferdigstillSakTask.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid.toString());
+        assertThat(ferdigstillSakTask.getPropertyValue(FellesTaskProperties.KEY_LUKKE_AARSAK)).isEqualTo(LukkeÅrsak.EKSTERN_INNSENDING.name());
+        assertThat(ferdigstillSakTask.getPropertyValue(FerdigstillSakTask.KEY_ER_FØRSTEGANGSINNSENDING)).isEqualTo("true");
+        assertThat(ferdigstillSakTask.getPropertyValue(FellesTaskProperties.KEY_INNTEKTSMELDING_UUID)).isNull();
+
+        assertThat(ferdigstillDialogTask.taskType()).isEqualTo(TaskType.forProsessTask(FerdigstillDialogTask.class));
+        assertThat(ferdigstillDialogTask.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid.toString());
+        assertThat(ferdigstillDialogTask.getPropertyValue(FellesTaskProperties.KEY_LUKKE_AARSAK)).isEqualTo(LukkeÅrsak.EKSTERN_INNSENDING.name());
+        assertThat(ferdigstillDialogTask.getPropertyValue(FellesTaskProperties.KEY_INNTEKTSMELDING_UUID)).isNull();
     }
 
     @Test
@@ -458,7 +467,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         var taskGrupper = taskGruppeCaptor.getAllValues();
 
         var forespørselUuiderMedTaskGruppe = taskGrupper.stream()
-            .map(gruppe -> gruppe.getTasks().getFirst().task().getPropertyValue(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID))
+            .map(gruppe -> gruppe.getTasks().getFirst().task().getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID))
             .toList();
         assertThat(forespørselUuiderMedTaskGruppe).containsExactlyInAnyOrder(forespørselUuid.toString(), forespørselUuid2.toString());
 
@@ -519,9 +528,9 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         var settSakTilUtgåttTask = tasks.getFirst();
         var settDialogTilUtgåttTask = tasks.getLast();
         assertThat(settSakTilUtgåttTask.taskType()).isEqualTo(TaskType.forProsessTask(SettSakTilUtgåttTask.class));
-        assertThat(settSakTilUtgåttTask.getPropertyValue(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid.toString());
+        assertThat(settSakTilUtgåttTask.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid.toString());
         assertThat(settDialogTilUtgåttTask.taskType()).isEqualTo(TaskType.forProsessTask(SettDialogTilUtgåttTask.class));
-        assertThat(settDialogTilUtgåttTask.getPropertyValue(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid.toString());
+        assertThat(settDialogTilUtgåttTask.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid.toString());
     }
 
     @Test
@@ -565,8 +574,13 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         clearHibernateCache();
 
         assertThat(res).isNotNull();
-        verify(minSideArbeidsgiverTjeneste).ferdigstillSak(any(ForespørselDto.class), eq(LukkeÅrsak.EKSTERN_INNSENDING), eq(Optional.of(imUuid)), eq(true));
-        verify(dialogportenTjeneste).ferdigstillDialog(any(ForespørselDto.class), eq(LukkeÅrsak.EKSTERN_INNSENDING), eq(Optional.of(imUuid)));
+        var taskGruppeCaptor = ArgumentCaptor.forClass(ProsessTaskGruppe.class);
+        verify(prosessTaskTjeneste).lagre(taskGruppeCaptor.capture());
+        var ferdigstillSakTask = taskGruppeCaptor.getValue().getTasks().getFirst().task();
+        assertThat(ferdigstillSakTask.taskType()).isEqualTo(TaskType.forProsessTask(FerdigstillSakTask.class));
+        assertThat(ferdigstillSakTask.getPropertyValue(FellesTaskProperties.KEY_LUKKE_AARSAK)).isEqualTo(LukkeÅrsak.EKSTERN_INNSENDING.name());
+        assertThat(ferdigstillSakTask.getPropertyValue(FellesTaskProperties.KEY_INNTEKTSMELDING_UUID)).isEqualTo(imUuid.toString());
+        assertThat(ferdigstillSakTask.getPropertyValue(FerdigstillSakTask.KEY_ER_FØRSTEGANGSINNSENDING)).isEqualTo("true");
     }
 
     @Test
@@ -590,8 +604,13 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         clearHibernateCache();
 
         assertThat(res).isNotNull();
-        verify(minSideArbeidsgiverTjeneste).ferdigstillSak(any(ForespørselDto.class), eq(LukkeÅrsak.EKSTERN_INNSENDING), eq(Optional.of(imUuid)), eq(false));
-        verify(dialogportenTjeneste).ferdigstillDialog(any(ForespørselDto.class), eq(LukkeÅrsak.EKSTERN_INNSENDING), eq(Optional.of(imUuid)));
+        var taskGruppeCaptor = ArgumentCaptor.forClass(ProsessTaskGruppe.class);
+        verify(prosessTaskTjeneste).lagre(taskGruppeCaptor.capture());
+        var ferdigstillSakTask = taskGruppeCaptor.getValue().getTasks().getFirst().task();
+        assertThat(ferdigstillSakTask.taskType()).isEqualTo(TaskType.forProsessTask(FerdigstillSakTask.class));
+        assertThat(ferdigstillSakTask.getPropertyValue(FellesTaskProperties.KEY_LUKKE_AARSAK)).isEqualTo(LukkeÅrsak.EKSTERN_INNSENDING.name());
+        assertThat(ferdigstillSakTask.getPropertyValue(FellesTaskProperties.KEY_INNTEKTSMELDING_UUID)).isEqualTo(imUuid.toString());
+        assertThat(ferdigstillSakTask.getPropertyValue(FerdigstillSakTask.KEY_ER_FØRSTEGANGSINNSENDING)).isEqualTo("false");
     }
     @Test
     void skal_gi_riktig_resultat_om_det_ikke_finnes_en_åpen_forespørsel() {

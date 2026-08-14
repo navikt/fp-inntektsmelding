@@ -15,19 +15,19 @@ import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskHandler;
 
 @ApplicationScoped
-@ProsessTask(value = "forespørsel.sak.utgått")
-public class SettSakTilUtgåttTask implements ProsessTaskHandler {
-    private static final Logger LOG = LoggerFactory.getLogger(SettSakTilUtgåttTask.class);
+@ProsessTask(value = "forespørsel.sak.oppdater")
+public class OppdaterSakMedEndretInntektsmeldingTask implements ProsessTaskHandler {
+    private static final Logger LOG = LoggerFactory.getLogger(OppdaterSakMedEndretInntektsmeldingTask.class);
 
     private ForespørselTjeneste forespørselTjeneste;
     private MinSideArbeidsgiverTjeneste minSideArbeidsgiverTjeneste;
 
-    SettSakTilUtgåttTask() {
+    OppdaterSakMedEndretInntektsmeldingTask() {
         // CDI
     }
 
     @Inject
-    public SettSakTilUtgåttTask(ForespørselTjeneste forespørselTjeneste, MinSideArbeidsgiverTjeneste minSideArbeidsgiverTjeneste) {
+    public OppdaterSakMedEndretInntektsmeldingTask(ForespørselTjeneste forespørselTjeneste, MinSideArbeidsgiverTjeneste minSideArbeidsgiverTjeneste) {
         this.forespørselTjeneste = forespørselTjeneste;
         this.minSideArbeidsgiverTjeneste = minSideArbeidsgiverTjeneste;
     }
@@ -36,10 +36,11 @@ public class SettSakTilUtgåttTask implements ProsessTaskHandler {
     public void doTask(ProsessTaskData prosessTaskData) {
         var forespørselUuid = UUID.fromString(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID));
         var forespørsel = forespørselTjeneste.hentForespørsel(forespørselUuid)
-            .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel " + forespørselUuid + " ved setting av sak til utgått"));
+            .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel " + forespørselUuid + " ved oppdatering av sak"));
+        var inntektsmeldingUuid = UUID.fromString(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_INNTEKTSMELDING_UUID));
 
-        LOG.info("Setter sak hos arbeidsgiverportalen til utgått for forespørsel {}", forespørselUuid);
-        minSideArbeidsgiverTjeneste.settSakTilUtgått(forespørsel);
-        LOG.info("Satte sak hos arbeidsgiverportalen til utgått for forespørsel {}", forespørselUuid);
+        LOG.info("Oppdaterer sak hos arbeidsgiverportalen med endret inntektsmelding for forespørsel {}", forespørselUuid);
+        minSideArbeidsgiverTjeneste.sendBeskjedOmOppdatertInntektsmelding(forespørsel, inntektsmeldingUuid);
+        LOG.info("Oppdaterte sak hos arbeidsgiverportalen med endret inntektsmelding for forespørsel {}", forespørselUuid);
     }
 }

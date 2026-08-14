@@ -100,7 +100,7 @@ public class InntektsmeldingApiMottakTjeneste {
             return sendInntektsmeldingResponse;
         }
 
-        var lagretIm = fellesMottakTjeneste.lagreOgJournalførInntektsmelding(inntektsmelding, forespørsel);
+        var lagretIm = fellesMottakTjeneste.lagreImOgOpprettJournalførTask(inntektsmelding, forespørsel);
         fellesMottakTjeneste.ferdigstillOgOppdaterEksterneSystemer(forespørsel, Optional.ofNullable(lagretIm.getInntektsmeldingUuid()));
 
         MetrikkerTjeneste.loggInnsendtInntektsmelding(lagretIm);
@@ -168,7 +168,7 @@ public class InntektsmeldingApiMottakTjeneste {
                 inntektsmelding.getId());
             InntektsmeldingDto inntektsmeldingMedStatus = InntektsmeldingDto.builder(inntektsmelding).medStatus(InntektsmeldingStatus.VENTER_VURDERING).build();
 
-            var inntektsmeldingDto = fellesMottakTjeneste.lagreIMOgOpprettTaskForEtterkontroll(inntektsmeldingMedStatus, forespørsel);
+            var inntektsmeldingDto = fellesMottakTjeneste.lagreImOgOpprettTaskForEtterkontroll(inntektsmeldingMedStatus, forespørsel);
             MetrikkerTjeneste.loggInnsendtInntektsmeldingUnderNedetid();
             return new SendInntektsmeldingResponse(true,
                 inntektsmeldingDto.getInntektsmeldingUuid(),
