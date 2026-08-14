@@ -26,8 +26,6 @@ import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.Forespørsel
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.LukkeÅrsak;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingTjeneste;
-import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
-import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
@@ -98,9 +96,6 @@ class OppdatereTilFerdigHvisMottattImTaskTest {
         // Assert
         verify(forespørselBehandlingTjeneste).ferdigstillForespørsel(
             forespørselUuid,
-            new AktørId(AKTØR_ID),
-            new Arbeidsgiver(ORG_NUMMER),
-            FØRSTE_UTTAKSDATO,
             LukkeÅrsak.ORDINÆR_INNSENDING,
             Optional.of(inntektsmeldingUuid)
         );
@@ -140,7 +135,7 @@ class OppdatereTilFerdigHvisMottattImTaskTest {
         task.doTask(prosessTaskData);
 
         // Assert
-        verify(forespørselBehandlingTjeneste, never()).ferdigstillForespørsel(any(), any(), any(), any(), any(), any());
+        verify(forespørselBehandlingTjeneste, never()).ferdigstillForespørsel(any(), any(), any());
     }
 
     @Test
@@ -172,7 +167,7 @@ class OppdatereTilFerdigHvisMottattImTaskTest {
         task.doTask(prosessTaskData);
 
         // Assert
-        verify(forespørselBehandlingTjeneste, never()).ferdigstillForespørsel(any(), any(), any(), any(), any(), any());
+        verify(forespørselBehandlingTjeneste, never()).ferdigstillForespørsel(any(), any(), any());
     }
 
     @Test
@@ -214,10 +209,8 @@ class OppdatereTilFerdigHvisMottattImTaskTest {
         task.doTask(prosessTaskData);
 
         // Assert
-        verify(forespørselBehandlingTjeneste).ferdigstillForespørsel(forespørselUuid1, new AktørId(AKTØR_ID), new Arbeidsgiver(ORG_NUMMER),
-            FØRSTE_UTTAKSDATO, LukkeÅrsak.ORDINÆR_INNSENDING, Optional.of(inntektsmeldingUuid1));
-        verify(forespørselBehandlingTjeneste).ferdigstillForespørsel(forespørselUuid2, new AktørId(AKTØR_ID), new Arbeidsgiver(ORG_NUMMER),
-            FØRSTE_UTTAKSDATO, LukkeÅrsak.ORDINÆR_INNSENDING, Optional.of(inntektsmeldingUuid2));
+        verify(forespørselBehandlingTjeneste).ferdigstillForespørsel(forespørselUuid1, LukkeÅrsak.ORDINÆR_INNSENDING, Optional.of(inntektsmeldingUuid1));
+        verify(forespørselBehandlingTjeneste).ferdigstillForespørsel(forespørselUuid2, LukkeÅrsak.ORDINÆR_INNSENDING, Optional.of(inntektsmeldingUuid2));
 
         // Verify next task was created with maxId+1
         verify(prosessTaskTjeneste).lagre(isA(ProsessTaskData.class));
@@ -245,7 +238,7 @@ class OppdatereTilFerdigHvisMottattImTaskTest {
         task.doTask(prosessTaskData);
 
         // Assert
-        verify(forespørselBehandlingTjeneste, never()).ferdigstillForespørsel(any(), any(), any(), any(), any(), any());
+        verify(forespørselBehandlingTjeneste, never()).ferdigstillForespørsel(any(), any(), any());
         verify(prosessTaskTjeneste, never()).lagre(isA(ProsessTaskData.class));
     }
 
@@ -271,7 +264,7 @@ class OppdatereTilFerdigHvisMottattImTaskTest {
         task.doTask(prosessTaskData);
 
         // Assert
-        verify(forespørselBehandlingTjeneste, never()).ferdigstillForespørsel(any(), any(), any(), any(), any(), any());
+        verify(forespørselBehandlingTjeneste, never()).ferdigstillForespørsel(any(), any(), any());
     }
 
     @Test

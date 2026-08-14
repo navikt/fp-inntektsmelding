@@ -124,9 +124,6 @@ public class ForespørselBehandlingTjeneste {
     }
 
     public ForespørselDto ferdigstillForespørsel(UUID foresporselUuid,
-                                                 AktørId aktorId,
-                                                 Arbeidsgiver arbeidsgiver,
-                                                 LocalDate startdato,
                                                  LukkeÅrsak årsak,
                                                  // inntektsmeldingUuid er optional fordi vi ikke har inntektsmeldingen lagret hvis den er innsendt via Altinn / LPS'er
                                                  Optional<UUID> inntektsmeldingUuid) {
@@ -301,11 +298,7 @@ public class ForespørselBehandlingTjeneste {
         // Alle inntektsmeldinger sendt inn via arbeidsgiverportal blir lukket umiddelbart etter innsending fra #InntektsmeldingTjeneste,
         // så forespørsler som enda er åpne her blir løst ved innsending fra andre systemer
         forespørsler.forEach(f -> {
-            var lukketForespørsel = ferdigstillForespørsel(f.uuid(),
-                f.aktørId(),
-                f.arbeidsgiver(),
-                f.førsteUttaksdato(),
-                LukkeÅrsak.EKSTERN_INNSENDING, Optional.empty());
+            var lukketForespørsel = ferdigstillForespørsel(f.uuid(), LukkeÅrsak.EKSTERN_INNSENDING, Optional.empty());
             MetrikkerTjeneste.loggForespørselLukkEkstern(lukketForespørsel);
         });
     }

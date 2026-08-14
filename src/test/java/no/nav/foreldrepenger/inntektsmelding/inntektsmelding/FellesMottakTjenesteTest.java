@@ -153,9 +153,6 @@ class FellesMottakTjenesteTest {
 
         when(forespørselBehandlingTjeneste.ferdigstillForespørsel(
             forespørselDto.uuid(),
-            forespørselDto.aktørId(),
-            forespørselDto.arbeidsgiver(),
-            forespørselDto.førsteUttaksdato(),
             LukkeÅrsak.ORDINÆR_INNSENDING,
             Optional.of(imUuid)
         )).thenReturn(ferdigstiltForespørselDto);
@@ -166,9 +163,6 @@ class FellesMottakTjenesteTest {
         // Assert
         verify(forespørselBehandlingTjeneste).ferdigstillForespørsel(
             forespørselDto.uuid(),
-            forespørselDto.aktørId(),
-            forespørselDto.arbeidsgiver(),
-            forespørselDto.førsteUttaksdato(),
             LukkeÅrsak.ORDINÆR_INNSENDING,
             Optional.of(imUuid)
         );

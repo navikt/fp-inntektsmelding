@@ -67,12 +67,9 @@ public class FellesMottakTjeneste {
     }
 
     public void ferdigstillOgOppdaterEksterneSystemer(ForespørselDto forespørsel, Optional<UUID> imId) {
-        var orgnummer = forespørsel.arbeidsgiver();
         //Ferdigstiller forespørsel hvis den ikke er ferdig fra før
         if (!ForespørselStatus.FERDIG.equals(forespørsel.status())) {
-            var aktørId = forespørsel.aktørId();
-            var ferdigstiltForespørsel = forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørsel.uuid(), aktørId, orgnummer,
-                forespørsel.førsteUttaksdato(), LukkeÅrsak.ORDINÆR_INNSENDING, imId);
+            var ferdigstiltForespørsel = forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørsel.uuid(), LukkeÅrsak.ORDINÆR_INNSENDING, imId);
 
             MetrikkerTjeneste.loggForespørselLukkIntern(ferdigstiltForespørsel);
         } else {

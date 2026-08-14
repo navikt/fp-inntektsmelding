@@ -180,9 +180,6 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         kjørOpprettSakTask(lagret.getUuid());
         kjørOpprettOppgaveTask(lagret.getUuid());
         var fpEntitet = forespørselBehandlingTjeneste.ferdigstillForespørsel(lagret.getUuid(),
-            AktørId.fra(lagret.getAktørId().getAktørId()),
-            Arbeidsgiver.fra(lagret.getOrganisasjonsnummer()),
-            lagret.getFørsteUttaksdato(),
             LukkeÅrsak.EKSTERN_INNSENDING, Optional.empty());
 
         assertThat(fpEntitet.status()).isEqualTo(ForespørselStatus.FERDIG);
@@ -218,9 +215,6 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         kjørOpprettOppgaveTask(lagret.getUuid());
 
         var fpEntitet = forespørselBehandlingTjeneste.ferdigstillForespørsel(lagret.getUuid(),
-            AktørId.fra(lagret.getAktørId().getAktørId()),
-            Arbeidsgiver.fra(lagret.getOrganisasjonsnummer()),
-            lagret.getFørsteUttaksdato(),
             LukkeÅrsak.EKSTERN_INNSENDING, Optional.empty());
 
         assertThat(fpEntitet.status()).isEqualTo(ForespørselStatus.FERDIG);
@@ -256,9 +250,6 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         kjørOpprettOppgaveTask(lagret.getUuid());
 
         var fpEntitet = forespørselBehandlingTjeneste.ferdigstillForespørsel(lagret.getUuid(),
-            AktørId.fra(lagret.getAktørId().getAktørId()),
-            Arbeidsgiver.fra(lagret.getOrganisasjonsnummer()),
-            lagret.getFørsteUttaksdato(),
             LukkeÅrsak.ORDINÆR_INNSENDING, Optional.empty());
 
         assertThat(fpEntitet.status()).isEqualTo(ForespørselStatus.FERDIG);
@@ -387,9 +378,6 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, SAK_ID);
 
         forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørselUuid,
-            AktørId.fra(AKTØR_ID),
-            Arbeidsgiver.fra(BRREG_ORGNUMMER),
-            SKJÆRINGSTIDSPUNKT,
             LukkeÅrsak.EKSTERN_INNSENDING, Optional.empty());
 
         clearHibernateCache();
@@ -425,9 +413,6 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, SAK_ID);
 
         forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørselUuid,
-            AktørId.fra(AKTØR_ID),
-            Arbeidsgiver.fra(BRREG_ORGNUMMER),
-            FØRSTE_UTTAKSDATO,
             LukkeÅrsak.EKSTERN_INNSENDING, Optional.empty());
 
         clearHibernateCache();
@@ -587,9 +572,6 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, SAK_ID);
 
         var res = forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørselUuid,
-            AktørId.fra(AKTØR_ID),
-            Arbeidsgiver.fra(BRREG_ORGNUMMER),
-            SKJÆRINGSTIDSPUNKT,
             LukkeÅrsak.EKSTERN_INNSENDING, Optional.of(imUuid));
 
         clearHibernateCache();
@@ -617,9 +599,6 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         forespørselRepository.ferdigstillForespørsel(SAK_ID);
 
         var res = forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørselUuid,
-            AktørId.fra(AKTØR_ID),
-            Arbeidsgiver.fra(BRREG_ORGNUMMER),
-            SKJÆRINGSTIDSPUNKT,
             LukkeÅrsak.EKSTERN_INNSENDING, Optional.of(imUuid));
 
         clearHibernateCache();

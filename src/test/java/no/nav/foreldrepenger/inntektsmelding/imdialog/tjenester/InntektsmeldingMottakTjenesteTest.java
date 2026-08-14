@@ -173,7 +173,7 @@ class InntektsmeldingMottakTjenesteTest {
         var responseDto = inntektsmeldingMottakTjeneste.mottaArbeidsgiverinitiertInntektsmelding(im, eksisterendeForespørselDto.uuid(), ArbeidsgiverinitiertÅrsak.NYANSATT);
 
         // Assert
-        verify(forespørselBehandlingTjeneste, times(0)).ferdigstillForespørsel(any(), any(), any(), any(), any(), any());
+        verify(forespørselBehandlingTjeneste, times(0)).ferdigstillForespørsel(any(), any(), any());
         assertThat(responseDto).isNotNull();
         assertThat(responseDto.refusjon()).hasSize(1);
         assertThat(responseDto.startdato()).isEqualTo(nyStartDato);
@@ -241,7 +241,7 @@ class InntektsmeldingMottakTjenesteTest {
             ArbeidsgiverinitiertÅrsak.UREGISTRERT);
 
         // Assert
-        verify(forespørselBehandlingTjeneste, times(0)).ferdigstillForespørsel(any(), any(), any(), any(), any(), any());
+        verify(forespørselBehandlingTjeneste, times(0)).ferdigstillForespørsel(any(), any(), any());
         assertThat(responseDto).isNotNull();
         assertThat(responseDto.refusjon()).hasSize(2);
         assertThat(responseDto.startdato()).isEqualTo(startdato);
