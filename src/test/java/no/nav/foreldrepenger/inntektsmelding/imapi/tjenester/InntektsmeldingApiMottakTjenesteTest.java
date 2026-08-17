@@ -85,7 +85,7 @@ class InntektsmeldingApiMottakTjenesteTest {
         assertThat(response.inntektsmeldingUuid()).isNull();
         assertThat(response.feilinformasjon().feilmelding()).contains("Finner ikke forespørsel for uuid");
         assertThat(response.feilinformasjon().referanseId()).isEqualTo(foresporselUuid.toString());
-        verify(fellesMottakTjeneste, never()).lagreOgJournalførInntektsmelding(any(), any());
+        verify(fellesMottakTjeneste, never()).lagreImOgOpprettJournalførTask(any(), any());
     }
 
     @Test
@@ -100,7 +100,7 @@ class InntektsmeldingApiMottakTjenesteTest {
         assertThat(response.success()).isFalse();
         assertThat(response.feilinformasjon().feilmelding()).contains("forkastet forespørsel");
         assertThat(response.feilinformasjon().referanseId()).isEqualTo(foresporselUuid.toString());
-        verify(fellesMottakTjeneste, never()).lagreOgJournalførInntektsmelding(any(), any());
+        verify(fellesMottakTjeneste, never()).lagreImOgOpprettJournalførTask(any(), any());
     }
 
     @Test
@@ -126,7 +126,7 @@ class InntektsmeldingApiMottakTjenesteTest {
         assertThat(response.status()).isNull();
         assertThat(response.feilinformasjon().feilmelding()).contains("Inntekt i inntektsmelding er ulik inntekt fra A-inntekt, og ingen endringsårsak er oppgitt");
         assertThat(response.feilinformasjon().referanseId()).isEqualTo(foresporselUuid.toString());
-        verify(fellesMottakTjeneste, never()).lagreOgJournalførInntektsmelding(any(), any());
+        verify(fellesMottakTjeneste, never()).lagreImOgOpprettJournalførTask(any(), any());
     }
 
     @Test
@@ -145,7 +145,7 @@ class InntektsmeldingApiMottakTjenesteTest {
         when(forespørselBehandlingTjeneste.hentForespørsel(foresporselUuid)).thenReturn(Optional.of(forespørselDto));
         when(inntektsmeldingTjeneste.hentSisteInntektsmeldingForForespørsel(foresporselUuid)).thenReturn(null);
         when(inntektTjeneste.hentInntekt(any(), any(), any(), any(), eq(false))).thenReturn(inntektsopplysninger);
-        when(fellesMottakTjeneste.lagreIMOgOpprettTaskForEtterkontroll(any(), any())).thenReturn(lagretIm);
+        when(fellesMottakTjeneste.lagreImOgOpprettTaskForEtterkontroll(any(), any())).thenReturn(lagretIm);
 
         var response = inntektsmeldingApiMottakTjeneste.mottaInntektsmelding(inputDto, foresporselUuid);
 
@@ -154,8 +154,8 @@ class InntektsmeldingApiMottakTjenesteTest {
         assertThat(response.status()).isEqualTo(InntektsmeldingStatusDto.VENTER_VURDERING);
         assertThat(response.feilinformasjon().feilmelding()).contains("nedetid");
         assertThat(response.feilinformasjon().referanseId()).isEqualTo(foresporselUuid.toString());
-        verify(fellesMottakTjeneste).lagreIMOgOpprettTaskForEtterkontroll(any(), any());
-        verify(fellesMottakTjeneste, never()).lagreOgJournalførInntektsmelding(any(), any());
+        verify(fellesMottakTjeneste).lagreImOgOpprettTaskForEtterkontroll(any(), any());
+        verify(fellesMottakTjeneste, never()).lagreImOgOpprettJournalførTask(any(), any());
     }
 
     @Test
@@ -173,7 +173,7 @@ class InntektsmeldingApiMottakTjenesteTest {
         when(forespørselBehandlingTjeneste.hentForespørsel(foresporselUuid)).thenReturn(Optional.of(forespørselDto));
         when(inntektsmeldingTjeneste.hentSisteInntektsmeldingForForespørsel(foresporselUuid)).thenReturn(null);
         when(inntektTjeneste.hentInntekt(any(), any(), any(), any(), eq(false))).thenReturn(inntektsopplysninger);
-        when(fellesMottakTjeneste.lagreOgJournalførInntektsmelding(any(), any())).thenReturn(lagretIm);
+        when(fellesMottakTjeneste.lagreImOgOpprettJournalførTask(any(), any())).thenReturn(lagretIm);
 
         var response = inntektsmeldingApiMottakTjeneste.mottaInntektsmelding(inputDto, foresporselUuid);
 
@@ -198,7 +198,7 @@ class InntektsmeldingApiMottakTjenesteTest {
         when(forespørselBehandlingTjeneste.hentForespørsel(foresporselUuid)).thenReturn(Optional.of(forespørselDto));
         when(inntektsmeldingTjeneste.hentSisteInntektsmeldingForForespørsel(foresporselUuid)).thenReturn(null);
         when(inntektTjeneste.hentInntekt(any(), any(), any(),any(), eq(false))).thenReturn(inntektsopplysninger);
-        when(fellesMottakTjeneste.lagreOgJournalførInntektsmelding(any(), any())).thenReturn(lagretIm);
+        when(fellesMottakTjeneste.lagreImOgOpprettJournalførTask(any(), any())).thenReturn(lagretIm);
 
         var response = inntektsmeldingApiMottakTjeneste.mottaInntektsmelding(inputDto, foresporselUuid);
 
@@ -223,7 +223,7 @@ class InntektsmeldingApiMottakTjenesteTest {
         assertThat(response.success()).isFalse();
         assertThat(response.feilinformasjon().feilmelding()).contains("Ingen endring på ny inntektsmelding");
         assertThat(response.feilinformasjon().referanseId()).isEqualTo(tidligereLikIm.getInntektsmeldingUuid().toString());
-        verify(fellesMottakTjeneste, never()).lagreOgJournalførInntektsmelding(any(), any());
+        verify(fellesMottakTjeneste, never()).lagreImOgOpprettJournalførTask(any(), any());
     }
 
     @Test
@@ -244,7 +244,7 @@ class InntektsmeldingApiMottakTjenesteTest {
         when(forespørselBehandlingTjeneste.hentForespørsel(foresporselUuid)).thenReturn(Optional.of(forespørselDto));
         when(inntektsmeldingTjeneste.hentSisteInntektsmeldingForForespørsel(foresporselUuid)).thenReturn(forrigeInnsendteIm);
         when(inntektTjeneste.hentInntekt(any(), any(), any(), any(), eq(false))).thenReturn(inntektsopplysninger);
-        when(fellesMottakTjeneste.lagreOgJournalførInntektsmelding(any(), any())).thenReturn(nyInnsendtIm);
+        when(fellesMottakTjeneste.lagreImOgOpprettJournalførTask(any(), any())).thenReturn(nyInnsendtIm);
 
         var response = inntektsmeldingApiMottakTjeneste.mottaInntektsmelding(inputDto, foresporselUuid);
 
@@ -389,13 +389,13 @@ class InntektsmeldingApiMottakTjenesteTest {
         when(personTjeneste.hentPersonInfoFraAktørId(any(), any())).thenReturn(lagPersonInfo());
         when(fellesGrunnlagTjeneste.harJobbetHeleBeregningsperioden(any(), any(), any())).thenReturn(false);
         when(inntektTjeneste.hentInntekt(any(), any(), any(), any(), eq(false))).thenReturn(inntektsopplysninger);
-        when(fellesMottakTjeneste.lagreOgJournalførInntektsmelding(any(), any())).thenReturn(lagretIm);
+        when(fellesMottakTjeneste.lagreImOgOpprettJournalførTask(any(), any())).thenReturn(lagretIm);
 
         var response = inntektsmeldingApiMottakTjeneste.mottaInntektsmelding(inputDto, foresporselUuid);
 
         assertThat(response.success()).isTrue();
         assertThat(response.inntektsmeldingUuid()).isEqualTo(imUuid);
-        verify(fellesMottakTjeneste).lagreOgJournalførInntektsmelding(any(), any());
+        verify(fellesMottakTjeneste).lagreImOgOpprettJournalførTask(any(), any());
     }
 
     @Test
@@ -417,7 +417,7 @@ class InntektsmeldingApiMottakTjenesteTest {
 
         assertThat(response.success()).isFalse();
         assertThat(response.feilinformasjon().feilkode()).isEqualTo(no.nav.foreldrepenger.inntektsmelding.felles.FeilkodeDto.ULIK_INNTEKT);
-        verify(fellesMottakTjeneste, never()).lagreOgJournalførInntektsmelding(any(), any());
+        verify(fellesMottakTjeneste, never()).lagreImOgOpprettJournalførTask(any(), any());
     }
 
     @Test
@@ -435,7 +435,7 @@ class InntektsmeldingApiMottakTjenesteTest {
         org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class,
             () -> inntektsmeldingApiMottakTjeneste.mottaInntektsmelding(inputDto, foresporselUuid));
 
-        verify(fellesMottakTjeneste, never()).lagreOgJournalførInntektsmelding(any(), any());
+        verify(fellesMottakTjeneste, never()).lagreImOgOpprettJournalførTask(any(), any());
     }
 
     private static ForespørselDto lagForespørselDto(UUID uuid, LocalDate startdatoOverride, ForespørselStatus status) {

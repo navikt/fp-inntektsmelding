@@ -73,7 +73,7 @@ class FellesMottakTjenesteTest {
         when(inntektsmeldingTjeneste.hentInntektsmelding(imId)).thenReturn(lagretInntektsmelding);
 
         // Act
-        var resultat = fellesMottakTjeneste.lagreOgJournalførInntektsmelding(inntektsmeldingDto, forespørselDto);
+        var resultat = fellesMottakTjeneste.lagreImOgOpprettJournalførTask(inntektsmeldingDto, forespørselDto);
 
         // Assert
         assertThat(resultat).isNotNull();
@@ -112,7 +112,7 @@ class FellesMottakTjenesteTest {
         when(inntektsmeldingTjeneste.hentInntektsmelding(imId)).thenReturn(lagretInntektsmelding);
 
         // Act
-        fellesMottakTjeneste.lagreOgJournalførInntektsmelding(inntektsmeldingDto, forespørselDto);
+        fellesMottakTjeneste.lagreImOgOpprettJournalførTask(inntektsmeldingDto, forespørselDto);
 
         // Assert
         ArgumentCaptor<ProsessTaskData> taskCaptor = ArgumentCaptor.forClass(ProsessTaskData.class);
@@ -134,7 +134,7 @@ class FellesMottakTjenesteTest {
         when(inntektsmeldingTjeneste.hentInntektsmelding(imId)).thenReturn(lagretInntektsmelding);
 
         // Act
-        fellesMottakTjeneste.lagreOgJournalførInntektsmelding(inntektsmeldingDto, forespørselDto);
+        fellesMottakTjeneste.lagreImOgOpprettJournalførTask(inntektsmeldingDto, forespørselDto);
 
         // Assert
         ArgumentCaptor<ProsessTaskData> taskCaptor = ArgumentCaptor.forClass(ProsessTaskData.class);
@@ -185,7 +185,7 @@ class FellesMottakTjenesteTest {
         fellesMottakTjeneste.ferdigstillOgOppdaterEksterneSystemer(forespørselDto, Optional.of(imUuid));
 
         // Assert
-        verify(forespørselBehandlingTjeneste).oppdaterPortalerMedEndretInntektsmelding(
+        verify(forespørselBehandlingTjeneste).opprettTasksForÅOppdaterePortaler(
             forespørselDto,
             Optional.of(imUuid)
         );
@@ -193,7 +193,7 @@ class FellesMottakTjenesteTest {
 
 
     @Test
-    void lagreIMOgOpprettTaskForEtterkontroll_skal_opprette_task_med_riktig_inntektsmeldingId() {
+    void lagreImOgOpprettTaskForEtterkontroll_skal_opprette_task_med_riktig_inntektsmeldingId() {
         var imId = 456L;
         var forespørselUuid = UUID.randomUUID();
         var inntektsmeldingDto = lagInntektsmeldingDto();
@@ -201,7 +201,7 @@ class FellesMottakTjenesteTest {
 
         when(inntektsmeldingTjeneste.lagreInntektsmelding(any(), any())).thenReturn(imId);
 
-        fellesMottakTjeneste.lagreIMOgOpprettTaskForEtterkontroll(inntektsmeldingDto, forespørselDto);
+        fellesMottakTjeneste.lagreImOgOpprettTaskForEtterkontroll(inntektsmeldingDto, forespørselDto);
 
         ArgumentCaptor<ProsessTaskData> taskCaptor = ArgumentCaptor.forClass(ProsessTaskData.class);
         verify(prosessTaskTjeneste).lagre(taskCaptor.capture());
@@ -211,7 +211,7 @@ class FellesMottakTjenesteTest {
     }
 
     @Test
-    void lagreIMOgOpprettTaskForEtterkontroll_skal_opprette_task_av_riktig_type() {
+    void lagreImOgOpprettTaskForEtterkontroll_skal_opprette_task_av_riktig_type() {
         var imId = 456L;
         var forespørselUuid = UUID.randomUUID();
         var inntektsmeldingDto = lagInntektsmeldingDto();
@@ -219,7 +219,7 @@ class FellesMottakTjenesteTest {
 
         when(inntektsmeldingTjeneste.lagreInntektsmelding(any(), any())).thenReturn(imId);
 
-        fellesMottakTjeneste.lagreIMOgOpprettTaskForEtterkontroll(inntektsmeldingDto, forespørselDto);
+        fellesMottakTjeneste.lagreImOgOpprettTaskForEtterkontroll(inntektsmeldingDto, forespørselDto);
 
         ArgumentCaptor<ProsessTaskData> taskCaptor = ArgumentCaptor.forClass(ProsessTaskData.class);
         verify(prosessTaskTjeneste).lagre(taskCaptor.capture());
