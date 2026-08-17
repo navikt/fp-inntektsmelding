@@ -3,7 +3,7 @@ package no.nav.foreldrepenger.inntektsmelding.imdialog.tjenester;
 import java.time.LocalDate;
 
 import no.nav.foreldrepenger.inntektsmelding.forvaltning.RekjørFeiledeTasksBatchTask;
-import no.nav.foreldrepenger.inntektsmelding.integrasjoner.fpsak.FpsakKlient;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.fpsak.FpsakFagsak;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonInfo;
 import no.nav.foreldrepenger.inntektsmelding.server.exceptions.InntektsmeldingException;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
@@ -19,11 +19,11 @@ public class UregistrertValiderer {
     private UregistrertValiderer() {
         // Skjuler default konstruktør
     }
-    public static void validerOmUregistrertKanOpprettes(FpsakKlient.InfoOmSakInntektsmeldingResponse infoOmsak,
+    public static void validerOmUregistrertKanOpprettes(FpsakFagsak infoOmsak,
                                                     Ytelsetype ytelsetype,
                                                     PersonInfo personInfo) {
-        if (!infoOmsak.statusInntektsmelding().equals(FpsakKlient.StatusSakInntektsmelding.ÅPEN_FOR_BEHANDLING)) {
-            if (infoOmsak.statusInntektsmelding().equals(FpsakKlient.StatusSakInntektsmelding.SØKT_FOR_TIDLIG)) {
+        if (!infoOmsak.statusInntektsmelding().equals(FpsakFagsak.StatusSakInntektsmelding.ÅPEN_FOR_BEHANDLING)) {
+            if (infoOmsak.statusInntektsmelding().equals(FpsakFagsak.StatusSakInntektsmelding.SØKT_FOR_TIDLIG)) {
                 kastForTidligException(personInfo, ytelsetype);
             } else {
                 LOG.info("Kan ikke sende inn inntektsmelding på {} for aktørid {}", ytelsetype, personInfo.aktørId());

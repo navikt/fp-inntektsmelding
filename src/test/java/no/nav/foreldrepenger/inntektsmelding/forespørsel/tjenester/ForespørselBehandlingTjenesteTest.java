@@ -322,6 +322,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             AktørId.fra(AKTØR_ID),
             Arbeidsgiver.fra(BRREG_ORGNUMMER),
             FØRSTE_UTTAKSDATO, ArbeidsgiverinitiertÅrsak.NYANSATT,
+            null,
             null);
 
         var lagret = forespørselRepository.hentForespørsel(uuid).orElseThrow();
@@ -348,7 +349,8 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             Arbeidsgiver.fra(BRREG_ORGNUMMER),
             FØRSTE_UTTAKSDATO,
             ArbeidsgiverinitiertÅrsak.UREGISTRERT,
-            forventetSkjæringstidspunkt);
+            forventetSkjæringstidspunkt,
+            Saksnummer.fra(SAKSNUMMER));
 
         var lagret = forespørselRepository.hentForespørsel(uuid).orElseThrow();
 
@@ -357,6 +359,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         assertThat(lagret.getOppgaveId()).isEmpty();
         assertThat(lagret.getFørsteUttaksdato()).isEqualTo(FØRSTE_UTTAKSDATO);
         assertThat(lagret.getSkjæringstidspunkt()).isEqualTo(Optional.of(forventetSkjæringstidspunkt));
+        assertThat(lagret.getFagsystemSaksnummer()).contains(SAKSNUMMER);
     }
 
     @Test

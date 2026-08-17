@@ -12,12 +12,14 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import java.util.Comparator;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.nav.foreldrepenger.inntektsmelding.imdialog.tjenester.GrunnlagDtoTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.imdialog.tjenester.UregistrertValiderer;
-import no.nav.foreldrepenger.inntektsmelding.integrasjoner.fpsak.FpsakKlient;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.fpsak.FpsakFagsak;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.fpsak.FpsakTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.AutentisertMedTokenX;
@@ -70,8 +72,8 @@ public class ArbeidsgiverinitiertDialogRest {
         if (eksisterendeForepørslersisteTreÅr.isEmpty()) {
             LOG.info("Fant ikke forespørsel siste tre år for aktør {}, spør fpsak.", aktørId);
 
-            var infoOmSakRespons = fpsakTjeneste.henterInfoOmSakIFagsystem(aktørId, request.ytelseType());
-            var finnesYtelseIFpsak = FpsakKlient.StatusSakInntektsmelding.ÅPEN_FOR_BEHANDLING.equals(infoOmSakRespons.statusInntektsmelding());
+            var sakerIFpsak = fpsakTjeneste.henterInfoOmSakIFagsystem(aktørId, request.ytelseType());
+            var finnesYtelseIFpsak = sakerIFpsak.stream().anyMatch(s -> s.statusInntektsmelding().equals(FpsakFagsak.StatusSakInntektsmelding.ÅPEN_FOR_BEHANDLING));
 
             if (!finnesYtelseIFpsak) {
                 LOG.info("{}: kan ikke sende inn inntektsmelding for {} for person med aktørId {}",
@@ -123,18 +125,21 @@ public class ArbeidsgiverinitiertDialogRest {
         }
 
         var aktørId = personInfo.aktørId();
-        var infoOmsak = fpsakTjeneste.henterInfoOmSakIFagsystem(aktørId, request.ytelseType());
-        var førsteUttaksdato = infoOmsak.førsteUttaksdato();
 
-        var infoOmSak = fpsakTjeneste.henterInfoOmSakIFagsystem(aktørId, request.ytelseType());
+        var sakerIFpsak = fpsakTjeneste.henterInfoOmSakIFagsystem(aktørId, request.ytelseType());
+        var infoOmSak = sakerIFpsak.stream()
+            .filter(sak -> sak.statusInntektsmelding().equals(FpsakFagsak.StatusSakInntektsmelding.ÅPEN_FOR_BEHANDLING))
+            .min(Comparator.comparing(FpsakFagsak::førsteUttaksdato))
+            .or(() -> sakerIFpsak.stream().min(Comparator.comparing(FpsakFagsak::førsteUttaksdato)))
+            .orElseThrow(() -> new IllegalStateException("Mangler sak i fpsak"));
 
         UregistrertValiderer.validerOmUregistrertKanOpprettes(infoOmSak, request.ytelseType(), personInfo);
 
         var dto = grunnlagDtoTjeneste.lagArbeidsgiverinitiertUregistrertDialogDto(request.fødselsnummer(),
             request.ytelseType(),
-            førsteUttaksdato,
+            infoOmSak.førsteUttaksdato(),
             Arbeidsgiver.fra(request.organisasjonsnummer().orgnr()),
-            infoOmsak.skjæringstidspunkt());
+            infoOmSak.skjæringstidspunkt());
         return Response.ok(dto).build();
     }
 

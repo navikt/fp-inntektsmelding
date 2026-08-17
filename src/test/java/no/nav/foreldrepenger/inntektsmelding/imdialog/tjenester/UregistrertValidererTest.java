@@ -5,10 +5,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.LocalDate;
 
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Saksnummer;
+
 import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.jupiter.api.Test;
 
-import no.nav.foreldrepenger.inntektsmelding.integrasjoner.fpsak.FpsakKlient;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.fpsak.FpsakFagsak;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonInfo;
 import no.nav.foreldrepenger.inntektsmelding.server.exceptions.InntektsmeldingException;
@@ -30,9 +32,10 @@ class UregistrertValidererTest {
 
     @Test
     void uregistrert_skal_ikke_opprettet_finnes_ikke_sak() {
-        var infoOmSak = new FpsakKlient.InfoOmSakInntektsmeldingResponse(FpsakKlient.StatusSakInntektsmelding.INGEN_BEHANDLING,
+        var infoOmSak = new FpsakFagsak(FpsakFagsak.StatusSakInntektsmelding.INGEN_BEHANDLING,
             Tid.TIDENES_ENDE,
-            Tid.TIDENES_ENDE);
+            Tid.TIDENES_ENDE,
+            new Saksnummer("12345"));
 
         var ex = assertThrows(InntektsmeldingException.class, () -> UregistrertValiderer.validerOmUregistrertKanOpprettes(infoOmSak,
             Ytelsetype.FORELDREPENGER,
@@ -43,9 +46,10 @@ class UregistrertValidererTest {
 
     @Test
     void uregistrert_skal_ikke_opprettet_søkt_for_tidlig_aksjonspunkt() {
-        var infoOmSak = new FpsakKlient.InfoOmSakInntektsmeldingResponse(FpsakKlient.StatusSakInntektsmelding.SØKT_FOR_TIDLIG,
+        var infoOmSak = new FpsakFagsak(FpsakFagsak.StatusSakInntektsmelding.SØKT_FOR_TIDLIG,
             FØRSTE_UTTAKSDATO,
-            FØRSTE_UTTAKSDATO);
+            FØRSTE_UTTAKSDATO,
+            new Saksnummer("12345"));
 
         var ex = assertThrows(InntektsmeldingException.class, () -> UregistrertValiderer.validerOmUregistrertKanOpprettes(infoOmSak,
             Ytelsetype.FORELDREPENGER,
@@ -57,9 +61,10 @@ class UregistrertValidererTest {
     @Test
     void uregistrert_skal_ikke_opprettet_søkt_for_tidlig_beregnet_fra_første_uttaksdato() {
         var førsteUttaksdatoForTidlig = FØRSTE_UTTAKSDATO.plusMonths(4).plusDays(1);
-        var infoOmSak = new FpsakKlient.InfoOmSakInntektsmeldingResponse(FpsakKlient.StatusSakInntektsmelding.ÅPEN_FOR_BEHANDLING,
+        var infoOmSak = new FpsakFagsak(FpsakFagsak.StatusSakInntektsmelding.ÅPEN_FOR_BEHANDLING,
             førsteUttaksdatoForTidlig,
-            FØRSTE_UTTAKSDATO.plusMonths(5).minusDays(2));
+            FØRSTE_UTTAKSDATO.plusMonths(5).minusDays(2),
+            new Saksnummer("12345"));
 
         var ex = assertThrows(InntektsmeldingException.class, () -> UregistrertValiderer.validerOmUregistrertKanOpprettes(infoOmSak,
             Ytelsetype.FORELDREPENGER,
@@ -70,9 +75,10 @@ class UregistrertValidererTest {
 
     @Test
     void uregistrert_kan_opprettes() {
-        var infoOmSak = new FpsakKlient.InfoOmSakInntektsmeldingResponse(FpsakKlient.StatusSakInntektsmelding.ÅPEN_FOR_BEHANDLING,
+        var infoOmSak = new FpsakFagsak(FpsakFagsak.StatusSakInntektsmelding.ÅPEN_FOR_BEHANDLING,
             FØRSTE_UTTAKSDATO,
-            FØRSTE_UTTAKSDATO.minusDays(2));
+            FØRSTE_UTTAKSDATO.minusDays(2),
+            new Saksnummer("12345"));
 
         assertDoesNotThrow(() -> UregistrertValiderer.validerOmUregistrertKanOpprettes(infoOmSak, Ytelsetype.FORELDREPENGER, PERSON_INFO));
     }

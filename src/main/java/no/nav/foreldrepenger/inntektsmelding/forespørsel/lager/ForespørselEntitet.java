@@ -100,8 +100,9 @@ public class ForespørselEntitet {
         this.ytelseType = Objects.requireNonNull(ytelseType, "ytelseType");
         this.førsteUttaksdato = Objects.requireNonNull(førsteUttaksdato, "førsteUttaksdato");
         this.forespørselType = Objects.requireNonNull(forespørselType, "forespørselType");
+        this.fagsystemSaksnummer = fagsystemSaksnummer;
         if (forespørselType.equals(ForespørselType.BESTILT_AV_FAGSYSTEM)) {
-            this.fagsystemSaksnummer = Objects.requireNonNull(fagsystemSaksnummer, "fagsystemSaksnummer");
+            Objects.requireNonNull(fagsystemSaksnummer, "fagsystemSaksnummer");
             this.skjæringstidspunkt = Objects.requireNonNull(skjæringstidspunkt, "skjæringstidspunkt");
         }
         if (skjæringstidspunkt != null && forespørselType.equals(ForespørselType.ARBEIDSGIVERINITIERT_UREGISTRERT)) {
