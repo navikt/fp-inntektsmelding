@@ -135,6 +135,7 @@ public class InntektsmeldingMottakTjeneste {
         LocalDate skjæringstidspunkt = Tid.TIDENES_ENDE;
         if (arbeidsgiverinitiertÅrsak.equals(ArbeidsgiverinitiertÅrsak.UREGISTRERT)) {
             var infoOmSak = fpsakTjeneste.henterInfoOmSakIFagsystem(aktørId, ytelseType).stream()
+                .filter(s -> FpsakFagsak.StatusSakInntektsmelding.ÅPEN_FOR_BEHANDLING.equals(s.statusInntektsmelding()))
                 .min(Comparator.comparing(FpsakFagsak::førsteUttaksdato))
                 .orElseThrow(() -> new IllegalStateException("Mangler sak i fpsak"));
             skjæringstidspunkt = infoOmSak.skjæringstidspunkt();
