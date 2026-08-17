@@ -121,9 +121,12 @@ public class InntektsmeldingMottakTjeneste {
                 Tid.TIDENES_ENDE.equals(skjæringstidspunkt) ? null : skjæringstidspunkt,
                 saksnummer);
 
+            //opdaterer status til FERDIG - må bruke uuid siden forespørselen ikke er oppdatert med sak id fra arbeidsgiverportalen enda
+            forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørselDto.uuid());
+
             lagretInntektsmelding = fellesMottakTjeneste.lagreImOgOpprettJournalførTask(inntektsmeldingDto, forespørselDto);
 
-            forespørselBehandlingTjeneste.opprettTasksForOpprettOgFerdigstillAgi(forespørselDto,
+            forespørselBehandlingTjeneste.opprettSakOgFerdigstillTasksIPortaler(forespørselDto,
                 lagretInntektsmelding.getInntektsmeldingUuid());
         }
 

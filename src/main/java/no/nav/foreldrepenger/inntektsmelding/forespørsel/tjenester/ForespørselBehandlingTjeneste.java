@@ -8,8 +8,6 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettDialogOgFerdigstillTask;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -365,16 +363,27 @@ public class ForespørselBehandlingTjeneste {
             fraLoepenr);
     }
 
-    public void opprettTasksForOpprettOgFerdigstillAgi(ForespørselDto forespørselDto, UUID inntektsmeldingUuid) {
-        // oppretter tasker for eksterne kall
+    public void ferdigstillForespørsel(UUID forespørselUuid) {
+        forespørselTjeneste.ferdigstillForespørsel(forespørselUuid);
+    }
+
+    public void opprettSakOgFerdigstillTasksIPortaler(ForespørselDto forespørselDto, UUID inntektsmeldingUuid) {
+        // oppretter sekvensielle tasks for å oppdatere arbeidgsiverportalen og dialogporten. Disse vil kun starte kjøring om foregående har status FERDIG
+        // Forespørselen er allerede ferdigstilt i databasen på dette tidspunktet
         var opprettSakTask = ProsessTaskData.forProsessTask(OpprettSakTask.class);
-        var opprettDialogOgFerdigstillTask = ProsessTaskData.forProsessTask(OpprettDialogOgFerdigstillTask.class);
-        opprettDialogOgFerdigstillTask.setProperty(FellesTaskProperties.KEY_INNTEKTSMELDING_UUID, inntektsmeldingUuid.toString());
+        var opprettDialogTask = ProsessTaskData.forProsessTask(OpprettDialogTask.class);
+        var ferdigstillSakTask = ProsessTaskData.forProsessTask(FerdigstillSakTask.class);
+        ferdigstillSakTask.setProperty(FerdigstillSakTask.KEY_ER_FØRSTEGANGSINNSENDING, Boolean.toString(true));
+        var ferdigstillDialogTask = ProsessTaskData.forProsessTask(FerdigstillDialogTask.class);
 
         var taskGruppe = new ProsessTaskGruppe();
         taskGruppe.setProperty(FellesTaskProperties.KEY_FORESPOERSEL_UUID, forespørselDto.uuid().toString());
+        taskGruppe.setProperty(FellesTaskProperties.KEY_INNTEKTSMELDING_UUID, inntektsmeldingUuid.toString());
+        taskGruppe.setProperty(FellesTaskProperties.KEY_LUKKE_AARSAK, LukkeÅrsak.ORDINÆR_INNSENDING.name());
         taskGruppe.addNesteSekvensiell(opprettSakTask);
-        taskGruppe.addNesteSekvensiell(opprettDialogOgFerdigstillTask);
+        taskGruppe.addNesteSekvensiell(opprettDialogTask);
+        taskGruppe.addNesteSekvensiell(ferdigstillSakTask);
+        taskGruppe.addNesteSekvensiell(ferdigstillDialogTask);
         prosessTaskTjeneste.lagre(taskGruppe);
     }
 }

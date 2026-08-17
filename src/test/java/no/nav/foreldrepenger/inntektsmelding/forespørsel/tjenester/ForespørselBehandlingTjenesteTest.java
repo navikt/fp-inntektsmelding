@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -24,7 +25,6 @@ import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselRepo
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.FerdigstillDialogTask;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.FerdigstillSakTask;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.FellesTaskProperties;
-import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettDialogOgFerdigstillTask;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettDialogTask;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettOppgaveTask;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettSakTask;
@@ -351,24 +351,49 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         var forespørselDto = forespørselTjeneste.hentForespørsel(forespørselUuid).orElseThrow();
         var inntektsmeldingUuid = UUID.randomUUID();
 
-        forespørselBehandlingTjeneste.opprettTasksForOpprettOgFerdigstillAgi(forespørselDto, inntektsmeldingUuid);
+        forespørselBehandlingTjeneste.opprettSakOgFerdigstillTasksIPortaler(forespørselDto, inntektsmeldingUuid);
 
-        // Oppretter sak hos arbeidsgiverportalen først, deretter opprett-dialog-og-ferdigstill, i sekvens
+        // Oppretter sak og dialog hos eksterne systemer, deretter ferdigstiller dem, alt i sekvens
         var taskGruppeCaptor = ArgumentCaptor.forClass(ProsessTaskGruppe.class);
         verify(prosessTaskTjeneste).lagre(taskGruppeCaptor.capture());
         var taskGruppe = taskGruppeCaptor.getValue();
 
         var tasks = taskGruppe.getTasks().stream().map(ProsessTaskGruppe.Entry::task).toList();
-        assertThat(tasks).hasSize(2);
-        var opprettSakTask = tasks.getFirst();
-        var opprettDialogOgFerdigstillTask = tasks.getLast();
+        assertThat(tasks).hasSize(4);
+        var opprettSakTask = tasks.get(0);
+        var opprettDialogTask = tasks.get(1);
+        var ferdigstillSakTask = tasks.get(2);
+        var ferdigstillDialogTask = tasks.get(3);
 
         assertThat(opprettSakTask.taskType()).isEqualTo(TaskType.forProsessTask(OpprettSakTask.class));
         assertThat(opprettSakTask.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid.toString());
 
-        assertThat(opprettDialogOgFerdigstillTask.taskType()).isEqualTo(TaskType.forProsessTask(OpprettDialogOgFerdigstillTask.class));
-        assertThat(opprettDialogOgFerdigstillTask.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid.toString());
-        assertThat(opprettDialogOgFerdigstillTask.getPropertyValue(FellesTaskProperties.KEY_INNTEKTSMELDING_UUID)).isEqualTo(inntektsmeldingUuid.toString());
+        assertThat(opprettDialogTask.taskType()).isEqualTo(TaskType.forProsessTask(OpprettDialogTask.class));
+        assertThat(opprettDialogTask.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid.toString());
+
+        assertThat(ferdigstillSakTask.taskType()).isEqualTo(TaskType.forProsessTask(FerdigstillSakTask.class));
+        assertThat(ferdigstillSakTask.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid.toString());
+        assertThat(ferdigstillSakTask.getPropertyValue(FellesTaskProperties.KEY_INNTEKTSMELDING_UUID)).isEqualTo(inntektsmeldingUuid.toString());
+        assertThat(ferdigstillSakTask.getPropertyValue(FellesTaskProperties.KEY_LUKKE_AARSAK)).isEqualTo(LukkeÅrsak.ORDINÆR_INNSENDING.name());
+        assertThat(ferdigstillSakTask.getPropertyValue(FerdigstillSakTask.KEY_ER_FØRSTEGANGSINNSENDING)).isEqualTo("true");
+
+        assertThat(ferdigstillDialogTask.taskType()).isEqualTo(TaskType.forProsessTask(FerdigstillDialogTask.class));
+        assertThat(ferdigstillDialogTask.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid.toString());
+        assertThat(ferdigstillDialogTask.getPropertyValue(FellesTaskProperties.KEY_INNTEKTSMELDING_UUID)).isEqualTo(inntektsmeldingUuid.toString());
+        assertThat(ferdigstillDialogTask.getPropertyValue(FellesTaskProperties.KEY_LUKKE_AARSAK)).isEqualTo(LukkeÅrsak.ORDINÆR_INNSENDING.name());
+    }
+
+    @Test
+    void skal_ferdigstille_forespørsel_i_databasen_uten_å_opprette_tasker() {
+        var forespørselUuid = lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, BRREG_ORGNUMMER, SAKSNUMMER,
+            FØRSTE_UTTAKSDATO, ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT);
+
+        forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørselUuid);
+
+        clearHibernateCache();
+        var lagret = forespørselRepository.hentForespørsel(forespørselUuid).orElseThrow();
+        assertThat(lagret.getStatus()).isEqualTo(ForespørselStatus.FERDIG);
+        verifyNoInteractions(prosessTaskTjeneste);
     }
 
     @Test
