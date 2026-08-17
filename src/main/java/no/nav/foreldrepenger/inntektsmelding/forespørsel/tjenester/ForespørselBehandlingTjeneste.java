@@ -8,6 +8,8 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettDialogOgFerdigstillTask;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -231,7 +233,7 @@ public class ForespørselBehandlingTjeneste {
         prosessTaskTjeneste.lagre(taskGruppe);
     }
 
-    public UUID opprettForespørselForArbeidsgiverInitiertIm(Ytelsetype ytelsetype,
+    public ForespørselDto opprettForespørselForArbeidsgiverInitiertIm(Ytelsetype ytelsetype,
                                                             AktørId aktørId,
                                                             Arbeidsgiver arbeidsgiver,
                                                             LocalDate førsteFraværsdato,
@@ -251,16 +253,8 @@ public class ForespørselBehandlingTjeneste {
             skjæringstidspunkt,
             fagsystemSaksnummer);
 
-        var forespørsel = forespørselTjeneste.hentForespørsel(uuid)
+        return forespørselTjeneste.hentForespørsel(uuid)
             .orElseThrow(() -> new IllegalStateException("Finner ikke opprettet arbeidsgiverinitiert forespørsel"));
-        var fagerSakId = minSideArbeidsgiverTjeneste.opprettSak(forespørsel);
-        forespørselTjeneste.setArbeidsgiverNotifikasjonSakId(uuid, fagerSakId);
-
-        var opprettDialogTask = ProsessTaskData.forProsessTask(OpprettDialogTask.class);
-        opprettDialogTask.setProperty(FellesTaskProperties.KEY_FORESPOERSEL_UUID, uuid.toString());
-        prosessTaskTjeneste.lagre(opprettDialogTask);
-
-        return uuid;
     }
 
     private void leggTilSettUtgåttTasks(UUID forespørselUuid) {
@@ -376,5 +370,18 @@ public class ForespørselBehandlingTjeneste {
             fom,
             tom,
             fraLoepenr);
+    }
+
+    public void opprettTasksForOpprettOgFerdigstillAgi(ForespørselDto forespørselDto, UUID inntektsmeldingUuid) {
+        // oppretter tasker for eksterne kall
+        var opprettSakTask = ProsessTaskData.forProsessTask(OpprettSakTask.class);
+        var opprettDialogOgFerdigstillTask = ProsessTaskData.forProsessTask(OpprettDialogOgFerdigstillTask.class);
+        opprettDialogOgFerdigstillTask.setProperty(FellesTaskProperties.KEY_INNTEKTSMELDING_UUID, inntektsmeldingUuid.toString());
+
+        var taskGruppe = new ProsessTaskGruppe();
+        taskGruppe.setProperty(FellesTaskProperties.KEY_FORESPOERSEL_UUID, forespørselDto.uuid().toString());
+        taskGruppe.addNesteSekvensiell(opprettSakTask);
+        taskGruppe.addNesteSekvensiell(opprettDialogOgFerdigstillTask);
+        prosessTaskTjeneste.lagre(taskGruppe);
     }
 }

@@ -24,6 +24,7 @@ import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselRepo
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.FerdigstillDialogTask;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.FerdigstillSakTask;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.FellesTaskProperties;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettDialogOgFerdigstillTask;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettDialogTask;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettOppgaveTask;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettSakTask;
@@ -316,35 +317,25 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
     @Test
     void skal_opprette_arbeidsgiverinitert_forespørsel_uten_oppgave() {
-        mockInfoForOpprettelse(SAK_ID);
-
-        var uuid = forespørselBehandlingTjeneste.opprettForespørselForArbeidsgiverInitiertIm(YTELSETYPE,
+        var forespørselDto = forespørselBehandlingTjeneste.opprettForespørselForArbeidsgiverInitiertIm(YTELSETYPE,
             AktørId.fra(AKTØR_ID),
             Arbeidsgiver.fra(BRREG_ORGNUMMER),
             FØRSTE_UTTAKSDATO, ArbeidsgiverinitiertÅrsak.NYANSATT,
             null,
             null);
 
-        var lagret = forespørselRepository.hentForespørsel(uuid).orElseThrow();
+        var lagret = forespørselRepository.hentForespørsel(forespørselDto.uuid()).orElseThrow();
 
         clearHibernateCache();
         assertThat(lagret.getStatus()).isEqualTo(ForespørselStatus.UNDER_BEHANDLING);
         assertThat(lagret.getOppgaveId()).isEmpty();
         assertThat(lagret.getFørsteUttaksdato()).isEqualTo(FØRSTE_UTTAKSDATO);
-
-        // Opprettelse av dialog hos Dialogporten skal skje asynkront via prosesstask
-        var taskCaptor = ArgumentCaptor.forClass(ProsessTaskData.class);
-        verify(prosessTaskTjeneste).lagre(taskCaptor.capture());
-        var opprettDialogTask = taskCaptor.getValue();
-        assertThat(opprettDialogTask.taskType()).isEqualTo(TaskType.forProsessTask(OpprettDialogTask.class));
-        assertThat(opprettDialogTask.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(uuid.toString());
     }
 
     @Test
     void skal_opprette_arbeidsgiverinitert_forespørsel_med_skjæringstidspunkt() {
-        mockInfoForOpprettelse(SAK_ID);
         var forventetSkjæringstidspunkt = FØRSTE_UTTAKSDATO.minusDays(1);
-        var uuid = forespørselBehandlingTjeneste.opprettForespørselForArbeidsgiverInitiertIm(YTELSETYPE,
+        var forespørselDto = forespørselBehandlingTjeneste.opprettForespørselForArbeidsgiverInitiertIm(YTELSETYPE,
             AktørId.fra(AKTØR_ID),
             Arbeidsgiver.fra(BRREG_ORGNUMMER),
             FØRSTE_UTTAKSDATO,
@@ -352,7 +343,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             forventetSkjæringstidspunkt,
             Saksnummer.fra(SAKSNUMMER));
 
-        var lagret = forespørselRepository.hentForespørsel(uuid).orElseThrow();
+        var lagret = forespørselRepository.hentForespørsel(forespørselDto.uuid()).orElseThrow();
 
         clearHibernateCache();
         assertThat(lagret.getStatus()).isEqualTo(ForespørselStatus.UNDER_BEHANDLING);
@@ -360,6 +351,33 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         assertThat(lagret.getFørsteUttaksdato()).isEqualTo(FØRSTE_UTTAKSDATO);
         assertThat(lagret.getSkjæringstidspunkt()).isEqualTo(Optional.of(forventetSkjæringstidspunkt));
         assertThat(lagret.getFagsystemSaksnummer()).contains(SAKSNUMMER);
+    }
+
+    @Test
+    void skal_opprette_tasker_for_å_opprette_og_ferdigstille_agi() {
+        var forespørselUuid = lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, BRREG_ORGNUMMER, SAKSNUMMER,
+            FØRSTE_UTTAKSDATO, ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT);
+        var forespørselDto = forespørselTjeneste.hentForespørsel(forespørselUuid).orElseThrow();
+        var inntektsmeldingUuid = UUID.randomUUID();
+
+        forespørselBehandlingTjeneste.opprettTasksForOpprettOgFerdigstillAgi(forespørselDto, inntektsmeldingUuid);
+
+        // Oppretter sak hos arbeidsgiverportalen først, deretter opprett-dialog-og-ferdigstill, i sekvens
+        var taskGruppeCaptor = ArgumentCaptor.forClass(ProsessTaskGruppe.class);
+        verify(prosessTaskTjeneste).lagre(taskGruppeCaptor.capture());
+        var taskGruppe = taskGruppeCaptor.getValue();
+
+        var tasks = taskGruppe.getTasks().stream().map(ProsessTaskGruppe.Entry::task).toList();
+        assertThat(tasks).hasSize(2);
+        var opprettSakTask = tasks.getFirst();
+        var opprettDialogOgFerdigstillTask = tasks.getLast();
+
+        assertThat(opprettSakTask.taskType()).isEqualTo(TaskType.forProsessTask(OpprettSakTask.class));
+        assertThat(opprettSakTask.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid.toString());
+
+        assertThat(opprettDialogOgFerdigstillTask.taskType()).isEqualTo(TaskType.forProsessTask(OpprettDialogOgFerdigstillTask.class));
+        assertThat(opprettDialogOgFerdigstillTask.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid.toString());
+        assertThat(opprettDialogOgFerdigstillTask.getPropertyValue(FellesTaskProperties.KEY_INNTEKTSMELDING_UUID)).isEqualTo(inntektsmeldingUuid.toString());
     }
 
     @Test

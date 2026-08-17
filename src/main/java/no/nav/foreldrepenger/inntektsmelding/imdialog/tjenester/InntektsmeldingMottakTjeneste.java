@@ -105,16 +105,28 @@ public class InntektsmeldingMottakTjeneste {
                 .filter(a -> a.statusInntektsmelding().equals(FpsakFagsak.StatusSakInntektsmelding.ÅPEN_FOR_BEHANDLING))
                 .toList();
             var saksnummer = muligeRelevanteFagsaker.size() == 1 ? muligeRelevanteFagsaker.getFirst().saksnummer() : null;
-            forespørselDto = oppretterArbeidsgiverinitiertForespørsel(ytelseType,
+            // dersom uregistrert så må vi hente skjæringstidspunkt fra fpsak. Vi trenger denne for å hente riktig inntektsperioder ved endring av inntektsmelding
+            LocalDate skjæringstidspunkt = Tid.TIDENES_ENDE;
+            if (agInitiertÅrsak.equals(ArbeidsgiverinitiertÅrsak.UREGISTRERT)) {
+                var infoOmSak = fpsakTjeneste.henterInfoOmSakIFagsystem(aktørId, ytelseType).stream()
+                    .filter(s -> FpsakFagsak.StatusSakInntektsmelding.ÅPEN_FOR_BEHANDLING.equals(s.statusInntektsmelding()))
+                    .min(Comparator.comparing(FpsakFagsak::førsteUttaksdato))
+                    .orElseThrow(() -> new IllegalStateException("Mangler sak i fpsak"));
+                skjæringstidspunkt = infoOmSak.skjæringstidspunkt();
+            }
+            //oppretter forespørsel i databasen
+            forespørselDto = forespørselBehandlingTjeneste.opprettForespørselForArbeidsgiverInitiertIm(ytelseType,
                 aktørId,
                 arbeidsgiver,
-                agInitiertÅrsak,
                 inntektsmeldingDto.getStartdato(),
+                agInitiertÅrsak,
+                Tid.TIDENES_ENDE.equals(skjæringstidspunkt) ? null : skjæringstidspunkt,
                 saksnummer);
 
             lagretInntektsmelding = fellesMottakTjeneste.lagreImOgOpprettJournalførTask(inntektsmeldingDto, forespørselDto);
-            forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørselDto.uuid(), aktørId, arbeidsgiver,
-                inntektsmeldingDto.getStartdato(), LukkeÅrsak.ORDINÆR_INNSENDING, Optional.ofNullable(lagretInntektsmelding.getInntektsmeldingUuid()));
+
+            forespørselBehandlingTjeneste.opprettTasksForOpprettOgFerdigstillAgi(forespørselDto,
+                lagretInntektsmelding.getInntektsmeldingUuid());
         }
 
         if (agInitiertÅrsak == ArbeidsgiverinitiertÅrsak.NYANSATT) {
@@ -123,34 +135,6 @@ public class InntektsmeldingMottakTjeneste {
             MetrikkerTjeneste.logginnsendtArbeidsgiverinitiertUregistrertIm(lagretInntektsmelding);
         }
         return InntektsmeldingMapper.mapFraDomene(lagretInntektsmelding, forespørselDto);
-    }
-
-    private ForespørselDto oppretterArbeidsgiverinitiertForespørsel(Ytelsetype ytelseType,
-                                                                    AktørId aktørId,
-                                                                    Arbeidsgiver arbeidsgiver,
-                                                                    ArbeidsgiverinitiertÅrsak arbeidsgiverinitiertÅrsak,
-                                                                    LocalDate startdato,
-                                                                    Saksnummer saksnummer) {
-        // dersom uregistrert så må vi hente skjæringstidspunkt fra fpsak. Vi trenger denne for å hente riktig inntektsperioder ved endring av inntektsmelding
-        LocalDate skjæringstidspunkt = Tid.TIDENES_ENDE;
-        if (arbeidsgiverinitiertÅrsak.equals(ArbeidsgiverinitiertÅrsak.UREGISTRERT)) {
-            var infoOmSak = fpsakTjeneste.henterInfoOmSakIFagsystem(aktørId, ytelseType).stream()
-                .filter(s -> FpsakFagsak.StatusSakInntektsmelding.ÅPEN_FOR_BEHANDLING.equals(s.statusInntektsmelding()))
-                .min(Comparator.comparing(FpsakFagsak::førsteUttaksdato))
-                .orElseThrow(() -> new IllegalStateException("Mangler sak i fpsak"));
-            skjæringstidspunkt = infoOmSak.skjæringstidspunkt();
-        }
-
-        var forespørselUuid = forespørselBehandlingTjeneste.opprettForespørselForArbeidsgiverInitiertIm(ytelseType,
-            aktørId,
-            arbeidsgiver,
-            startdato,
-            arbeidsgiverinitiertÅrsak,
-            Tid.TIDENES_ENDE.equals(skjæringstidspunkt) ? null : skjæringstidspunkt,
-            saksnummer);
-
-        return forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid)
-            .orElseThrow(this::manglerForespørselFeil);
     }
 
     private TekniskException manglerForespørselFeil() {

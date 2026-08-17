@@ -29,7 +29,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
-import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.LukkeÅrsak;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.fpsak.FpsakFagsak;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.fpsak.FpsakTjeneste;
@@ -125,7 +124,6 @@ class InntektsmeldingMottakTjenesteTest {
     @Test
     void skal_kunne_motta_arbeidsgiverinitert_inntektsmelding() {
         // Arrange
-        var uuid = UUID.randomUUID();
         var ytelse = Ytelsetype.FORELDREPENGER;
         var aktørId = AktørId.fra("9999999999999");
         var orgnr = "999999999";
@@ -140,16 +138,15 @@ class InntektsmeldingMottakTjenesteTest {
             startdato,
             ArbeidsgiverinitiertÅrsak.NYANSATT,
             null,
-            null)).thenReturn(uuid);
-        when(forespørselBehandlingTjeneste.hentForespørsel(uuid)).thenReturn(Optional.of(forespørselDto));
+            null)).thenReturn(forespørselDto);
+        when(forespørselBehandlingTjeneste.hentForespørsel(forespørselDto.uuid())).thenReturn(Optional.of(forespørselDto));
         when(fellesMottakTjeneste.lagreImOgOpprettJournalførTask(any(), any())).thenReturn(im);
 
         // Act
         var responseDto = inntektsmeldingMottakTjeneste.mottaArbeidsgiverinitiertInntektsmelding(im, null, ArbeidsgiverinitiertÅrsak.NYANSATT);
 
         // Assert
-        verify(forespørselBehandlingTjeneste, times(1)).ferdigstillForespørsel(forespørselDto.uuid(), aktørId, Arbeidsgiver.fra(orgnr), startdato, LukkeÅrsak.ORDINÆR_INNSENDING,
-                Optional.ofNullable(im.getInntektsmeldingUuid()));
+        verify(forespørselBehandlingTjeneste, times(1)).opprettTasksForOpprettOgFerdigstillAgi(forespørselDto, im.getInntektsmeldingUuid());
         assertThat(responseDto).isNotNull();
         assertThat(responseDto.refusjon()).hasSize(1);
     }
@@ -185,7 +182,6 @@ class InntektsmeldingMottakTjenesteTest {
     @Test
     void skal_kunne_motta_arbeidsgiverinitert_uregistrert_inntektsmelding() {
         // Arrange
-        var uuid = UUID.randomUUID();
         var ytelse = Ytelsetype.FORELDREPENGER;
         var aktørId = AktørId.fra("9999999999999");
         var orgnr = "999999999";
@@ -203,8 +199,9 @@ class InntektsmeldingMottakTjenesteTest {
             startdato,
             ArbeidsgiverinitiertÅrsak.UREGISTRERT,
             skjæringstidspunkt,
-            new Saksnummer("12345"))).thenReturn(uuid);
-        when(forespørselBehandlingTjeneste.hentForespørsel(uuid)).thenReturn(Optional.of(forespørselDto));
+            new Saksnummer("12345"))).thenReturn(forespørselDto);
+
+        when(forespørselBehandlingTjeneste.hentForespørsel(forespørselDto.uuid())).thenReturn(Optional.of(forespørselDto));
 
         when(fellesMottakTjeneste.lagreImOgOpprettJournalførTask(any(), any())).thenReturn(im);
 
@@ -213,8 +210,7 @@ class InntektsmeldingMottakTjenesteTest {
             ArbeidsgiverinitiertÅrsak.UREGISTRERT);
 
         // Assert
-        verify(forespørselBehandlingTjeneste, times(1)).ferdigstillForespørsel(forespørselDto.uuid(), aktørId, Arbeidsgiver.fra(orgnr), startdato, LukkeÅrsak.ORDINÆR_INNSENDING,
-            Optional.ofNullable(im.getInntektsmeldingUuid()));
+        verify(forespørselBehandlingTjeneste, times(1)).opprettTasksForOpprettOgFerdigstillAgi(forespørselDto, im.getInntektsmeldingUuid());
         assertThat(responseDto).isNotNull();
         assertThat(responseDto.refusjon()).hasSize(1);
         assertThat(responseDto.startdato()).isEqualTo(startdato);
