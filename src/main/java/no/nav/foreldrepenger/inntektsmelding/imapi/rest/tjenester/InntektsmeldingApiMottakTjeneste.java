@@ -111,6 +111,10 @@ public class InntektsmeldingApiMottakTjeneste {
 
     public void kontrollerInntektsmeldingEtterNedetid(Long inntektsmeldingId) {
         var inntektsmelding = inntektsmeldingTjeneste.hentInntektsmelding(inntektsmeldingId);
+        if (InntektsmeldingStatus.UTDATERT.equals(inntektsmelding.getStatus())) {
+            LOG.info("Inntektsmelding {} er utdatert, hopper over etterkontroll etter nedetid", inntektsmelding.getInntektsmeldingUuid());
+            return;
+        }
         var forespørsel = inntektsmelding.getForespørsel().orElseThrow();
         var personInfo = personTjeneste.hentPersonInfoFraAktørId(inntektsmelding.getAktørId(), inntektsmelding.getYtelse());
         var harJobbetHeleBeregningsperioden = fellesGrunnlagTjeneste.harJobbetHeleBeregningsperioden(personInfo,

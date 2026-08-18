@@ -58,8 +58,6 @@ public class InntektsmeldingMottakTjeneste {
         ForespørselValiderer.validerOrganisasjon(forespørsel, mottattInntektsmeldingDto.getArbeidsgiver());
         ForespørselValiderer.validerStartdato(forespørsel, mottattInntektsmeldingDto.getStartdato());
 
-        fellesMottakTjeneste.settForrigeInntektsmeldingUtdatertHvisVenterVurdering(forespørsel);
-
         var lagretIm = fellesMottakTjeneste.lagreImOgOpprettJournalførTask(mottattInntektsmeldingDto, forespørsel);
         fellesMottakTjeneste.ferdigstillOgOppdaterEksterneSystemer(forespørsel, Optional.ofNullable(lagretIm.getInntektsmeldingUuid()));
 
@@ -96,7 +94,8 @@ public class InntektsmeldingMottakTjeneste {
                 ForespørselValiderer.validerStartdato(forespørselDto, inntektsmeldingDto.getStartdato());
             }
 
-            fellesMottakTjeneste.settForrigeInntektsmeldingUtdatertHvisVenterVurdering(forespørselDto);
+            // Se kommentar i mottaInntektsmelding: samme her, ikke relevant før frontend-flyten
+            // har egen VENTER_VURDERING-logikk, se TFP-6987.
 
             lagretInntektsmelding = fellesMottakTjeneste.lagreImOgOpprettJournalførTask(inntektsmeldingDto, forespørselDto);
             //legger inn oppdatert inntektsmelding i portaler
