@@ -18,6 +18,7 @@ import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.task.SendTilJoarkTa
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.metrikker.MetrikkerTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Saksnummer;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingStatus;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskTjeneste;
 
@@ -64,6 +65,15 @@ public class FellesMottakTjeneste {
         prosessTaskTjeneste.lagre(task);
         LOG.info("Opprettet task for etterkontroll av inntektsmelding");
         return inntektsmeldingTjeneste.hentInntektsmelding(lagretIMId);
+    }
+
+    public void settForrigeInntektsmeldingUtdatertHvisVenterVurdering(ForespørselDto forespørsel) {
+        var sisteInntektsmelding = inntektsmeldingTjeneste.hentSisteInntektsmeldingForForespørsel(forespørsel.uuid());
+        if (sisteInntektsmelding != null && InntektsmeldingStatus.VENTER_VURDERING.equals(sisteInntektsmelding.getStatus())) {
+            LOG.info("Forrige inntektsmelding {} venter fortsatt på vurdering. Setter status utdatert siden ny inntektsmelding er mottatt.",
+                sisteInntektsmelding.getInntektsmeldingUuid());
+            inntektsmeldingTjeneste.oppdatertStatusTilInntektsmelding(sisteInntektsmelding.getInntektsmeldingUuid(), InntektsmeldingStatus.UTDATERT);
+        }
     }
 
     public void ferdigstillOgOppdaterEksterneSystemer(ForespørselDto forespørsel, Optional<UUID> imId) {

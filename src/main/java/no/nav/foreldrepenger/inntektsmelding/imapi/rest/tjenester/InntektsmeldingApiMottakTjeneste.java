@@ -93,6 +93,8 @@ public class InntektsmeldingApiMottakTjeneste {
                     sisteInntektsmelding.getInntektsmeldingUuid().toString()));
         }
 
+        fellesMottakTjeneste.settForrigeInntektsmeldingUtdatertHvisVenterVurdering(forespørsel);
+
         var sendInntektsmeldingResponse = sjekkMånedInntektMotRapportertInntekt(forespørsel, inntektsmelding);
         // Både avvisning (ulik inntekt) og nedetid i a-inntekt (venter vurdering) er allerede ferdigbehandlet av
         // sjekkMånedInntektMotRapportertInntekt og gir feilinformasjon tilbake - da skal vi ikke fortsette videre.
