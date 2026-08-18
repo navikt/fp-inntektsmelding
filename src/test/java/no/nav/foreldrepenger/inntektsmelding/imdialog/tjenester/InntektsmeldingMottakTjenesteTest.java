@@ -139,7 +139,6 @@ class InntektsmeldingMottakTjenesteTest {
             ArbeidsgiverinitiertÅrsak.NYANSATT,
             null,
             null)).thenReturn(forespørselDto);
-        when(forespørselBehandlingTjeneste.hentForespørsel(forespørselDto.uuid())).thenReturn(Optional.of(forespørselDto));
         when(fellesMottakTjeneste.lagreImOgOpprettJournalførTask(any(), any())).thenReturn(im);
 
         // Act
@@ -201,8 +200,6 @@ class InntektsmeldingMottakTjenesteTest {
             ArbeidsgiverinitiertÅrsak.UREGISTRERT,
             skjæringstidspunkt,
             new Saksnummer("12345"))).thenReturn(forespørselDto);
-
-        when(forespørselBehandlingTjeneste.hentForespørsel(forespørselDto.uuid())).thenReturn(Optional.of(forespørselDto));
 
         when(fellesMottakTjeneste.lagreImOgOpprettJournalførTask(any(), any())).thenReturn(im);
 
