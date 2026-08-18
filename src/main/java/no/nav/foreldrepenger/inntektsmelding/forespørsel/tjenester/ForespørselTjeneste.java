@@ -78,6 +78,10 @@ public class ForespørselTjeneste {
         forespørselRepository.ferdigstillForespørsel(arbeidsgiverNotifikasjonSakId);
     }
 
+    public void ferdigstillForespørsel(UUID forespørselUuid) {
+        forespørselRepository.ferdigstillForespørsel(forespørselUuid);
+    }
+
     public void settForespørselTilUtgått(String arbeidsgiverNotifikasjonSakId) {
         forespørselRepository.settForespørselTilUtgått(arbeidsgiverNotifikasjonSakId);
     }

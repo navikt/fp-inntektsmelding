@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -179,9 +180,6 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         kjørOpprettSakTask(lagret.getUuid());
         kjørOpprettOppgaveTask(lagret.getUuid());
         var fpEntitet = forespørselBehandlingTjeneste.ferdigstillForespørsel(lagret.getUuid(),
-            AktørId.fra(lagret.getAktørId().getAktørId()),
-            Arbeidsgiver.fra(lagret.getOrganisasjonsnummer()),
-            lagret.getFørsteUttaksdato(),
             LukkeÅrsak.EKSTERN_INNSENDING, Optional.empty());
 
         assertThat(fpEntitet.status()).isEqualTo(ForespørselStatus.FERDIG);
@@ -217,9 +215,6 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         kjørOpprettOppgaveTask(lagret.getUuid());
 
         var fpEntitet = forespørselBehandlingTjeneste.ferdigstillForespørsel(lagret.getUuid(),
-            AktørId.fra(lagret.getAktørId().getAktørId()),
-            Arbeidsgiver.fra(lagret.getOrganisasjonsnummer()),
-            lagret.getFørsteUttaksdato(),
             LukkeÅrsak.EKSTERN_INNSENDING, Optional.empty());
 
         assertThat(fpEntitet.status()).isEqualTo(ForespørselStatus.FERDIG);
@@ -255,9 +250,6 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         kjørOpprettOppgaveTask(lagret.getUuid());
 
         var fpEntitet = forespørselBehandlingTjeneste.ferdigstillForespørsel(lagret.getUuid(),
-            AktørId.fra(lagret.getAktørId().getAktørId()),
-            Arbeidsgiver.fra(lagret.getOrganisasjonsnummer()),
-            lagret.getFørsteUttaksdato(),
             LukkeÅrsak.ORDINÆR_INNSENDING, Optional.empty());
 
         assertThat(fpEntitet.status()).isEqualTo(ForespørselStatus.FERDIG);
@@ -316,35 +308,25 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
     @Test
     void skal_opprette_arbeidsgiverinitert_forespørsel_uten_oppgave() {
-        mockInfoForOpprettelse(SAK_ID);
-
-        var uuid = forespørselBehandlingTjeneste.opprettForespørselForArbeidsgiverInitiertIm(YTELSETYPE,
+        var forespørselDto = forespørselBehandlingTjeneste.opprettForespørselForArbeidsgiverInitiertIm(YTELSETYPE,
             AktørId.fra(AKTØR_ID),
             Arbeidsgiver.fra(BRREG_ORGNUMMER),
             FØRSTE_UTTAKSDATO, ArbeidsgiverinitiertÅrsak.NYANSATT,
             null,
             null);
 
-        var lagret = forespørselRepository.hentForespørsel(uuid).orElseThrow();
+        var lagret = forespørselRepository.hentForespørsel(forespørselDto.uuid()).orElseThrow();
 
         clearHibernateCache();
         assertThat(lagret.getStatus()).isEqualTo(ForespørselStatus.UNDER_BEHANDLING);
         assertThat(lagret.getOppgaveId()).isEmpty();
         assertThat(lagret.getFørsteUttaksdato()).isEqualTo(FØRSTE_UTTAKSDATO);
-
-        // Opprettelse av dialog hos Dialogporten skal skje asynkront via prosesstask
-        var taskCaptor = ArgumentCaptor.forClass(ProsessTaskData.class);
-        verify(prosessTaskTjeneste).lagre(taskCaptor.capture());
-        var opprettDialogTask = taskCaptor.getValue();
-        assertThat(opprettDialogTask.taskType()).isEqualTo(TaskType.forProsessTask(OpprettDialogTask.class));
-        assertThat(opprettDialogTask.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(uuid.toString());
     }
 
     @Test
     void skal_opprette_arbeidsgiverinitert_forespørsel_med_skjæringstidspunkt() {
-        mockInfoForOpprettelse(SAK_ID);
         var forventetSkjæringstidspunkt = FØRSTE_UTTAKSDATO.minusDays(1);
-        var uuid = forespørselBehandlingTjeneste.opprettForespørselForArbeidsgiverInitiertIm(YTELSETYPE,
+        var forespørselDto = forespørselBehandlingTjeneste.opprettForespørselForArbeidsgiverInitiertIm(YTELSETYPE,
             AktørId.fra(AKTØR_ID),
             Arbeidsgiver.fra(BRREG_ORGNUMMER),
             FØRSTE_UTTAKSDATO,
@@ -352,7 +334,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             forventetSkjæringstidspunkt,
             Saksnummer.fra(SAKSNUMMER));
 
-        var lagret = forespørselRepository.hentForespørsel(uuid).orElseThrow();
+        var lagret = forespørselRepository.hentForespørsel(forespørselDto.uuid()).orElseThrow();
 
         clearHibernateCache();
         assertThat(lagret.getStatus()).isEqualTo(ForespørselStatus.UNDER_BEHANDLING);
@@ -363,15 +345,64 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
     }
 
     @Test
+    void skal_opprette_tasker_for_å_opprette_og_ferdigstille_agi() {
+        var forespørselUuid = lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, BRREG_ORGNUMMER, SAKSNUMMER,
+            FØRSTE_UTTAKSDATO, ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT);
+        var forespørselDto = forespørselTjeneste.hentForespørsel(forespørselUuid).orElseThrow();
+        var inntektsmeldingUuid = UUID.randomUUID();
+
+        forespørselBehandlingTjeneste.opprettSakOgFerdigstillTasksIPortaler(forespørselDto, inntektsmeldingUuid);
+
+        // Oppretter sak og dialog hos eksterne systemer, deretter ferdigstiller dem, alt i sekvens
+        var taskGruppeCaptor = ArgumentCaptor.forClass(ProsessTaskGruppe.class);
+        verify(prosessTaskTjeneste).lagre(taskGruppeCaptor.capture());
+        var taskGruppe = taskGruppeCaptor.getValue();
+
+        var tasks = taskGruppe.getTasks().stream().map(ProsessTaskGruppe.Entry::task).toList();
+        assertThat(tasks).hasSize(4);
+        var opprettSakTask = tasks.get(0);
+        var opprettDialogTask = tasks.get(1);
+        var ferdigstillSakTask = tasks.get(2);
+        var ferdigstillDialogTask = tasks.get(3);
+
+        assertThat(opprettSakTask.taskType()).isEqualTo(TaskType.forProsessTask(OpprettSakTask.class));
+        assertThat(opprettSakTask.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid.toString());
+
+        assertThat(opprettDialogTask.taskType()).isEqualTo(TaskType.forProsessTask(OpprettDialogTask.class));
+        assertThat(opprettDialogTask.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid.toString());
+
+        assertThat(ferdigstillSakTask.taskType()).isEqualTo(TaskType.forProsessTask(FerdigstillSakTask.class));
+        assertThat(ferdigstillSakTask.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid.toString());
+        assertThat(ferdigstillSakTask.getPropertyValue(FellesTaskProperties.KEY_INNTEKTSMELDING_UUID)).isEqualTo(inntektsmeldingUuid.toString());
+        assertThat(ferdigstillSakTask.getPropertyValue(FellesTaskProperties.KEY_LUKKE_AARSAK)).isEqualTo(LukkeÅrsak.ORDINÆR_INNSENDING.name());
+        assertThat(ferdigstillSakTask.getPropertyValue(FerdigstillSakTask.KEY_ER_FØRSTEGANGSINNSENDING)).isEqualTo("true");
+
+        assertThat(ferdigstillDialogTask.taskType()).isEqualTo(TaskType.forProsessTask(FerdigstillDialogTask.class));
+        assertThat(ferdigstillDialogTask.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid.toString());
+        assertThat(ferdigstillDialogTask.getPropertyValue(FellesTaskProperties.KEY_INNTEKTSMELDING_UUID)).isEqualTo(inntektsmeldingUuid.toString());
+        assertThat(ferdigstillDialogTask.getPropertyValue(FellesTaskProperties.KEY_LUKKE_AARSAK)).isEqualTo(LukkeÅrsak.ORDINÆR_INNSENDING.name());
+    }
+
+    @Test
+    void skal_ferdigstille_forespørsel_i_databasen_uten_å_opprette_tasker() {
+        var forespørselUuid = lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, BRREG_ORGNUMMER, SAKSNUMMER,
+            FØRSTE_UTTAKSDATO, ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT);
+
+        forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørselUuid);
+
+        clearHibernateCache();
+        var lagret = forespørselRepository.hentForespørsel(forespørselUuid).orElseThrow();
+        assertThat(lagret.getStatus()).isEqualTo(ForespørselStatus.FERDIG);
+        verifyNoInteractions(prosessTaskTjeneste);
+    }
+
+    @Test
     void skal_ferdigstille_forespørsel() {
         var forespørselUuid = lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, BRREG_ORGNUMMER, SAKSNUMMER,
             SKJÆRINGSTIDSPUNKT, ForespørselType.BESTILT_AV_FAGSYSTEM);
         forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, SAK_ID);
 
         forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørselUuid,
-            AktørId.fra(AKTØR_ID),
-            Arbeidsgiver.fra(BRREG_ORGNUMMER),
-            SKJÆRINGSTIDSPUNKT,
             LukkeÅrsak.EKSTERN_INNSENDING, Optional.empty());
 
         clearHibernateCache();
@@ -407,9 +438,6 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, SAK_ID);
 
         forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørselUuid,
-            AktørId.fra(AKTØR_ID),
-            Arbeidsgiver.fra(BRREG_ORGNUMMER),
-            FØRSTE_UTTAKSDATO,
             LukkeÅrsak.EKSTERN_INNSENDING, Optional.empty());
 
         clearHibernateCache();
@@ -569,9 +597,6 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, SAK_ID);
 
         var res = forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørselUuid,
-            AktørId.fra(AKTØR_ID),
-            Arbeidsgiver.fra(BRREG_ORGNUMMER),
-            SKJÆRINGSTIDSPUNKT,
             LukkeÅrsak.EKSTERN_INNSENDING, Optional.of(imUuid));
 
         clearHibernateCache();
@@ -599,9 +624,6 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         forespørselRepository.ferdigstillForespørsel(SAK_ID);
 
         var res = forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørselUuid,
-            AktørId.fra(AKTØR_ID),
-            Arbeidsgiver.fra(BRREG_ORGNUMMER),
-            SKJÆRINGSTIDSPUNKT,
             LukkeÅrsak.EKSTERN_INNSENDING, Optional.of(imUuid));
 
         clearHibernateCache();

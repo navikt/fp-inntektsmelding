@@ -16,8 +16,6 @@ import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEnti
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.LukkeÅrsak;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingTjeneste;
-import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
-import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTask;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskHandler;
@@ -69,9 +67,6 @@ public class OppdatereTilFerdigHvisMottattImTask implements ProsessTaskHandler {
 
                 if (dryRun.equals(Boolean.FALSE)) {
                     forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørsel.getUuid(),
-                        new AktørId(forespørsel.getAktørId().getAktørId()),
-                        new Arbeidsgiver(forespørsel.getOrganisasjonsnummer()),
-                        forespørsel.getFørsteUttaksdato(),
                         LukkeÅrsak.ORDINÆR_INNSENDING,
                         Optional.of(innteksmelding.getInntektsmeldingUuid()));
                     LOG.info("FEILAKTIGE_FORESPØRSLER: Oppdatert forespørselId {} til FERDIGSTILT", forespørsel.getId());
