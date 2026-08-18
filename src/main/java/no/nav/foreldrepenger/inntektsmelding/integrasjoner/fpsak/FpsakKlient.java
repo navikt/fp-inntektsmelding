@@ -16,7 +16,7 @@ import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.vedtak.exception.IntegrasjonException;
 import no.nav.vedtak.felles.integrasjon.rest.FpApplication;
-import no.nav.vedtak.felles.integrasjon.rest.Jackson3RestClient;
+import no.nav.vedtak.felles.integrasjon.rest.RestClient;
 import no.nav.vedtak.felles.integrasjon.rest.RestClientConfig;
 import no.nav.vedtak.felles.integrasjon.rest.RestConfig;
 import no.nav.vedtak.felles.integrasjon.rest.RestRequest;
@@ -29,14 +29,14 @@ public class FpsakKlient {
 
     private static final String FPSAK_SAKSOVERSIKT = "/api/fordel/inntektsmeldingSaksoversikt";
 
-    private final Jackson3RestClient restClient;
+    private final RestClient restClient;
     private final RestConfig restConfig;
 
     public FpsakKlient() {
-        this(Jackson3RestClient.client());
+        this(RestClient.client());
     }
 
-    FpsakKlient(Jackson3RestClient restClient) {
+    FpsakKlient(RestClient restClient) {
         this.restClient = restClient;
         this.restConfig = RestConfig.forClient(this.getClass());
     }

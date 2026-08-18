@@ -23,7 +23,7 @@ import no.nav.foreldrepenger.konfig.Environment;
 import no.nav.vedtak.openapi.OpenApiUtils;
 import no.nav.vedtak.server.rest.AuthenticationFilter;
 import no.nav.vedtak.server.rest.ForvaltningAuthorizationFilter;
-import no.nav.vedtak.server.rest.FpRestJackson3Feature;
+import no.nav.vedtak.server.rest.FpRestJacksonFeature;
 
 @ApplicationPath(ForvaltningApiConfig.API_URI)
 public class ForvaltningApiConfig extends ResourceConfig {
@@ -35,7 +35,7 @@ public class ForvaltningApiConfig extends ResourceConfig {
     public ForvaltningApiConfig() {
         LOG.info("Initialiserer: {}", API_URI);
         register(AuthenticationFilter.class);
-        register(FpRestJackson3Feature.class);
+        register(FpRestJacksonFeature.class);
         // Sikkerhet - lokal autentisering - kan antagelig saneres gitt import av abac/BeskyttetRessurs
         register(AutentiseringAnnoteringFilter.class);
         register(ForvaltningAuthorizationFilter.class);

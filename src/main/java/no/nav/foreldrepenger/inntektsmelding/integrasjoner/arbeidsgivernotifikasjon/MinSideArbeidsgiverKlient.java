@@ -11,12 +11,12 @@ import org.slf4j.LoggerFactory;
 import no.nav.foreldrepenger.graphql.GraphQLRequest;
 import no.nav.foreldrepenger.graphql.GraphQLResult;
 import no.nav.vedtak.exception.TekniskException;
-import no.nav.vedtak.felles.integrasjon.rest.Jackson3RestClient;
+import no.nav.vedtak.felles.integrasjon.rest.RestClient;
 import no.nav.vedtak.felles.integrasjon.rest.RestClientConfig;
 import no.nav.vedtak.felles.integrasjon.rest.RestConfig;
 import no.nav.vedtak.felles.integrasjon.rest.RestRequest;
 import no.nav.vedtak.felles.integrasjon.rest.TokenFlow;
-import no.nav.vedtak.mapper.json.DefaultJson3Mapper;
+import no.nav.vedtak.mapper.json.DefaultJsonMapper;
 
 @Dependent
 @RestClientConfig(tokenConfig = TokenFlow.AZUREAD_CC, endpointProperty = "arbeidsgiver.notifikasjon.url", endpointDefault = "http://notifikasjon-produsent-api.fager/api/graphql", scopesProperty = "arbeidsgiver.notifikasjon.scopes", scopesDefault = "api://prod-gcp.fager.notifikasjon-produsent-api/.default")
@@ -26,14 +26,14 @@ class MinSideArbeidsgiverKlient {
 
     private static final String ERROR_RESPONSE = "F-102030";
 
-    private final Jackson3RestClient restKlient;
+    private final RestClient restKlient;
     private final RestConfig restConfig;
 
     MinSideArbeidsgiverKlient() {
-        this(Jackson3RestClient.client());
+        this(RestClient.client());
     }
 
-    public MinSideArbeidsgiverKlient(Jackson3RestClient restKlient) {
+    public MinSideArbeidsgiverKlient(RestClient restKlient) {
         this.restKlient = restKlient;
         this.restConfig = RestConfig.forClient(this.getClass());
     }
@@ -161,7 +161,7 @@ class MinSideArbeidsgiverKlient {
             return clazz.cast(response);
         }
         LOG.info("FAGER: Response: {} til class {}", response, clazz);
-        return DefaultJson3Mapper.fromJson(response, clazz);
+        return DefaultJsonMapper.fromJson(response, clazz);
     }
 
     private static IllegalStateException ulovligTilstandException() {
