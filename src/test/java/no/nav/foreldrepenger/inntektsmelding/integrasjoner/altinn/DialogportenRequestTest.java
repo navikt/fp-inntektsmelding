@@ -6,17 +6,12 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.json.JsonMapper;
-
 import no.nav.vedtak.mapper.json.DefaultJsonMapper;
 
 class DialogportenRequestTest {
 
-    private static final JsonMapper JSON_MAPPER = DefaultJsonMapper.getJsonMapper();
-
     @Test
-    void serdes_test() throws JsonProcessingException {
+    void serdes_test() {
         var orgnr = "987654321";
         var party = "urn:altinn:organization:identifier-no:%s".formatted(orgnr);
         var serviceResource = "urn:altinn:resource:nav_foreldrepenger_inntektsmelding";
@@ -32,9 +27,9 @@ class DialogportenRequestTest {
             null,
             null);
 
-        var serialized = JSON_MAPPER.writeValueAsString(request);
+        var serialized = DefaultJsonMapper.toJson(request);
 
-        var deserialized = JSON_MAPPER.readValue(serialized, DialogportenRequest.class);
+        var deserialized = DefaultJsonMapper.fromJson(serialized, DialogportenRequest.class);
 
         assertThat(deserialized).isEqualTo(request);
     }

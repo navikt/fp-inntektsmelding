@@ -19,14 +19,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import no.nav.foreldrepenger.graphql.GraphQLError;
 import no.nav.foreldrepenger.graphql.GraphQLErrorType;
 import no.nav.vedtak.exception.TekniskException;
-import no.nav.vedtak.felles.integrasjon.rest.Jackson3RestClient;
+import no.nav.vedtak.felles.integrasjon.rest.RestClient;
 import no.nav.vedtak.felles.integrasjon.rest.RestRequest;
 
 @ExtendWith(MockitoExtension.class)
 class MinSideArbeidsgiverTjenesteKlientTest {
 
     @Mock
-    Jackson3RestClient restClient;
+    RestClient restClient;
 
     private MinSideArbeidsgiverKlient agKlient;
 

@@ -10,7 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.nav.vedtak.exception.IntegrasjonException;
-import no.nav.vedtak.felles.integrasjon.rest.Jackson3RestClient;
+import no.nav.vedtak.felles.integrasjon.rest.RestClient;
 import no.nav.vedtak.felles.integrasjon.rest.RestClientConfig;
 import no.nav.vedtak.felles.integrasjon.rest.RestConfig;
 import no.nav.vedtak.felles.integrasjon.rest.RestRequest;
@@ -24,14 +24,14 @@ public class InntektskomponentKlient {
     private static final Logger LOG = LoggerFactory.getLogger(InntektskomponentKlient.class);
     private static final YearMonth INNTK_TIDLIGSTE_DATO = YearMonth.of(2015, 7);
 
-    private final Jackson3RestClient restClient;
+    private final RestClient restClient;
     private final RestConfig restConfig;
 
     public InntektskomponentKlient() {
-        this(Jackson3RestClient.client());
+        this(RestClient.client());
     }
 
-    public InntektskomponentKlient(Jackson3RestClient restClient) {
+    public InntektskomponentKlient(RestClient restClient) {
         this.restClient = restClient;
         this.restConfig = RestConfig.forClient(this.getClass());
     }

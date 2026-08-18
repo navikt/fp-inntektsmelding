@@ -22,7 +22,7 @@ import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.inntektsmelding.utils.OrganisasjonsnummerValidator;
-import no.nav.vedtak.mapper.json.DefaultJson3Mapper;
+import no.nav.vedtak.mapper.json.DefaultJsonMapper;
 
 @ApplicationScoped
 public class DokumentGeneratorTjeneste {
@@ -79,7 +79,7 @@ public class DokumentGeneratorTjeneste {
     private byte[] genererPdf(InntektsmeldingPdfData metadata, ForespørselType forespørselType) {
         var template = utledMal(forespørselType);
         var requestDto = new FpDokgenRequest(template, null, FpDokgenRequest.CssStyling.INNTEKTSMELDING_PDF,
-            DefaultJson3Mapper.toJson(metadata));
+            DefaultJsonMapper.toJson(metadata));
 
         return dokgenKlient.genererPdf(requestDto);
     }

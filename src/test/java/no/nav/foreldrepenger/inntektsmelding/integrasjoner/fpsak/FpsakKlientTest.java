@@ -15,14 +15,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
-import no.nav.vedtak.felles.integrasjon.rest.Jackson3RestClient;
+import no.nav.vedtak.felles.integrasjon.rest.RestClient;
 
 @ExtendWith(MockitoExtension.class)
 class FpsakKlientTest {
     private static final String AKTØR_ID = "1234567891234";
 
     @Mock
-    private Jackson3RestClient restClient;
+    private RestClient restClient;
 
     private FpsakKlient fpsakKlient;
 

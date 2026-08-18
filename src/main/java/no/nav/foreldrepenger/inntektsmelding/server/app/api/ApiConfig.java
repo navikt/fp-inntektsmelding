@@ -7,6 +7,8 @@ import java.util.Set;
 
 import jakarta.ws.rs.ApplicationPath;
 
+import no.nav.vedtak.server.rest.FpRestJacksonFeature;
+
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.slf4j.Logger;
@@ -21,7 +23,6 @@ import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.kvittering.PdfDokumen
 import no.nav.foreldrepenger.inntektsmelding.overstyring.rest.InntektsmeldingFpsakRest;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.AutentiseringAnnoteringFilter;
 import no.nav.vedtak.server.rest.AuthenticationFilter;
-import no.nav.vedtak.server.rest.FpRestJackson3Feature;
 import no.nav.vedtak.server.rest.RestSecureLogFeature;
 
 @ApplicationPath(ApiConfig.API_URI)
@@ -33,7 +34,7 @@ public class ApiConfig extends ResourceConfig {
     public ApiConfig() {
         LOG.info("Initialiserer: {}", API_URI);
         register(AuthenticationFilter.class);
-        register(FpRestJackson3Feature.class);
+        register(FpRestJacksonFeature.class);
         // Sørger for logging av feil (validering og annet) til sikkerlogg
         register(RestSecureLogFeature.class);
         // Sikkerhet - lokal "tilleggsautentisering" sjekker match IdentType og Annotering
