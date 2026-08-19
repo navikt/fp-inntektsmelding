@@ -131,7 +131,7 @@ public class ArbeidsgiverinitiertDialogRest {
             .filter(sak -> sak.statusInntektsmelding().equals(FpsakFagsak.StatusSakInntektsmelding.ÅPEN_FOR_BEHANDLING))
             .min(Comparator.comparing(FpsakFagsak::førsteUttaksdato))
             .or(() -> sakerIFpsak.stream().min(Comparator.comparing(FpsakFagsak::førsteUttaksdato)))
-            .orElseThrow(() -> new IllegalStateException("Mangler sak i fpsak"));
+            .orElseThrow(() -> new InntektsmeldingException(InntektsmeldingException.LokalFeilKode.INGEN_SAK_FUNNET));
 
         UregistrertValiderer.validerOmUregistrertKanOpprettes(infoOmSak, request.ytelseType(), personInfo);
 
