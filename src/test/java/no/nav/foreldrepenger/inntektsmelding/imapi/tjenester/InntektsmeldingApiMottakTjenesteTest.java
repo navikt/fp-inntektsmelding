@@ -280,6 +280,26 @@ class InntektsmeldingApiMottakTjenesteTest {
     }
 
     @Test
+    void kontrollerInntektsmeldingEtterNedetid_skal_ikke_gjøre_noe_når_inntektsmelding_er_utdatert() {
+        var inntektsmeldingId = 123L;
+        var foresporselUuid = UUID.randomUUID();
+        var imUuid = UUID.randomUUID();
+        var forespørselDto = lagForespørselDtoMedSkjæringstidspunkt(foresporselUuid, ForespørselStatus.UNDER_BEHANDLING);
+        var utdatertInntektsmelding = InntektsmeldingDto.builder(lagInntektsmeldingDtoMedForespørsel(imUuid, forespørselDto, false))
+            .medStatus(InntektsmeldingStatus.UTDATERT)
+            .build();
+
+        when(inntektsmeldingTjeneste.hentInntektsmelding(inntektsmeldingId)).thenReturn(utdatertInntektsmelding);
+
+        inntektsmeldingApiMottakTjeneste.kontrollerInntektsmeldingEtterNedetid(inntektsmeldingId);
+
+        verify(inntektsmeldingTjeneste, never()).oppdatertStatusTilInntektsmelding(any(), any());
+        verify(fellesMottakTjeneste, never()).opprettTaskForSendTilJoark(any(), any());
+        verify(fellesMottakTjeneste, never()).ferdigstillOgOppdaterEksterneSystemer(any(), any());
+        verify(personTjeneste, never()).hentPersonInfoFraAktørId(any(), any());
+    }
+
+    @Test
     void kontrollerInntektsmeldingEtterNedetid_skal_ferdigstille_når_inntekt_er_gyldig() {
         var inntektsmeldingId = 123L;
         var foresporselUuid = UUID.randomUUID();
