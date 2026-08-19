@@ -87,7 +87,6 @@ public class InntektsmeldingMottakTjeneste {
             } else {
                 ForespørselValiderer.validerStartdato(forespørselDto, inntektsmeldingDto.getStartdato());
             }
-
             lagretInntektsmelding = fellesMottakTjeneste.lagreImOgOpprettJournalførTask(inntektsmeldingDto, forespørselDto);
             //legger inn oppdatert inntektsmelding i portaler
             forespørselBehandlingTjeneste.opprettTasksForÅOppdaterePortaler(forespørselDto,

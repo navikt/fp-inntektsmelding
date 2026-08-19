@@ -2,6 +2,7 @@ package no.nav.foreldrepenger.inntektsmelding.inntektsmelding;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -29,6 +30,7 @@ import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Saksnummer;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.NaturalytelseType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
@@ -219,6 +221,59 @@ class FellesMottakTjenesteTest {
         verify(prosessTaskTjeneste).lagre(taskCaptor.capture());
         assertThat(taskCaptor.getValue().taskType())
             .isEqualTo(TaskType.forProsessTask(FerdigstillInntektsmeldingEtterNedetidTask.class));
+    }
+
+    @Test
+    void skal_sette_forrige_inntektsmelding_utdatert_når_den_venter_på_vurdering() {
+        // Arrange
+        var forespørselUuid = UUID.randomUUID();
+        var forespørselDto = lagForespørselDto(forespørselUuid, ForespørselStatus.UNDER_BEHANDLING);
+        var forrigeImUuid = UUID.randomUUID();
+        var forrigeIm = InntektsmeldingDto.builder(lagInntektsmeldingDtoMedUuid(forrigeImUuid))
+            .medStatus(InntektsmeldingStatus.VENTER_VURDERING)
+            .build();
+
+        when(inntektsmeldingTjeneste.hentSisteInntektsmeldingForForespørsel(forespørselUuid)).thenReturn(forrigeIm);
+
+        // Act
+        fellesMottakTjeneste.settForrigeInntektsmeldingUtdatertHvisVenterVurdering(forespørselDto);
+
+        // Assert
+        verify(inntektsmeldingTjeneste).oppdatertStatusTilInntektsmelding(forrigeImUuid, InntektsmeldingStatus.UTDATERT);
+    }
+
+    @Test
+    void skal_ikke_endre_status_når_forrige_inntektsmelding_ikke_venter_på_vurdering() {
+        // Arrange
+        var forespørselUuid = UUID.randomUUID();
+        var forespørselDto = lagForespørselDto(forespørselUuid, ForespørselStatus.UNDER_BEHANDLING);
+        var forrigeImUuid = UUID.randomUUID();
+        var forrigeIm = InntektsmeldingDto.builder(lagInntektsmeldingDtoMedUuid(forrigeImUuid))
+            .medStatus(InntektsmeldingStatus.GODKJENT)
+            .build();
+
+        when(inntektsmeldingTjeneste.hentSisteInntektsmeldingForForespørsel(forespørselUuid)).thenReturn(forrigeIm);
+
+        // Act
+        fellesMottakTjeneste.settForrigeInntektsmeldingUtdatertHvisVenterVurdering(forespørselDto);
+
+        // Assert
+        verify(inntektsmeldingTjeneste, never()).oppdatertStatusTilInntektsmelding(any(), any());
+    }
+
+    @Test
+    void skal_ikke_feile_når_det_ikke_finnes_noen_tidligere_inntektsmelding() {
+        // Arrange
+        var forespørselUuid = UUID.randomUUID();
+        var forespørselDto = lagForespørselDto(forespørselUuid, ForespørselStatus.UNDER_BEHANDLING);
+
+        when(inntektsmeldingTjeneste.hentSisteInntektsmeldingForForespørsel(forespørselUuid)).thenReturn(null);
+
+        // Act
+        fellesMottakTjeneste.settForrigeInntektsmeldingUtdatertHvisVenterVurdering(forespørselDto);
+
+        // Assert
+        verify(inntektsmeldingTjeneste, never()).oppdatertStatusTilInntektsmelding(any(), any());
     }
 
     private static ForespørselDto lagForespørselDto(UUID uuid, ForespørselStatus status) {
