@@ -58,7 +58,7 @@ public class OrganisasjonTjeneste {
         try {
             return Optional.of(hent(arbeidsgiver));
         } catch (IntegrasjonException e) {
-            LOG.warn("Fant ikke organisasjon i EREG for orgnr {}, hopper over: {}", arbeidsgiver.orgnr(), e.getMessage());
+            LOG.warn("Fant ikke organisasjon i EREG for orgnr {} hopper over. FeltType: {}", arbeidsgiver, e.getClass().getSimpleName());
             return Optional.empty();
         }
     }
