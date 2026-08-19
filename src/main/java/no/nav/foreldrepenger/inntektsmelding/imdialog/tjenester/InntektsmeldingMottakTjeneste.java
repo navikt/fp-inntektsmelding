@@ -93,10 +93,6 @@ public class InntektsmeldingMottakTjeneste {
             } else {
                 ForespørselValiderer.validerStartdato(forespørselDto, inntektsmeldingDto.getStartdato());
             }
-
-            // Se kommentar i mottaInntektsmelding: samme her, ikke relevant før frontend-flyten
-            // har egen VENTER_VURDERING-logikk, se TFP-6987.
-
             lagretInntektsmelding = fellesMottakTjeneste.lagreImOgOpprettJournalførTask(inntektsmeldingDto, forespørselDto);
             //legger inn oppdatert inntektsmelding i portaler
             forespørselBehandlingTjeneste.opprettTasksForÅOppdaterePortaler(forespørselDto,
