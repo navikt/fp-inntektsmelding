@@ -93,6 +93,8 @@ public class InntektsmeldingApiMottakTjeneste {
                     sisteInntektsmelding.getInntektsmeldingUuid().toString()));
         }
 
+        fellesMottakTjeneste.settForrigeInntektsmeldingUtdatertHvisVenterVurdering(forespørsel);
+
         var sendInntektsmeldingResponse = sjekkMånedInntektMotRapportertInntekt(forespørsel, inntektsmelding);
         // Både avvisning (ulik inntekt) og nedetid i a-inntekt (venter vurdering) er allerede ferdigbehandlet av
         // sjekkMånedInntektMotRapportertInntekt og gir feilinformasjon tilbake - da skal vi ikke fortsette videre.
@@ -109,6 +111,10 @@ public class InntektsmeldingApiMottakTjeneste {
 
     public void kontrollerInntektsmeldingEtterNedetid(Long inntektsmeldingId) {
         var inntektsmelding = inntektsmeldingTjeneste.hentInntektsmelding(inntektsmeldingId);
+        if (InntektsmeldingStatus.UTDATERT.equals(inntektsmelding.getStatus())) {
+            LOG.info("Inntektsmelding {} er utdatert, hopper over etterkontroll etter nedetid", inntektsmelding.getInntektsmeldingUuid());
+            return;
+        }
         var forespørsel = inntektsmelding.getForespørsel().orElseThrow();
         var personInfo = personTjeneste.hentPersonInfoFraAktørId(inntektsmelding.getAktørId(), inntektsmelding.getYtelse());
         var harJobbetHeleBeregningsperioden = fellesGrunnlagTjeneste.harJobbetHeleBeregningsperioden(personInfo,

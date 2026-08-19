@@ -122,9 +122,6 @@ public class ForespørselBehandlingTjeneste {
     }
 
     public ForespørselDto ferdigstillForespørsel(UUID foresporselUuid,
-                                                 AktørId aktorId,
-                                                 Arbeidsgiver arbeidsgiver,
-                                                 LocalDate startdato,
                                                  LukkeÅrsak årsak,
                                                  // inntektsmeldingUuid er optional fordi vi ikke har inntektsmeldingen lagret hvis den er innsendt via Altinn / LPS'er
                                                  Optional<UUID> inntektsmeldingUuid) {
@@ -231,7 +228,7 @@ public class ForespørselBehandlingTjeneste {
         prosessTaskTjeneste.lagre(taskGruppe);
     }
 
-    public UUID opprettForespørselForArbeidsgiverInitiertIm(Ytelsetype ytelsetype,
+    public ForespørselDto opprettForespørselForArbeidsgiverInitiertIm(Ytelsetype ytelsetype,
                                                             AktørId aktørId,
                                                             Arbeidsgiver arbeidsgiver,
                                                             LocalDate førsteFraværsdato,
@@ -251,16 +248,8 @@ public class ForespørselBehandlingTjeneste {
             skjæringstidspunkt,
             fagsystemSaksnummer);
 
-        var forespørsel = forespørselTjeneste.hentForespørsel(uuid)
+        return forespørselTjeneste.hentForespørsel(uuid)
             .orElseThrow(() -> new IllegalStateException("Finner ikke opprettet arbeidsgiverinitiert forespørsel"));
-        var fagerSakId = minSideArbeidsgiverTjeneste.opprettSak(forespørsel);
-        forespørselTjeneste.setArbeidsgiverNotifikasjonSakId(uuid, fagerSakId);
-
-        var opprettDialogTask = ProsessTaskData.forProsessTask(OpprettDialogTask.class);
-        opprettDialogTask.setProperty(FellesTaskProperties.KEY_FORESPOERSEL_UUID, uuid.toString());
-        prosessTaskTjeneste.lagre(opprettDialogTask);
-
-        return uuid;
     }
 
     private void leggTilSettUtgåttTasks(UUID forespørselUuid) {
@@ -307,11 +296,7 @@ public class ForespørselBehandlingTjeneste {
         // Alle inntektsmeldinger sendt inn via arbeidsgiverportal blir lukket umiddelbart etter innsending fra #InntektsmeldingTjeneste,
         // så forespørsler som enda er åpne her blir løst ved innsending fra andre systemer
         forespørsler.forEach(f -> {
-            var lukketForespørsel = ferdigstillForespørsel(f.uuid(),
-                f.aktørId(),
-                f.arbeidsgiver(),
-                f.førsteUttaksdato(),
-                LukkeÅrsak.EKSTERN_INNSENDING, Optional.empty());
+            var lukketForespørsel = ferdigstillForespørsel(f.uuid(), LukkeÅrsak.EKSTERN_INNSENDING, Optional.empty());
             MetrikkerTjeneste.loggForespørselLukkEkstern(lukketForespørsel);
         });
     }
@@ -376,5 +361,29 @@ public class ForespørselBehandlingTjeneste {
             fom,
             tom,
             fraLoepenr);
+    }
+
+    public void ferdigstillForespørsel(UUID forespørselUuid) {
+        forespørselTjeneste.ferdigstillForespørsel(forespørselUuid);
+    }
+
+    public void opprettSakOgFerdigstillTasksIPortaler(ForespørselDto forespørselDto, UUID inntektsmeldingUuid) {
+        // oppretter sekvensielle tasks for å oppdatere arbeidgsiverportalen og dialogporten. Disse vil kun starte kjøring om foregående har status FERDIG
+        // Forespørselen er allerede ferdigstilt i databasen på dette tidspunktet
+        var opprettSakTask = ProsessTaskData.forProsessTask(OpprettSakTask.class);
+        var opprettDialogTask = ProsessTaskData.forProsessTask(OpprettDialogTask.class);
+        var ferdigstillSakTask = ProsessTaskData.forProsessTask(FerdigstillSakTask.class);
+        ferdigstillSakTask.setProperty(FerdigstillSakTask.KEY_ER_FØRSTEGANGSINNSENDING, Boolean.toString(true));
+        var ferdigstillDialogTask = ProsessTaskData.forProsessTask(FerdigstillDialogTask.class);
+
+        var taskGruppe = new ProsessTaskGruppe();
+        taskGruppe.setProperty(FellesTaskProperties.KEY_FORESPOERSEL_UUID, forespørselDto.uuid().toString());
+        taskGruppe.setProperty(FellesTaskProperties.KEY_INNTEKTSMELDING_UUID, inntektsmeldingUuid.toString());
+        taskGruppe.setProperty(FellesTaskProperties.KEY_LUKKE_AARSAK, LukkeÅrsak.ORDINÆR_INNSENDING.name());
+        taskGruppe.addNesteSekvensiell(opprettSakTask);
+        taskGruppe.addNesteSekvensiell(opprettDialogTask);
+        taskGruppe.addNesteSekvensiell(ferdigstillSakTask);
+        taskGruppe.addNesteSekvensiell(ferdigstillDialogTask);
+        prosessTaskTjeneste.lagre(taskGruppe);
     }
 }

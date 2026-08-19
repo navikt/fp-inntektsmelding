@@ -90,6 +90,16 @@ public class ForespørselRepository {
         entityManager.flush();
     }
 
+    // Brukes ved innsending av agi
+    // vi ønsker å ferdigstille forespørselen i databasen før vi vet om den har fått sakId
+    public void ferdigstillForespørsel(UUID forespørselUuid) {
+        hentForespørsel(forespørselUuid).ifPresent(f -> {
+            f.setStatus(ForespørselStatus.FERDIG);
+            entityManager.persist(f);
+        });
+        entityManager.flush();
+    }
+
     public void settForespørselTilUtgått(String arbeidsgiverNotifikasjonSakId) {
         var query = entityManager.createQuery("FROM ForespørselEntitet where sakId = :sak_id", ForespørselEntitet.class)
             .setParameter("sak_id", arbeidsgiverNotifikasjonSakId);
