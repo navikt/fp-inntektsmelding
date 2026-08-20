@@ -1,8 +1,5 @@
 package no.nav.foreldrepenger.inntektsmelding.forespørsel.task;
 
-import java.util.Optional;
-import java.util.UUID;
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -14,7 +11,6 @@ import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.LukkeÅrsak;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.altinn.DialogportenTjeneste;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTask;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
-import no.nav.vedtak.felles.prosesstask.api.ProsessTaskHandler;
 
 /**
  * Selve Dialogporten-kallet gjøres via {@link DialogportenTjeneste#utførMotDialogportenMedDevToleranse}, som
@@ -23,10 +19,9 @@ import no.nav.vedtak.felles.prosesstask.api.ProsessTaskHandler;
  */
 @ApplicationScoped
 @ProsessTask(value = "forespørsel.dialog.ferdigstill")
-public class FerdigstillDialogTask implements ProsessTaskHandler {
+public class FerdigstillDialogTask extends ForespørselProsessTask {
     private static final Logger LOG = LoggerFactory.getLogger(FerdigstillDialogTask.class);
 
-    private ForespørselTjeneste forespørselTjeneste;
     private DialogportenTjeneste dialogportenTjeneste;
 
     FerdigstillDialogTask() {
@@ -35,21 +30,18 @@ public class FerdigstillDialogTask implements ProsessTaskHandler {
 
     @Inject
     public FerdigstillDialogTask(ForespørselTjeneste forespørselTjeneste, DialogportenTjeneste dialogportenTjeneste) {
-        this.forespørselTjeneste = forespørselTjeneste;
+        super(forespørselTjeneste);
         this.dialogportenTjeneste = dialogportenTjeneste;
     }
 
     @Override
     public void doTask(ProsessTaskData prosessTaskData) {
-        var forespørselUuid = UUID.fromString(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID));
-        var forespørsel = forespørselTjeneste.hentForespørsel(forespørselUuid)
-            .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel " + forespørselUuid + " ved ferdigstilling av dialog"));
+        var forespørsel = hentForespørsel(prosessTaskData);
+        var årsak = LukkeÅrsak.valueOf(prosessTaskData.getPropertyValue(ForespørselProsessTask.KEY_LUKKE_AARSAK));
+        var inntektsmeldingUuid = hentInntektsmeldingUuid(prosessTaskData);
 
-        var årsak = LukkeÅrsak.valueOf(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_LUKKE_AARSAK));
-        var inntektsmeldingUuid = Optional.ofNullable(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_INNTEKTSMELDING_UUID)).map(UUID::fromString);
-
-        LOG.info("Ferdigstiller dialog hos Dialogporten for forespørsel {}", forespørselUuid);
+        LOG.info("Ferdigstiller dialog hos Dialogporten for forespørsel {}", forespørsel.uuid());
         dialogportenTjeneste.utførMotDialogportenMedDevToleranse(() -> dialogportenTjeneste.ferdigstillDialog(forespørsel, årsak, inntektsmeldingUuid));
-        LOG.info("Ferdigstilte dialog hos Dialogporten for forespørsel {}", forespørselUuid);
+        LOG.info("Ferdigstilte dialog hos Dialogporten for forespørsel {}", forespørsel.uuid());
     }
 }
