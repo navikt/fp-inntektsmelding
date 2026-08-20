@@ -11,8 +11,6 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.UUID;
 
-import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -60,7 +58,6 @@ class JoarkTjenesteTest {
             .medYtelse(Ytelsetype.FORELDREPENGER)
             .medAktørId(aktørIdSøker)
             .medInnsendtTidspunkt(LocalDateTime.now())
-            .medKildesystem(Kildesystem.ARBEIDSGIVERPORTAL)
             .build();
 
         var testBedrift = new Organisasjon("Test Bedrift", arbeidsgiverIdent);
@@ -85,7 +82,6 @@ class JoarkTjenesteTest {
         assertThat(opprettJournalpostRequest.sak().fagsaksystem()).isEqualTo(Fagsystem.FPSAK.getOffisiellKode());
         assertThat(opprettJournalpostRequest.sak().sakstype()).isEqualTo(Sak.Sakstype.FAGSAK);
         assertThat(opprettJournalpostRequest.bruker().id()).isEqualTo(aktør);
-        assertThat(opprettJournalpostRequest.kanal()).isEqualTo(JoarkTjeneste.KANAL_NAV_NO);
     }
 
     @Test
@@ -103,7 +99,6 @@ class JoarkTjenesteTest {
             .medYtelse(Ytelsetype.FORELDREPENGER)
             .medAktørId(aktørIdSøker)
             .medInnsendtTidspunkt(innsendtTidspunkt)
-            .medKildesystem(Kildesystem.LØNN_OG_PERSONAL_SYSTEM)
             .build();
 
         var testBedrift = new Organisasjon("Test Bedrift", arbeidsgiver.toString());
@@ -125,7 +120,6 @@ class JoarkTjenesteTest {
         assertThat(opprettJournalpostRequest.bruker().id()).isEqualTo(aktør);
         assertThat(opprettJournalpostRequest.datoMottatt()).isEqualTo(innsendtTidspunkt.toLocalDate().atStartOfDay());
         assertThat(opprettJournalpostRequest.eksternReferanseId()).isNotEmpty().isEqualTo(inntektsmeldingUuid.toString());
-        assertThat(opprettJournalpostRequest.kanal()).isEqualTo(JoarkTjeneste.KANAL_LPS);
     }
 
     @Test
@@ -142,7 +136,6 @@ class JoarkTjenesteTest {
             .medYtelse(Ytelsetype.FORELDREPENGER)
             .medAktørId(aktørIdSøker)
             .medInnsendtTidspunkt(LocalDateTime.now())
-            .medKildesystem(Kildesystem.FPSAK)
             .build();
 
         var testBedrift = new Organisasjon("Test Bedrift", arbeidsgiver.toString());
@@ -164,7 +157,7 @@ class JoarkTjenesteTest {
         assertThat(opprettJournalpostRequest.eksternReferanseId()).isNotEmpty().isEqualTo(inntektsmeldingUuid.toString());
         assertThat(opprettJournalpostRequest.bruker().id()).isEqualTo(aktør);
         assertThat(opprettJournalpostRequest.tema()).isEqualTo(JoarkTjeneste.TEMA_FOR);
-        assertThat(opprettJournalpostRequest.kanal()).isEqualTo(JoarkTjeneste.KANAL_NAV_ANSATT);
+        assertThat(opprettJournalpostRequest.kanal()).isEqualTo(JoarkTjeneste.KANAL);
     }
 
     @Test
@@ -179,7 +172,6 @@ class JoarkTjenesteTest {
             .medYtelse(Ytelsetype.FORELDREPENGER)
             .medAktørId(aktørIdSøker)
             .medInnsendtTidspunkt(LocalDateTime.now())
-            .medKildesystem(Kildesystem.ARBEIDSGIVERPORTAL)
             .build();
 
         var testBedrift = new Organisasjon("Test Bedrift", arbeidsgiver.toString());
