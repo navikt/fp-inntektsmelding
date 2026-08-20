@@ -10,6 +10,7 @@ import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.Forespørsel
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon.MinSideArbeidsgiverTjeneste;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTask;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
+import no.nav.vedtak.felles.prosesstask.api.ProsessTaskHandler;
 
 /**
  * Oppretter oppgave hos arbeidsgiverportalen (min side arbeidsgiver) for en allerede lagret forespørsel.
@@ -17,9 +18,11 @@ import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
  */
 @ApplicationScoped
 @ProsessTask(value = "forespørsel.opprett.oppgave")
-public class OpprettOppgaveTask extends ForespørselProsessTask {
+public class OpprettOppgaveTask implements ProsessTaskHandler {
     private static final Logger LOG = LoggerFactory.getLogger(OpprettOppgaveTask.class);
 
+    private ForespørselTaskTjeneste forespørselTaskTjeneste;
+    private ForespørselTjeneste forespørselTjeneste;
     private MinSideArbeidsgiverTjeneste minSideArbeidsgiverTjeneste;
 
     OpprettOppgaveTask() {
@@ -27,14 +30,17 @@ public class OpprettOppgaveTask extends ForespørselProsessTask {
     }
 
     @Inject
-    public OpprettOppgaveTask(ForespørselTjeneste forespørselTjeneste, MinSideArbeidsgiverTjeneste minSideArbeidsgiverTjeneste) {
-        super(forespørselTjeneste);
+    public OpprettOppgaveTask(ForespørselTaskTjeneste forespørselTaskTjeneste,
+                               ForespørselTjeneste forespørselTjeneste,
+                               MinSideArbeidsgiverTjeneste minSideArbeidsgiverTjeneste) {
+        this.forespørselTaskTjeneste = forespørselTaskTjeneste;
+        this.forespørselTjeneste = forespørselTjeneste;
         this.minSideArbeidsgiverTjeneste = minSideArbeidsgiverTjeneste;
     }
 
     @Override
     public void doTask(ProsessTaskData prosessTaskData) {
-        var forespørsel = hentForespørsel(prosessTaskData);
+        var forespørsel = forespørselTaskTjeneste.hentForespørsel(prosessTaskData);
 
         if (forespørsel.oppgaveId() != null) {
             LOG.info("Oppgave er allerede opprettet for forespørsel {}, hopper over", forespørsel.uuid());

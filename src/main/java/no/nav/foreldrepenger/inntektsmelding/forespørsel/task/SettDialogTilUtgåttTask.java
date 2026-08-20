@@ -6,10 +6,10 @@ import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.altinn.DialogportenTjeneste;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTask;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
+import no.nav.vedtak.felles.prosesstask.api.ProsessTaskHandler;
 
 /**
  * Selve Dialogporten-kallet gjøres via {@link DialogportenTjeneste#utførMotDialogportenMedDevToleranse}, som
@@ -18,9 +18,10 @@ import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
  */
 @ApplicationScoped
 @ProsessTask(value = "forespørsel.dialog.utgått")
-public class SettDialogTilUtgåttTask extends ForespørselProsessTask {
+public class SettDialogTilUtgåttTask implements ProsessTaskHandler {
     private static final Logger LOG = LoggerFactory.getLogger(SettDialogTilUtgåttTask.class);
 
+    private ForespørselTaskTjeneste forespørselTaskTjeneste;
     private DialogportenTjeneste dialogportenTjeneste;
 
     SettDialogTilUtgåttTask() {
@@ -28,14 +29,14 @@ public class SettDialogTilUtgåttTask extends ForespørselProsessTask {
     }
 
     @Inject
-    public SettDialogTilUtgåttTask(ForespørselTjeneste forespørselTjeneste, DialogportenTjeneste dialogportenTjeneste) {
-        super(forespørselTjeneste);
+    public SettDialogTilUtgåttTask(ForespørselTaskTjeneste forespørselTaskTjeneste, DialogportenTjeneste dialogportenTjeneste) {
+        this.forespørselTaskTjeneste = forespørselTaskTjeneste;
         this.dialogportenTjeneste = dialogportenTjeneste;
     }
 
     @Override
     public void doTask(ProsessTaskData prosessTaskData) {
-        var forespørsel = hentForespørsel(prosessTaskData);
+        var forespørsel = forespørselTaskTjeneste.hentForespørsel(prosessTaskData);
 
         LOG.info("Setter dialog hos Dialogporten til utgått for forespørsel {}", forespørsel.uuid());
         dialogportenTjeneste.utførMotDialogportenMedDevToleranse(() -> dialogportenTjeneste.settDialogTilUtgått(forespørsel));
