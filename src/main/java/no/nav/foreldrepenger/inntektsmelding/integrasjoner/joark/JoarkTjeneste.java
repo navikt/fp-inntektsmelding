@@ -10,6 +10,8 @@ import jakarta.annotation.Nullable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,8 +35,9 @@ public class JoarkTjeneste {
     // Ved maskinell journalføring skal enhet være satt til 9999. Se https://confluence.adeo.no/display/BOA/opprettJournalpost
     private static final String JOURNALFØRENDE_ENHET = "9999";
     private static final String JOURNALFØRING_TITTEL = "Inntektsmelding";
-    // TODO Denne bør nok synkes med avsendersystem i XML
-    static final String KANAL = "NAV_NO";
+    static final String KANAL_NAV_NO = "NAV_NO";
+    static final String KANAL_LPS = "HR_SYSTEM_API";
+    static final String KANAL_NAV_ANSATT = "INNSENDT_NAV_ANSATT";
     static final String BREVKODE_IM = "4936";
     static final String TEMA_FOR = "FOR";
 
@@ -81,7 +84,7 @@ public class JoarkTjeneste {
                 .map(UUID::toString)
                 .orElse(UUID.randomUUID().toString()))
             .medJournalfoerendeEnhet(JOURNALFØRENDE_ENHET)
-            .medKanal(KANAL) //TODO: Bør settes til HR_SYSTEM_API ved maskinell innsending, vurder INNSENDT_NAV_ANSATT ved overstyring også.
+            .medKanal(mapKanal(inntektsmeldingDto.getKildesystem()))
             .medDokumenter(lagDokumenter(inntektsmeldingXml, inntektsmeldingPdf));
 
         if (saksnummer != null && saksnummer.isNotEmpty()) {
@@ -89,6 +92,15 @@ public class JoarkTjeneste {
                 .medSak(new Sak(saksnummer.saksnummer(), Fagsystem.FPSAK.getOffisiellKode(), Sak.Sakstype.FAGSAK));
         }
         return opprettJournalpostRequestBuilder.build();
+    }
+
+    private String mapKanal(Kildesystem kildesystem) {
+        return switch (kildesystem) {
+            case LØNN_OG_PERSONAL_SYSTEM -> KANAL_LPS;
+            case ARBEIDSGIVERPORTAL -> KANAL_NAV_NO;
+            case FPSAK -> KANAL_NAV_ANSATT;
+            case null -> throw new IllegalArgumentException("Noe er feil. Inntektsmelding har ikke kildesystem, eller den er ukjent: " + kildesystem);
+        };
     }
 
     private List<DokumentInfoOpprett> lagDokumenter(String xmlAvInntektsmelding, byte[] pdf) {
