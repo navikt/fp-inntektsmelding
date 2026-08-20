@@ -1,8 +1,5 @@
 package no.nav.foreldrepenger.inntektsmelding.forespørsel.task;
 
-import java.util.Optional;
-import java.util.UUID;
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -14,16 +11,14 @@ import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.LukkeÅrsak;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon.MinSideArbeidsgiverTjeneste;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTask;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
-import no.nav.vedtak.felles.prosesstask.api.ProsessTaskHandler;
 
 
 @ApplicationScoped
 @ProsessTask(value = "forespørsel.sak.ferdigstill")
-public class FerdigstillSakTask implements ProsessTaskHandler {
+public class FerdigstillSakTask extends ForespørselProsessTask {
     public static final String KEY_ER_FØRSTEGANGSINNSENDING = "erFoerstegangsinnsending";
     private static final Logger LOG = LoggerFactory.getLogger(FerdigstillSakTask.class);
 
-    private ForespørselTjeneste forespørselTjeneste;
     private MinSideArbeidsgiverTjeneste minSideArbeidsgiverTjeneste;
 
     FerdigstillSakTask() {
@@ -32,22 +27,19 @@ public class FerdigstillSakTask implements ProsessTaskHandler {
 
     @Inject
     public FerdigstillSakTask(ForespørselTjeneste forespørselTjeneste, MinSideArbeidsgiverTjeneste minSideArbeidsgiverTjeneste) {
-        this.forespørselTjeneste = forespørselTjeneste;
+        super(forespørselTjeneste);
         this.minSideArbeidsgiverTjeneste = minSideArbeidsgiverTjeneste;
     }
 
     @Override
     public void doTask(ProsessTaskData prosessTaskData) {
-        var forespørselUuid = UUID.fromString(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID));
-        var forespørsel = forespørselTjeneste.hentForespørsel(forespørselUuid)
-            .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel " + forespørselUuid + " ved ferdigstilling av sak"));
-
-        var årsak = LukkeÅrsak.valueOf(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_LUKKE_AARSAK));
-        var inntektsmeldingUuid = Optional.ofNullable(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_INNTEKTSMELDING_UUID)).map(UUID::fromString);
+        var forespørsel = hentForespørsel(prosessTaskData);
+        var årsak = LukkeÅrsak.valueOf(prosessTaskData.getPropertyValue(ForespørselProsessTask.KEY_LUKKE_AARSAK));
+        var inntektsmeldingUuid = hentInntektsmeldingUuid(prosessTaskData);
         var erFørstegangsinnsending = Boolean.parseBoolean(prosessTaskData.getPropertyValue(KEY_ER_FØRSTEGANGSINNSENDING));
 
-        LOG.info("Ferdigstiller sak hos arbeidsgiverportalen for forespørsel {}", forespørselUuid);
+        LOG.info("Ferdigstiller sak hos arbeidsgiverportalen for forespørsel {}", forespørsel.uuid());
         minSideArbeidsgiverTjeneste.ferdigstillSak(forespørsel, årsak, inntektsmeldingUuid, erFørstegangsinnsending);
-        LOG.info("Ferdigstilte sak hos arbeidsgiverportalen for forespørsel {}", forespørselUuid);
+        LOG.info("Ferdigstilte sak hos arbeidsgiverportalen for forespørsel {}", forespørsel.uuid());
     }
 }

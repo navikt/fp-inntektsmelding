@@ -1,8 +1,5 @@
 package no.nav.foreldrepenger.inntektsmelding.forespørsel.task;
 
-import java.util.Optional;
-import java.util.UUID;
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -13,15 +10,13 @@ import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.Forespørsel
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.altinn.DialogportenTjeneste;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTask;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
-import no.nav.vedtak.felles.prosesstask.api.ProsessTaskHandler;
 
 
 @ApplicationScoped
 @ProsessTask(value = "forespørsel.dialog.oppdater")
-public class OppdaterDialogMedEndretInntektsmeldingTask implements ProsessTaskHandler {
+public class OppdaterDialogMedEndretInntektsmeldingTask extends ForespørselProsessTask {
     private static final Logger LOG = LoggerFactory.getLogger(OppdaterDialogMedEndretInntektsmeldingTask.class);
 
-    private ForespørselTjeneste forespørselTjeneste;
     private DialogportenTjeneste dialogportenTjeneste;
 
     OppdaterDialogMedEndretInntektsmeldingTask() {
@@ -30,19 +25,17 @@ public class OppdaterDialogMedEndretInntektsmeldingTask implements ProsessTaskHa
 
     @Inject
     public OppdaterDialogMedEndretInntektsmeldingTask(ForespørselTjeneste forespørselTjeneste, DialogportenTjeneste dialogportenTjeneste) {
-        this.forespørselTjeneste = forespørselTjeneste;
+        super(forespørselTjeneste);
         this.dialogportenTjeneste = dialogportenTjeneste;
     }
 
     @Override
     public void doTask(ProsessTaskData prosessTaskData) {
-        var forespørselUuid = UUID.fromString(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID));
-        var forespørsel = forespørselTjeneste.hentForespørsel(forespørselUuid)
-            .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel " + forespørselUuid + " ved oppdatering av dialog"));
-        var inntektsmeldingUuid = Optional.ofNullable(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_INNTEKTSMELDING_UUID)).map(UUID::fromString);
+        var forespørsel = hentForespørsel(prosessTaskData);
+        var inntektsmeldingUuid = hentInntektsmeldingUuid(prosessTaskData);
 
-        LOG.info("Oppdaterer dialog hos Dialogporten med endret inntektsmelding for forespørsel {}", forespørselUuid);
+        LOG.info("Oppdaterer dialog hos Dialogporten med endret inntektsmelding for forespørsel {}", forespørsel.uuid());
         dialogportenTjeneste.utførMotDialogportenMedDevToleranse(() -> dialogportenTjeneste.oppdaterDialogMedEndretInntektsmelding(forespørsel, inntektsmeldingUuid));
-        LOG.info("Oppdaterte dialog hos Dialogporten med endret inntektsmelding for forespørsel {}", forespørselUuid);
+        LOG.info("Oppdaterte dialog hos Dialogporten med endret inntektsmelding for forespørsel {}", forespørsel.uuid());
     }
 }
