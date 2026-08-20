@@ -10,7 +10,7 @@ import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.Forespørsel
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon.MinSideArbeidsgiverTjeneste;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTask;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
-
+import no.nav.vedtak.felles.prosesstask.api.ProsessTaskHandler;
 
 /**
  * Oppretter sak hos arbeidsgiverportalen (min side arbeidsgiver) for en allerede lagret forespørsel.
@@ -18,9 +18,11 @@ import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
  */
 @ApplicationScoped
 @ProsessTask(value = "forespørsel.opprett.sak")
-public class OpprettSakTask extends ForespørselProsessTask {
+public class OpprettSakTask implements ProsessTaskHandler {
     private static final Logger LOG = LoggerFactory.getLogger(OpprettSakTask.class);
 
+    private ForespørselTaskTjeneste forespørselTaskTjeneste;
+    private ForespørselTjeneste forespørselTjeneste;
     private MinSideArbeidsgiverTjeneste minSideArbeidsgiverTjeneste;
 
     OpprettSakTask() {
@@ -28,14 +30,17 @@ public class OpprettSakTask extends ForespørselProsessTask {
     }
 
     @Inject
-    public OpprettSakTask(ForespørselTjeneste forespørselTjeneste, MinSideArbeidsgiverTjeneste minSideArbeidsgiverTjeneste) {
-        super(forespørselTjeneste);
+    public OpprettSakTask(ForespørselTaskTjeneste forespørselTaskTjeneste,
+                          ForespørselTjeneste forespørselTjeneste,
+                          MinSideArbeidsgiverTjeneste minSideArbeidsgiverTjeneste) {
+        this.forespørselTaskTjeneste = forespørselTaskTjeneste;
+        this.forespørselTjeneste = forespørselTjeneste;
         this.minSideArbeidsgiverTjeneste = minSideArbeidsgiverTjeneste;
     }
 
     @Override
     public void doTask(ProsessTaskData prosessTaskData) {
-        var forespørsel = hentForespørsel(prosessTaskData);
+        var forespørsel = forespørselTaskTjeneste.hentForespørsel(prosessTaskData);
 
         if (forespørsel.arbeidsgiverNotifikasjonSakId() != null) {
             LOG.info("Sak er allerede opprettet for forespørsel {}, hopper over", forespørsel.uuid());

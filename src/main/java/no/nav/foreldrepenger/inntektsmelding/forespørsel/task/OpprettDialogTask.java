@@ -10,6 +10,7 @@ import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.Forespørsel
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.altinn.DialogportenTjeneste;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTask;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
+import no.nav.vedtak.felles.prosesstask.api.ProsessTaskHandler;
 
 /**
  * Selve Dialogporten-kallet gjøres via {@link DialogportenTjeneste#utførMotDialogportenMedDevToleranse}, som
@@ -18,9 +19,11 @@ import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
  */
 @ApplicationScoped
 @ProsessTask(value = "forespørsel.opprettDialog")
-public class OpprettDialogTask extends ForespørselProsessTask {
+public class OpprettDialogTask implements ProsessTaskHandler {
     private static final Logger LOG = LoggerFactory.getLogger(OpprettDialogTask.class);
 
+    private ForespørselTaskTjeneste forespørselTaskTjeneste;
+    private ForespørselTjeneste forespørselTjeneste;
     private DialogportenTjeneste dialogportenTjeneste;
 
     OpprettDialogTask() {
@@ -28,14 +31,17 @@ public class OpprettDialogTask extends ForespørselProsessTask {
     }
 
     @Inject
-    public OpprettDialogTask(ForespørselTjeneste forespørselTjeneste, DialogportenTjeneste dialogportenTjeneste) {
-        super(forespørselTjeneste);
+    public OpprettDialogTask(ForespørselTaskTjeneste forespørselTaskTjeneste,
+                              ForespørselTjeneste forespørselTjeneste,
+                              DialogportenTjeneste dialogportenTjeneste) {
+        this.forespørselTaskTjeneste = forespørselTaskTjeneste;
+        this.forespørselTjeneste = forespørselTjeneste;
         this.dialogportenTjeneste = dialogportenTjeneste;
     }
 
     @Override
     public void doTask(ProsessTaskData prosessTaskData) {
-        var forespørsel = hentForespørsel(prosessTaskData);
+        var forespørsel = forespørselTaskTjeneste.hentForespørsel(prosessTaskData);
 
         if (forespørsel.dialogportenUuid() != null) {
             // Idempotens: unngår å opprette en ny dialog dersom et tidligere (delvis) forsøk allerede har lykkes
