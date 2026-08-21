@@ -6,6 +6,7 @@ import java.util.UUID;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselTjeneste;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
+import no.nav.vedtak.felles.prosesstask.api.ProsessTaskGruppe;
 
 /**
  * Hjelpeklasse for forespørsel-prosesstasks. Tilbyr felles konstanter for task-properties
@@ -30,5 +31,11 @@ public class ForespørselTaskTjeneste {
     public static Optional<UUID> hentInntektsmeldingUuid(ProsessTaskData prosessTaskData) {
         return Optional.ofNullable(prosessTaskData.getPropertyValue(KEY_INNTEKTSMELDING_UUID))
             .map(UUID::fromString);
+    }
+
+    public static ProsessTaskGruppe opprettTaskGruppe(UUID forespørselUuid) {
+        var taskGruppe = new ProsessTaskGruppe();
+        taskGruppe.setProperty(KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
+        return taskGruppe;
     }
 }
