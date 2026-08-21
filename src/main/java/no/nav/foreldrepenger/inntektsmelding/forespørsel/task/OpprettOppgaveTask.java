@@ -21,7 +21,6 @@ import no.nav.vedtak.felles.prosesstask.api.ProsessTaskHandler;
 public class OpprettOppgaveTask implements ProsessTaskHandler {
     private static final Logger LOG = LoggerFactory.getLogger(OpprettOppgaveTask.class);
 
-    private ForespørselTaskTjeneste forespørselTaskTjeneste;
     private ForespørselTjeneste forespørselTjeneste;
     private MinSideArbeidsgiverTjeneste minSideArbeidsgiverTjeneste;
 
@@ -30,17 +29,15 @@ public class OpprettOppgaveTask implements ProsessTaskHandler {
     }
 
     @Inject
-    public OpprettOppgaveTask(ForespørselTaskTjeneste forespørselTaskTjeneste,
-                               ForespørselTjeneste forespørselTjeneste,
+    public OpprettOppgaveTask(ForespørselTjeneste forespørselTjeneste,
                                MinSideArbeidsgiverTjeneste minSideArbeidsgiverTjeneste) {
-        this.forespørselTaskTjeneste = forespørselTaskTjeneste;
         this.forespørselTjeneste = forespørselTjeneste;
         this.minSideArbeidsgiverTjeneste = minSideArbeidsgiverTjeneste;
     }
 
     @Override
     public void doTask(ProsessTaskData prosessTaskData) {
-        var forespørsel = forespørselTaskTjeneste.hentForespørsel(prosessTaskData);
+        var forespørsel = ForespørselTaskTjeneste.hentForespørsel(forespørselTjeneste, prosessTaskData);
 
         if (forespørsel.oppgaveId() != null) {
             LOG.info("Oppgave er allerede opprettet for forespørsel {}, hopper over", forespørsel.uuid());

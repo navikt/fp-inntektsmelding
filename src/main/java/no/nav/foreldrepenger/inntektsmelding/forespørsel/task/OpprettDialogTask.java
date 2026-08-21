@@ -22,7 +22,6 @@ import no.nav.vedtak.felles.prosesstask.api.ProsessTaskHandler;
 public class OpprettDialogTask implements ProsessTaskHandler {
     private static final Logger LOG = LoggerFactory.getLogger(OpprettDialogTask.class);
 
-    private ForespørselTaskTjeneste forespørselTaskTjeneste;
     private ForespørselTjeneste forespørselTjeneste;
     private DialogportenTjeneste dialogportenTjeneste;
 
@@ -31,17 +30,15 @@ public class OpprettDialogTask implements ProsessTaskHandler {
     }
 
     @Inject
-    public OpprettDialogTask(ForespørselTaskTjeneste forespørselTaskTjeneste,
-                              ForespørselTjeneste forespørselTjeneste,
+    public OpprettDialogTask(ForespørselTjeneste forespørselTjeneste,
                               DialogportenTjeneste dialogportenTjeneste) {
-        this.forespørselTaskTjeneste = forespørselTaskTjeneste;
         this.forespørselTjeneste = forespørselTjeneste;
         this.dialogportenTjeneste = dialogportenTjeneste;
     }
 
     @Override
     public void doTask(ProsessTaskData prosessTaskData) {
-        var forespørsel = forespørselTaskTjeneste.hentForespørsel(prosessTaskData);
+        var forespørsel = ForespørselTaskTjeneste.hentForespørsel(forespørselTjeneste, prosessTaskData);
 
         if (forespørsel.dialogportenUuid() != null) {
             // Idempotens: unngår å opprette en ny dialog dersom et tidligere (delvis) forsøk allerede har lykkes
