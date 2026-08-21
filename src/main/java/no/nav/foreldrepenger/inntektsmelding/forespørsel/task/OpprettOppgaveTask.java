@@ -1,7 +1,5 @@
 package no.nav.foreldrepenger.inntektsmelding.forespørsel.task;
 
-import java.util.UUID;
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -31,25 +29,24 @@ public class OpprettOppgaveTask implements ProsessTaskHandler {
     }
 
     @Inject
-    public OpprettOppgaveTask(ForespørselTjeneste forespørselTjeneste, MinSideArbeidsgiverTjeneste minSideArbeidsgiverTjeneste) {
+    public OpprettOppgaveTask(ForespørselTjeneste forespørselTjeneste,
+                               MinSideArbeidsgiverTjeneste minSideArbeidsgiverTjeneste) {
         this.forespørselTjeneste = forespørselTjeneste;
         this.minSideArbeidsgiverTjeneste = minSideArbeidsgiverTjeneste;
     }
 
     @Override
     public void doTask(ProsessTaskData prosessTaskData) {
-        var forespørselUuid = UUID.fromString(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID));
-        var forespørsel = forespørselTjeneste.hentForespørsel(forespørselUuid)
-            .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel " + forespørselUuid + " ved opprettelse av oppgave"));
+        var forespørsel = ForespørselTaskTjeneste.hentForespørsel(forespørselTjeneste, prosessTaskData);
 
         if (forespørsel.oppgaveId() != null) {
-            LOG.info("Oppgave er allerede opprettet for forespørsel {}, hopper over", forespørselUuid);
+            LOG.info("Oppgave er allerede opprettet for forespørsel {}, hopper over", forespørsel.uuid());
             return;
         }
 
-        LOG.info("Oppretter oppgave hos arbeidsgiverportalen for forespørsel {}", forespørselUuid);
+        LOG.info("Oppretter oppgave hos arbeidsgiverportalen for forespørsel {}", forespørsel.uuid());
         var oppgaveId = minSideArbeidsgiverTjeneste.opprettOppgave(forespørsel);
-        forespørselTjeneste.setOppgaveId(forespørselUuid, oppgaveId);
-        LOG.info("Opprettet oppgave {} hos arbeidsgiverportalen for forespørsel {}", oppgaveId, forespørselUuid);
+        forespørselTjeneste.setOppgaveId(forespørsel.uuid(), oppgaveId);
+        LOG.info("Opprettet oppgave {} hos arbeidsgiverportalen for forespørsel {}", oppgaveId, forespørsel.uuid());
     }
 }

@@ -1,8 +1,5 @@
 package no.nav.foreldrepenger.inntektsmelding.forespørsel.task;
 
-import java.util.Optional;
-import java.util.UUID;
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -36,13 +33,11 @@ public class OppdaterDialogMedEndretInntektsmeldingTask implements ProsessTaskHa
 
     @Override
     public void doTask(ProsessTaskData prosessTaskData) {
-        var forespørselUuid = UUID.fromString(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID));
-        var forespørsel = forespørselTjeneste.hentForespørsel(forespørselUuid)
-            .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel " + forespørselUuid + " ved oppdatering av dialog"));
-        var inntektsmeldingUuid = Optional.ofNullable(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_INNTEKTSMELDING_UUID)).map(UUID::fromString);
+        var forespørsel = ForespørselTaskTjeneste.hentForespørsel(forespørselTjeneste, prosessTaskData);
+        var inntektsmeldingUuid = ForespørselTaskTjeneste.hentInntektsmeldingUuid(prosessTaskData);
 
-        LOG.info("Oppdaterer dialog hos Dialogporten med endret inntektsmelding for forespørsel {}", forespørselUuid);
+        LOG.info("Oppdaterer dialog hos Dialogporten med endret inntektsmelding for forespørsel {}", forespørsel.uuid());
         dialogportenTjeneste.utførMotDialogportenMedDevToleranse(() -> dialogportenTjeneste.oppdaterDialogMedEndretInntektsmelding(forespørsel, inntektsmeldingUuid));
-        LOG.info("Oppdaterte dialog hos Dialogporten med endret inntektsmelding for forespørsel {}", forespørselUuid);
+        LOG.info("Oppdaterte dialog hos Dialogporten med endret inntektsmelding for forespørsel {}", forespørsel.uuid());
     }
 }

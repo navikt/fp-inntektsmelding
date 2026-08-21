@@ -1,7 +1,5 @@
 package no.nav.foreldrepenger.inntektsmelding.forespørsel.task;
 
-import java.util.UUID;
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -34,12 +32,10 @@ public class SettSakTilUtgåttTask implements ProsessTaskHandler {
 
     @Override
     public void doTask(ProsessTaskData prosessTaskData) {
-        var forespørselUuid = UUID.fromString(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID));
-        var forespørsel = forespørselTjeneste.hentForespørsel(forespørselUuid)
-            .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel " + forespørselUuid + " ved setting av sak til utgått"));
+        var forespørsel = ForespørselTaskTjeneste.hentForespørsel(forespørselTjeneste, prosessTaskData);
 
-        LOG.info("Setter sak hos arbeidsgiverportalen til utgått for forespørsel {}", forespørselUuid);
+        LOG.info("Setter sak hos arbeidsgiverportalen til utgått for forespørsel {}", forespørsel.uuid());
         minSideArbeidsgiverTjeneste.settSakTilUtgått(forespørsel);
-        LOG.info("Satte sak hos arbeidsgiverportalen til utgått for forespørsel {}", forespørselUuid);
+        LOG.info("Satte sak hos arbeidsgiverportalen til utgått for forespørsel {}", forespørsel.uuid());
     }
 }

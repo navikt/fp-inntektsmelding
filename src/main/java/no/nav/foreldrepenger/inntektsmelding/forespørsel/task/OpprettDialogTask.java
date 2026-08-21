@@ -1,7 +1,5 @@
 package no.nav.foreldrepenger.inntektsmelding.forespørsel.task;
 
-import java.util.UUID;
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -32,28 +30,27 @@ public class OpprettDialogTask implements ProsessTaskHandler {
     }
 
     @Inject
-    public OpprettDialogTask(ForespørselTjeneste forespørselTjeneste, DialogportenTjeneste dialogportenTjeneste) {
+    public OpprettDialogTask(ForespørselTjeneste forespørselTjeneste,
+                              DialogportenTjeneste dialogportenTjeneste) {
         this.forespørselTjeneste = forespørselTjeneste;
         this.dialogportenTjeneste = dialogportenTjeneste;
     }
 
     @Override
     public void doTask(ProsessTaskData prosessTaskData) {
-        var forespørselUuid = UUID.fromString(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID));
-        var forespørsel = forespørselTjeneste.hentForespørsel(forespørselUuid)
-            .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel " + forespørselUuid + " ved opprettelse av dialog"));
+        var forespørsel = ForespørselTaskTjeneste.hentForespørsel(forespørselTjeneste, prosessTaskData);
 
         if (forespørsel.dialogportenUuid() != null) {
             // Idempotens: unngår å opprette en ny dialog dersom et tidligere (delvis) forsøk allerede har lykkes
-            LOG.info("Dialog er allerede opprettet for forespørsel {}, hopper over", forespørselUuid);
+            LOG.info("Dialog er allerede opprettet for forespørsel {}, hopper over", forespørsel.uuid());
             return;
         }
 
-        LOG.info("Oppretter dialog hos Dialogporten for forespørsel {}", forespørselUuid);
+        LOG.info("Oppretter dialog hos Dialogporten for forespørsel {}", forespørsel.uuid());
         dialogportenTjeneste.utførMotDialogportenMedDevToleranse(() -> {
             var dialogportenUuid = dialogportenTjeneste.opprettDialog(forespørsel);
-            forespørselTjeneste.setDialogportenUuid(forespørselUuid, dialogportenUuid);
-            LOG.info("Opprettet dialog {} hos Dialogporten for forespørsel {}", dialogportenUuid, forespørselUuid);
+            forespørselTjeneste.setDialogportenUuid(forespørsel.uuid(), dialogportenUuid);
+            LOG.info("Opprettet dialog {} hos Dialogporten for forespørsel {}", dialogportenUuid, forespørsel.uuid());
         });
     }
 }

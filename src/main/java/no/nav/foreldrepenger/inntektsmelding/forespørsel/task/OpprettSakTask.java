@@ -1,7 +1,5 @@
 package no.nav.foreldrepenger.inntektsmelding.forespørsel.task;
 
-import java.util.UUID;
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -13,8 +11,6 @@ import no.nav.foreldrepenger.inntektsmelding.integrasjoner.arbeidsgivernotifikas
 import no.nav.vedtak.felles.prosesstask.api.ProsessTask;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskHandler;
-
-import static no.nav.foreldrepenger.inntektsmelding.forespørsel.task.FellesTaskProperties.KEY_FORESPOERSEL_UUID;
 
 /**
  * Oppretter sak hos arbeidsgiverportalen (min side arbeidsgiver) for en allerede lagret forespørsel.
@@ -33,25 +29,24 @@ public class OpprettSakTask implements ProsessTaskHandler {
     }
 
     @Inject
-    public OpprettSakTask(ForespørselTjeneste forespørselTjeneste, MinSideArbeidsgiverTjeneste minSideArbeidsgiverTjeneste) {
+    public OpprettSakTask(ForespørselTjeneste forespørselTjeneste,
+                          MinSideArbeidsgiverTjeneste minSideArbeidsgiverTjeneste) {
         this.forespørselTjeneste = forespørselTjeneste;
         this.minSideArbeidsgiverTjeneste = minSideArbeidsgiverTjeneste;
     }
 
     @Override
     public void doTask(ProsessTaskData prosessTaskData) {
-        var forespørselUuid = UUID.fromString(prosessTaskData.getPropertyValue(KEY_FORESPOERSEL_UUID));
-        var forespørsel = forespørselTjeneste.hentForespørsel(forespørselUuid)
-            .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel " + forespørselUuid + " ved opprettelse av sak"));
+        var forespørsel = ForespørselTaskTjeneste.hentForespørsel(forespørselTjeneste, prosessTaskData);
 
         if (forespørsel.arbeidsgiverNotifikasjonSakId() != null) {
-            LOG.info("Sak er allerede opprettet for forespørsel {}, hopper over", forespørselUuid);
+            LOG.info("Sak er allerede opprettet for forespørsel {}, hopper over", forespørsel.uuid());
             return;
         }
 
-        LOG.info("Oppretter sak hos arbeidsgiverportalen for forespørsel {}", forespørselUuid);
+        LOG.info("Oppretter sak hos arbeidsgiverportalen for forespørsel {}", forespørsel.uuid());
         var sakId = minSideArbeidsgiverTjeneste.opprettSak(forespørsel);
-        forespørselTjeneste.setArbeidsgiverNotifikasjonSakId(forespørselUuid, sakId);
-        LOG.info("Opprettet sak {} hos arbeidsgiverportalen for forespørsel {}", sakId, forespørselUuid);
+        forespørselTjeneste.setArbeidsgiverNotifikasjonSakId(forespørsel.uuid(), sakId);
+        LOG.info("Opprettet sak {} hos arbeidsgiverportalen for forespørsel {}", sakId, forespørsel.uuid());
     }
 }

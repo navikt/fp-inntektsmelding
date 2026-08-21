@@ -1,8 +1,5 @@
 package no.nav.foreldrepenger.inntektsmelding.forespørsel.task;
 
-import java.util.Optional;
-import java.util.UUID;
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -38,16 +35,13 @@ public class FerdigstillSakTask implements ProsessTaskHandler {
 
     @Override
     public void doTask(ProsessTaskData prosessTaskData) {
-        var forespørselUuid = UUID.fromString(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID));
-        var forespørsel = forespørselTjeneste.hentForespørsel(forespørselUuid)
-            .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel " + forespørselUuid + " ved ferdigstilling av sak"));
-
-        var årsak = LukkeÅrsak.valueOf(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_LUKKE_AARSAK));
-        var inntektsmeldingUuid = Optional.ofNullable(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_INNTEKTSMELDING_UUID)).map(UUID::fromString);
+        var forespørsel = ForespørselTaskTjeneste.hentForespørsel(forespørselTjeneste, prosessTaskData);
+        var årsak = LukkeÅrsak.valueOf(prosessTaskData.getPropertyValue(ForespørselTaskTjeneste.KEY_LUKKE_AARSAK));
+        var inntektsmeldingUuid = ForespørselTaskTjeneste.hentInntektsmeldingUuid(prosessTaskData);
         var erFørstegangsinnsending = Boolean.parseBoolean(prosessTaskData.getPropertyValue(KEY_ER_FØRSTEGANGSINNSENDING));
 
-        LOG.info("Ferdigstiller sak hos arbeidsgiverportalen for forespørsel {}", forespørselUuid);
+        LOG.info("Ferdigstiller sak hos arbeidsgiverportalen for forespørsel {}", forespørsel.uuid());
         minSideArbeidsgiverTjeneste.ferdigstillSak(forespørsel, årsak, inntektsmeldingUuid, erFørstegangsinnsending);
-        LOG.info("Ferdigstilte sak hos arbeidsgiverportalen for forespørsel {}", forespørselUuid);
+        LOG.info("Ferdigstilte sak hos arbeidsgiverportalen for forespørsel {}", forespørsel.uuid());
     }
 }
