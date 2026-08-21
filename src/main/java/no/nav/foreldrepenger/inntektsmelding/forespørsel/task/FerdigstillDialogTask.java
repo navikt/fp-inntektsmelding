@@ -6,6 +6,7 @@ import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.LukkeÅrsak;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.altinn.DialogportenTjeneste;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTask;
@@ -22,7 +23,7 @@ import no.nav.vedtak.felles.prosesstask.api.ProsessTaskHandler;
 public class FerdigstillDialogTask implements ProsessTaskHandler {
     private static final Logger LOG = LoggerFactory.getLogger(FerdigstillDialogTask.class);
 
-    private ForespørselTaskTjeneste forespørselTaskTjeneste;
+    private ForespørselTjeneste forespørselTjeneste;
     private DialogportenTjeneste dialogportenTjeneste;
 
     FerdigstillDialogTask() {
@@ -30,16 +31,16 @@ public class FerdigstillDialogTask implements ProsessTaskHandler {
     }
 
     @Inject
-    public FerdigstillDialogTask(ForespørselTaskTjeneste forespørselTaskTjeneste, DialogportenTjeneste dialogportenTjeneste) {
-        this.forespørselTaskTjeneste = forespørselTaskTjeneste;
+    public FerdigstillDialogTask(ForespørselTjeneste forespørselTjeneste, DialogportenTjeneste dialogportenTjeneste) {
+        this.forespørselTjeneste = forespørselTjeneste;
         this.dialogportenTjeneste = dialogportenTjeneste;
     }
 
     @Override
     public void doTask(ProsessTaskData prosessTaskData) {
-        var forespørsel = forespørselTaskTjeneste.hentForespørsel(prosessTaskData);
+        var forespørsel = ForespørselTaskTjeneste.hentForespørsel(forespørselTjeneste, prosessTaskData);
         var årsak = LukkeÅrsak.valueOf(prosessTaskData.getPropertyValue(ForespørselTaskTjeneste.KEY_LUKKE_AARSAK));
-        var inntektsmeldingUuid = forespørselTaskTjeneste.hentInntektsmeldingUuid(prosessTaskData);
+        var inntektsmeldingUuid = ForespørselTaskTjeneste.hentInntektsmeldingUuid(prosessTaskData);
 
         LOG.info("Ferdigstiller dialog hos Dialogporten for forespørsel {}", forespørsel.uuid());
         dialogportenTjeneste.utførMotDialogportenMedDevToleranse(() -> dialogportenTjeneste.ferdigstillDialog(forespørsel, årsak, inntektsmeldingUuid));

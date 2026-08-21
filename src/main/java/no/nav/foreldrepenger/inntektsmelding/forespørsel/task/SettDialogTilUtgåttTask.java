@@ -6,6 +6,7 @@ import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.altinn.DialogportenTjeneste;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTask;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
@@ -21,7 +22,7 @@ import no.nav.vedtak.felles.prosesstask.api.ProsessTaskHandler;
 public class SettDialogTilUtgåttTask implements ProsessTaskHandler {
     private static final Logger LOG = LoggerFactory.getLogger(SettDialogTilUtgåttTask.class);
 
-    private ForespørselTaskTjeneste forespørselTaskTjeneste;
+    private ForespørselTjeneste forespørselTjeneste;
     private DialogportenTjeneste dialogportenTjeneste;
 
     SettDialogTilUtgåttTask() {
@@ -29,14 +30,14 @@ public class SettDialogTilUtgåttTask implements ProsessTaskHandler {
     }
 
     @Inject
-    public SettDialogTilUtgåttTask(ForespørselTaskTjeneste forespørselTaskTjeneste, DialogportenTjeneste dialogportenTjeneste) {
-        this.forespørselTaskTjeneste = forespørselTaskTjeneste;
+    public SettDialogTilUtgåttTask(ForespørselTjeneste forespørselTjeneste, DialogportenTjeneste dialogportenTjeneste) {
+        this.forespørselTjeneste = forespørselTjeneste;
         this.dialogportenTjeneste = dialogportenTjeneste;
     }
 
     @Override
     public void doTask(ProsessTaskData prosessTaskData) {
-        var forespørsel = forespørselTaskTjeneste.hentForespørsel(prosessTaskData);
+        var forespørsel = ForespørselTaskTjeneste.hentForespørsel(forespørselTjeneste, prosessTaskData);
 
         LOG.info("Setter dialog hos Dialogporten til utgått for forespørsel {}", forespørsel.uuid());
         dialogportenTjeneste.utførMotDialogportenMedDevToleranse(() -> dialogportenTjeneste.settDialogTilUtgått(forespørsel));

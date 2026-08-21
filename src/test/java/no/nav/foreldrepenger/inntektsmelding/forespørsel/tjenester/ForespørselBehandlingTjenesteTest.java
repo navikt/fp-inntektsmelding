@@ -70,14 +70,12 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
     private ForespørselRepository forespørselRepository;
     private ForespørselTjeneste forespørselTjeneste;
-    private ForespørselTaskTjeneste forespørselTaskTjeneste;
     private ForespørselBehandlingTjeneste forespørselBehandlingTjeneste;
 
     @BeforeEach
     void setUp() {
         this.forespørselRepository = new ForespørselRepository(getEntityManager());
         this.forespørselTjeneste = new ForespørselTjeneste(forespørselRepository);
-        this.forespørselTaskTjeneste = new ForespørselTaskTjeneste(forespørselTjeneste);
         this.forespørselBehandlingTjeneste = new ForespørselBehandlingTjeneste(forespørselTjeneste,
             minSideArbeidsgiverTjeneste,
             dialogportenTjeneste,
@@ -88,14 +86,14 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
     // kort tid etter i produksjon. Nødvendig i disse testene fordi enkelte påfølgende operasjoner (f.eks. ferdigstille/
     // sette utgått) fortsatt slår opp forespørselen på arbeidsgiverNotifikasjonSakId og oppgaveId
     private void kjørOpprettSakTask(UUID forespørselUuid) {
-        var task = new OpprettSakTask(forespørselTaskTjeneste, forespørselTjeneste, minSideArbeidsgiverTjeneste);
+        var task = new OpprettSakTask(forespørselTjeneste, minSideArbeidsgiverTjeneste);
         var taskData = ProsessTaskData.forProsessTask(OpprettSakTask.class);
         taskData.setProperty(ForespørselTaskTjeneste.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
         task.doTask(taskData);
     }
 
     private void kjørOpprettOppgaveTask(UUID forespørselUuid) {
-        var task = new OpprettOppgaveTask(forespørselTaskTjeneste, forespørselTjeneste, minSideArbeidsgiverTjeneste);
+        var task = new OpprettOppgaveTask(forespørselTjeneste, minSideArbeidsgiverTjeneste);
         var taskData = ProsessTaskData.forProsessTask(OpprettOppgaveTask.class);
         taskData.setProperty(ForespørselTaskTjeneste.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
         task.doTask(taskData);
