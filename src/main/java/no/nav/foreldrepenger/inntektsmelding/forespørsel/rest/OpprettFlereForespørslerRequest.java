@@ -1,0 +1,20 @@
+package no.nav.foreldrepenger.inntektsmelding.forespørsel.rest;
+
+import java.time.LocalDate;
+import java.util.List;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+
+import no.nav.foreldrepenger.inntektsmelding.typer.dto.AktørIdDto;
+import no.nav.foreldrepenger.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
+import no.nav.foreldrepenger.inntektsmelding.typer.dto.SaksnummerDto;
+import no.nav.foreldrepenger.inntektsmelding.typer.dto.YtelseTypeDto;
+
+public record OpprettFlereForespørslerRequest(@NotNull @Valid AktørIdDto aktørId,
+                                              @NotNull @Valid LocalDate skjæringstidspunkt,
+                                              @NotNull @Valid YtelseTypeDto ytelsetype,
+                                              @NotNull @Valid SaksnummerDto fagsakSaksnummer,
+                                              @Valid LocalDate førsteUttaksdato,
+                                              @NotNull List<@NotNull @Valid OrganisasjonsnummerDto> organisasjonsnumre) {
+}

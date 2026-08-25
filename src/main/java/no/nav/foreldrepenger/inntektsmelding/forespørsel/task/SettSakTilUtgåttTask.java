@@ -38,6 +38,10 @@ public class SettSakTilUtgåttTask implements ProsessTaskHandler {
         var forespørsel = forespørselTjeneste.hentForespørsel(forespørselUuid)
             .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel " + forespørselUuid + " ved setting av sak til utgått"));
 
+        if (forespørsel.arbeidsgiverNotifikasjonSakId() == null) {
+            LOG.info("Forespørsel {} har ingen sak hos arbeidsgiverportalen, hopper over", forespørselUuid);
+            return;
+        }
         LOG.info("Setter sak hos arbeidsgiverportalen til utgått for forespørsel {}", forespørselUuid);
         minSideArbeidsgiverTjeneste.settSakTilUtgått(forespørsel);
         LOG.info("Satte sak hos arbeidsgiverportalen til utgått for forespørsel {}", forespørselUuid);

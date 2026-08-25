@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon.MinSideArbeidsgiverTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTask;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskHandler;
@@ -44,6 +45,10 @@ public class OpprettSakTask implements ProsessTaskHandler {
         var forespørsel = forespørselTjeneste.hentForespørsel(forespørselUuid)
             .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel " + forespørselUuid + " ved opprettelse av sak"));
 
+        if (ForespørselStatus.UTGÅTT.equals(forespørsel.status())) {
+            LOG.info("Forespørsel {} er utgått, oppretter ikke sak", forespørselUuid);
+            return;
+        }
         if (forespørsel.arbeidsgiverNotifikasjonSakId() != null) {
             LOG.info("Sak er allerede opprettet for forespørsel {}, hopper over", forespørselUuid);
             return;

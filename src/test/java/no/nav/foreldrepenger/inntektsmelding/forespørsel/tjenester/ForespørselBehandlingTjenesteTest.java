@@ -53,6 +53,7 @@ import no.nav.vedtak.felles.testutilities.db.EntityManagerAwareTest;
 class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
     private static final String BRREG_ORGNUMMER = "974760673";
+    private static final String ANNET_ORGNUMMER = "450674427";
     private static final String AKTØR_ID = "1234567891234";
     private static final String SAK_ID = "1";
     private static final String OPPGAVE_ID = "2";
@@ -83,8 +84,8 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
     }
 
     // Simulerer at prosesstasken for å opprette sak/oppgave hos arbeidsgiverportalen har kjørt, slik den ville gjort
-    // kort tid etter i produksjon. Nødvendig i disse testene fordi enkelte påfølgende operasjoner (f.eks. ferdigstille/
-    // sette utgått) fortsatt slår opp forespørselen på arbeidsgiverNotifikasjonSakId og oppgaveId
+    // kort tid etter i produksjon. Nødvendig i disse testene fordi ferdigstilling fortsatt slår opp forespørselen
+    // på arbeidsgiverNotifikasjonSakId og oppgaveId
     private void kjørOpprettSakTask(UUID forespørselUuid) {
         var task = new OpprettSakTask(forespørselTjeneste, minSideArbeidsgiverTjeneste);
         var taskData = ProsessTaskData.forProsessTask(OpprettSakTask.class);
@@ -95,6 +96,27 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
     private void kjørOpprettOppgaveTask(UUID forespørselUuid) {
         var task = new OpprettOppgaveTask(forespørselTjeneste, minSideArbeidsgiverTjeneste);
         var taskData = ProsessTaskData.forProsessTask(OpprettOppgaveTask.class);
+        taskData.setProperty(FellesTaskProperties.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
+        task.doTask(taskData);
+    }
+
+    private void kjørOpprettDialogTask(UUID forespørselUuid) {
+        var task = new OpprettDialogTask(forespørselTjeneste, dialogportenTjeneste);
+        var taskData = ProsessTaskData.forProsessTask(OpprettDialogTask.class);
+        taskData.setProperty(FellesTaskProperties.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
+        task.doTask(taskData);
+    }
+
+    private void kjørSettSakTilUtgåttTask(UUID forespørselUuid) {
+        var task = new SettSakTilUtgåttTask(forespørselTjeneste, minSideArbeidsgiverTjeneste);
+        var taskData = ProsessTaskData.forProsessTask(SettSakTilUtgåttTask.class);
+        taskData.setProperty(FellesTaskProperties.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
+        task.doTask(taskData);
+    }
+
+    private void kjørSettDialogTilUtgåttTask(UUID forespørselUuid) {
+        var task = new SettDialogTilUtgåttTask(forespørselTjeneste, dialogportenTjeneste);
+        var taskData = ProsessTaskData.forProsessTask(SettDialogTilUtgåttTask.class);
         taskData.setProperty(FellesTaskProperties.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
         task.doTask(taskData);
     }
@@ -159,6 +181,90 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         var lagret = forespørselRepository.hentForespørslerPåSak(SAKSNUMMER);
         assertThat(resultat).isEqualTo(ForespørselResultat.IKKE_OPPRETTET_FINNES_ALLEREDE);
         assertThat(lagret).hasSize(1);
+    }
+
+    @Test
+    void skal_sette_forespørsel_som_mangler_fra_komplett_liste_til_utgått() {
+        var beholdUuid = lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, BRREG_ORGNUMMER, SAKSNUMMER,
+            FØRSTE_UTTAKSDATO, ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var utgåttUuid = lagreForespørsel(SKJÆRINGSTIDSPUNKT.minusDays(10), YTELSETYPE, AKTØR_ID, ANNET_ORGNUMMER, SAKSNUMMER,
+            FØRSTE_UTTAKSDATO.minusDays(5), ForespørselType.BESTILT_AV_FAGSYSTEM);
+
+        var resultater = forespørselBehandlingTjeneste.håndterKomplettListeMedForespørsler(SKJÆRINGSTIDSPUNKT,
+            YTELSETYPE,
+            AktørId.fra(AKTØR_ID),
+            List.of(Arbeidsgiver.fra(BRREG_ORGNUMMER)),
+            Saksnummer.fra(SAKSNUMMER),
+            FØRSTE_UTTAKSDATO);
+
+        clearHibernateCache();
+
+        assertThat(resultater).containsExactly(ForespørselResultat.IKKE_OPPRETTET_FINNES_ALLEREDE);
+        assertThat(forespørselRepository.hentForespørsel(beholdUuid).orElseThrow().getStatus()).isEqualTo(ForespørselStatus.UNDER_BEHANDLING);
+        assertThat(forespørselRepository.hentForespørsel(utgåttUuid).orElseThrow().getStatus()).isEqualTo(ForespørselStatus.UTGÅTT);
+        verify(prosessTaskTjeneste).lagre(any(ProsessTaskGruppe.class));
+    }
+
+    @Test
+    void skal_sette_alle_relevante_forespørsler_til_utgått_for_tom_komplett_liste() {
+        var førsteUuid = lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, BRREG_ORGNUMMER, SAKSNUMMER,
+            FØRSTE_UTTAKSDATO, ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var andreUuid = lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, ANNET_ORGNUMMER, SAKSNUMMER,
+            FØRSTE_UTTAKSDATO, ForespørselType.BESTILT_AV_FAGSYSTEM);
+
+        var resultater = forespørselBehandlingTjeneste.håndterKomplettListeMedForespørsler(SKJÆRINGSTIDSPUNKT,
+            YTELSETYPE,
+            AktørId.fra(AKTØR_ID),
+            List.of(),
+            Saksnummer.fra(SAKSNUMMER),
+            FØRSTE_UTTAKSDATO);
+
+        clearHibernateCache();
+
+        assertThat(resultater).isEmpty();
+        assertThat(forespørselRepository.hentForespørsel(førsteUuid).orElseThrow().getStatus()).isEqualTo(ForespørselStatus.UTGÅTT);
+        assertThat(forespørselRepository.hentForespørsel(andreUuid).orElseThrow().getStatus()).isEqualTo(ForespørselStatus.UTGÅTT);
+        verify(prosessTaskTjeneste, Mockito.times(2)).lagre(any(ProsessTaskGruppe.class));
+    }
+
+    @Test
+    void komplett_liste_skal_ikke_sette_arbeidsgiverinitiert_forespørsel_til_utgått() {
+        var arbeidsgiverinitiertUuid = lagreForespørsel(null, YTELSETYPE, AKTØR_ID, ANNET_ORGNUMMER, SAKSNUMMER,
+            FØRSTE_UTTAKSDATO, ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT);
+
+        forespørselBehandlingTjeneste.håndterKomplettListeMedForespørsler(SKJÆRINGSTIDSPUNKT,
+            YTELSETYPE,
+            AktørId.fra(AKTØR_ID),
+            List.of(),
+            Saksnummer.fra(SAKSNUMMER),
+            FØRSTE_UTTAKSDATO);
+
+        clearHibernateCache();
+
+        assertThat(forespørselRepository.hentForespørsel(arbeidsgiverinitiertUuid).orElseThrow().getStatus()).isEqualTo(ForespørselStatus.UNDER_BEHANDLING);
+        verifyNoInteractions(prosessTaskTjeneste);
+    }
+
+    @Test
+    void tasks_skal_ikke_opprette_eller_sette_utgått_eksterne_ressurser_som_ikke_finnes() {
+        var forespørselUuid = lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, BRREG_ORGNUMMER, SAKSNUMMER,
+            FØRSTE_UTTAKSDATO, ForespørselType.BESTILT_AV_FAGSYSTEM);
+
+        forespørselBehandlingTjeneste.håndterKomplettListeMedForespørsler(SKJÆRINGSTIDSPUNKT,
+            YTELSETYPE,
+            AktørId.fra(AKTØR_ID),
+            List.of(),
+            Saksnummer.fra(SAKSNUMMER),
+            FØRSTE_UTTAKSDATO);
+        clearHibernateCache();
+
+        kjørOpprettSakTask(forespørselUuid);
+        kjørOpprettOppgaveTask(forespørselUuid);
+        kjørOpprettDialogTask(forespørselUuid);
+        kjørSettSakTilUtgåttTask(forespørselUuid);
+        kjørSettDialogTilUtgåttTask(forespørselUuid);
+
+        verifyNoInteractions(minSideArbeidsgiverTjeneste, dialogportenTjeneste);
     }
 
     @Test
