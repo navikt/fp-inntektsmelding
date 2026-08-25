@@ -285,6 +285,7 @@ public class ForespørselBehandlingTjeneste {
             fagsakSaksnummer,
             forespørsel.ytelseType());
         LOG.info(msg);
+        dialogportenTjeneste.sendMeldingOmPurring(forespørsel);
         minSideArbeidsgiverTjeneste.sendNyBeskjedMedEksternVarsling(forespørsel);
 
         return NyBeskjedResultat.NY_BESKJED_SENDT;

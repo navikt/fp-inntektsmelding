@@ -14,6 +14,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
@@ -83,6 +84,23 @@ class DialogportenTjenesteTest {
     @Test
     void skal_ikke_kalle_klient_når_dialog_uuid_mangler() {
         tjeneste.settDialogTilUtgått(forespørsel(null));
+
+        verifyNoInteractions(dialogportenKlient);
+    }
+
+    @Test
+    void skal_sende_melding_om_purring() {
+        var forespørsel = forespørsel(DIALOG_UUID);
+        mockPerson();
+
+        tjeneste.sendMeldingOmPurring(forespørsel);
+
+        verify(dialogportenKlient).sendMeldingOmPurring(eq(DIALOG_UUID), Mockito.contains("foreldrepenger"));
+    }
+
+    @Test
+    void skal_ikke_sende_melding_om_purring_når_dialog_uuid_mangler() {
+        tjeneste.sendMeldingOmPurring(forespørsel(null));
 
         verifyNoInteractions(dialogportenKlient);
     }

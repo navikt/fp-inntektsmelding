@@ -583,6 +583,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
         assertThat(resultat).isEqualTo(NyBeskjedResultat.NY_BESKJED_SENDT);
         verify(minSideArbeidsgiverTjeneste, Mockito.times(1)).sendNyBeskjedMedEksternVarsling(any(ForespørselDto.class));
+        verify(dialogportenTjeneste, Mockito.times(1)).sendMeldingOmPurring(any(ForespørselDto.class));
     }
 
     @Test

@@ -122,6 +122,16 @@ class DialogportenRequestMapperTest {
     }
 
     @Test
+    void inntektsmeldingPurringMelding() {
+        var purringPatchRequest = DialogportenRequestMapper.inntektsmeldingPurringMelding("Vi har ennå ikke mottatt inntektsmelding");
+
+        assertThat(purringPatchRequest.op()).isEqualTo(DialogportenPatchRequest.OP_ADD);
+        assertThat(purringPatchRequest.path()).isEqualTo(DialogportenPatchRequest.PATH_TRANSMISSIONS);
+        assertThat(purringPatchRequest.value().toString()).contains("Vi har ennå ikke mottatt inntektsmelding");
+        assertThat(purringPatchRequest.value().toString()).contains("Request");
+    }
+
+    @Test
     void opprettUtgåttPatchRequest() {
         var utgåttRequest = DialogportenRequestMapper.opprettUtgåttPatchRequest("sakstittel");
 

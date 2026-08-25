@@ -157,6 +157,20 @@ public class DialogportenRequestMapper {
             List.of(transmission));
     }
 
+    public static DialogportenPatchRequest inntektsmeldingPurringMelding(String purringTekst) {
+        var contentTransmission = lagContentValue(purringTekst);
+
+        var transmissionContent = new DialogportenRequest.Content(contentTransmission, null, null);
+
+        return new DialogportenPatchRequest(DialogportenPatchRequest.OP_ADD,
+            DialogportenPatchRequest.PATH_TRANSMISSIONS,
+            List.of(new DialogportenRequest.Transmission(DialogportenRequest.TransmissionType.Request,
+                DialogportenRequest.TransmissionExtendedType.INNTEKTSMELDING,
+                new DialogportenRequest.Sender("ServiceOwner", null),
+                transmissionContent,
+                List.of())));
+    }
+
     public static DialogportenPatchRequest inntektsmeldingAvvistTransmission(Arbeidsgiver arbeidsgiver,
                                                                                String avvistTekst) {
         var contentTransmission = lagContentValue(avvistTekst);
