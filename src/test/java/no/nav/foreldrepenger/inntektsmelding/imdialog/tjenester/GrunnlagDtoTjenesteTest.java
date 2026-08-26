@@ -107,7 +107,7 @@ class GrunnlagDtoTjenesteTest {
             "123",
             stp,
             ForespørselType.BESTILT_AV_FAGSYSTEM);
-        when(forespørselBehandlingTjeneste.hentForespørselOptional(uuid)).thenReturn(Optional.of(ForespørselDtoMapper.mapFraEntitet(forespørsel)));
+        when(forespørselBehandlingTjeneste.hentForespørsel(uuid)).thenReturn(ForespørselDtoMapper.mapFraEntitet(forespørsel));
         when(organisasjonTjeneste.finnOrganisasjon(Arbeidsgiver.fra(forespørsel.getOrganisasjonsnummer()))).thenReturn(
             new Organisasjon("Bedriften", forespørsel.getOrganisasjonsnummer()));
         var personIdent = new PersonIdent("12121212122");
@@ -181,7 +181,7 @@ class GrunnlagDtoTjenesteTest {
             Ytelsetype.FORELDREPENGER,
             "123",
             stp.plusDays(10), ForespørselType.BESTILT_AV_FAGSYSTEM);
-        when(forespørselBehandlingTjeneste.hentForespørselOptional(uuid)).thenReturn(Optional.of(ForespørselDtoMapper.mapFraEntitet(forespørsel)));
+        when(forespørselBehandlingTjeneste.hentForespørsel(uuid)).thenReturn(ForespørselDtoMapper.mapFraEntitet(forespørsel));
         when(organisasjonTjeneste.finnOrganisasjon(Arbeidsgiver.fra(forespørsel.getOrganisasjonsnummer()))).thenReturn(
             new Organisasjon("Bedriften", forespørsel.getOrganisasjonsnummer()));
         var personIdent = new PersonIdent("12121212122");
@@ -379,7 +379,7 @@ class GrunnlagDtoTjenesteTest {
         when(personTjeneste.hentPersonFraIdent(PersonIdent.fra(INNMELDER_UID), ytelsetype)).thenReturn(
             new PersonInfo("Ine", null, "Sender", new PersonIdent(INNMELDER_UID), null, LocalDate.now(), "+4711111111", PersonInfo.Kjønn.MANN));
         when(forespørselBehandlingTjeneste.finnForespørslerForAktørId(aktørId, ytelsetype)).thenReturn(List.of(ForespørselDtoMapper.mapFraEntitet(forespørsel)));
-        when(forespørselBehandlingTjeneste.hentForespørselOptional(forespørsel.getUuid())).thenReturn(Optional.of(ForespørselDtoMapper.mapFraEntitet(forespørsel)));
+        when(forespørselBehandlingTjeneste.hentForespørsel(forespørsel.getUuid())).thenReturn(ForespørselDtoMapper.mapFraEntitet(forespørsel));
         when(organisasjonTjeneste.finnOrganisasjon(Arbeidsgiver.fra(orgnr))).thenReturn(new Organisasjon("Bedriften",
             orgnr));
         when(fellesGrunnlagTjeneste.harJobbetHeleBeregningsperioden(any(), any(), any())).thenReturn(true);
@@ -421,7 +421,7 @@ class GrunnlagDtoTjenesteTest {
         when(personTjeneste.hentPersonFraIdent(PersonIdent.fra(INNMELDER_UID), ytelsetype)).thenReturn(
             new PersonInfo("Ine", null, "Sender", new PersonIdent(INNMELDER_UID), null, LocalDate.now(), "+4711111111", PersonInfo.Kjønn.MANN));
         when(forespørselBehandlingTjeneste.finnForespørslerForAktørId(aktørId, ytelsetype)).thenReturn(List.of(ForespørselDtoMapper.mapFraEntitet(forespørsel)));
-        when(forespørselBehandlingTjeneste.hentForespørselOptional(forespørsel.getUuid())).thenReturn(Optional.of(ForespørselDtoMapper.mapFraEntitet(forespørsel)));
+        when(forespørselBehandlingTjeneste.hentForespørsel(forespørsel.getUuid())).thenReturn(ForespørselDtoMapper.mapFraEntitet(forespørsel));
         when(organisasjonTjeneste.finnOrganisasjon(Arbeidsgiver.fra(organisasjonsnummer))).thenReturn(new Organisasjon("Bedriften",
             organisasjonsnummer));
         when(arbeidsforholdTjeneste.hentArbeidsforhold(any(), any())).thenReturn(List.of(
@@ -523,7 +523,7 @@ class GrunnlagDtoTjenesteTest {
         when(personTjeneste.hentPersonFraIdent(PersonIdent.fra(INNMELDER_UID), ytelsetype)).thenReturn(
             new PersonInfo("Ine", null, "Sender", new PersonIdent(INNMELDER_UID), null, LocalDate.now(), "+4711111111", PersonInfo.Kjønn.MANN));
         when(forespørselBehandlingTjeneste.finnForespørslerForAktørId(aktørId, ytelsetype)).thenReturn(List.of(ForespørselDtoMapper.mapFraEntitet(forespørsel)));
-        when(forespørselBehandlingTjeneste.hentForespørselOptional(forespørsel.getUuid())).thenReturn(Optional.of(ForespørselDtoMapper.mapFraEntitet(forespørsel)));
+        when(forespørselBehandlingTjeneste.hentForespørsel(forespørsel.getUuid())).thenReturn(ForespørselDtoMapper.mapFraEntitet(forespørsel));
         when(organisasjonTjeneste.finnOrganisasjon(Arbeidsgiver.fra(orgnr))).thenReturn(new Organisasjon("Bedriften",
             orgnr));
         when(fellesGrunnlagTjeneste.harJobbetHeleBeregningsperioden(any(), any(), any())).thenReturn(true);
