@@ -31,8 +31,7 @@ public class OpprettOppgaveTask implements ProsessTaskHandler {
     }
 
     @Inject
-    public OpprettOppgaveTask(ForespørselTjeneste forespørselTjeneste,
-                               MinSideArbeidsgiverTjeneste minSideArbeidsgiverTjeneste) {
+    public OpprettOppgaveTask(ForespørselTjeneste forespørselTjeneste, MinSideArbeidsgiverTjeneste minSideArbeidsgiverTjeneste) {
         this.forespørselTjeneste = forespørselTjeneste;
         this.minSideArbeidsgiverTjeneste = minSideArbeidsgiverTjeneste;
     }
