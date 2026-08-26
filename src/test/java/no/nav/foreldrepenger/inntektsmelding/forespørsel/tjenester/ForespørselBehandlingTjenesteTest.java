@@ -348,7 +348,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
     void skal_opprette_tasker_for_å_opprette_og_ferdigstille_agi() {
         var forespørselUuid = lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, BRREG_ORGNUMMER, SAKSNUMMER,
             FØRSTE_UTTAKSDATO, ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT);
-        var forespørselDto = forespørselTjeneste.hentForespørselOptional(forespørselUuid).orElseThrow();
+        var forespørselDto = forespørselTjeneste.hentForespørsel(forespørselUuid);
         var inntektsmeldingUuid = UUID.randomUUID();
 
         forespørselBehandlingTjeneste.opprettSakOgFerdigstillTasksIPortaler(forespørselDto, inntektsmeldingUuid);

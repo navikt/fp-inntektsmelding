@@ -32,8 +32,7 @@ public class OpprettDialogTask implements ProsessTaskHandler {
     }
 
     @Inject
-    public OpprettDialogTask(ForespørselTjeneste forespørselTjeneste,
-                              DialogportenTjeneste dialogportenTjeneste) {
+    public OpprettDialogTask(ForespørselTjeneste forespørselTjeneste, DialogportenTjeneste dialogportenTjeneste) {
         this.forespørselTjeneste = forespørselTjeneste;
         this.dialogportenTjeneste = dialogportenTjeneste;
     }

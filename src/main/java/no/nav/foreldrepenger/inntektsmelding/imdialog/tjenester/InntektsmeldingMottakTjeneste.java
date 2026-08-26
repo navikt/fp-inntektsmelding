@@ -19,7 +19,6 @@ import no.nav.foreldrepenger.inntektsmelding.integrasjoner.fpsak.FpsakTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.metrikker.MetrikkerTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ArbeidsgiverinitiertÅrsak;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
-import no.nav.vedtak.exception.TekniskException;
 import no.nav.vedtak.konfig.Tid;
 
 @ApplicationScoped
@@ -41,8 +40,7 @@ public class InntektsmeldingMottakTjeneste {
     }
 
     public InntektsmeldingResponseDto mottaInntektsmelding(InntektsmeldingDto mottattInntektsmeldingDto, UUID forespørselUuid) {
-        var forespørsel = forespørselBehandlingTjeneste.hentForespørselOptional(forespørselUuid)
-            .orElseThrow(this::manglerForespørselFeil);
+        var forespørsel = forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid);
 
         //Validering
         if (ForespørselStatus.UTGÅTT.equals(forespørsel.status())) {
@@ -72,8 +70,7 @@ public class InntektsmeldingMottakTjeneste {
         InntektsmeldingDto lagretInntektsmelding;
 
         if (finnesForespørselFraFør) {
-            forespørselDto = forespørselBehandlingTjeneste.hentForespørselOptional(forespørselUuid)
-                .orElseThrow(this::manglerForespørselFeil);
+            forespørselDto = forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid);
             //Validering
             ForespørselValiderer.validerAktør(forespørselDto, inntektsmeldingDto.getAktørId());
             ForespørselValiderer.validerOrganisasjon(forespørselDto, inntektsmeldingDto.getArbeidsgiver());
@@ -133,7 +130,4 @@ public class InntektsmeldingMottakTjeneste {
         return InntektsmeldingMapper.mapFraDomene(lagretInntektsmelding, forespørselDto);
     }
 
-    private TekniskException manglerForespørselFeil() {
-        return new TekniskException("FPINNTEKTSMELDING_FORESPØRSEL_1", "Mangler forespørsel entitet");
-    }
 }
