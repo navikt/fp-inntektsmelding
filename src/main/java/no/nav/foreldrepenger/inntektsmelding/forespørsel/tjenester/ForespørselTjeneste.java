@@ -105,8 +105,13 @@ public class ForespørselTjeneste {
         return forespørselRepository.finnÅpenForespørsel(fagsakSaksnummer.saksnummer(), arbeidsgiver.orgnr()).map(ForespørselDtoMapper::mapFraEntitet);
     }
 
-    public Optional<ForespørselDto> hentForespørsel(UUID forespørselUuid) {
+    public Optional<ForespørselDto> hentForespørselOptional(UUID forespørselUuid) {
         return forespørselRepository.hentForespørsel(forespørselUuid).map(ForespørselDtoMapper::mapFraEntitet);
+    }
+
+    public ForespørselDto hentForespørsel(UUID forespørselUuid) {
+        return hentForespørselOptional(forespørselUuid)
+            .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel " + forespørselUuid));
     }
 
     public List<ForespørselDto> finnForespørslerForAktørid(AktørId aktørId, Ytelsetype ytelsetype) {

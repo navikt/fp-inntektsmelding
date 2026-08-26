@@ -24,7 +24,7 @@ import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEnti
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselRepository;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.FerdigstillDialogTask;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.FerdigstillSakTask;
-import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.ForespørselTaskTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.ForespørselTaskProperties;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettDialogTask;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettOppgaveTask;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettSakTask;
@@ -88,14 +88,14 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
     private void kjørOpprettSakTask(UUID forespørselUuid) {
         var task = new OpprettSakTask(forespørselTjeneste, minSideArbeidsgiverTjeneste);
         var taskData = ProsessTaskData.forProsessTask(OpprettSakTask.class);
-        taskData.setProperty(ForespørselTaskTjeneste.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
+        taskData.setProperty(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
         task.doTask(taskData);
     }
 
     private void kjørOpprettOppgaveTask(UUID forespørselUuid) {
         var task = new OpprettOppgaveTask(forespørselTjeneste, minSideArbeidsgiverTjeneste);
         var taskData = ProsessTaskData.forProsessTask(OpprettOppgaveTask.class);
-        taskData.setProperty(ForespørselTaskTjeneste.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
+        taskData.setProperty(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
         task.doTask(taskData);
     }
 
@@ -134,9 +134,9 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         assertThat(opprettedeTasks.get(2).taskType()).isEqualTo(TaskType.forProsessTask(OpprettDialogTask.class));
 
         var forespørselUuid = lagret.getFirst().getUuid().toString();
-        assertThat(opprettedeTasks.get(0).getPropertyValue(ForespørselTaskTjeneste.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid);
-        assertThat(opprettedeTasks.get(1).getPropertyValue(ForespørselTaskTjeneste.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid);
-        assertThat(opprettedeTasks.get(2).getPropertyValue(ForespørselTaskTjeneste.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid);
+        assertThat(opprettedeTasks.get(0).getPropertyValue(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid);
+        assertThat(opprettedeTasks.get(1).getPropertyValue(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid);
+        assertThat(opprettedeTasks.get(2).getPropertyValue(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid);
     }
 
     @Test
@@ -348,7 +348,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
     void skal_opprette_tasker_for_å_opprette_og_ferdigstille_agi() {
         var forespørselUuid = lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, BRREG_ORGNUMMER, SAKSNUMMER,
             FØRSTE_UTTAKSDATO, ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT);
-        var forespørselDto = forespørselTjeneste.hentForespørsel(forespørselUuid).orElseThrow();
+        var forespørselDto = forespørselTjeneste.hentForespørselOptional(forespørselUuid).orElseThrow();
         var inntektsmeldingUuid = UUID.randomUUID();
 
         forespørselBehandlingTjeneste.opprettSakOgFerdigstillTasksIPortaler(forespørselDto, inntektsmeldingUuid);
@@ -366,21 +366,21 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         var ferdigstillDialogTask = tasks.get(3);
 
         assertThat(opprettSakTask.taskType()).isEqualTo(TaskType.forProsessTask(OpprettSakTask.class));
-        assertThat(opprettSakTask.getPropertyValue(ForespørselTaskTjeneste.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid.toString());
+        assertThat(opprettSakTask.getPropertyValue(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid.toString());
 
         assertThat(opprettDialogTask.taskType()).isEqualTo(TaskType.forProsessTask(OpprettDialogTask.class));
-        assertThat(opprettDialogTask.getPropertyValue(ForespørselTaskTjeneste.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid.toString());
+        assertThat(opprettDialogTask.getPropertyValue(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid.toString());
 
         assertThat(ferdigstillSakTask.taskType()).isEqualTo(TaskType.forProsessTask(FerdigstillSakTask.class));
-        assertThat(ferdigstillSakTask.getPropertyValue(ForespørselTaskTjeneste.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid.toString());
-        assertThat(ferdigstillSakTask.getPropertyValue(ForespørselTaskTjeneste.KEY_INNTEKTSMELDING_UUID)).isEqualTo(inntektsmeldingUuid.toString());
-        assertThat(ferdigstillSakTask.getPropertyValue(ForespørselTaskTjeneste.KEY_LUKKE_AARSAK)).isEqualTo(LukkeÅrsak.ORDINÆR_INNSENDING.name());
+        assertThat(ferdigstillSakTask.getPropertyValue(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid.toString());
+        assertThat(ferdigstillSakTask.getPropertyValue(ForespørselTaskProperties.KEY_INNTEKTSMELDING_UUID)).isEqualTo(inntektsmeldingUuid.toString());
+        assertThat(ferdigstillSakTask.getPropertyValue(ForespørselTaskProperties.KEY_LUKKE_AARSAK)).isEqualTo(LukkeÅrsak.ORDINÆR_INNSENDING.name());
         assertThat(ferdigstillSakTask.getPropertyValue(FerdigstillSakTask.KEY_ER_FØRSTEGANGSINNSENDING)).isEqualTo("true");
 
         assertThat(ferdigstillDialogTask.taskType()).isEqualTo(TaskType.forProsessTask(FerdigstillDialogTask.class));
-        assertThat(ferdigstillDialogTask.getPropertyValue(ForespørselTaskTjeneste.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid.toString());
-        assertThat(ferdigstillDialogTask.getPropertyValue(ForespørselTaskTjeneste.KEY_INNTEKTSMELDING_UUID)).isEqualTo(inntektsmeldingUuid.toString());
-        assertThat(ferdigstillDialogTask.getPropertyValue(ForespørselTaskTjeneste.KEY_LUKKE_AARSAK)).isEqualTo(LukkeÅrsak.ORDINÆR_INNSENDING.name());
+        assertThat(ferdigstillDialogTask.getPropertyValue(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid.toString());
+        assertThat(ferdigstillDialogTask.getPropertyValue(ForespørselTaskProperties.KEY_INNTEKTSMELDING_UUID)).isEqualTo(inntektsmeldingUuid.toString());
+        assertThat(ferdigstillDialogTask.getPropertyValue(ForespørselTaskProperties.KEY_LUKKE_AARSAK)).isEqualTo(LukkeÅrsak.ORDINÆR_INNSENDING.name());
     }
 
     @Test
@@ -420,15 +420,15 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         var ferdigstillSakTask = tasks.getFirst();
         var ferdigstillDialogTask = tasks.getLast();
         assertThat(ferdigstillSakTask.taskType()).isEqualTo(TaskType.forProsessTask(FerdigstillSakTask.class));
-        assertThat(ferdigstillSakTask.getPropertyValue(ForespørselTaskTjeneste.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid.toString());
-        assertThat(ferdigstillSakTask.getPropertyValue(ForespørselTaskTjeneste.KEY_LUKKE_AARSAK)).isEqualTo(LukkeÅrsak.EKSTERN_INNSENDING.name());
+        assertThat(ferdigstillSakTask.getPropertyValue(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid.toString());
+        assertThat(ferdigstillSakTask.getPropertyValue(ForespørselTaskProperties.KEY_LUKKE_AARSAK)).isEqualTo(LukkeÅrsak.EKSTERN_INNSENDING.name());
         assertThat(ferdigstillSakTask.getPropertyValue(FerdigstillSakTask.KEY_ER_FØRSTEGANGSINNSENDING)).isEqualTo("true");
-        assertThat(ferdigstillSakTask.getPropertyValue(ForespørselTaskTjeneste.KEY_INNTEKTSMELDING_UUID)).isNull();
+        assertThat(ferdigstillSakTask.getPropertyValue(ForespørselTaskProperties.KEY_INNTEKTSMELDING_UUID)).isNull();
 
         assertThat(ferdigstillDialogTask.taskType()).isEqualTo(TaskType.forProsessTask(FerdigstillDialogTask.class));
-        assertThat(ferdigstillDialogTask.getPropertyValue(ForespørselTaskTjeneste.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid.toString());
-        assertThat(ferdigstillDialogTask.getPropertyValue(ForespørselTaskTjeneste.KEY_LUKKE_AARSAK)).isEqualTo(LukkeÅrsak.EKSTERN_INNSENDING.name());
-        assertThat(ferdigstillDialogTask.getPropertyValue(ForespørselTaskTjeneste.KEY_INNTEKTSMELDING_UUID)).isNull();
+        assertThat(ferdigstillDialogTask.getPropertyValue(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid.toString());
+        assertThat(ferdigstillDialogTask.getPropertyValue(ForespørselTaskProperties.KEY_LUKKE_AARSAK)).isEqualTo(LukkeÅrsak.EKSTERN_INNSENDING.name());
+        assertThat(ferdigstillDialogTask.getPropertyValue(ForespørselTaskProperties.KEY_INNTEKTSMELDING_UUID)).isNull();
     }
 
     @Test
@@ -498,7 +498,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         var taskGrupper = taskGruppeCaptor.getAllValues();
 
         var forespørselUuiderMedTaskGruppe = taskGrupper.stream()
-            .map(gruppe -> gruppe.getTasks().getFirst().task().getPropertyValue(ForespørselTaskTjeneste.KEY_FORESPOERSEL_UUID))
+            .map(gruppe -> gruppe.getTasks().getFirst().task().getPropertyValue(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID))
             .toList();
         assertThat(forespørselUuiderMedTaskGruppe).containsExactlyInAnyOrder(forespørselUuid.toString(), forespørselUuid2.toString());
 
@@ -559,9 +559,9 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         var settSakTilUtgåttTask = tasks.getFirst();
         var settDialogTilUtgåttTask = tasks.getLast();
         assertThat(settSakTilUtgåttTask.taskType()).isEqualTo(TaskType.forProsessTask(SettSakTilUtgåttTask.class));
-        assertThat(settSakTilUtgåttTask.getPropertyValue(ForespørselTaskTjeneste.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid.toString());
+        assertThat(settSakTilUtgåttTask.getPropertyValue(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid.toString());
         assertThat(settDialogTilUtgåttTask.taskType()).isEqualTo(TaskType.forProsessTask(SettDialogTilUtgåttTask.class));
-        assertThat(settDialogTilUtgåttTask.getPropertyValue(ForespørselTaskTjeneste.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid.toString());
+        assertThat(settDialogTilUtgåttTask.getPropertyValue(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid.toString());
     }
 
     @Test
@@ -606,8 +606,8 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         verify(prosessTaskTjeneste).lagre(taskGruppeCaptor.capture());
         var ferdigstillSakTask = taskGruppeCaptor.getValue().getTasks().getFirst().task();
         assertThat(ferdigstillSakTask.taskType()).isEqualTo(TaskType.forProsessTask(FerdigstillSakTask.class));
-        assertThat(ferdigstillSakTask.getPropertyValue(ForespørselTaskTjeneste.KEY_LUKKE_AARSAK)).isEqualTo(LukkeÅrsak.EKSTERN_INNSENDING.name());
-        assertThat(ferdigstillSakTask.getPropertyValue(ForespørselTaskTjeneste.KEY_INNTEKTSMELDING_UUID)).isEqualTo(imUuid.toString());
+        assertThat(ferdigstillSakTask.getPropertyValue(ForespørselTaskProperties.KEY_LUKKE_AARSAK)).isEqualTo(LukkeÅrsak.EKSTERN_INNSENDING.name());
+        assertThat(ferdigstillSakTask.getPropertyValue(ForespørselTaskProperties.KEY_INNTEKTSMELDING_UUID)).isEqualTo(imUuid.toString());
         assertThat(ferdigstillSakTask.getPropertyValue(FerdigstillSakTask.KEY_ER_FØRSTEGANGSINNSENDING)).isEqualTo("true");
     }
 
@@ -633,8 +633,8 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         verify(prosessTaskTjeneste).lagre(taskGruppeCaptor.capture());
         var ferdigstillSakTask = taskGruppeCaptor.getValue().getTasks().getFirst().task();
         assertThat(ferdigstillSakTask.taskType()).isEqualTo(TaskType.forProsessTask(FerdigstillSakTask.class));
-        assertThat(ferdigstillSakTask.getPropertyValue(ForespørselTaskTjeneste.KEY_LUKKE_AARSAK)).isEqualTo(LukkeÅrsak.EKSTERN_INNSENDING.name());
-        assertThat(ferdigstillSakTask.getPropertyValue(ForespørselTaskTjeneste.KEY_INNTEKTSMELDING_UUID)).isEqualTo(imUuid.toString());
+        assertThat(ferdigstillSakTask.getPropertyValue(ForespørselTaskProperties.KEY_LUKKE_AARSAK)).isEqualTo(LukkeÅrsak.EKSTERN_INNSENDING.name());
+        assertThat(ferdigstillSakTask.getPropertyValue(ForespørselTaskProperties.KEY_INNTEKTSMELDING_UUID)).isEqualTo(imUuid.toString());
         assertThat(ferdigstillSakTask.getPropertyValue(FerdigstillSakTask.KEY_ER_FØRSTEGANGSINNSENDING)).isEqualTo("false");
     }
     @Test
@@ -667,7 +667,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, SAK_ID);
         forespørselRepository.ferdigstillForespørsel(SAK_ID);
 
-        var forespørsel = forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid).orElseThrow();
+        var forespørsel = forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid);
         var nyFørsteUttaksdato = FØRSTE_UTTAKSDATO.plusWeeks(1);
 
         var resultat = forespørselBehandlingTjeneste.oppdaterFørsteUttaksdato(forespørsel, nyFørsteUttaksdato);

@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.FerdigstillDialogTask;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.FerdigstillSakTask;
-import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.ForespørselTaskTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.ForespørselTaskProperties;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OppdaterDialogMedEndretInntektsmeldingTask;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OppdaterSakMedEndretInntektsmeldingTask;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettDialogTask;
@@ -38,6 +38,7 @@ import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
+import no.nav.vedtak.felles.prosesstask.api.ProsessTaskGruppe;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskTjeneste;
 
 
@@ -124,8 +125,7 @@ public class ForespørselBehandlingTjeneste {
                                                  LukkeÅrsak årsak,
                                                  // inntektsmeldingUuid er optional fordi vi ikke har inntektsmeldingen lagret hvis den er innsendt via Altinn / LPS'er
                                                  Optional<UUID> inntektsmeldingUuid) {
-        var forespørsel = forespørselTjeneste.hentForespørsel(foresporselUuid)
-            .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel for inntektsmelding, ugyldig tilstand"));
+        var forespørsel = forespørselTjeneste.hentForespørsel(foresporselUuid);
 
         var erFørstegangsinnsending = ForespørselStatus.UNDER_BEHANDLING.equals(forespørsel.status());
 
@@ -133,31 +133,32 @@ public class ForespørselBehandlingTjeneste {
 
         var ferdigstillSakTask = ProsessTaskData.forProsessTask(FerdigstillSakTask.class);
         ferdigstillSakTask.setProperty(FerdigstillSakTask.KEY_ER_FØRSTEGANGSINNSENDING, Boolean.toString(erFørstegangsinnsending));
-        inntektsmeldingUuid.ifPresent(uuid -> ferdigstillSakTask.setProperty(ForespørselTaskTjeneste.KEY_INNTEKTSMELDING_UUID, uuid.toString()));
+        inntektsmeldingUuid.ifPresent(uuid -> ferdigstillSakTask.setProperty(ForespørselTaskProperties.KEY_INNTEKTSMELDING_UUID, uuid.toString()));
 
         //Det er sjekk på inntektsmeldingUuid lenger inn i koden. Derfor kalles denne uansett om verdien er tom eller ei
         var ferdigstillDialogTask = ProsessTaskData.forProsessTask(FerdigstillDialogTask.class);
-        inntektsmeldingUuid.ifPresent(uuid -> ferdigstillDialogTask.setProperty(ForespørselTaskTjeneste.KEY_INNTEKTSMELDING_UUID, uuid.toString()));
+        inntektsmeldingUuid.ifPresent(uuid -> ferdigstillDialogTask.setProperty(ForespørselTaskProperties.KEY_INNTEKTSMELDING_UUID, uuid.toString()));
 
-        var taskGruppe = ForespørselTaskTjeneste.opprettTaskGruppe(foresporselUuid);
-        taskGruppe.setProperty(ForespørselTaskTjeneste.KEY_LUKKE_AARSAK, årsak.name());
+        var taskGruppe = new ProsessTaskGruppe();
+        taskGruppe.setProperty(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID, foresporselUuid.toString());
+        taskGruppe.setProperty(ForespørselTaskProperties.KEY_LUKKE_AARSAK, årsak.name());
         taskGruppe.addNesteSekvensiell(ferdigstillSakTask);
         taskGruppe.addNesteSekvensiell(ferdigstillDialogTask);
         prosessTaskTjeneste.lagre(taskGruppe);
 
         // Re-fetch to get updated status
-        return forespørselTjeneste.hentForespørsel(foresporselUuid)
-            .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel etter ferdigstilling"));
+        return forespørselTjeneste.hentForespørsel(foresporselUuid);
     }
 
     public void opprettTasksForÅOppdaterePortaler(ForespørselDto forespørsel,
                                                   Optional<UUID> inntektsmeldingUuid) {
-        var taskGruppe = ForespørselTaskTjeneste.opprettTaskGruppe(forespørsel.uuid());
+        var taskGruppe = new ProsessTaskGruppe();
+        taskGruppe.setProperty(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID, forespørsel.uuid().toString());
 
         // Kun relevant å oppdatere sak hos arbeidsgiverportalen dersom vi faktisk har en inntektsmelding å vise til
         inntektsmeldingUuid.ifPresent(imUuid -> {
             var oppdaterSakTask = ProsessTaskData.forProsessTask(OppdaterSakMedEndretInntektsmeldingTask.class);
-            oppdaterSakTask.setProperty(ForespørselTaskTjeneste.KEY_INNTEKTSMELDING_UUID, imUuid.toString());
+            oppdaterSakTask.setProperty(ForespørselTaskProperties.KEY_INNTEKTSMELDING_UUID, imUuid.toString());
             taskGruppe.addNesteSekvensiell(oppdaterSakTask);
         });
 
@@ -165,14 +166,18 @@ public class ForespørselBehandlingTjeneste {
         // OppdaterDialogMedEndretInntektsmeldingTask håndterer manglende inntektsmeldingUuid (Optional), mens
         // OppdaterSakMedEndretInntektsmeldingTask krever en verdi og vil feile uten
         var oppdaterDialogTask = ProsessTaskData.forProsessTask(OppdaterDialogMedEndretInntektsmeldingTask.class);
-        inntektsmeldingUuid.ifPresent(imUuid -> oppdaterDialogTask.setProperty(ForespørselTaskTjeneste.KEY_INNTEKTSMELDING_UUID, imUuid.toString()));
+        inntektsmeldingUuid.ifPresent(imUuid -> oppdaterDialogTask.setProperty(ForespørselTaskProperties.KEY_INNTEKTSMELDING_UUID, imUuid.toString()));
         taskGruppe.addNesteSekvensiell(oppdaterDialogTask);
 
         prosessTaskTjeneste.lagre(taskGruppe);
     }
 
-    public Optional<ForespørselDto> hentForespørsel(UUID forespørselUUID) {
+    public ForespørselDto hentForespørsel(UUID forespørselUUID) {
         return forespørselTjeneste.hentForespørsel(forespørselUUID);
+    }
+
+    public Optional<ForespørselDto> hentForespørselOptional(UUID forespørselUUID) {
+        return forespørselTjeneste.hentForespørselOptional(forespørselUUID);
     }
 
     public List<ForespørselDto> finnForespørslerForAktørId(AktørId aktørId, Ytelsetype ytelsetype) {
@@ -217,7 +222,8 @@ public class ForespørselBehandlingTjeneste {
         var opprettOppgaveTask = ProsessTaskData.forProsessTask(OpprettOppgaveTask.class);
         var opprettDialogTask = ProsessTaskData.forProsessTask(OpprettDialogTask.class);
 
-        var taskGruppe = ForespørselTaskTjeneste.opprettTaskGruppe(forespørselUuid);
+        var taskGruppe = new ProsessTaskGruppe();
+        taskGruppe.setProperty(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
         taskGruppe.addNesteSekvensiell(opprettSakTask);
         taskGruppe.addNesteSekvensiell(opprettOppgaveTask);
         taskGruppe.addNesteSekvensiell(opprettDialogTask);
@@ -244,16 +250,15 @@ public class ForespørselBehandlingTjeneste {
             skjæringstidspunkt,
             fagsystemSaksnummer);
 
-        return forespørselTjeneste.hentForespørsel(uuid)
-            .orElseThrow(() -> new IllegalStateException("Finner ikke opprettet arbeidsgiverinitiert forespørsel"));
+        return forespørselTjeneste.hentForespørsel(uuid);
     }
 
     private void leggTilSettUtgåttTasks(UUID forespørselUuid) {
         var settSakTilUtgåttTask = ProsessTaskData.forProsessTask(SettSakTilUtgåttTask.class);
         var settDialogTilUtgåttTask = ProsessTaskData.forProsessTask(SettDialogTilUtgåttTask.class);
 
-        var taskGruppe = ForespørselTaskTjeneste.opprettTaskGruppe(forespørselUuid);
-        taskGruppe.addNesteSekvensiell(settSakTilUtgåttTask);
+        var taskGruppe = new ProsessTaskGruppe();
+        taskGruppe.setProperty(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
         taskGruppe.addNesteSekvensiell(settDialogTilUtgåttTask);
         prosessTaskTjeneste.lagre(taskGruppe);
     }
@@ -312,8 +317,7 @@ public class ForespørselBehandlingTjeneste {
     }
 
     public void settForespørselTilUtgåttForvaltning(UUID forespørselUuid) {
-        var forespørselDto = hentForespørsel(forespørselUuid)
-            .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel med forespørselUuid: " + forespørselUuid));
+        var forespørselDto = hentForespørsel(forespørselUuid);
 
         forespørselTjeneste.settForespørselTilUtgått(forespørselDto.arbeidsgiverNotifikasjonSakId());
         leggTilSettUtgåttTasks(forespørselUuid);
@@ -371,9 +375,10 @@ public class ForespørselBehandlingTjeneste {
         ferdigstillSakTask.setProperty(FerdigstillSakTask.KEY_ER_FØRSTEGANGSINNSENDING, Boolean.toString(true));
         var ferdigstillDialogTask = ProsessTaskData.forProsessTask(FerdigstillDialogTask.class);
 
-        var taskGruppe = ForespørselTaskTjeneste.opprettTaskGruppe(forespørselDto.uuid());
-        taskGruppe.setProperty(ForespørselTaskTjeneste.KEY_INNTEKTSMELDING_UUID, inntektsmeldingUuid.toString());
-        taskGruppe.setProperty(ForespørselTaskTjeneste.KEY_LUKKE_AARSAK, LukkeÅrsak.ORDINÆR_INNSENDING.name());
+        var taskGruppe = new ProsessTaskGruppe();
+        taskGruppe.setProperty(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID, forespørselDto.uuid().toString());
+        taskGruppe.setProperty(ForespørselTaskProperties.KEY_INNTEKTSMELDING_UUID, inntektsmeldingUuid.toString());
+        taskGruppe.setProperty(ForespørselTaskProperties.KEY_LUKKE_AARSAK, LukkeÅrsak.ORDINÆR_INNSENDING.name());
         taskGruppe.addNesteSekvensiell(opprettSakTask);
         taskGruppe.addNesteSekvensiell(opprettDialogTask);
         taskGruppe.addNesteSekvensiell(ferdigstillSakTask);

@@ -1,5 +1,8 @@
 package no.nav.foreldrepenger.inntektsmelding.forespørsel.task;
 
+import java.util.Optional;
+import java.util.UUID;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -35,9 +38,11 @@ public class FerdigstillSakTask implements ProsessTaskHandler {
 
     @Override
     public void doTask(ProsessTaskData prosessTaskData) {
-        var forespørsel = ForespørselTaskTjeneste.hentForespørsel(forespørselTjeneste, prosessTaskData);
-        var årsak = LukkeÅrsak.valueOf(prosessTaskData.getPropertyValue(ForespørselTaskTjeneste.KEY_LUKKE_AARSAK));
-        var inntektsmeldingUuid = ForespørselTaskTjeneste.hentInntektsmeldingUuid(prosessTaskData);
+        var forespørselUuid = UUID.fromString(prosessTaskData.getPropertyValue(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID));
+        var forespørsel = forespørselTjeneste.hentForespørsel(forespørselUuid);
+        var årsak = LukkeÅrsak.valueOf(prosessTaskData.getPropertyValue(ForespørselTaskProperties.KEY_LUKKE_AARSAK));
+        var inntektsmeldingUuid = Optional.ofNullable(prosessTaskData.getPropertyValue(ForespørselTaskProperties.KEY_INNTEKTSMELDING_UUID))
+            .map(UUID::fromString);
         var erFørstegangsinnsending = Boolean.parseBoolean(prosessTaskData.getPropertyValue(KEY_ER_FØRSTEGANGSINNSENDING));
 
         LOG.info("Ferdigstiller sak hos arbeidsgiverportalen for forespørsel {}", forespørsel.uuid());

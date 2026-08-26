@@ -80,7 +80,7 @@ class InntektsmeldingMottakTjenesteTest {
         // Arrange
         var uuid = UUID.randomUUID();
         var forespørselDto = lagForespørselDto(ForespørselType.BESTILT_AV_FAGSYSTEM, ForespørselStatus.UTGÅTT, LocalDate.now());
-        when(forespørselBehandlingTjeneste.hentForespørsel(uuid)).thenReturn(Optional.of(forespørselDto));
+        when(forespørselBehandlingTjeneste.hentForespørselOptional(uuid)).thenReturn(Optional.of(forespørselDto));
 
         var inntektsmeldingDto = lagInntektsmeldingDto(AktørId.fra("9999999999999"),
             Arbeidsgiver.fra("999999999"),
@@ -109,7 +109,7 @@ class InntektsmeldingMottakTjenesteTest {
 
         var im = lagInntektsmeldingDto(aktørId, Arbeidsgiver.fra(orgnr), startdato, BigDecimal.valueOf(100), List.of(),List.of(), List.of(), BigDecimal.valueOf(100), Tid.TIDENES_ENDE);
 
-        when(forespørselBehandlingTjeneste.hentForespørsel(forespørselDto.uuid())).thenReturn(Optional.of(forespørselDto));
+        when(forespørselBehandlingTjeneste.hentForespørselOptional(forespørselDto.uuid())).thenReturn(Optional.of(forespørselDto));
         when(fellesMottakTjeneste.lagreImOgOpprettJournalførTask(any(), any())).thenReturn(im);
 
         // Act
@@ -165,7 +165,7 @@ class InntektsmeldingMottakTjenesteTest {
 
         var forespørselMedNyDatoDto = lagForespørselDto(ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT, ForespørselStatus.UNDER_BEHANDLING, nyStartDato);
 
-        when(forespørselBehandlingTjeneste.hentForespørsel(eksisterendeForespørselDto.uuid())).thenReturn(Optional.of(eksisterendeForespørselDto));
+        when(forespørselBehandlingTjeneste.hentForespørselOptional(eksisterendeForespørselDto.uuid())).thenReturn(Optional.of(eksisterendeForespørselDto));
         when(forespørselBehandlingTjeneste.oppdaterFørsteUttaksdato(any(), any())).thenReturn(forespørselMedNyDatoDto);
         when(fellesMottakTjeneste.lagreImOgOpprettJournalførTask(any(), any())).thenReturn(im);
 
@@ -227,7 +227,7 @@ class InntektsmeldingMottakTjenesteTest {
         var opphørsdato = LocalDate.now().plusMonths(5);
         var nyInntekt = BigDecimal.valueOf(200);
 
-        when(forespørselBehandlingTjeneste.hentForespørsel(uuid)).thenReturn(Optional.of(eksisterendeForespørselDto));
+        when(forespørselBehandlingTjeneste.hentForespørselOptional(uuid)).thenReturn(Optional.of(eksisterendeForespørselDto));
 
         var endringsårsaker = List.of(new InntektsmeldingDto.Endringsårsak(EndringsårsakType.VARIG_LØNNSENDRING, null, null, null));
 

@@ -87,7 +87,7 @@ public class InntektsmeldingDialogRest {
     @Tilgangskontrollert
     public Response hentInntektsmeldingerForOppgave(@NotNull @Valid @QueryParam("foresporselUuid") UUID forespørselUuid) {
         tilgang.sjekkAtArbeidsgiverHarTilgangTilBedrift(forespørselUuid);
-        var forespørselEntitet = forespørselTjeneste.hentForespørsel(forespørselUuid).orElseThrow(() -> new IllegalStateException("Finner ingen forespørsel for id: " + forespørselUuid));
+        var forespørselEntitet = forespørselTjeneste.hentForespørsel(forespørselUuid);
         LOG.info("Henter inntektsmeldinger for forespørsel {}", forespørselUuid);
         var dto = inntektsmeldingTjeneste.hentInntektsmeldinger(forespørselUuid).stream()
             .filter(im -> !Kildesystem.FPSAK.equals(im.getKildesystem())) // Vi skal ikke vise inntektsmeldinger som er overstyrt av driftstilganger / saksbehandlere

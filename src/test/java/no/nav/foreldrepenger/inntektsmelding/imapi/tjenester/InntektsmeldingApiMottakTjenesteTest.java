@@ -77,7 +77,7 @@ class InntektsmeldingApiMottakTjenesteTest {
         var foresporselUuid = UUID.randomUUID();
         var inputDto = lagInntektsmeldingDto(null);
 
-        when(forespørselBehandlingTjeneste.hentForespørsel(foresporselUuid)).thenReturn(Optional.empty());
+        when(forespørselBehandlingTjeneste.hentForespørselOptional(foresporselUuid)).thenReturn(Optional.empty());
 
         var response = inntektsmeldingApiMottakTjeneste.mottaInntektsmelding(inputDto, foresporselUuid);
 
@@ -93,7 +93,7 @@ class InntektsmeldingApiMottakTjenesteTest {
         var foresporselUuid = UUID.randomUUID();
         var forespørselDto = lagForespørselDto(foresporselUuid, null, ForespørselStatus.UTGÅTT);
 
-        when(forespørselBehandlingTjeneste.hentForespørsel(foresporselUuid)).thenReturn(Optional.of(forespørselDto));
+        when(forespørselBehandlingTjeneste.hentForespørselOptional(foresporselUuid)).thenReturn(Optional.of(forespørselDto));
 
         var response = inntektsmeldingApiMottakTjeneste.mottaInntektsmelding(lagInntektsmeldingDto(null), foresporselUuid);
 
@@ -115,7 +115,7 @@ class InntektsmeldingApiMottakTjenesteTest {
             new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(46000), YearMonth.of(2026, Month.MARCH), MånedslønnStatus.BRUKT_I_GJENNOMSNITT)));
 
 
-        when(forespørselBehandlingTjeneste.hentForespørsel(foresporselUuid)).thenReturn(Optional.of(forespørselDto));
+        when(forespørselBehandlingTjeneste.hentForespørselOptional(foresporselUuid)).thenReturn(Optional.of(forespørselDto));
         when(inntektsmeldingTjeneste.hentSisteInntektsmeldingForForespørsel(foresporselUuid)).thenReturn(null);
         when(inntektTjeneste.hentInntekt(any(), any(), any(), any(), eq(false))).thenReturn(inntektsopplysninger);
 
@@ -142,7 +142,7 @@ class InntektsmeldingApiMottakTjenesteTest {
             new Inntektsopplysninger.InntektMåned(BigDecimal.ZERO, YearMonth.of(2026, Month.MARCH), MånedslønnStatus.NEDETID_AINNTEKT)));
 
 
-        when(forespørselBehandlingTjeneste.hentForespørsel(foresporselUuid)).thenReturn(Optional.of(forespørselDto));
+        when(forespørselBehandlingTjeneste.hentForespørselOptional(foresporselUuid)).thenReturn(Optional.of(forespørselDto));
         when(inntektsmeldingTjeneste.hentSisteInntektsmeldingForForespørsel(foresporselUuid)).thenReturn(null);
         when(inntektTjeneste.hentInntekt(any(), any(), any(), any(), eq(false))).thenReturn(inntektsopplysninger);
         when(fellesMottakTjeneste.lagreImOgOpprettTaskForEtterkontroll(any(), any())).thenReturn(lagretIm);
@@ -170,7 +170,7 @@ class InntektsmeldingApiMottakTjenesteTest {
             new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45000), YearMonth.of(2026, Month.FEBRUARY), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
             new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45000), YearMonth.of(2026, Month.MARCH), MånedslønnStatus.BRUKT_I_GJENNOMSNITT)));
 
-        when(forespørselBehandlingTjeneste.hentForespørsel(foresporselUuid)).thenReturn(Optional.of(forespørselDto));
+        when(forespørselBehandlingTjeneste.hentForespørselOptional(foresporselUuid)).thenReturn(Optional.of(forespørselDto));
         when(inntektsmeldingTjeneste.hentSisteInntektsmeldingForForespørsel(foresporselUuid)).thenReturn(null);
         when(inntektTjeneste.hentInntekt(any(), any(), any(), any(), eq(false))).thenReturn(inntektsopplysninger);
         when(fellesMottakTjeneste.lagreImOgOpprettJournalførTask(any(), any())).thenReturn(lagretIm);
@@ -195,7 +195,7 @@ class InntektsmeldingApiMottakTjenesteTest {
             new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45550), YearMonth.of(2026, Month.FEBRUARY), MånedslønnStatus.BRUKT_I_GJENNOMSNITT),
             new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45550), YearMonth.of(2026, Month.MARCH), MånedslønnStatus.BRUKT_I_GJENNOMSNITT)));
 
-        when(forespørselBehandlingTjeneste.hentForespørsel(foresporselUuid)).thenReturn(Optional.of(forespørselDto));
+        when(forespørselBehandlingTjeneste.hentForespørselOptional(foresporselUuid)).thenReturn(Optional.of(forespørselDto));
         when(inntektsmeldingTjeneste.hentSisteInntektsmeldingForForespørsel(foresporselUuid)).thenReturn(null);
         when(inntektTjeneste.hentInntekt(any(), any(), any(),any(), eq(false))).thenReturn(inntektsopplysninger);
         when(fellesMottakTjeneste.lagreImOgOpprettJournalførTask(any(), any())).thenReturn(lagretIm);
@@ -215,7 +215,7 @@ class InntektsmeldingApiMottakTjenesteTest {
         var forespørselDto = lagForespørselDto(foresporselUuid, null, ForespørselStatus.UNDER_BEHANDLING);
         var tidligereLikIm = lagInntektsmeldingDtoMedUuid(inntektsmeldingUUid, null, true, null);
 
-        when(forespørselBehandlingTjeneste.hentForespørsel(foresporselUuid)).thenReturn(Optional.of(forespørselDto));
+        when(forespørselBehandlingTjeneste.hentForespørselOptional(foresporselUuid)).thenReturn(Optional.of(forespørselDto));
         when(inntektsmeldingTjeneste.hentSisteInntektsmeldingForForespørsel(foresporselUuid)).thenReturn(tidligereLikIm);
 
         var response = inntektsmeldingApiMottakTjeneste.mottaInntektsmelding(inputDto, foresporselUuid);
@@ -241,7 +241,7 @@ class InntektsmeldingApiMottakTjenesteTest {
             new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45000), YearMonth.of(2026, Month.MARCH), MånedslønnStatus.BRUKT_I_GJENNOMSNITT)));
 
 
-        when(forespørselBehandlingTjeneste.hentForespørsel(foresporselUuid)).thenReturn(Optional.of(forespørselDto));
+        when(forespørselBehandlingTjeneste.hentForespørselOptional(foresporselUuid)).thenReturn(Optional.of(forespørselDto));
         when(inntektsmeldingTjeneste.hentSisteInntektsmeldingForForespørsel(foresporselUuid)).thenReturn(forrigeInnsendteIm);
         when(inntektTjeneste.hentInntekt(any(), any(), any(), any(), eq(false))).thenReturn(inntektsopplysninger);
         when(fellesMottakTjeneste.lagreImOgOpprettJournalførTask(any(), any())).thenReturn(nyInnsendtIm);
@@ -404,7 +404,7 @@ class InntektsmeldingApiMottakTjenesteTest {
         var inntektsopplysninger = new Inntektsopplysninger(BigDecimal.valueOf(45050), ORGNR, List.of(
             new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45050), YearMonth.of(2026, Month.JANUARY), MånedslønnStatus.BRUKT_I_GJENNOMSNITT)));
 
-        when(forespørselBehandlingTjeneste.hentForespørsel(foresporselUuid)).thenReturn(Optional.of(forespørselDto));
+        when(forespørselBehandlingTjeneste.hentForespørselOptional(foresporselUuid)).thenReturn(Optional.of(forespørselDto));
         when(inntektsmeldingTjeneste.hentSisteInntektsmeldingForForespørsel(foresporselUuid)).thenReturn(null);
         when(personTjeneste.hentPersonInfoFraAktørId(any(), any())).thenReturn(lagPersonInfo());
         when(fellesGrunnlagTjeneste.harJobbetHeleBeregningsperioden(any(), any(), any())).thenReturn(false);
@@ -427,7 +427,7 @@ class InntektsmeldingApiMottakTjenesteTest {
         var inntektsopplysninger = new Inntektsopplysninger(BigDecimal.valueOf(45051), ORGNR, List.of(
             new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(45051), YearMonth.of(2026, Month.JANUARY), MånedslønnStatus.BRUKT_I_GJENNOMSNITT)));
 
-        when(forespørselBehandlingTjeneste.hentForespørsel(foresporselUuid)).thenReturn(Optional.of(forespørselDto));
+        when(forespørselBehandlingTjeneste.hentForespørselOptional(foresporselUuid)).thenReturn(Optional.of(forespørselDto));
         when(inntektsmeldingTjeneste.hentSisteInntektsmeldingForForespørsel(foresporselUuid)).thenReturn(null);
         when(personTjeneste.hentPersonInfoFraAktørId(any(), any())).thenReturn(lagPersonInfo());
         when(fellesGrunnlagTjeneste.harJobbetHeleBeregningsperioden(any(), any(), any())).thenReturn(false);
@@ -446,7 +446,7 @@ class InntektsmeldingApiMottakTjenesteTest {
         var inputDto = lagInntektsmeldingDto(null);
         var forespørselDto = lagForespørselDto(foresporselUuid, null, ForespørselStatus.UNDER_BEHANDLING);
 
-        when(forespørselBehandlingTjeneste.hentForespørsel(foresporselUuid)).thenReturn(Optional.of(forespørselDto));
+        when(forespørselBehandlingTjeneste.hentForespørselOptional(foresporselUuid)).thenReturn(Optional.of(forespørselDto));
         when(inntektsmeldingTjeneste.hentSisteInntektsmeldingForForespørsel(foresporselUuid)).thenReturn(null);
         when(personTjeneste.hentPersonInfoFraAktørId(any(), any())).thenReturn(lagPersonInfo());
         when(fellesGrunnlagTjeneste.harJobbetHeleBeregningsperioden(any(), any(), any())).thenReturn(false);

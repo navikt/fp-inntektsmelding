@@ -1,5 +1,7 @@
 package no.nav.foreldrepenger.inntektsmelding.forespørsel.task;
 
+import java.util.UUID;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -37,7 +39,8 @@ public class OpprettOppgaveTask implements ProsessTaskHandler {
 
     @Override
     public void doTask(ProsessTaskData prosessTaskData) {
-        var forespørsel = ForespørselTaskTjeneste.hentForespørsel(forespørselTjeneste, prosessTaskData);
+        var forespørselUuid = UUID.fromString(prosessTaskData.getPropertyValue(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID));
+        var forespørsel = forespørselTjeneste.hentForespørsel(forespørselUuid);
 
         if (forespørsel.oppgaveId() != null) {
             LOG.info("Oppgave er allerede opprettet for forespørsel {}, hopper over", forespørsel.uuid());

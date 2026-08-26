@@ -41,7 +41,7 @@ public class InntektsmeldingMottakTjeneste {
     }
 
     public InntektsmeldingResponseDto mottaInntektsmelding(InntektsmeldingDto mottattInntektsmeldingDto, UUID forespørselUuid) {
-        var forespørsel = forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid)
+        var forespørsel = forespørselBehandlingTjeneste.hentForespørselOptional(forespørselUuid)
             .orElseThrow(this::manglerForespørselFeil);
 
         //Validering
@@ -72,7 +72,7 @@ public class InntektsmeldingMottakTjeneste {
         InntektsmeldingDto lagretInntektsmelding;
 
         if (finnesForespørselFraFør) {
-            forespørselDto = forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid)
+            forespørselDto = forespørselBehandlingTjeneste.hentForespørselOptional(forespørselUuid)
                 .orElseThrow(this::manglerForespørselFeil);
             //Validering
             ForespørselValiderer.validerAktør(forespørselDto, inntektsmeldingDto.getAktørId());

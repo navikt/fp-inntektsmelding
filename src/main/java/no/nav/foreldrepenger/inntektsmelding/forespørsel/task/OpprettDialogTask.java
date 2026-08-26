@@ -1,5 +1,7 @@
 package no.nav.foreldrepenger.inntektsmelding.forespørsel.task;
 
+import java.util.UUID;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -38,7 +40,8 @@ public class OpprettDialogTask implements ProsessTaskHandler {
 
     @Override
     public void doTask(ProsessTaskData prosessTaskData) {
-        var forespørsel = ForespørselTaskTjeneste.hentForespørsel(forespørselTjeneste, prosessTaskData);
+        var forespørselUuid = UUID.fromString(prosessTaskData.getPropertyValue(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID));
+        var forespørsel = forespørselTjeneste.hentForespørsel(forespørselUuid);
 
         if (forespørsel.dialogportenUuid() != null) {
             // Idempotens: unngår å opprette en ny dialog dersom et tidligere (delvis) forsøk allerede har lykkes
