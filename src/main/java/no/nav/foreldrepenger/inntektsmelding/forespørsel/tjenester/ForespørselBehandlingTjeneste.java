@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.FerdigstillDialogTask;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.FerdigstillSakTask;
-import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.ForespørselTaskProperties;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.FellesTaskProperties;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OppdaterDialogMedEndretInntektsmeldingTask;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OppdaterSakMedEndretInntektsmeldingTask;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettDialogTask;
@@ -133,15 +133,15 @@ public class ForespørselBehandlingTjeneste {
 
         var ferdigstillSakTask = ProsessTaskData.forProsessTask(FerdigstillSakTask.class);
         ferdigstillSakTask.setProperty(FerdigstillSakTask.KEY_ER_FØRSTEGANGSINNSENDING, Boolean.toString(erFørstegangsinnsending));
-        inntektsmeldingUuid.ifPresent(uuid -> ferdigstillSakTask.setProperty(ForespørselTaskProperties.KEY_INNTEKTSMELDING_UUID, uuid.toString()));
+        inntektsmeldingUuid.ifPresent(uuid -> ferdigstillSakTask.setProperty(FellesTaskProperties.KEY_INNTEKTSMELDING_UUID, uuid.toString()));
 
         //Det er sjekk på inntektsmeldingUuid lenger inn i koden. Derfor kalles denne uansett om verdien er tom eller ei
         var ferdigstillDialogTask = ProsessTaskData.forProsessTask(FerdigstillDialogTask.class);
-        inntektsmeldingUuid.ifPresent(uuid -> ferdigstillDialogTask.setProperty(ForespørselTaskProperties.KEY_INNTEKTSMELDING_UUID, uuid.toString()));
+        inntektsmeldingUuid.ifPresent(uuid -> ferdigstillDialogTask.setProperty(FellesTaskProperties.KEY_INNTEKTSMELDING_UUID, uuid.toString()));
 
         var taskGruppe = new ProsessTaskGruppe();
-        taskGruppe.setProperty(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID, foresporselUuid.toString());
-        taskGruppe.setProperty(ForespørselTaskProperties.KEY_LUKKE_AARSAK, årsak.name());
+        taskGruppe.setProperty(FellesTaskProperties.KEY_FORESPOERSEL_UUID, foresporselUuid.toString());
+        taskGruppe.setProperty(FellesTaskProperties.KEY_LUKKE_AARSAK, årsak.name());
         taskGruppe.addNesteSekvensiell(ferdigstillSakTask);
         taskGruppe.addNesteSekvensiell(ferdigstillDialogTask);
         prosessTaskTjeneste.lagre(taskGruppe);
@@ -153,12 +153,12 @@ public class ForespørselBehandlingTjeneste {
     public void opprettTasksForÅOppdaterePortaler(ForespørselDto forespørsel,
                                                   Optional<UUID> inntektsmeldingUuid) {
         var taskGruppe = new ProsessTaskGruppe();
-        taskGruppe.setProperty(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID, forespørsel.uuid().toString());
+        taskGruppe.setProperty(FellesTaskProperties.KEY_FORESPOERSEL_UUID, forespørsel.uuid().toString());
 
         // Kun relevant å oppdatere sak hos arbeidsgiverportalen dersom vi faktisk har en inntektsmelding å vise til
         inntektsmeldingUuid.ifPresent(imUuid -> {
             var oppdaterSakTask = ProsessTaskData.forProsessTask(OppdaterSakMedEndretInntektsmeldingTask.class);
-            oppdaterSakTask.setProperty(ForespørselTaskProperties.KEY_INNTEKTSMELDING_UUID, imUuid.toString());
+            oppdaterSakTask.setProperty(FellesTaskProperties.KEY_INNTEKTSMELDING_UUID, imUuid.toString());
             taskGruppe.addNesteSekvensiell(oppdaterSakTask);
         });
 
@@ -166,7 +166,7 @@ public class ForespørselBehandlingTjeneste {
         // OppdaterDialogMedEndretInntektsmeldingTask håndterer manglende inntektsmeldingUuid (Optional), mens
         // OppdaterSakMedEndretInntektsmeldingTask krever en verdi og vil feile uten
         var oppdaterDialogTask = ProsessTaskData.forProsessTask(OppdaterDialogMedEndretInntektsmeldingTask.class);
-        inntektsmeldingUuid.ifPresent(imUuid -> oppdaterDialogTask.setProperty(ForespørselTaskProperties.KEY_INNTEKTSMELDING_UUID, imUuid.toString()));
+        inntektsmeldingUuid.ifPresent(imUuid -> oppdaterDialogTask.setProperty(FellesTaskProperties.KEY_INNTEKTSMELDING_UUID, imUuid.toString()));
         taskGruppe.addNesteSekvensiell(oppdaterDialogTask);
 
         prosessTaskTjeneste.lagre(taskGruppe);
@@ -223,7 +223,7 @@ public class ForespørselBehandlingTjeneste {
         var opprettDialogTask = ProsessTaskData.forProsessTask(OpprettDialogTask.class);
 
         var taskGruppe = new ProsessTaskGruppe();
-        taskGruppe.setProperty(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
+        taskGruppe.setProperty(FellesTaskProperties.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
         taskGruppe.addNesteSekvensiell(opprettSakTask);
         taskGruppe.addNesteSekvensiell(opprettOppgaveTask);
         taskGruppe.addNesteSekvensiell(opprettDialogTask);
@@ -258,7 +258,7 @@ public class ForespørselBehandlingTjeneste {
         var settDialogTilUtgåttTask = ProsessTaskData.forProsessTask(SettDialogTilUtgåttTask.class);
 
         var taskGruppe = new ProsessTaskGruppe();
-        taskGruppe.setProperty(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
+        taskGruppe.setProperty(FellesTaskProperties.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
         taskGruppe.addNesteSekvensiell(settDialogTilUtgåttTask);
         prosessTaskTjeneste.lagre(taskGruppe);
     }
@@ -376,9 +376,9 @@ public class ForespørselBehandlingTjeneste {
         var ferdigstillDialogTask = ProsessTaskData.forProsessTask(FerdigstillDialogTask.class);
 
         var taskGruppe = new ProsessTaskGruppe();
-        taskGruppe.setProperty(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID, forespørselDto.uuid().toString());
-        taskGruppe.setProperty(ForespørselTaskProperties.KEY_INNTEKTSMELDING_UUID, inntektsmeldingUuid.toString());
-        taskGruppe.setProperty(ForespørselTaskProperties.KEY_LUKKE_AARSAK, LukkeÅrsak.ORDINÆR_INNSENDING.name());
+        taskGruppe.setProperty(FellesTaskProperties.KEY_FORESPOERSEL_UUID, forespørselDto.uuid().toString());
+        taskGruppe.setProperty(FellesTaskProperties.KEY_INNTEKTSMELDING_UUID, inntektsmeldingUuid.toString());
+        taskGruppe.setProperty(FellesTaskProperties.KEY_LUKKE_AARSAK, LukkeÅrsak.ORDINÆR_INNSENDING.name());
         taskGruppe.addNesteSekvensiell(opprettSakTask);
         taskGruppe.addNesteSekvensiell(opprettDialogTask);
         taskGruppe.addNesteSekvensiell(ferdigstillSakTask);

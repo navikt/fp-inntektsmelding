@@ -39,7 +39,7 @@ public class SettDialogTilUtgåttTask implements ProsessTaskHandler {
 
     @Override
     public void doTask(ProsessTaskData prosessTaskData) {
-        var forespørselUuid = UUID.fromString(prosessTaskData.getPropertyValue(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID));
+        var forespørselUuid = UUID.fromString(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID));
         var forespørsel = forespørselTjeneste.hentForespørsel(forespørselUuid);
 
         LOG.info("Setter dialog hos Dialogporten til utgått for forespørsel {}", forespørsel.uuid());

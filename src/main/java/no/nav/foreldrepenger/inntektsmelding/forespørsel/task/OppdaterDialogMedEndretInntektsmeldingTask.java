@@ -36,9 +36,9 @@ public class OppdaterDialogMedEndretInntektsmeldingTask implements ProsessTaskHa
 
     @Override
     public void doTask(ProsessTaskData prosessTaskData) {
-        var forespørselUuid = UUID.fromString(prosessTaskData.getPropertyValue(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID));
+        var forespørselUuid = UUID.fromString(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID));
         var forespørsel = forespørselTjeneste.hentForespørsel(forespørselUuid);
-        var inntektsmeldingUuid = Optional.ofNullable(prosessTaskData.getPropertyValue(ForespørselTaskProperties.KEY_INNTEKTSMELDING_UUID))
+        var inntektsmeldingUuid = Optional.ofNullable(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_INNTEKTSMELDING_UUID))
             .map(UUID::fromString);
 
         LOG.info("Oppdaterer dialog hos Dialogporten med endret inntektsmelding for forespørsel {}", forespørsel.uuid());

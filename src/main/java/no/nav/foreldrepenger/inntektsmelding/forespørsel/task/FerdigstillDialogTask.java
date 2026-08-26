@@ -41,10 +41,10 @@ public class FerdigstillDialogTask implements ProsessTaskHandler {
 
     @Override
     public void doTask(ProsessTaskData prosessTaskData) {
-        var forespørselUuid = UUID.fromString(prosessTaskData.getPropertyValue(ForespørselTaskProperties.KEY_FORESPOERSEL_UUID));
+        var forespørselUuid = UUID.fromString(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID));
         var forespørsel = forespørselTjeneste.hentForespørsel(forespørselUuid);
-        var årsak = LukkeÅrsak.valueOf(prosessTaskData.getPropertyValue(ForespørselTaskProperties.KEY_LUKKE_AARSAK));
-        var inntektsmeldingUuid = Optional.ofNullable(prosessTaskData.getPropertyValue(ForespørselTaskProperties.KEY_INNTEKTSMELDING_UUID))
+        var årsak = LukkeÅrsak.valueOf(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_LUKKE_AARSAK));
+        var inntektsmeldingUuid = Optional.ofNullable(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_INNTEKTSMELDING_UUID))
             .map(UUID::fromString);
 
         LOG.info("Ferdigstiller dialog hos Dialogporten for forespørsel {}", forespørsel.uuid());
