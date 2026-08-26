@@ -1,6 +1,5 @@
 package no.nav.foreldrepenger.inntektsmelding.forespørsel.task;
 
-import java.util.Optional;
 import java.util.UUID;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -37,9 +36,7 @@ public class OppdaterSakMedEndretInntektsmeldingTask implements ProsessTaskHandl
     public void doTask(ProsessTaskData prosessTaskData) {
         var forespørselUuid = UUID.fromString(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID));
         var forespørsel = forespørselTjeneste.hentForespørsel(forespørselUuid);
-        var inntektsmeldingUuid = Optional.ofNullable(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_INNTEKTSMELDING_UUID))
-            .map(UUID::fromString)
-            .orElseThrow(() -> new IllegalStateException("Mangler inntektsmeldingUuid for forespørsel " + forespørselUuid));
+        var inntektsmeldingUuid = UUID.fromString(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_INNTEKTSMELDING_UUID));
 
         LOG.info("Oppdaterer sak hos arbeidsgiverportalen med endret inntektsmelding for forespørsel {}", forespørselUuid);
         minSideArbeidsgiverTjeneste.sendBeskjedOmOppdatertInntektsmelding(forespørsel, inntektsmeldingUuid);
