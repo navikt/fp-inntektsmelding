@@ -259,6 +259,7 @@ public class ForespørselBehandlingTjeneste {
 
         var taskGruppe = new ProsessTaskGruppe();
         taskGruppe.setProperty(FellesTaskProperties.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
+        taskGruppe.addNesteSekvensiell(settSakTilUtgåttTask);
         taskGruppe.addNesteSekvensiell(settDialogTilUtgåttTask);
         prosessTaskTjeneste.lagre(taskGruppe);
     }
