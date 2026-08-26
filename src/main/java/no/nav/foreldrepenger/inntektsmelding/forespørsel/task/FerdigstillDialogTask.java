@@ -47,8 +47,8 @@ public class FerdigstillDialogTask implements ProsessTaskHandler {
         var inntektsmeldingUuid = Optional.ofNullable(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_INNTEKTSMELDING_UUID))
             .map(UUID::fromString);
 
-        LOG.info("Ferdigstiller dialog hos Dialogporten for forespørsel {}", forespørsel.uuid());
+        LOG.info("Ferdigstiller dialog hos Dialogporten for forespørsel {}", forespørselUuid);
         dialogportenTjeneste.utførMotDialogportenMedDevToleranse(() -> dialogportenTjeneste.ferdigstillDialog(forespørsel, årsak, inntektsmeldingUuid));
-        LOG.info("Ferdigstilte dialog hos Dialogporten for forespørsel {}", forespørsel.uuid());
+        LOG.info("Ferdigstilte dialog hos Dialogporten for forespørsel {}", forespørselUuid);
     }
 }

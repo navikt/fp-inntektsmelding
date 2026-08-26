@@ -37,8 +37,8 @@ public class SettSakTilUtgåttTask implements ProsessTaskHandler {
         var forespørselUuid = UUID.fromString(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID));
         var forespørsel = forespørselTjeneste.hentForespørsel(forespørselUuid);
 
-        LOG.info("Setter sak hos arbeidsgiverportalen til utgått for forespørsel {}", forespørsel.uuid());
+        LOG.info("Setter sak hos arbeidsgiverportalen til utgått for forespørsel {}", forespørselUuid);
         minSideArbeidsgiverTjeneste.settSakTilUtgått(forespørsel);
-        LOG.info("Satte sak hos arbeidsgiverportalen til utgått for forespørsel {}", forespørsel.uuid());
+        LOG.info("Satte sak hos arbeidsgiverportalen til utgått for forespørsel {}", forespørselUuid);
     }
 }

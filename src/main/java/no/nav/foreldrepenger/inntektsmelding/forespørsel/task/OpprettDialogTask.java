@@ -45,15 +45,15 @@ public class OpprettDialogTask implements ProsessTaskHandler {
 
         if (forespørsel.dialogportenUuid() != null) {
             // Idempotens: unngår å opprette en ny dialog dersom et tidligere (delvis) forsøk allerede har lykkes
-            LOG.info("Dialog er allerede opprettet for forespørsel {}, hopper over", forespørsel.uuid());
+            LOG.info("Dialog er allerede opprettet for forespørsel {}, hopper over", forespørselUuid);
             return;
         }
 
-        LOG.info("Oppretter dialog hos Dialogporten for forespørsel {}", forespørsel.uuid());
+        LOG.info("Oppretter dialog hos Dialogporten for forespørsel {}", forespørselUuid);
         dialogportenTjeneste.utførMotDialogportenMedDevToleranse(() -> {
             var dialogportenUuid = dialogportenTjeneste.opprettDialog(forespørsel);
-            forespørselTjeneste.setDialogportenUuid(forespørsel.uuid(), dialogportenUuid);
-            LOG.info("Opprettet dialog {} hos Dialogporten for forespørsel {}", dialogportenUuid, forespørsel.uuid());
+            forespørselTjeneste.setDialogportenUuid(forespørselUuid, dialogportenUuid);
+            LOG.info("Opprettet dialog {} hos Dialogporten for forespørsel {}", dialogportenUuid, forespørselUuid);
         });
     }
 }

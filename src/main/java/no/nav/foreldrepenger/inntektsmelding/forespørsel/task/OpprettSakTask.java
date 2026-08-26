@@ -43,13 +43,13 @@ public class OpprettSakTask implements ProsessTaskHandler {
         var forespørsel = forespørselTjeneste.hentForespørsel(forespørselUuid);
 
         if (forespørsel.arbeidsgiverNotifikasjonSakId() != null) {
-            LOG.info("Sak er allerede opprettet for forespørsel {}, hopper over", forespørsel.uuid());
+            LOG.info("Sak er allerede opprettet for forespørsel {}, hopper over", forespørselUuid);
             return;
         }
 
-        LOG.info("Oppretter sak hos arbeidsgiverportalen for forespørsel {}", forespørsel.uuid());
+        LOG.info("Oppretter sak hos arbeidsgiverportalen for forespørsel {}", forespørselUuid);
         var sakId = minSideArbeidsgiverTjeneste.opprettSak(forespørsel);
-        forespørselTjeneste.setArbeidsgiverNotifikasjonSakId(forespørsel.uuid(), sakId);
-        LOG.info("Opprettet sak {} hos arbeidsgiverportalen for forespørsel {}", sakId, forespørsel.uuid());
+        forespørselTjeneste.setArbeidsgiverNotifikasjonSakId(forespørselUuid, sakId);
+        LOG.info("Opprettet sak {} hos arbeidsgiverportalen for forespørsel {}", sakId, forespørselUuid);
     }
 }

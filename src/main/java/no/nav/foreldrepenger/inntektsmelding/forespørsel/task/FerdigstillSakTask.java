@@ -45,8 +45,8 @@ public class FerdigstillSakTask implements ProsessTaskHandler {
             .map(UUID::fromString);
         var erFørstegangsinnsending = Boolean.parseBoolean(prosessTaskData.getPropertyValue(KEY_ER_FØRSTEGANGSINNSENDING));
 
-        LOG.info("Ferdigstiller sak hos arbeidsgiverportalen for forespørsel {}", forespørsel.uuid());
+        LOG.info("Ferdigstiller sak hos arbeidsgiverportalen for forespørsel {}", forespørselUuid);
         minSideArbeidsgiverTjeneste.ferdigstillSak(forespørsel, årsak, inntektsmeldingUuid, erFørstegangsinnsending);
-        LOG.info("Ferdigstilte sak hos arbeidsgiverportalen for forespørsel {}", forespørsel.uuid());
+        LOG.info("Ferdigstilte sak hos arbeidsgiverportalen for forespørsel {}", forespørselUuid);
     }
 }

@@ -43,13 +43,13 @@ public class OpprettOppgaveTask implements ProsessTaskHandler {
         var forespørsel = forespørselTjeneste.hentForespørsel(forespørselUuid);
 
         if (forespørsel.oppgaveId() != null) {
-            LOG.info("Oppgave er allerede opprettet for forespørsel {}, hopper over", forespørsel.uuid());
+            LOG.info("Oppgave er allerede opprettet for forespørsel {}, hopper over", forespørselUuid);
             return;
         }
 
-        LOG.info("Oppretter oppgave hos arbeidsgiverportalen for forespørsel {}", forespørsel.uuid());
+        LOG.info("Oppretter oppgave hos arbeidsgiverportalen for forespørsel {}", forespørselUuid);
         var oppgaveId = minSideArbeidsgiverTjeneste.opprettOppgave(forespørsel);
-        forespørselTjeneste.setOppgaveId(forespørsel.uuid(), oppgaveId);
-        LOG.info("Opprettet oppgave {} hos arbeidsgiverportalen for forespørsel {}", oppgaveId, forespørsel.uuid());
+        forespørselTjeneste.setOppgaveId(forespørselUuid, oppgaveId);
+        LOG.info("Opprettet oppgave {} hos arbeidsgiverportalen for forespørsel {}", oppgaveId, forespørselUuid);
     }
 }
