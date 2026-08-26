@@ -10,6 +10,6 @@ public class FellesTaskProperties {
     public static final String KEY_INNTEKTSMELDING_UUID = "inntektsmeldingUuid";
 
     private FellesTaskProperties() {
-        // statisk hjelpeklasse
+        // Skal ikke instansieres
     }
 }
