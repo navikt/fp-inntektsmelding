@@ -2,6 +2,7 @@ package no.nav.foreldrepenger.inntektsmelding.integrasjoner.arbeidsgivernotifika
 
 import java.net.URI;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
@@ -117,6 +118,12 @@ public class MinSideArbeidsgiverTjeneste {
             ForespørselTekster.lagTilleggsInformasjon(LukkeÅrsak.UTGÅTT, forespørsel.førsteUttaksdato()));
     }
 
+    /**
+     * Sender beskjed til arbeidsgiver om at forespørsel om inntektsmelding er purret av saksbehandler.
+     * EksternId er utledet av forespørsel-uuid og dagens dato, slik at kallet er idempotent: gjentatte kall
+     * samme dag (f.eks. ved retry etter feil) fører ikke til at arbeidsgiver får flere purringer samme dag.
+     * En ny, bevisst purring neste dag vil derimot gå gjennom, siden datoen da er en annen.
+     */
     public void sendNyBeskjedMedEksternVarsling(ForespørselDto forespørsel) {
         var arbeidsgiver = forespørsel.arbeidsgiver();
         var organisasjon = organisasjonTjeneste.finnOrganisasjon(arbeidsgiver);
@@ -126,13 +133,15 @@ public class MinSideArbeidsgiverTjeneste {
         var skjemaUri = URI.create(inntektsmeldingSkjemaLenke + "/" + forespørsel.uuid());
         var varselTekst = ForespørselTekster.lagVarselFraSaksbehandlerTekst(forespørsel.ytelseType(), organisasjon);
         var beskjedTekst = ForespørselTekster.lagBeskjedFraSaksbehandlerTekst(forespørsel.ytelseType(), person.mapFulltNavn());
+        var eksternId = "purring-" + forespørsel.uuid() + "-" + LocalDate.now();
 
         sendNyBeskjedMedEksternVarsling(forespørsel.uuid().toString(),
             merkelapp,
             arbeidsgiver.orgnr(),
             beskjedTekst,
             varselTekst,
-            skjemaUri);
+            skjemaUri,
+            eksternId);
     }
 
     public void sendNyBeskjedOmAvvistInntektsmelding(ForespørselDto forespørselDto, String feiltekst) {
@@ -315,7 +324,12 @@ public class MinSideArbeidsgiverTjeneste {
 
     public String sendNyBeskjedMedEksternVarsling(String grupperingsid, Merkelapp merkelapp,
                                                   String virksomhetsnummer, String beskjedTekst, String varselTekst, URI lenke) {
-        return sendNyBeskjed(grupperingsid, merkelapp, virksomhetsnummer, beskjedTekst, Optional.of(varselTekst), lenke, UUID.randomUUID().toString());
+        return sendNyBeskjedMedEksternVarsling(grupperingsid, merkelapp, virksomhetsnummer, beskjedTekst, varselTekst, lenke, UUID.randomUUID().toString());
+    }
+
+    public String sendNyBeskjedMedEksternVarsling(String grupperingsid, Merkelapp merkelapp, String virksomhetsnummer,
+                                                  String beskjedTekst, String varselTekst, URI lenke, String eksternId) {
+        return sendNyBeskjed(grupperingsid, merkelapp, virksomhetsnummer, beskjedTekst, Optional.of(varselTekst), lenke, eksternId);
     }
 
     private String sendNyBeskjed(String grupperingsid,

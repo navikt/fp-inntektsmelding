@@ -285,6 +285,8 @@ public class ForespørselBehandlingTjeneste {
             fagsakSaksnummer,
             forespørsel.ytelseType());
         LOG.info(msg);
+        // Rekkefølgen er bevisst: Dialogporten sendes først, Arbeidsgiverportalen sist.
+        // IKKE bytt om på rekkefølgen uten å diskutere med teamet først.
         dialogportenTjeneste.sendMeldingOmPurring(forespørsel);
         minSideArbeidsgiverTjeneste.sendNyBeskjedMedEksternVarsling(forespørsel);
 

@@ -2,6 +2,7 @@ package no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -584,6 +585,11 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         assertThat(resultat).isEqualTo(NyBeskjedResultat.NY_BESKJED_SENDT);
         verify(minSideArbeidsgiverTjeneste, Mockito.times(1)).sendNyBeskjedMedEksternVarsling(any(ForespørselDto.class));
         verify(dialogportenTjeneste, Mockito.times(1)).sendMeldingOmPurring(any(ForespørselDto.class));
+        // Dialogporten skal kalles før Arbeidsgiverportalen: kun Arbeidsgiverportalen-kallet er idempotent,
+        // så det skal sendes sist (se kommentar i ForespørselBehandlingTjeneste)
+        var rekkefølge = inOrder(dialogportenTjeneste, minSideArbeidsgiverTjeneste);
+        rekkefølge.verify(dialogportenTjeneste).sendMeldingOmPurring(any(ForespørselDto.class));
+        rekkefølge.verify(minSideArbeidsgiverTjeneste).sendNyBeskjedMedEksternVarsling(any(ForespørselDto.class));
     }
 
     @Test
