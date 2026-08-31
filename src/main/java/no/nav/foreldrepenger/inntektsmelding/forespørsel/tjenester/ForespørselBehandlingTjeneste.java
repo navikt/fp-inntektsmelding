@@ -285,10 +285,11 @@ public class ForespørselBehandlingTjeneste {
             fagsakSaksnummer,
             forespørsel.ytelseType());
         LOG.info(msg);
-        // Rekkefølgen er bevisst: Dialogporten sendes først, Arbeidsgiverportalen sist.
+        // Rekkefølgen er bevisst: Arbeidsgiverportalen sendes først, Dialogporten sist.
+        // Arbeidsgiverportalen-kallet er idempotent og tåler å bli kalt på nytt (f.eks. ved retry),
         // IKKE bytt om på rekkefølgen uten å diskutere med teamet først.
-        dialogportenTjeneste.sendMeldingOmPurring(forespørsel);
         minSideArbeidsgiverTjeneste.sendNyBeskjedMedEksternVarsling(forespørsel);
+        dialogportenTjeneste.sendMeldingOmPurring(forespørsel);
 
         return NyBeskjedResultat.NY_BESKJED_SENDT;
     }
