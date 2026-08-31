@@ -43,6 +43,10 @@ public class SettDialogTilUtgåttTask implements ProsessTaskHandler {
         var forespørsel = forespørselTjeneste.hentForespørsel(forespørselUuid)
             .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel " + forespørselUuid + " ved setting av dialog til utgått"));
 
+        if (forespørsel.dialogportenUuid() == null) {
+            LOG.info("Forespørsel {} har ingen dialog hos Dialogporten, hopper over", forespørselUuid);
+            return;
+        }
         LOG.info("Setter dialog hos Dialogporten til utgått for forespørsel {}", forespørselUuid);
         dialogportenTjeneste.utførMotDialogportenMedDevToleranse(() -> dialogportenTjeneste.settDialogTilUtgått(forespørsel));
         LOG.info("Satte dialog hos Dialogporten til utgått for forespørsel {}", forespørselUuid);

@@ -3,7 +3,9 @@ package no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -97,6 +99,38 @@ public class ForespørselBehandlingTjeneste {
         return ForespørselResultat.FORESPØRSEL_OPPRETTET;
     }
 
+    public List<ForespørselResultat> håndterKomplettListeMedForespørsler(LocalDate skjæringstidspunkt,
+                                                                         Ytelsetype ytelsetype,
+                                                                         AktørId aktørId,
+                                                                         List<Arbeidsgiver> arbeidsgivere,
+                                                                         Saksnummer fagsakSaksnummer,
+                                                                         LocalDate førsteUttaksdato) {
+        var alleOrgnrSomSkalHaForespørsel = arbeidsgivere.stream()
+            .map(Arbeidsgiver::orgnr)
+            .collect(Collectors.toUnmodifiableSet());
+        settForespørslerSomIkkeLengerEtterspørresTilUtgått(fagsakSaksnummer, aktørId, ytelsetype, alleOrgnrSomSkalHaForespørsel);
+
+        return arbeidsgivere.stream()
+            .map(arbeidsgiver -> håndterInnkommendeForespørsel(skjæringstidspunkt,
+                ytelsetype,
+                aktørId,
+                arbeidsgiver,
+                fagsakSaksnummer,
+                førsteUttaksdato))
+            .toList();
+    }
+
+    private void settForespørslerSomIkkeLengerEtterspørresTilUtgått(Saksnummer fagsakSaksnummer,
+                                                                    AktørId aktørId,
+                                                                    Ytelsetype ytelsetype,
+                                                                    Set<String> orgnrSomSkalHaForespørsel) {
+        forespørselTjeneste.finnForespørslerForFagsak(fagsakSaksnummer).stream()
+            .filter(forespørsel -> ForespørselType.BESTILT_AV_FAGSYSTEM.equals(forespørsel.forespørselType()))
+            .filter(forespørsel -> aktørId.equals(forespørsel.aktørId()) && ytelsetype.equals(forespørsel.ytelseType()))
+            .filter(forespørsel -> !orgnrSomSkalHaForespørsel.contains(forespørsel.arbeidsgiver().orgnr()))
+            .forEach(this::settForespørselTilUtgått);
+    }
+
     public void sendMeldingOmAvvistInntektsmelding(ForespørselDto forespørselDto,
                                                    String feiltekst) {
         // Send transmission til dialogporten
@@ -183,7 +217,7 @@ public class ForespørselBehandlingTjeneste {
     }
 
     public void settForespørselTilUtgått(ForespørselDto eksisterendeForespørsel) {
-        forespørselTjeneste.settForespørselTilUtgått(eksisterendeForespørsel.arbeidsgiverNotifikasjonSakId());
+        forespørselTjeneste.settForespørselTilUtgått(eksisterendeForespørsel.uuid());
         leggTilSettUtgåttTasks(eksisterendeForespørsel.uuid());
 
         var msg = String.format("Setter forespørsel til utgått, orgnr: %s, stp: %s, saksnummer: %s, ytelse: %s",
@@ -320,7 +354,7 @@ public class ForespørselBehandlingTjeneste {
         var forespørselDto = hentForespørsel(forespørselUuid)
             .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel med forespørselUuid: " + forespørselUuid));
 
-        forespørselTjeneste.settForespørselTilUtgått(forespørselDto.arbeidsgiverNotifikasjonSakId());
+        forespørselTjeneste.settForespørselTilUtgått(forespørselDto.uuid());
         leggTilSettUtgåttTasks(forespørselUuid);
 
         var msg = String.format("Setter forespørsel til utgått, orgnr: %s, stp: %s, saksnummer: %s, ytelse: %s",
