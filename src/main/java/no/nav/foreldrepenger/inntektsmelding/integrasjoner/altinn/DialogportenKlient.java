@@ -97,6 +97,11 @@ public class DialogportenKlient {
         sendPatchRequest(dialogUuid, List.of(patchAvvistInntektsmelding));
     }
 
+    public void sendMeldingOmPurring(UUID dialogUuid, String purringTekst) {
+        var patchPurring = DialogportenRequestMapper.inntektsmeldingPurringMelding(purringTekst);
+        sendPatchRequest(dialogUuid, List.of(patchPurring));
+    }
+
     public void oppdaterDialogMedEndretInntektsmelding(UUID dialogUuid,
                                                        Arbeidsgiver arbeidsgiver,
                                                        Optional<UUID> inntektsmeldingUuid) {

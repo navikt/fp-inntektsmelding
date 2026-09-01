@@ -13,6 +13,7 @@ import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 
 public class DialogportenRequestMapper {
     private static final String ALTINN_RESSURS_PREFIX = "urn:altinn:resource:";
+    private static final String SERVICE_OWNER = "ServiceOwner";
 
     private DialogportenRequestMapper(){
         //statisk klasse
@@ -49,7 +50,7 @@ public class DialogportenRequestMapper {
             List.of(guiUrl, forespørselApiUrl));
         var transmission = new DialogportenRequest.Transmission(DialogportenRequest.TransmissionType.Request,
             DialogportenRequest.TransmissionExtendedType.INNTEKTSMELDING,
-            new DialogportenRequest.Sender("ServiceOwner", null),
+            new DialogportenRequest.Sender(SERVICE_OWNER, null),
             contentTransmission,
             List.of(attachementTransmission));
 
@@ -157,6 +158,20 @@ public class DialogportenRequestMapper {
             List.of(transmission));
     }
 
+    public static DialogportenPatchRequest inntektsmeldingPurringMelding(String purringTekst) {
+        var contentTransmission = lagContentValue(purringTekst);
+
+        var transmissionContent = new DialogportenRequest.Content(contentTransmission, null, null);
+
+        return new DialogportenPatchRequest(DialogportenPatchRequest.OP_ADD,
+            DialogportenPatchRequest.PATH_TRANSMISSIONS,
+            List.of(new DialogportenRequest.Transmission(DialogportenRequest.TransmissionType.Request,
+                DialogportenRequest.TransmissionExtendedType.INNTEKTSMELDING,
+                new DialogportenRequest.Sender(SERVICE_OWNER, null),
+                transmissionContent,
+                List.of())));
+    }
+
     public static DialogportenPatchRequest inntektsmeldingAvvistTransmission(Arbeidsgiver arbeidsgiver,
                                                                                String avvistTekst) {
         var contentTransmission = lagContentValue(avvistTekst);
@@ -201,7 +216,7 @@ public class DialogportenRequestMapper {
         var transmissionContent = new DialogportenRequest.Content(lagContentValue("Inntektsmeldingen er ikke lenger påkrevd"), null, null);
         var transmission = new DialogportenRequest.Transmission(DialogportenRequest.TransmissionType.Correction,
             DialogportenRequest.TransmissionExtendedType.INNTEKTSMELDING,
-            new DialogportenRequest.Sender("ServiceOwner", null),
+            new DialogportenRequest.Sender(SERVICE_OWNER, null),
             transmissionContent,
             List.of());
         var patchTransmission = new DialogportenPatchRequest(DialogportenPatchRequest.OP_ADD,

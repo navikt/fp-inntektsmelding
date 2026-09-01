@@ -107,6 +107,17 @@ public class DialogportenTjeneste {
             avvistTekst);
     }
 
+    public void sendMeldingOmPurring(ForespørselDto forespørsel) {
+        if (forespørsel.dialogportenUuid() == null) {
+            return;
+        }
+
+        var person = personTjeneste.hentPersonInfoFraAktørId(forespørsel.aktørId(), forespørsel.ytelseType());
+        var purringTekst = ForespørselTekster.lagBeskjedFraSaksbehandlerTekst(forespørsel.ytelseType(), person.mapFulltNavn());
+
+        dialogportenKlient.sendMeldingOmPurring(forespørsel.dialogportenUuid(), purringTekst);
+    }
+
     private String lagSaksTittel(ForespørselDto forespørsel) {
         var person = personTjeneste.hentPersonInfoFraAktørId(forespørsel.aktørId(), forespørsel.ytelseType());
         return ForespørselTekster.lagSaksTittel(person.mapFulltNavn(), person.fødselsdato());

@@ -39,6 +39,7 @@ import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Arbeidsgiverinitiert
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
+import no.nav.foreldrepenger.konfig.Environment;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskGruppe;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskTjeneste;
@@ -319,7 +320,13 @@ public class ForespørselBehandlingTjeneste {
             fagsakSaksnummer,
             forespørsel.ytelseType());
         LOG.info(msg);
+        // Rekkefølgen er bevisst: Arbeidsgiverportalen sendes først, Dialogporten sist.
+        // Arbeidsgiverportalen-kallet er idempotent og tåler å bli kalt på nytt (f.eks. ved retry),
+        // IKKE bytt om på rekkefølgen uten å diskutere med teamet først.
         minSideArbeidsgiverTjeneste.sendNyBeskjedMedEksternVarsling(forespørsel);
+        if (Environment.current().isDev()) {
+            dialogportenTjeneste.sendMeldingOmPurring(forespørsel);
+        }
 
         return NyBeskjedResultat.NY_BESKJED_SENDT;
     }

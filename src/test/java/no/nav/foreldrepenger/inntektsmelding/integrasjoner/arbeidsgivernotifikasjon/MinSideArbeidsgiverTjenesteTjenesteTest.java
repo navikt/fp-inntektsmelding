@@ -417,6 +417,27 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
     }
 
     @Test
+    void send_ny_beskjed_med_ekstern_varsling_skal_bruke_idempotent_eksternid_basert_paa_uuid_og_dato() {
+        var uuid = UUID.randomUUID();
+        var forespørsel = lagForespørsel(uuid, null, "sak-1", LocalDate.now());
+        var organisasjon = new Organisasjon("Test A/S", ORGNR);
+        var personInfo = lagPersonInfo();
+
+        when(organisasjonTjeneste.finnOrganisasjon(forespørsel.arbeidsgiver())).thenReturn(organisasjon);
+        when(personTjeneste.hentPersonInfoFraAktørId(forespørsel.aktørId(), Ytelsetype.FORELDREPENGER)).thenReturn(personInfo);
+
+        tjeneste.sendNyBeskjedMedEksternVarsling(forespørsel);
+
+        var beskjedCaptor = ArgumentCaptor.forClass(NyBeskjedMutationRequest.class);
+        verify(klient).opprettBeskjedOgVarsling(beskjedCaptor.capture(), any(NyBeskjedResultatResponseProjection.class));
+        var nyBeskjed = (NyBeskjedInput) beskjedCaptor.getValue().getInput().get("nyBeskjed");
+
+        // Gjentatte purringer samme dag skal ende opp med samme eksternId, slik at Arbeidsgiverportalen
+        // kan deduplisere. En purring neste dag vil derimot få en annen eksternId (ny dato).
+        assertThat(nyBeskjed.getMetadata().getEksternId()).isEqualTo("purring-" + uuid + "-" + LocalDate.now());
+    }
+
+    @Test
     void send_ny_beskjed_om_avvist_inntektsmelding_skal_sende_riktig_feiltekst_og_lenke() {
         var uuid = UUID.randomUUID();
         var forespørsel = lagForespørsel(uuid, null, "sak-1", LocalDate.now());
