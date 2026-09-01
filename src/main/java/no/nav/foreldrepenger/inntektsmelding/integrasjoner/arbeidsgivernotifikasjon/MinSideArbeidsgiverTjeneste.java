@@ -322,11 +322,6 @@ public class MinSideArbeidsgiverTjeneste {
         return sendNyBeskjed(grupperingsid, merkelapp, virksomhetsnummer, beskjedTekst, Optional.empty(), kvitteringLenke, eksternId);
     }
 
-    public String sendNyBeskjedMedEksternVarsling(String grupperingsid, Merkelapp merkelapp,
-                                                  String virksomhetsnummer, String beskjedTekst, String varselTekst, URI lenke) {
-        return sendNyBeskjedMedEksternVarsling(grupperingsid, merkelapp, virksomhetsnummer, beskjedTekst, varselTekst, lenke, UUID.randomUUID().toString());
-    }
-
     public String sendNyBeskjedMedEksternVarsling(String grupperingsid, Merkelapp merkelapp, String virksomhetsnummer,
                                                   String beskjedTekst, String varselTekst, URI lenke, String eksternId) {
         return sendNyBeskjed(grupperingsid, merkelapp, virksomhetsnummer, beskjedTekst, Optional.of(varselTekst), lenke, eksternId);

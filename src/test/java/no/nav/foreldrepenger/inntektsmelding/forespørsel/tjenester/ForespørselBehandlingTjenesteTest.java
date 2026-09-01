@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
@@ -15,6 +16,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Answers;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -44,6 +46,7 @@ import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
+import no.nav.foreldrepenger.konfig.Environment;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskGruppe;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskTjeneste;
@@ -577,14 +580,21 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
         var arbeidsgiver = Arbeidsgiver.fra(BRREG_ORGNUMMER);
 
-        var resultat = forespørselBehandlingTjeneste.opprettNyBeskjedMedEksternVarsling(Saksnummer.fra(SAKSNUMMER),
-            arbeidsgiver);
+        NyBeskjedResultat resultat;
+        try (var environment = Mockito.mockStatic(Environment.class, Answers.CALLS_REAL_METHODS)) {
+            var devEnv = Mockito.mock(Environment.class);
+            Mockito.when(devEnv.isDev()).thenReturn(true);
+            environment.when(Environment::current).thenReturn(devEnv);
+
+            resultat = forespørselBehandlingTjeneste.opprettNyBeskjedMedEksternVarsling(Saksnummer.fra(SAKSNUMMER),
+                arbeidsgiver);
+        }
 
         clearHibernateCache();
 
         assertThat(resultat).isEqualTo(NyBeskjedResultat.NY_BESKJED_SENDT);
-        verify(minSideArbeidsgiverTjeneste, Mockito.times(1)).sendNyBeskjedMedEksternVarsling(any(ForespørselDto.class));
-        verify(dialogportenTjeneste, Mockito.times(1)).sendMeldingOmPurring(any(ForespørselDto.class));
+        verify(minSideArbeidsgiverTjeneste, times(1)).sendNyBeskjedMedEksternVarsling(any(ForespørselDto.class));
+        verify(dialogportenTjeneste, times(1)).sendMeldingOmPurring(any(ForespørselDto.class));
         // Arbeidsgiverportalen skal kalles før Dialogporten: kun Arbeidsgiverportalen-kallet er idempotent,
         // så det skal sendes først (se kommentar i ForespørselBehandlingTjeneste)
         var rekkefølge = inOrder(dialogportenTjeneste, minSideArbeidsgiverTjeneste);
