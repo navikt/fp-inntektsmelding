@@ -59,7 +59,7 @@ class ForespørselApiTjenesteTest {
             ForespørselType.BESTILT_AV_FAGSYSTEM);
         when(personTjeneste.finnPersonIdentForAktørId(new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(aktørId.getAktørId()))).thenReturn(fnr);
         var forespørselUuid = UUID.randomUUID();
-        when(forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid)).thenReturn(Optional.of(ForespørselDtoMapper.mapFraEntitet(forespørsel)));
+        when(forespørselBehandlingTjeneste.hentForespørselOptional(forespørselUuid)).thenReturn(Optional.of(ForespørselDtoMapper.mapFraEntitet(forespørsel)));
 
         var dto = forespørselApiTjeneste.hentForesørselDto(forespørselUuid);
 

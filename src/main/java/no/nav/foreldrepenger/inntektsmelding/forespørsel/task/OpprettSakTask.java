@@ -15,8 +15,6 @@ import no.nav.vedtak.felles.prosesstask.api.ProsessTask;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskHandler;
 
-import static no.nav.foreldrepenger.inntektsmelding.forespørsel.task.FellesTaskProperties.KEY_FORESPOERSEL_UUID;
-
 /**
  * Oppretter sak hos arbeidsgiverportalen (min side arbeidsgiver) for en allerede lagret forespørsel.
  * Forutsetter at forespørselen er lagret/committet. Kjøres sekvensielt før {@link OpprettOppgaveTask}.
@@ -41,9 +39,8 @@ public class OpprettSakTask implements ProsessTaskHandler {
 
     @Override
     public void doTask(ProsessTaskData prosessTaskData) {
-        var forespørselUuid = UUID.fromString(prosessTaskData.getPropertyValue(KEY_FORESPOERSEL_UUID));
-        var forespørsel = forespørselTjeneste.hentForespørsel(forespørselUuid)
-            .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel " + forespørselUuid + " ved opprettelse av sak"));
+        var forespørselUuid = UUID.fromString(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID));
+        var forespørsel = forespørselTjeneste.hentForespørsel(forespørselUuid);
 
         if (ForespørselStatus.UTGÅTT.equals(forespørsel.status())) {
             LOG.info("Forespørsel {} er utgått, oppretter ikke sak", forespørselUuid);

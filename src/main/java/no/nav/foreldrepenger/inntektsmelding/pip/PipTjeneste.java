@@ -28,7 +28,7 @@ public class PipTjeneste {
     }
 
     public Arbeidsgiver hentArbeidsgiverFor(UUID forespørselUuid) {
-        return forespørselTjeneste.hentForespørsel(forespørselUuid).map(ForespørselDto::arbeidsgiver).orElse(null);
+        return forespørselTjeneste.hentForespørselOptional(forespørselUuid).map(ForespørselDto::arbeidsgiver).orElse(null);
     }
 
     public Arbeidsgiver hentArbeidsgiverFor(long inntektsmeldingId) {

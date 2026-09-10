@@ -63,7 +63,7 @@ public class InntektsmeldingApiMottakTjeneste {
     }
 
     public SendInntektsmeldingResponse mottaInntektsmelding(InntektsmeldingDto inntektsmelding, UUID forespørselUuid) {
-        var forespørsel = forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid).orElse(null);
+        var forespørsel = forespørselBehandlingTjeneste.hentForespørselOptional(forespørselUuid).orElse(null);
         if (forespørsel == null) {
             LOG.info("Finner ikke forespørsel for uuid {}", forespørselUuid);
             return new SendInntektsmeldingResponse(false,

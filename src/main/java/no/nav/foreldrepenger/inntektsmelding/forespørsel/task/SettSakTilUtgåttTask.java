@@ -35,8 +35,7 @@ public class SettSakTilUtgåttTask implements ProsessTaskHandler {
     @Override
     public void doTask(ProsessTaskData prosessTaskData) {
         var forespørselUuid = UUID.fromString(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID));
-        var forespørsel = forespørselTjeneste.hentForespørsel(forespørselUuid)
-            .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel " + forespørselUuid + " ved setting av sak til utgått"));
+        var forespørsel = forespørselTjeneste.hentForespørsel(forespørselUuid);
 
         if (forespørsel.arbeidsgiverNotifikasjonSakId() == null) {
             LOG.info("Forespørsel {} har ingen sak hos arbeidsgiverportalen, hopper over", forespørselUuid);

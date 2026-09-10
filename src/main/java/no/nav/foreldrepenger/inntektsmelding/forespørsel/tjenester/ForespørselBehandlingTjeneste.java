@@ -160,8 +160,7 @@ public class ForespørselBehandlingTjeneste {
                                                  LukkeÅrsak årsak,
                                                  // inntektsmeldingUuid er optional fordi vi ikke har inntektsmeldingen lagret hvis den er innsendt via Altinn / LPS'er
                                                  Optional<UUID> inntektsmeldingUuid) {
-        var forespørsel = forespørselTjeneste.hentForespørsel(foresporselUuid)
-            .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel for inntektsmelding, ugyldig tilstand"));
+        var forespørsel = forespørselTjeneste.hentForespørsel(foresporselUuid);
 
         var erFørstegangsinnsending = ForespørselStatus.UNDER_BEHANDLING.equals(forespørsel.status());
 
@@ -183,8 +182,7 @@ public class ForespørselBehandlingTjeneste {
         prosessTaskTjeneste.lagre(taskGruppe);
 
         // Re-fetch to get updated status
-        return forespørselTjeneste.hentForespørsel(foresporselUuid)
-            .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel etter ferdigstilling"));
+        return forespørselTjeneste.hentForespørsel(foresporselUuid);
     }
 
     public void opprettTasksForÅOppdaterePortaler(ForespørselDto forespørsel,
@@ -209,8 +207,12 @@ public class ForespørselBehandlingTjeneste {
         prosessTaskTjeneste.lagre(taskGruppe);
     }
 
-    public Optional<ForespørselDto> hentForespørsel(UUID forespørselUUID) {
+    public ForespørselDto hentForespørsel(UUID forespørselUUID) {
         return forespørselTjeneste.hentForespørsel(forespørselUUID);
+    }
+
+    public Optional<ForespørselDto> hentForespørselOptional(UUID forespørselUUID) {
+        return forespørselTjeneste.hentForespørselOptional(forespørselUUID);
     }
 
     public List<ForespørselDto> finnForespørslerForAktørId(AktørId aktørId, Ytelsetype ytelsetype) {
@@ -283,8 +285,7 @@ public class ForespørselBehandlingTjeneste {
             skjæringstidspunkt,
             fagsystemSaksnummer);
 
-        return forespørselTjeneste.hentForespørsel(uuid)
-            .orElseThrow(() -> new IllegalStateException("Finner ikke opprettet arbeidsgiverinitiert forespørsel"));
+        return forespørselTjeneste.hentForespørsel(uuid);
     }
 
     private void leggTilSettUtgåttTasks(UUID forespørselUuid) {
@@ -358,8 +359,7 @@ public class ForespørselBehandlingTjeneste {
     }
 
     public void settForespørselTilUtgåttForvaltning(UUID forespørselUuid) {
-        var forespørselDto = hentForespørsel(forespørselUuid)
-            .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel med forespørselUuid: " + forespørselUuid));
+        var forespørselDto = hentForespørsel(forespørselUuid);
 
         forespørselTjeneste.settForespørselTilUtgått(forespørselDto.uuid());
         leggTilSettUtgåttTasks(forespørselUuid);

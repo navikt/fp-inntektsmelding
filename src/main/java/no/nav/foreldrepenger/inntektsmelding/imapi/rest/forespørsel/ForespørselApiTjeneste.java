@@ -41,7 +41,7 @@ public class ForespørselApiTjeneste {
 
 
     public Optional<ForespørselResponse> hentForesørselDto(UUID forespørselUuid) {
-        return forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid).map(fp ->{
+        return forespørselBehandlingTjeneste.hentForespørselOptional(forespørselUuid).map(fp ->{
             var fnr = personTjeneste.finnPersonIdentForAktørId(fp.aktørId());
             return mapTilResponseDto(fp, fnr);
         });

@@ -50,9 +50,7 @@ public class InntektsmeldingTjeneste {
     }
 
     public List<InntektsmeldingDto> hentInntektsmeldinger(UUID forespørselUuid) {
-        var forespørsel = forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid)
-            .orElseThrow(
-                () -> new IllegalStateException("Prøver å hente data for en forespørsel som ikke finnes, forespørselUUID: " + forespørselUuid));
+        var forespørsel = forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid);
 
         return inntektsmeldingRepository.hentInntektsmeldingerSortertNyesteFørst(new AktørIdEntitet(forespørsel.aktørId().getAktørId()),
                 forespørsel.arbeidsgiver().orgnr(),

@@ -107,7 +107,7 @@ public class ForespørselForvaltningRestTjeneste {
         var gyldigForespørselUuid = UUID.fromString(forespørselUuid);
         sjekkAtKallerHarRollenDrift();
         LOG.info("Setter oppgaven for forespørselUuid {} til utført", forespørselUuid);
-        var forespørsel = forespørselTjeneste.hentForespørsel(gyldigForespørselUuid).orElseThrow();
+        var forespørsel = forespørselTjeneste.hentForespørsel(gyldigForespørselUuid);
         minSideArbeidsgiverTjeneste.oppgaveUtført(forespørsel.oppgaveId(), OffsetDateTime.now());
         return Response.status(Response.Status.ACCEPTED).build();
     }
@@ -160,7 +160,7 @@ public class ForespørselForvaltningRestTjeneste {
         var sakerSomIkkeBleSlettet = new ArrayList<SakGrupperingDto>();
         for (var sak : saker) {
             var grupperingsIdSomUuid = sak.grupperingsId();
-            var forespørsel = forespørselTjeneste.hentForespørsel(grupperingsIdSomUuid);
+            var forespørsel = forespørselTjeneste.hentForespørselOptional(grupperingsIdSomUuid);
             if (forespørsel.isPresent()) {
                 continue;
             }

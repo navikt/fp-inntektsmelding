@@ -67,9 +67,7 @@ public class GrunnlagDtoTjeneste {
     }
 
     public InntektsmeldingDialogDto lagDialogDto(UUID forespørselUuid) {
-        var forespørsel = forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid)
-            .orElseThrow(() -> new IllegalStateException(
-                "Prøver å hente data for en forespørsel som ikke finnes, forespørselUUID: " + forespørselUuid));
+        var forespørsel = forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid);
 
         var organisasjonsnummer = forespørsel.arbeidsgiver();
         var personInfo = personTjeneste.hentPersonInfoFraAktørId(forespørsel.aktørId(), forespørsel.ytelseType());

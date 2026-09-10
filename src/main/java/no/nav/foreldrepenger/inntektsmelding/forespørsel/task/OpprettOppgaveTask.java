@@ -40,8 +40,7 @@ public class OpprettOppgaveTask implements ProsessTaskHandler {
     @Override
     public void doTask(ProsessTaskData prosessTaskData) {
         var forespørselUuid = UUID.fromString(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID));
-        var forespørsel = forespørselTjeneste.hentForespørsel(forespørselUuid)
-            .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel " + forespørselUuid + " ved opprettelse av oppgave"));
+        var forespørsel = forespørselTjeneste.hentForespørsel(forespørselUuid);
 
         if (ForespørselStatus.UTGÅTT.equals(forespørsel.status())) {
             LOG.info("Forespørsel {} er utgått, oppretter ikke oppgave", forespørselUuid);

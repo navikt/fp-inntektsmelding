@@ -458,7 +458,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
     void skal_opprette_tasker_for_å_opprette_og_ferdigstille_agi() {
         var forespørselUuid = lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, BRREG_ORGNUMMER, SAKSNUMMER,
             FØRSTE_UTTAKSDATO, ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT);
-        var forespørselDto = forespørselTjeneste.hentForespørsel(forespørselUuid).orElseThrow();
+        var forespørselDto = forespørselTjeneste.hentForespørsel(forespørselUuid);
         var inntektsmeldingUuid = UUID.randomUUID();
 
         forespørselBehandlingTjeneste.opprettSakOgFerdigstillTasksIPortaler(forespørselDto, inntektsmeldingUuid);
@@ -790,7 +790,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, SAK_ID);
         forespørselRepository.ferdigstillForespørsel(SAK_ID);
 
-        var forespørsel = forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid).orElseThrow();
+        var forespørsel = forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid);
         var nyFørsteUttaksdato = FØRSTE_UTTAKSDATO.plusWeeks(1);
 
         var resultat = forespørselBehandlingTjeneste.oppdaterFørsteUttaksdato(forespørsel, nyFørsteUttaksdato);
