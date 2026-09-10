@@ -2,7 +2,9 @@ package no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
@@ -14,6 +16,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Answers;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -43,6 +46,7 @@ import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
+import no.nav.foreldrepenger.konfig.Environment;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskGruppe;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskTjeneste;
@@ -53,6 +57,7 @@ import no.nav.vedtak.felles.testutilities.db.EntityManagerAwareTest;
 class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
     private static final String BRREG_ORGNUMMER = "974760673";
+    private static final String ANNET_ORGNUMMER = "450674427";
     private static final String AKTØR_ID = "1234567891234";
     private static final String SAK_ID = "1";
     private static final String OPPGAVE_ID = "2";
@@ -83,8 +88,8 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
     }
 
     // Simulerer at prosesstasken for å opprette sak/oppgave hos arbeidsgiverportalen har kjørt, slik den ville gjort
-    // kort tid etter i produksjon. Nødvendig i disse testene fordi enkelte påfølgende operasjoner (f.eks. ferdigstille/
-    // sette utgått) fortsatt slår opp forespørselen på arbeidsgiverNotifikasjonSakId og oppgaveId
+    // kort tid etter i produksjon. Nødvendig i disse testene fordi ferdigstilling fortsatt slår opp forespørselen
+    // på arbeidsgiverNotifikasjonSakId og oppgaveId
     private void kjørOpprettSakTask(UUID forespørselUuid) {
         var task = new OpprettSakTask(forespørselTjeneste, minSideArbeidsgiverTjeneste);
         var taskData = ProsessTaskData.forProsessTask(OpprettSakTask.class);
@@ -95,6 +100,27 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
     private void kjørOpprettOppgaveTask(UUID forespørselUuid) {
         var task = new OpprettOppgaveTask(forespørselTjeneste, minSideArbeidsgiverTjeneste);
         var taskData = ProsessTaskData.forProsessTask(OpprettOppgaveTask.class);
+        taskData.setProperty(FellesTaskProperties.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
+        task.doTask(taskData);
+    }
+
+    private void kjørOpprettDialogTask(UUID forespørselUuid) {
+        var task = new OpprettDialogTask(forespørselTjeneste, dialogportenTjeneste);
+        var taskData = ProsessTaskData.forProsessTask(OpprettDialogTask.class);
+        taskData.setProperty(FellesTaskProperties.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
+        task.doTask(taskData);
+    }
+
+    private void kjørSettSakTilUtgåttTask(UUID forespørselUuid) {
+        var task = new SettSakTilUtgåttTask(forespørselTjeneste, minSideArbeidsgiverTjeneste);
+        var taskData = ProsessTaskData.forProsessTask(SettSakTilUtgåttTask.class);
+        taskData.setProperty(FellesTaskProperties.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
+        task.doTask(taskData);
+    }
+
+    private void kjørSettDialogTilUtgåttTask(UUID forespørselUuid) {
+        var task = new SettDialogTilUtgåttTask(forespørselTjeneste, dialogportenTjeneste);
+        var taskData = ProsessTaskData.forProsessTask(SettDialogTilUtgåttTask.class);
         taskData.setProperty(FellesTaskProperties.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
         task.doTask(taskData);
     }
@@ -159,6 +185,90 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         var lagret = forespørselRepository.hentForespørslerPåSak(SAKSNUMMER);
         assertThat(resultat).isEqualTo(ForespørselResultat.IKKE_OPPRETTET_FINNES_ALLEREDE);
         assertThat(lagret).hasSize(1);
+    }
+
+    @Test
+    void skal_sette_forespørsel_som_mangler_fra_komplett_liste_til_utgått() {
+        var beholdUuid = lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, BRREG_ORGNUMMER, SAKSNUMMER,
+            FØRSTE_UTTAKSDATO, ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var utgåttUuid = lagreForespørsel(SKJÆRINGSTIDSPUNKT.minusDays(10), YTELSETYPE, AKTØR_ID, ANNET_ORGNUMMER, SAKSNUMMER,
+            FØRSTE_UTTAKSDATO.minusDays(5), ForespørselType.BESTILT_AV_FAGSYSTEM);
+
+        var resultater = forespørselBehandlingTjeneste.håndterKomplettListeMedForespørsler(SKJÆRINGSTIDSPUNKT,
+            YTELSETYPE,
+            AktørId.fra(AKTØR_ID),
+            List.of(Arbeidsgiver.fra(BRREG_ORGNUMMER)),
+            Saksnummer.fra(SAKSNUMMER),
+            FØRSTE_UTTAKSDATO);
+
+        clearHibernateCache();
+
+        assertThat(resultater).containsExactly(ForespørselResultat.IKKE_OPPRETTET_FINNES_ALLEREDE);
+        assertThat(forespørselRepository.hentForespørsel(beholdUuid).orElseThrow().getStatus()).isEqualTo(ForespørselStatus.UNDER_BEHANDLING);
+        assertThat(forespørselRepository.hentForespørsel(utgåttUuid).orElseThrow().getStatus()).isEqualTo(ForespørselStatus.UTGÅTT);
+        verify(prosessTaskTjeneste).lagre(any(ProsessTaskGruppe.class));
+    }
+
+    @Test
+    void skal_sette_alle_relevante_forespørsler_til_utgått_for_tom_komplett_liste() {
+        var førsteUuid = lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, BRREG_ORGNUMMER, SAKSNUMMER,
+            FØRSTE_UTTAKSDATO, ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var andreUuid = lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, ANNET_ORGNUMMER, SAKSNUMMER,
+            FØRSTE_UTTAKSDATO, ForespørselType.BESTILT_AV_FAGSYSTEM);
+
+        var resultater = forespørselBehandlingTjeneste.håndterKomplettListeMedForespørsler(SKJÆRINGSTIDSPUNKT,
+            YTELSETYPE,
+            AktørId.fra(AKTØR_ID),
+            List.of(),
+            Saksnummer.fra(SAKSNUMMER),
+            FØRSTE_UTTAKSDATO);
+
+        clearHibernateCache();
+
+        assertThat(resultater).isEmpty();
+        assertThat(forespørselRepository.hentForespørsel(førsteUuid).orElseThrow().getStatus()).isEqualTo(ForespørselStatus.UTGÅTT);
+        assertThat(forespørselRepository.hentForespørsel(andreUuid).orElseThrow().getStatus()).isEqualTo(ForespørselStatus.UTGÅTT);
+        verify(prosessTaskTjeneste, Mockito.times(2)).lagre(any(ProsessTaskGruppe.class));
+    }
+
+    @Test
+    void komplett_liste_skal_ikke_sette_arbeidsgiverinitiert_forespørsel_til_utgått() {
+        var arbeidsgiverinitiertUuid = lagreForespørsel(null, YTELSETYPE, AKTØR_ID, ANNET_ORGNUMMER, SAKSNUMMER,
+            FØRSTE_UTTAKSDATO, ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT);
+
+        forespørselBehandlingTjeneste.håndterKomplettListeMedForespørsler(SKJÆRINGSTIDSPUNKT,
+            YTELSETYPE,
+            AktørId.fra(AKTØR_ID),
+            List.of(),
+            Saksnummer.fra(SAKSNUMMER),
+            FØRSTE_UTTAKSDATO);
+
+        clearHibernateCache();
+
+        assertThat(forespørselRepository.hentForespørsel(arbeidsgiverinitiertUuid).orElseThrow().getStatus()).isEqualTo(ForespørselStatus.UNDER_BEHANDLING);
+        verifyNoInteractions(prosessTaskTjeneste);
+    }
+
+    @Test
+    void tasks_skal_ikke_opprette_eller_sette_utgått_eksterne_ressurser_som_ikke_finnes() {
+        var forespørselUuid = lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, BRREG_ORGNUMMER, SAKSNUMMER,
+            FØRSTE_UTTAKSDATO, ForespørselType.BESTILT_AV_FAGSYSTEM);
+
+        forespørselBehandlingTjeneste.håndterKomplettListeMedForespørsler(SKJÆRINGSTIDSPUNKT,
+            YTELSETYPE,
+            AktørId.fra(AKTØR_ID),
+            List.of(),
+            Saksnummer.fra(SAKSNUMMER),
+            FØRSTE_UTTAKSDATO);
+        clearHibernateCache();
+
+        kjørOpprettSakTask(forespørselUuid);
+        kjørOpprettOppgaveTask(forespørselUuid);
+        kjørOpprettDialogTask(forespørselUuid);
+        kjørSettSakTilUtgåttTask(forespørselUuid);
+        kjørSettDialogTilUtgåttTask(forespørselUuid);
+
+        verifyNoInteractions(minSideArbeidsgiverTjeneste, dialogportenTjeneste);
     }
 
     @Test
@@ -576,13 +686,26 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
         var arbeidsgiver = Arbeidsgiver.fra(BRREG_ORGNUMMER);
 
-        var resultat = forespørselBehandlingTjeneste.opprettNyBeskjedMedEksternVarsling(Saksnummer.fra(SAKSNUMMER),
-            arbeidsgiver);
+        NyBeskjedResultat resultat;
+        try (var environment = Mockito.mockStatic(Environment.class, Answers.CALLS_REAL_METHODS)) {
+            var devEnv = Mockito.mock(Environment.class);
+            Mockito.when(devEnv.isDev()).thenReturn(true);
+            environment.when(Environment::current).thenReturn(devEnv);
+
+            resultat = forespørselBehandlingTjeneste.opprettNyBeskjedMedEksternVarsling(Saksnummer.fra(SAKSNUMMER),
+                arbeidsgiver);
+        }
 
         clearHibernateCache();
 
         assertThat(resultat).isEqualTo(NyBeskjedResultat.NY_BESKJED_SENDT);
-        verify(minSideArbeidsgiverTjeneste, Mockito.times(1)).sendNyBeskjedMedEksternVarsling(any(ForespørselDto.class));
+        verify(minSideArbeidsgiverTjeneste, times(1)).sendNyBeskjedMedEksternVarsling(any(ForespørselDto.class));
+        verify(dialogportenTjeneste, times(1)).sendMeldingOmPurring(any(ForespørselDto.class));
+        // Arbeidsgiverportalen skal kalles før Dialogporten: kun Arbeidsgiverportalen-kallet er idempotent,
+        // så det skal sendes først (se kommentar i ForespørselBehandlingTjeneste)
+        var rekkefølge = inOrder(dialogportenTjeneste, minSideArbeidsgiverTjeneste);
+        rekkefølge.verify(minSideArbeidsgiverTjeneste).sendNyBeskjedMedEksternVarsling(any(ForespørselDto.class));
+        rekkefølge.verify(dialogportenTjeneste).sendMeldingOmPurring(any(ForespørselDto.class));
     }
 
     @Test

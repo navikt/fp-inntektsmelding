@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.altinn.DialogportenTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTask;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskHandler;
@@ -42,6 +43,10 @@ public class OpprettDialogTask implements ProsessTaskHandler {
         var forespørselUuid = UUID.fromString(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID));
         var forespørsel = forespørselTjeneste.hentForespørsel(forespørselUuid);
 
+        if (ForespørselStatus.UTGÅTT.equals(forespørsel.status())) {
+            LOG.info("Forespørsel {} er utgått, oppretter ikke dialog", forespørselUuid);
+            return;
+        }
         if (forespørsel.dialogportenUuid() != null) {
             // Idempotens: unngår å opprette en ny dialog dersom et tidligere (delvis) forsøk allerede har lykkes
             LOG.info("Dialog er allerede opprettet for forespørsel {}, hopper over", forespørselUuid);

@@ -1,8 +1,10 @@
 package no.nav.foreldrepenger.inntektsmelding.forespørsel.rest;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.IntStream;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -29,8 +31,11 @@ import no.nav.foreldrepenger.inntektsmelding.server.auth.api.Tilgangskontrollert
 import no.nav.foreldrepenger.inntektsmelding.server.tilgangsstyring.Tilgang;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Saksnummer;
+import no.nav.foreldrepenger.inntektsmelding.typer.dto.AktørIdDto;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.ForespørselResultat;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.KodeverkMapper;
+import no.nav.foreldrepenger.inntektsmelding.typer.dto.SaksnummerDto;
+import no.nav.foreldrepenger.inntektsmelding.typer.dto.YtelseTypeDto;
 
 @AutentisertMedAzure
 @ApplicationScoped
@@ -55,6 +60,7 @@ public class ForespørselRest {
         this.tilgang = tilgang;
     }
 
+    @Deprecated // Erstattes av /opprett-en og opprett-flere
     @POST
     @Path("/opprett")
     @Tilgangskontrollert
@@ -95,6 +101,73 @@ public class ForespørselRest {
         } else {
             return Response.status(Response.Status.BAD_REQUEST).build();
         }
+    }
+
+    @POST
+    @Path("/opprett-en")
+    @Tilgangskontrollert
+    public Response opprettEnForespørsel(@Valid @NotNull OpprettEnForespørselRequest request) {
+        sjekkErSystemkall();
+
+        LOG.info("Mottok beskjed fra fpsak om å opprette forespørsel på {} med skjæringstidspunkt {} og første uttaksdato {}",
+            request.fagsakSaksnummer(),
+            request.skjæringstidspunkt(),
+            request.førsteUttaksdato());
+        var resultat = håndterInnkommendeForespørsel(request.skjæringstidspunkt(),
+            request.ytelsetype(),
+            request.aktørId(),
+            request.orgnummer(),
+            request.fagsakSaksnummer(),
+            request.førsteUttaksdato());
+        return Response.ok(new OpprettForespørselResponsNy(
+            List.of(new OpprettForespørselResponsNy.OrganisasjonsnummerMedStatus(request.orgnummer(), resultat)))).build();
+    }
+
+    @POST
+    @Path("/opprett-flere")
+    @Tilgangskontrollert
+    public Response opprettFlereForespørsler(@Valid @NotNull OpprettFlereForespørslerRequest request) {
+        sjekkErSystemkall();
+
+        LOG.info("Mottok komplett liste fra fpsak for forespørsler på {} med skjæringstidspunkt {} og første uttaksdato {}",
+            request.fagsakSaksnummer(),
+            request.skjæringstidspunkt(),
+            request.førsteUttaksdato());
+        var ytelsetype = KodeverkMapper.mapYtelsetype(request.ytelsetype());
+        var resultater = forespørselBehandlingTjeneste.håndterKomplettListeMedForespørsler(request.skjæringstidspunkt(),
+            ytelsetype,
+            AktørId.fra(request.aktørId().id()),
+            request.organisasjonsnumre().stream().map(OrganisasjonsnummerDto::orgnr).map(Arbeidsgiver::fra).toList(),
+            Saksnummer.fra(request.fagsakSaksnummer().saksnr()),
+            request.førsteUttaksdato());
+
+        var organisasjonsnumreMedStatus = IntStream.range(0, request.organisasjonsnumre().size())
+            .mapToObj(i -> new OpprettForespørselResponsNy.OrganisasjonsnummerMedStatus(request.organisasjonsnumre().get(i), resultater.get(i)))
+            .toList();
+        resultater.forEach(resultat -> loggOpprettetMetrikk(request.ytelsetype(), resultat));
+        return Response.ok(new OpprettForespørselResponsNy(organisasjonsnumreMedStatus)).build();
+    }
+
+    private void loggOpprettetMetrikk(YtelseTypeDto ytelsetype, ForespørselResultat resultat) {
+        if (ForespørselResultat.FORESPØRSEL_OPPRETTET.equals(resultat)) {
+            MetrikkerTjeneste.loggForespørselOpprettet(KodeverkMapper.mapYtelsetype(ytelsetype));
+        }
+    }
+
+    private ForespørselResultat håndterInnkommendeForespørsel(LocalDate skjæringstidspunkt,
+                                                              YtelseTypeDto ytelsetype,
+                                                              AktørIdDto aktørId,
+                                                              OrganisasjonsnummerDto organisasjonsnummer,
+                                                              SaksnummerDto fagsakSaksnummer,
+                                                              LocalDate førsteUttaksdato) {
+        var resultat = forespørselBehandlingTjeneste.håndterInnkommendeForespørsel(skjæringstidspunkt,
+            KodeverkMapper.mapYtelsetype(ytelsetype),
+            AktørId.fra(aktørId.id()),
+            Arbeidsgiver.fra(organisasjonsnummer.orgnr()),
+            Saksnummer.fra(fagsakSaksnummer.saksnr()),
+            førsteUttaksdato);
+        loggOpprettetMetrikk(ytelsetype, resultat);
+        return resultat;
     }
 
     @POST
@@ -161,4 +234,3 @@ public class ForespørselRest {
         tilgang.sjekkAtAnsattHarRollenSaksbehandler();
     }
 }
-

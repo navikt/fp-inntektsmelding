@@ -100,12 +100,8 @@ public class ForespørselRepository {
         entityManager.flush();
     }
 
-    public void settForespørselTilUtgått(String arbeidsgiverNotifikasjonSakId) {
-        var query = entityManager.createQuery("FROM ForespørselEntitet where sakId = :sak_id", ForespørselEntitet.class)
-            .setParameter("sak_id", arbeidsgiverNotifikasjonSakId);
-        var resultList = query.getResultList();
-
-        resultList.forEach(f -> {
+    public void settForespørselTilUtgått(UUID forespørselUuid) {
+        hentForespørsel(forespørselUuid).ifPresent(f -> {
             f.setStatus(ForespørselStatus.UTGÅTT);
             entityManager.persist(f);
         });

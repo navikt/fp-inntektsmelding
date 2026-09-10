@@ -3,7 +3,9 @@ package no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -37,6 +39,7 @@ import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Arbeidsgiverinitiert
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
+import no.nav.foreldrepenger.konfig.Environment;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskGruppe;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskTjeneste;
@@ -95,6 +98,38 @@ public class ForespørselBehandlingTjeneste {
         opprettForespørsel(ytelsetype, aktørId, fagsakSaksnummer, arbeidsgiver, skjæringstidspunkt, førsteUttaksdato);
 
         return ForespørselResultat.FORESPØRSEL_OPPRETTET;
+    }
+
+    public List<ForespørselResultat> håndterKomplettListeMedForespørsler(LocalDate skjæringstidspunkt,
+                                                                         Ytelsetype ytelsetype,
+                                                                         AktørId aktørId,
+                                                                         List<Arbeidsgiver> arbeidsgivere,
+                                                                         Saksnummer fagsakSaksnummer,
+                                                                         LocalDate førsteUttaksdato) {
+        var alleOrgnrSomSkalHaForespørsel = arbeidsgivere.stream()
+            .map(Arbeidsgiver::orgnr)
+            .collect(Collectors.toUnmodifiableSet());
+        settForespørslerSomIkkeLengerEtterspørresTilUtgått(fagsakSaksnummer, aktørId, ytelsetype, alleOrgnrSomSkalHaForespørsel);
+
+        return arbeidsgivere.stream()
+            .map(arbeidsgiver -> håndterInnkommendeForespørsel(skjæringstidspunkt,
+                ytelsetype,
+                aktørId,
+                arbeidsgiver,
+                fagsakSaksnummer,
+                førsteUttaksdato))
+            .toList();
+    }
+
+    private void settForespørslerSomIkkeLengerEtterspørresTilUtgått(Saksnummer fagsakSaksnummer,
+                                                                    AktørId aktørId,
+                                                                    Ytelsetype ytelsetype,
+                                                                    Set<String> orgnrSomSkalHaForespørsel) {
+        forespørselTjeneste.finnForespørslerForFagsak(fagsakSaksnummer).stream()
+            .filter(forespørsel -> ForespørselType.BESTILT_AV_FAGSYSTEM.equals(forespørsel.forespørselType()))
+            .filter(forespørsel -> aktørId.equals(forespørsel.aktørId()) && ytelsetype.equals(forespørsel.ytelseType()))
+            .filter(forespørsel -> !orgnrSomSkalHaForespørsel.contains(forespørsel.arbeidsgiver().orgnr()))
+            .forEach(this::settForespørselTilUtgått);
     }
 
     public void sendMeldingOmAvvistInntektsmelding(ForespørselDto forespørselDto,
@@ -185,7 +220,7 @@ public class ForespørselBehandlingTjeneste {
     }
 
     public void settForespørselTilUtgått(ForespørselDto eksisterendeForespørsel) {
-        forespørselTjeneste.settForespørselTilUtgått(eksisterendeForespørsel.arbeidsgiverNotifikasjonSakId());
+        forespørselTjeneste.settForespørselTilUtgått(eksisterendeForespørsel.uuid());
         leggTilSettUtgåttTasks(eksisterendeForespørsel.uuid());
 
         var msg = String.format("Setter forespørsel til utgått, orgnr: %s, stp: %s, saksnummer: %s, ytelse: %s",
@@ -286,7 +321,13 @@ public class ForespørselBehandlingTjeneste {
             fagsakSaksnummer,
             forespørsel.ytelseType());
         LOG.info(msg);
+        // Rekkefølgen er bevisst: Arbeidsgiverportalen sendes først, Dialogporten sist.
+        // Arbeidsgiverportalen-kallet er idempotent og tåler å bli kalt på nytt (f.eks. ved retry),
+        // IKKE bytt om på rekkefølgen uten å diskutere med teamet først.
         minSideArbeidsgiverTjeneste.sendNyBeskjedMedEksternVarsling(forespørsel);
+        if (Environment.current().isDev()) {
+            dialogportenTjeneste.sendMeldingOmPurring(forespørsel);
+        }
 
         return NyBeskjedResultat.NY_BESKJED_SENDT;
     }
@@ -320,7 +361,7 @@ public class ForespørselBehandlingTjeneste {
     public void settForespørselTilUtgåttForvaltning(UUID forespørselUuid) {
         var forespørselDto = hentForespørsel(forespørselUuid);
 
-        forespørselTjeneste.settForespørselTilUtgått(forespørselDto.arbeidsgiverNotifikasjonSakId());
+        forespørselTjeneste.settForespørselTilUtgått(forespørselDto.uuid());
         leggTilSettUtgåttTasks(forespørselUuid);
 
         var msg = String.format("Setter forespørsel til utgått, orgnr: %s, stp: %s, saksnummer: %s, ytelse: %s",
