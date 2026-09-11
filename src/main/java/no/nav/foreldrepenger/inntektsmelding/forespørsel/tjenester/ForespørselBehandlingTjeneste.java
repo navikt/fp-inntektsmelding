@@ -154,8 +154,7 @@ public class ForespørselBehandlingTjeneste {
     }
 
     private void håndterEndretForespørsel(ForespørselDto eksisterendeForespørsel, LocalDate nyFørsteUttaksdato, LocalDate nyttSkjæringstidspunkt) {
-        var eksisterendeForespørselMåUtgås = false; // TODO skriv en passende logikk her
-
+        var eksisterendeForespørselMåUtgås = false; // TODO her må vi ble enige om en logikk for å utlede om vi bare skal oppdatere eller lage ny forespørsel
         if (eksisterendeForespørselMåUtgås) {
 
         } else {
