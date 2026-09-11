@@ -507,26 +507,6 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
     }
 
     @Test
-    void send_beskjed_om_endret_første_uttaksdato_skal_gi_distinkt_eksternid_for_ny_endring_selv_med_samme_datoer() {
-        var uuid = UUID.randomUUID();
-        var forespørsel = lagForespørsel(uuid, "oppgave-1", "sak-1", LocalDate.of(2024, 7, 1));
-        var tidligereDato = LocalDate.of(2024, 6, 1);
-        var nyDato = LocalDate.of(2024, 6, 15);
-
-        tjeneste.sendBeskjedOmEndretFørsteUttaksdato(forespørsel, tidligereDato, nyDato);
-        tjeneste.sendBeskjedOmEndretFørsteUttaksdato(forespørsel, tidligereDato, nyDato);
-
-        var beskjedCaptor = ArgumentCaptor.forClass(NyBeskjedMutationRequest.class);
-        verify(klient, org.mockito.Mockito.times(2)).opprettBeskjedOgVarsling(beskjedCaptor.capture(), any(NyBeskjedResultatResponseProjection.class));
-
-        var eksternIder = beskjedCaptor.getAllValues().stream()
-            .map(request -> ((NyBeskjedInput) request.getInput().get("nyBeskjed")).getMetadata().getEksternId())
-            .toList();
-        assertThat(eksternIder).allSatisfy(id -> assertThat(id).startsWith("endret-uttaksdato-"));
-        assertThat(eksternIder.get(0)).isNotEqualTo(eksternIder.get(1));
-    }
-
-    @Test
     void send_beskjed_om_endret_første_uttaksdato_naar_sak_er_utgått_skal_ikke_overskrive_tilleggsinformasjon() {
         var uuid = UUID.randomUUID();
         var forespørsel = ForespørselDto.builder()

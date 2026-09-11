@@ -122,7 +122,7 @@ public class MinSideArbeidsgiverTjeneste {
         var merkelapp = ForespørselTekster.finnMerkelapp(forespørsel.ytelseType());
         var beskjedTekst = ForespørselTekster.lagBeskjedOmEndretFørsteUttaksdato(tidligereFørsteUttaksdato, nyFørsteUttaksdato);
         var skjemaUri = URI.create(inntektsmeldingSkjemaLenke + "/" + forespørsel.uuid());
-        var eksternId = "endret-uttaksdato-" + nyFørsteUttaksdato;
+        var eksternId = "endret-uttaksdato-" + forespørsel.uuid() + nyFørsteUttaksdato;
 
         sendNyBeskjed(forespørsel.uuid().toString(),
             merkelapp,
