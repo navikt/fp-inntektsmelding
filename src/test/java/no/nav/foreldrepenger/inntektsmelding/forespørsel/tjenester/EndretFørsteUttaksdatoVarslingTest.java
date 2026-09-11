@@ -87,7 +87,7 @@ class EndretFørsteUttaksdatoVarslingTest {
         assertThat(captor.getValue().getTasks()).extracting(ProsessTaskGruppe.Entry::sekvens).containsExactly("1", "2");
         assertThat(tasks).allSatisfy(task -> {
             assertThat(task.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(FORESPØRSEL_UUID.toString());
-            assertThat(task.getProperties()).hasSize(1);
+            assertThat(task.getProperties()).hasSize(task.harCallId() ? 2 : 1);
         });
         verifyNoInteractions(minSideArbeidsgiverTjeneste, dialogportenTjeneste);
     }
@@ -157,7 +157,7 @@ class EndretFørsteUttaksdatoVarslingTest {
         var tasks = captor.getValue().getTasks();
         assertThat(tasks).hasSize(2).allSatisfy(entry -> {
             assertThat(entry.task().getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(FORESPØRSEL_UUID.toString());
-            assertThat(entry.task().getProperties()).hasSize(1);
+            assertThat(entry.task().getProperties()).hasSize(entry.task().harCallId() ? 2 : 1);
         });
     }
 
@@ -178,7 +178,7 @@ class EndretFørsteUttaksdatoVarslingTest {
     @Test
     void sak_task_skal_bruke_siste_historiske_dato_og_gjeldende_dato() {
         var gjeldende = forespørsel(NY_DATO.plusDays(1), DIALOG_UUID);
-        when(forespørselTjeneste.hentForespørsel(FORESPØRSEL_UUID)).thenReturn(Optional.of(gjeldende));
+        when(forespørselTjeneste.hentForespørsel(FORESPØRSEL_UUID)).thenReturn(gjeldende);
         var task = new OppdaterSakMedEndretFørsteUttaksdatoTask(forespørselTjeneste, minSideArbeidsgiverTjeneste);
         var data = taskData();
 
@@ -193,7 +193,7 @@ class EndretFørsteUttaksdatoVarslingTest {
     @Test
     void dialog_task_skal_bruke_siste_historiske_dato_og_gjeldende_dato() {
         var gjeldende = forespørsel(NY_DATO.plusDays(1), DIALOG_UUID);
-        when(forespørselTjeneste.hentForespørsel(FORESPØRSEL_UUID)).thenReturn(Optional.of(gjeldende));
+        when(forespørselTjeneste.hentForespørsel(FORESPØRSEL_UUID)).thenReturn(gjeldende);
         doAnswer(invocation -> {
             invocation.getArgument(0, Runnable.class).run();
             return null;
@@ -207,7 +207,7 @@ class EndretFørsteUttaksdatoVarslingTest {
 
     @Test
     void manglende_dialog_skal_feile_for_retry_også_i_dev() {
-        when(forespørselTjeneste.hentForespørsel(FORESPØRSEL_UUID)).thenReturn(Optional.of(forespørsel(NY_DATO, null)));
+        when(forespørselTjeneste.hentForespørsel(FORESPØRSEL_UUID)).thenReturn(forespørsel(NY_DATO, null));
         var task = new OppdaterDialogMedEndretFørsteUttaksdatoTask(forespørselTjeneste, dialogportenTjeneste);
 
         assertThatThrownBy(() -> task.doTask(taskData())).isInstanceOf(IllegalStateException.class)
@@ -217,12 +217,13 @@ class EndretFørsteUttaksdatoVarslingTest {
 
     @Test
     void manglende_forespørsel_skal_feile_i_begge_tasks() {
-        when(forespørselTjeneste.hentForespørsel(FORESPØRSEL_UUID)).thenReturn(Optional.empty());
+        var feil = new IllegalStateException("Finner ikke forespørsel " + FORESPØRSEL_UUID);
+        when(forespørselTjeneste.hentForespørsel(FORESPØRSEL_UUID)).thenThrow(feil);
         var sakTask = new OppdaterSakMedEndretFørsteUttaksdatoTask(forespørselTjeneste, minSideArbeidsgiverTjeneste);
         var dialogTask = new OppdaterDialogMedEndretFørsteUttaksdatoTask(forespørselTjeneste, dialogportenTjeneste);
 
-        assertThatThrownBy(() -> sakTask.doTask(taskData())).isInstanceOf(IllegalStateException.class);
-        assertThatThrownBy(() -> dialogTask.doTask(taskData())).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> sakTask.doTask(taskData())).isSameAs(feil);
+        assertThatThrownBy(() -> dialogTask.doTask(taskData())).isSameAs(feil);
         verifyNoInteractions(minSideArbeidsgiverTjeneste, dialogportenTjeneste);
     }
 
