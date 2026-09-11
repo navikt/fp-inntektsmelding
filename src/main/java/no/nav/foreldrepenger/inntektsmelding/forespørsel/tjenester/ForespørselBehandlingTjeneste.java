@@ -167,11 +167,11 @@ public class ForespørselBehandlingTjeneste {
                                               LocalDate nyttSkjæringstidspunkt) {
         forespørselTjeneste.oppdaterFørsteUttaksdatoOgSkjæringstidspunkt(eksisterendeForespørsel, nyFørsteUttaksdato, nyttSkjæringstidspunkt);
         if (!Objects.equals(eksisterendeForespørsel.førsteUttaksdato(), nyFørsteUttaksdato)) {
-            opprettTasksForEndretFørsteUttaksdato(eksisterendeForespørsel, nyFørsteUttaksdato);
+            opprettTasksForEndretFørsteUttaksdato(eksisterendeForespørsel);
         }
     }
 
-    private void opprettTasksForEndretFørsteUttaksdato(ForespørselDto forespørsel, LocalDate nyFørsteUttaksdato) {
+    private void opprettTasksForEndretFørsteUttaksdato(ForespørselDto forespørsel) {
         var taskGruppe = new ProsessTaskGruppe();
         taskGruppe.setProperty(FellesTaskProperties.KEY_FORESPOERSEL_UUID, forespørsel.uuid().toString());
         taskGruppe.addNesteSekvensiell(ProsessTaskData.forProsessTask(OppdaterSakMedEndretFørsteUttaksdatoTask.class));
