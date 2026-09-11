@@ -41,8 +41,7 @@ public class OppdaterDialogMedEndretFørsteUttaksdatoTask implements ProsessTask
     @Override
     public void doTask(ProsessTaskData prosessTaskData) {
         var forespørselUuid = UUID.fromString(prosessTaskData.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID));
-        var forespørsel = forespørselTjeneste.hentForespørsel(forespørselUuid)
-            .orElseThrow(() -> new IllegalStateException("Finner ikke forespørsel " + forespørselUuid + " ved oppdatering av første uttaksdato"));
+        var forespørsel = forespørselTjeneste.hentForespørsel(forespørselUuid);
         if (forespørsel.dialogportenUuid() == null) {
             throw new IllegalStateException("Mangler dialogportenUuid for forespørsel " + forespørselUuid);
         }
