@@ -124,9 +124,9 @@ public class ForespørselRest {
     }
 
     @POST
-    @Path("/opprett-flere")
+    @Path("/opprett-komplett")
     @Tilgangskontrollert
-    public Response opprettFlereForespørsler(@Valid @NotNull OpprettFlereForespørslerRequest request) {
+    public Response opprettForespørslerKomplettListe(@Valid @NotNull OpprettFlereForespørslerRequest request) {
         sjekkErSystemkall();
 
         LOG.info("Mottok komplett liste fra fpsak for forespørsler på {} med skjæringstidspunkt {} og første uttaksdato {}",

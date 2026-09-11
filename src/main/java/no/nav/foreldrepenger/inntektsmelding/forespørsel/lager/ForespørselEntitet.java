@@ -29,6 +29,8 @@ import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
 
+import static jakarta.persistence.CascadeType.PERSIST;
+
 @SequenceGenerator(name = "GLOBAL_PK_SEQ_GENERATOR", sequenceName = "SEQ_GLOBAL_PK")
 @Entity(name = "ForespørselEntitet")
 @Table(name = "FORESPOERSEL")
@@ -54,7 +56,7 @@ public class ForespørselEntitet {
     @Column(name = "orgnr", nullable = false, updatable = false)
     private String organisasjonsnummer;
 
-    @Column(name = "skjaeringstidspunkt", updatable = false)
+    @Column(name = "skjaeringstidspunkt")
     private LocalDate skjæringstidspunkt;
 
     @Column(name = "forste_uttaksdato", nullable = false)
@@ -86,6 +88,9 @@ public class ForespørselEntitet {
 
     @OneToMany(mappedBy = "forespørsel", fetch = FetchType.LAZY)
     private List<InntektsmeldingEntitet> inntektsmeldinger = new ArrayList<>();
+
+    @OneToMany(mappedBy = "forespørsel", fetch = FetchType.LAZY, cascade = PERSIST)
+    private List<ForespørselEndringHistorikkEntitet> endringer = new ArrayList<>();
 
     public ForespørselEntitet(String organisasjonsnummer,
                               LocalDate skjæringstidspunkt,
@@ -151,8 +156,20 @@ public class ForespørselEntitet {
         this.oppgaveId = oppgaveId;
     }
 
-    public void setFørsteUttaksdato(LocalDate førsteUttaksdato) {
+    void setFørsteUttaksdato(LocalDate førsteUttaksdato) {
         this.førsteUttaksdato = førsteUttaksdato;
+    }
+
+    ForespørselEndringHistorikkEntitet oppdaterFørsteUttaksdatoOgSkjæringstidspunkt(LocalDate nyFørsteUttaksdato, LocalDate nyttSkjæringstidspunkt) {
+        var endring = new ForespørselEndringHistorikkEntitet(this, this.skjæringstidspunkt, this.førsteUttaksdato);
+        endringer.add(endring);
+        this.førsteUttaksdato = nyFørsteUttaksdato;
+        this.skjæringstidspunkt = nyttSkjæringstidspunkt;
+        return endring;
+    }
+
+    public List<ForespørselEndringHistorikkEntitet> getEndringer() {
+        return endringer;
     }
 
     public String getOrganisasjonsnummer() {

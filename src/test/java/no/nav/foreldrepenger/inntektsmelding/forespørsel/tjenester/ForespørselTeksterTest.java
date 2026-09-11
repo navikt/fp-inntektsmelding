@@ -87,6 +87,20 @@ class ForespørselTeksterTest {
     }
 
     @Test
+    void skal_lage_beskjed_med_tidligere_og_ny_første_uttaksdato() {
+        var tekst = lagBeskjedOmEndretFørsteUttaksdato(LocalDate.of(2026, 9, 1), LocalDate.of(2026, 9, 8));
+
+        assertThat(tekst).isEqualTo("Første fraværsdag er endret fra 01.09.26 til 08.09.26.");
+    }
+
+    @Test
+    void skal_lage_beskjed_når_tidligere_første_uttaksdato_mangler() {
+        var tekst = lagBeskjedOmEndretFørsteUttaksdato(null, LocalDate.of(2026, 9, 8));
+
+        assertThat(tekst).isEqualTo("Første fraværsdag er endret til 08.09.26.");
+    }
+
+    @Test
     void mapYtelsestypeNavn_shouldMapCorrectly() {
         assertThat(ForespørselTekster.mapYtelsestypeNavn(Ytelsetype.FORELDREPENGER)).isEqualTo("foreldrepenger");
         assertThat(ForespørselTekster.mapYtelsestypeNavn(Ytelsetype.SVANGERSKAPSPENGER)).isEqualTo("svangerskapspenger");

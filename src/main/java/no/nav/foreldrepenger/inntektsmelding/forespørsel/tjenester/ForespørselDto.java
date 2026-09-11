@@ -2,6 +2,8 @@ package no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
@@ -24,7 +26,8 @@ public record ForespørselDto(Long loepenr,
                              LocalDateTime opprettetTidspunkt,
                              String arbeidsgiverNotifikasjonSakId,
                              String oppgaveId,
-                             UUID dialogportenUuid) {
+                             UUID dialogportenUuid,
+                             List<ForespørselEndringHistorikkDto> historiskeEndringer) {
 
     public static Builder builder() {
         return new Builder();
@@ -45,6 +48,7 @@ public record ForespørselDto(Long loepenr,
         private String arbeidsgiverNotifikasjonSakId;
         private String oppgaveId;
         private UUID dialogportenUuid;
+        private List<ForespørselEndringHistorikkDto> historiskeEndringer = new ArrayList<>();
 
         public Builder loepenr(Long loepenr) {
             this.loepenr = loepenr;
@@ -116,10 +120,15 @@ public record ForespørselDto(Long loepenr,
             return this;
         }
 
+        public Builder leggTilEndringer(List<ForespørselEndringHistorikkDto> endringer) {
+            this.historiskeEndringer = endringer;
+            return this;
+        }
+
         public ForespørselDto build() {
             return new ForespørselDto(loepenr, uuid, arbeidsgiver, aktørId, ytelseType, status, forespørselType,
                 skjæringstidspunkt, førsteUttaksdato, fagsystemSaksnummer, opprettetTidspunkt,
-                arbeidsgiverNotifikasjonSakId, oppgaveId, dialogportenUuid);
+                arbeidsgiverNotifikasjonSakId, oppgaveId, dialogportenUuid, historiskeEndringer);
         }
     }
 }
