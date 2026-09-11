@@ -14,6 +14,7 @@ import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 public class DialogportenRequestMapper {
     private static final String ALTINN_RESSURS_PREFIX = "urn:altinn:resource:";
     private static final String SERVICE_OWNER = "ServiceOwner";
+    private static final String PURRING_TITTEL = "Vi har ennå ikke mottatt inntektsmelding";
 
     private DialogportenRequestMapper(){
         //statisk klasse
@@ -159,9 +160,7 @@ public class DialogportenRequestMapper {
     }
 
     public static DialogportenPatchRequest inntektsmeldingPurringMelding(String purringTekst) {
-        var contentTransmission = lagContentValue(purringTekst);
-
-        var transmissionContent = new DialogportenRequest.Content(contentTransmission, null, null);
+        var transmissionContent = new DialogportenRequest.Content(lagContentValue(PURRING_TITTEL), lagContentValue(purringTekst), null);
 
         return new DialogportenPatchRequest(DialogportenPatchRequest.OP_ADD,
             DialogportenPatchRequest.PATH_TRANSMISSIONS,
