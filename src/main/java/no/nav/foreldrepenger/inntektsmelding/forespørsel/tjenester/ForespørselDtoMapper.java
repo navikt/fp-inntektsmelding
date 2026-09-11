@@ -15,6 +15,12 @@ public class ForespørselDtoMapper {
         if (entitet == null) {
             return null;
         }
+        var endringer = entitet.getEndringer()
+            .stream()
+            .map(e -> new ForespørselEndringHistorikkDto(e.getSkjæringstidspunkt().orElse(null),
+                e.getFørsteUttaksdato().orElse(null),
+                e.getOpprettetTidspunkt()))
+            .toList();
         return ForespørselDto.builder()
             .loepenr(entitet.getId())
             .uuid(entitet.getUuid())
@@ -30,6 +36,7 @@ public class ForespørselDtoMapper {
             .arbeidsgiverNotifikasjonSakId(entitet.getArbeidsgiverNotifikasjonSakId())
             .oppgaveId(entitet.getOppgaveId().orElse(null))
             .dialogportenUuid(entitet.getDialogportenUuid().orElse(null))
+            .leggTilEndringer(endringer)
             .build();
     }
 }

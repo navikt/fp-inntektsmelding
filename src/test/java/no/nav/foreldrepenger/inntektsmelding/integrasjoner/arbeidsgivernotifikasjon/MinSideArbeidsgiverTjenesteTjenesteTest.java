@@ -2,9 +2,11 @@ package no.nav.foreldrepenger.inntektsmelding.integrasjoner.arbeidsgivernotifika
 
 import static no.nav.foreldrepenger.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon.MinSideArbeidsgiverTjeneste.ALTINN_INNTEKTSMELDING_RESSURS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.net.URI;
@@ -471,5 +473,89 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
         assertThat(nyBeskjed.getNotifikasjon().getTekst()).isEqualTo(ForespørselTekster.lagBeskjedOmOppdatertInntektsmelding());
         assertThat(nyBeskjed.getNotifikasjon().getLenke())
             .isEqualTo(INNTEKTSMELDING_SKJEMA_LENKE + "/server/api" + PdfDokumentRest.INNTEKTSMELDING_FULL_PATH + "/" + imUuid);
+    }
+
+    @Test
+    void send_beskjed_om_endret_første_uttaksdato_skal_sende_riktig_tekst_lenke_og_oppdatere_tilleggsinformasjon_med_gjeldende_dato() {
+        var uuid = UUID.randomUUID();
+        var tidligereDato = LocalDate.of(2024, 6, 1);
+        var nyDato = LocalDate.of(2024, 6, 15);
+        var gjeldendeDato = LocalDate.of(2024, 7, 1);
+        var forespørsel = lagForespørsel(uuid, "oppgave-1", "sak-1", gjeldendeDato);
+
+        tjeneste.sendBeskjedOmEndretFørsteUttaksdato(forespørsel, tidligereDato, nyDato);
+
+        var beskjedCaptor = ArgumentCaptor.forClass(NyBeskjedMutationRequest.class);
+        verify(klient).opprettBeskjedOgVarsling(beskjedCaptor.capture(), any(NyBeskjedResultatResponseProjection.class));
+        var nyBeskjed = (NyBeskjedInput) beskjedCaptor.getValue().getInput().get("nyBeskjed");
+
+        assertThat(nyBeskjed.getNotifikasjon().getTekst()).isEqualTo(ForespørselTekster.lagBeskjedOmEndretFørsteUttaksdato(tidligereDato, nyDato));
+        assertThat(nyBeskjed.getNotifikasjon().getLenke()).isEqualTo(INNTEKTSMELDING_SKJEMA_LENKE + "/" + uuid);
+        assertThat(nyBeskjed.getMetadata().getGrupperingsid()).isEqualTo(uuid.toString());
+        assertThat(nyBeskjed.getMetadata().getVirksomhetsnummer()).isEqualTo(ORGNR);
+        assertThat(nyBeskjed.getMetadata().getEksternId()).startsWith("endret-uttaksdato-");
+        assertThat(nyBeskjed.getEksterneVarsler()).isEmpty();
+
+        // Metadata følger gjeldende forespørsel, mens meldingen beskriver den kølagte endringen.
+        var tilleggsinfoCaptor = ArgumentCaptor.forClass(TilleggsinformasjonSakMutationRequest.class);
+        verify(klient).oppdaterSakTilleggsinformasjon(tilleggsinfoCaptor.capture(), any(TilleggsinformasjonSakResultatResponseProjection.class));
+        assertThat(tilleggsinfoCaptor.getValue().getInput())
+            .containsEntry("id", "sak-1")
+            .containsEntry("tilleggsinformasjon", ForespørselTekster.lagTilleggsInformasjonOrdinær(gjeldendeDato));
+
+        verifyNoInteractions(personTjeneste);
+    }
+
+    @Test
+    void send_beskjed_om_endret_første_uttaksdato_skal_gi_distinkt_eksternid_for_ny_endring_selv_med_samme_datoer() {
+        var uuid = UUID.randomUUID();
+        var forespørsel = lagForespørsel(uuid, "oppgave-1", "sak-1", LocalDate.of(2024, 7, 1));
+        var tidligereDato = LocalDate.of(2024, 6, 1);
+        var nyDato = LocalDate.of(2024, 6, 15);
+
+        tjeneste.sendBeskjedOmEndretFørsteUttaksdato(forespørsel, tidligereDato, nyDato);
+        tjeneste.sendBeskjedOmEndretFørsteUttaksdato(forespørsel, tidligereDato, nyDato);
+
+        var beskjedCaptor = ArgumentCaptor.forClass(NyBeskjedMutationRequest.class);
+        verify(klient, org.mockito.Mockito.times(2)).opprettBeskjedOgVarsling(beskjedCaptor.capture(), any(NyBeskjedResultatResponseProjection.class));
+
+        var eksternIder = beskjedCaptor.getAllValues().stream()
+            .map(request -> ((NyBeskjedInput) request.getInput().get("nyBeskjed")).getMetadata().getEksternId())
+            .toList();
+        assertThat(eksternIder).allSatisfy(id -> assertThat(id).startsWith("endret-uttaksdato-"));
+        assertThat(eksternIder.get(0)).isNotEqualTo(eksternIder.get(1));
+    }
+
+    @Test
+    void send_beskjed_om_endret_første_uttaksdato_naar_sak_er_utgått_skal_ikke_overskrive_tilleggsinformasjon() {
+        var uuid = UUID.randomUUID();
+        var forespørsel = ForespørselDto.builder()
+            .uuid(uuid)
+            .arbeidsgiver(Arbeidsgiver.fra(ORGNR))
+            .aktørId(new AktørId(AKTØR_ID))
+            .ytelseType(Ytelsetype.FORELDREPENGER)
+            .status(ForespørselStatus.UTGÅTT)
+            .forespørselType(ForespørselType.BESTILT_AV_FAGSYSTEM)
+            .førsteUttaksdato(LocalDate.of(2024, 7, 1))
+            .arbeidsgiverNotifikasjonSakId("sak-1")
+            .oppgaveId(null)
+            .build();
+
+        tjeneste.sendBeskjedOmEndretFørsteUttaksdato(forespørsel, LocalDate.of(2024, 6, 1), LocalDate.of(2024, 6, 15));
+
+        verify(klient).opprettBeskjedOgVarsling(any(), any(NyBeskjedResultatResponseProjection.class));
+        verify(klient, never()).oppdaterSakTilleggsinformasjon(any(), any());
+    }
+
+    @Test
+    void send_beskjed_om_endret_første_uttaksdato_uten_sak_id_skal_kaste_illegalstateexception_med_forespørsel_uuid() {
+        var uuid = UUID.randomUUID();
+        var forespørsel = lagForespørsel(uuid, "oppgave-1", null, LocalDate.of(2024, 7, 1));
+
+        assertThatThrownBy(() -> tjeneste.sendBeskjedOmEndretFørsteUttaksdato(forespørsel, LocalDate.of(2024, 6, 1), LocalDate.of(2024, 6, 15)))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("Mangler arbeidsgiverNotifikasjonSakId for forespørsel " + uuid);
+
+        verifyNoInteractions(klient);
     }
 }

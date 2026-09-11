@@ -118,6 +118,11 @@ public class DialogportenKlient {
         sendPatchRequest(dialogUuid, patchRequestUtgått);
     }
 
+    public void oppdaterDialogMedEndretFørsteUttaksdato(UUID dialogUuid, String beskjedTekst) {
+        var patchRequest = DialogportenRequestMapper.opprettEndretFørsteUttaksdatoPatchRequest(beskjedTekst);
+        sendPatchRequest(dialogUuid, List.of(patchRequest));
+    }
+
     private void sendPatchRequest(UUID dialogUuid, List<DialogportenPatchRequest> oppdateringer) {
         var target = URI.create(restConfig.endpoint().toString() + "/dialogporten/api/v1/serviceowner/dialogs/" + dialogUuid);
 

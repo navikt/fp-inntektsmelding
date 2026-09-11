@@ -2,6 +2,7 @@ package no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -17,7 +18,9 @@ import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.FerdigstillDialog
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.FerdigstillSakTask;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.FellesTaskProperties;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OppdaterDialogMedEndretInntektsmeldingTask;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OppdaterDialogMedEndretFørsteUttaksdatoTask;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OppdaterSakMedEndretInntektsmeldingTask;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OppdaterSakMedEndretFørsteUttaksdatoTask;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettDialogTask;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettOppgaveTask;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.OpprettSakTask;
@@ -78,14 +81,14 @@ public class ForespørselBehandlingTjeneste {
                                                              Arbeidsgiver arbeidsgiver,
                                                              Saksnummer fagsakSaksnummer,
                                                              LocalDate førsteUttaksdato) {
-        var finnesForespørsel = forespørselTjeneste.finnGjeldendeForespørsel(skjæringstidspunkt,
+        var eksaktForespørsel = forespørselTjeneste.finnIkkeUtgåttForespørsel(skjæringstidspunkt,
             ytelsetype,
             aktørId,
             arbeidsgiver,
             fagsakSaksnummer,
             førsteUttaksdato);
 
-        if (finnesForespørsel.isPresent()) {
+        if (eksaktForespørsel.isPresent()) {
             LOG.info("Finnes allerede forespørsel for saksnummer: {} med orgnummer: {} med skjæringstidspunkt: {} og første uttaksdato: {}",
                 fagsakSaksnummer,
                 arbeidsgiver,
@@ -112,13 +115,77 @@ public class ForespørselBehandlingTjeneste {
         settForespørslerSomIkkeLengerEtterspørresTilUtgått(fagsakSaksnummer, aktørId, ytelsetype, alleOrgnrSomSkalHaForespørsel);
 
         return arbeidsgivere.stream()
-            .map(arbeidsgiver -> håndterInnkommendeForespørsel(skjæringstidspunkt,
+            .map(arbeidsgiver -> håndterInnkommendeForespørselNy(skjæringstidspunkt,
                 ytelsetype,
                 aktørId,
                 arbeidsgiver,
                 fagsakSaksnummer,
                 førsteUttaksdato))
             .toList();
+    }
+
+    public ForespørselResultat håndterInnkommendeForespørselNy(LocalDate skjæringstidspunkt,
+                                                             Ytelsetype ytelsetype,
+                                                             AktørId aktørId,
+                                                             Arbeidsgiver arbeidsgiver,
+                                                             Saksnummer fagsakSaksnummer,
+                                                             LocalDate førsteUttaksdato) {
+        var eksisterendeForespørselHosArbeidsgiverOpt = forespørselTjeneste.finnArbeidsgiversÅpneForespørslerPåSak(fagsakSaksnummer, arbeidsgiver);
+
+        if (eksisterendeForespørselHosArbeidsgiverOpt.isEmpty()) {
+            opprettForespørsel(ytelsetype, aktørId, fagsakSaksnummer, arbeidsgiver, skjæringstidspunkt, førsteUttaksdato);
+            return ForespørselResultat.FORESPØRSEL_OPPRETTET;
+        }
+
+        var eksisterendeForespørsel = eksisterendeForespørselHosArbeidsgiverOpt.get();
+
+        validerYtelseOgAktør(ytelsetype, aktørId, eksisterendeForespørsel);
+
+        if (Objects.equals(eksisterendeForespørsel.skjæringstidspunkt(), skjæringstidspunkt)
+            && Objects.equals(eksisterendeForespørsel.førsteUttaksdato(), førsteUttaksdato)) {
+            return ForespørselResultat.IKKE_OPPRETTET_FINNES_ALLEREDE;
+        }
+
+        // Forespørsel finnes, men skjæringstidspunkt eller første uttaksdato eller begge er endret.
+        // Må enten endre eksisterende forespørsel, eller utgå den gamle og opprette ny
+        håndterEndretForespørsel(eksisterendeForespørsel, førsteUttaksdato, skjæringstidspunkt);
+        return ForespørselResultat.IKKE_OPPRETTET_FINNES_ALLEREDE;
+
+    }
+
+    private void håndterEndretForespørsel(ForespørselDto eksisterendeForespørsel, LocalDate nyFørsteUttaksdato, LocalDate nyttSkjæringstidspunkt) {
+        var eksisterendeForespørselMåUtgås = false; // TODO skriv en passende logikk her
+
+        if (eksisterendeForespørselMåUtgås) {
+
+        } else {
+            oppdaterDatoerForForespørsel(eksisterendeForespørsel, nyFørsteUttaksdato, nyttSkjæringstidspunkt);
+        }
+    }
+
+    private void oppdaterDatoerForForespørsel(ForespørselDto eksisterendeForespørsel,
+                                              LocalDate nyFørsteUttaksdato,
+                                              LocalDate nyttSkjæringstidspunkt) {
+        forespørselTjeneste.oppdaterFørsteUttaksdatoOgSkjæringstidspunkt(eksisterendeForespørsel, nyFørsteUttaksdato, nyttSkjæringstidspunkt);
+        if (!Objects.equals(eksisterendeForespørsel.førsteUttaksdato(), nyFørsteUttaksdato)) {
+            opprettTasksForEndretFørsteUttaksdato(eksisterendeForespørsel, nyFørsteUttaksdato);
+        }
+    }
+
+    private void opprettTasksForEndretFørsteUttaksdato(ForespørselDto forespørsel, LocalDate nyFørsteUttaksdato) {
+        var taskGruppe = new ProsessTaskGruppe();
+        taskGruppe.setProperty(FellesTaskProperties.KEY_FORESPOERSEL_UUID, forespørsel.uuid().toString());
+        taskGruppe.addNesteSekvensiell(ProsessTaskData.forProsessTask(OppdaterSakMedEndretFørsteUttaksdatoTask.class));
+        taskGruppe.addNesteSekvensiell(ProsessTaskData.forProsessTask(OppdaterDialogMedEndretFørsteUttaksdatoTask.class));
+        prosessTaskTjeneste.lagre(taskGruppe);
+    }
+
+    private static void validerYtelseOgAktør(Ytelsetype ytelsetype, AktørId aktørId, ForespørselDto eksisterendeForespørsel) {
+        if (!eksisterendeForespørsel.ytelseType().equals(ytelsetype) || !eksisterendeForespørsel.aktørId().equals(aktørId)) {
+            throw new IllegalStateException("Eksisterende forespørsel har ikke matchende ytelseType og aktørId. forventet: ytelseType="
+                + ytelsetype + ", aktørId=" + aktørId + ", men var: ytelseType=" + eksisterendeForespørsel.ytelseType()
+                + ", aktørId=" + eksisterendeForespørsel.aktørId());
+        }
     }
 
     private void settForespørslerSomIkkeLengerEtterspørresTilUtgått(Saksnummer fagsakSaksnummer,
