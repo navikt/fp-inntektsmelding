@@ -12,10 +12,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 
-@SequenceGenerator(name = "GLOBAL_PK_SEQ_GENERATOR", sequenceName = "SEQ_GLOBAL_PK")
 @Entity(name = "ForespørselEndringHistorikkEntitet")
 @Table(name = "FORESPOERSEL_ENDRING_HISTORIKK")
 public class ForespørselEndringHistorikkEntitet {
