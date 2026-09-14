@@ -88,6 +88,15 @@ public class ForespørselTekster {
         return BESKJED_OM_OPPDATERT_INNTEKTSMELDING;
     }
 
+    public static String lagBeskjedOmEndretFørsteUttaksdato(LocalDate tidligereFørsteUttaksdato, LocalDate nyFørsteUttaksdato) {
+        var nyDato = nyFørsteUttaksdato.format(DATE_TIME_FORMATTER);
+        if (tidligereFørsteUttaksdato == null) {
+            return "Første fraværsdag er endret til %s.".formatted(nyDato);
+        }
+        return "Første fraværsdag er endret fra %s til %s.".formatted(
+            tidligereFørsteUttaksdato.format(DATE_TIME_FORMATTER), nyDato);
+    }
+
     public static String lagVarselFraSaksbehandlerTekst(Ytelsetype ytelsetype, Organisasjon org) {
         return String.format(VARSEL_FRA_SAKSBEHANDLER_TEKST, org.navn().toUpperCase(), org.orgnr(), mapYtelsestypeNavn(ytelsetype));
     }

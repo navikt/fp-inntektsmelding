@@ -11,6 +11,7 @@
     <entity class="no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.KontaktpersonEntitet" />
     <entity class="no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.LpsSystemInfoEntitet" />
     <entity class="no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet" />
+    <entity class="no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEndringHistorikkEntitet" />
 
 
 </entity-mappings>

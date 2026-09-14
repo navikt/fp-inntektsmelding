@@ -20,6 +20,7 @@ import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.kvittering.PdfDokumen
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.altinn.AltinnRessurser;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.organisasjon.OrganisasjonTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 import no.nav.foreldrepenger.konfig.Environment;
 import no.nav.foreldrepenger.konfig.KonfigVerdi;
 
@@ -108,6 +109,33 @@ public class MinSideArbeidsgiverTjeneste {
                 URI.create(url),
                 imUuid);
         });
+    }
+
+    public void sendBeskjedOmEndretFørsteUttaksdato(ForespørselDto forespørsel,
+                                                    LocalDate tidligereFørsteUttaksdato,
+                                                    LocalDate nyFørsteUttaksdato) {
+        var sakId = forespørsel.arbeidsgiverNotifikasjonSakId();
+        if (sakId == null) {
+            throw new IllegalStateException("Mangler arbeidsgiverNotifikasjonSakId for forespørsel " + forespørsel.uuid());
+        }
+
+        var merkelapp = ForespørselTekster.finnMerkelapp(forespørsel.ytelseType());
+        var beskjedTekst = ForespørselTekster.lagBeskjedOmEndretFørsteUttaksdato(tidligereFørsteUttaksdato, nyFørsteUttaksdato);
+        var skjemaUri = URI.create(inntektsmeldingSkjemaLenke + "/" + forespørsel.uuid());
+        var eksternId = "endret-uttaksdato-" + forespørsel.uuid() + nyFørsteUttaksdato;
+
+        sendNyBeskjed(forespørsel.uuid().toString(),
+            merkelapp,
+            forespørsel.arbeidsgiver().orgnr(),
+            beskjedTekst,
+            Optional.empty(),
+            skjemaUri,
+            eksternId);
+
+        // Bevar forklaringen om at inntektsmeldingen ikke lenger trengs.
+        if (!ForespørselStatus.UTGÅTT.equals(forespørsel.status())) {
+            oppdaterSakTilleggsinformasjon(sakId, ForespørselTekster.lagTilleggsInformasjonOrdinær(forespørsel.førsteUttaksdato()));
+        }
     }
 
     public void settSakTilUtgått(ForespørselDto forespørsel) {

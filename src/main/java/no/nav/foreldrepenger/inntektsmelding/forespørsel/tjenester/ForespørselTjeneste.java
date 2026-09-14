@@ -86,13 +86,13 @@ public class ForespørselTjeneste {
         forespørselRepository.settForespørselTilUtgått(forespørselUuid);
     }
 
-    public Optional<ForespørselDto> finnGjeldendeForespørsel(LocalDate skjæringstidspunkt,
-                                                             Ytelsetype ytelseType,
-                                                             AktørId brukerAktørId,
-                                                             Arbeidsgiver arbeidsgiver,
-                                                             Saksnummer fagsakSaksnummer,
-                                                             LocalDate førsteUttaksdato) {
-        return forespørselRepository.finnGjeldendeForespørsel(mapTilEntitet(brukerAktørId), ytelseType,
+    public Optional<ForespørselDto> finnIkkeUtgåttForespørsel(LocalDate skjæringstidspunkt,
+                                                              Ytelsetype ytelseType,
+                                                              AktørId brukerAktørId,
+                                                              Arbeidsgiver arbeidsgiver,
+                                                              Saksnummer fagsakSaksnummer,
+                                                              LocalDate førsteUttaksdato) {
+        return forespørselRepository.finnIkkeUtgåttForespørsel(mapTilEntitet(brukerAktørId), ytelseType,
                 skjæringstidspunkt, arbeidsgiver.orgnr(), fagsakSaksnummer.saksnummer(), førsteUttaksdato)
             .map(ForespørselDtoMapper::mapFraEntitet);
     }
@@ -103,6 +103,10 @@ public class ForespørselTjeneste {
 
     public Optional<ForespørselDto> finnÅpenForespørslelForFagsak(Saksnummer fagsakSaksnummer, Arbeidsgiver arbeidsgiver) {
         return forespørselRepository.finnÅpenForespørsel(fagsakSaksnummer.saksnummer(), arbeidsgiver.orgnr()).map(ForespørselDtoMapper::mapFraEntitet);
+    }
+
+    public Optional<ForespørselDto> finnArbeidsgiversÅpneForespørslerPåSak(Saksnummer fagsakSaksnummer, Arbeidsgiver arbeidsgiver) {
+        return forespørselRepository.finnArbeidsgiversÅpneForespørselPåSak(fagsakSaksnummer.saksnummer(), arbeidsgiver.orgnr()).map(ForespørselDtoMapper::mapFraEntitet);
     }
 
     public Optional<ForespørselDto> hentForespørselOptional(UUID forespørselUuid) {
@@ -145,4 +149,10 @@ public class ForespørselTjeneste {
         return Optional.ofNullable(aktørId).map(aktør -> new AktørIdEntitet(aktør.getAktørId())).orElse(null);
     }
 
+    public void oppdaterFørsteUttaksdatoOgSkjæringstidspunkt(ForespørselDto eksisterendeForespørsel,
+                                                             LocalDate nyFørsteUttaksdato,
+                                                             LocalDate nyttSkjæringstidspunkt) {
+        forespørselRepository.oppdaterUttaksdatoOgSkjæringstidspunkt(eksisterendeForespørsel.uuid(),
+            nyFørsteUttaksdato, nyttSkjæringstidspunkt);
+    }
 }

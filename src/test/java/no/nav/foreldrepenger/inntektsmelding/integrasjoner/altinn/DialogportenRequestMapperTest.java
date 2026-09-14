@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -119,6 +120,23 @@ class DialogportenRequestMapperTest {
         assertThat(patchValue.toString()).contains("Completed");
         assertThat(patchValue.toString()).contains("urn:altinn:organization:identifier-no:999999999");
         assertThat(patchValue.toString()).contains("Utført i Altinn eller i bedriftens lønns- og personalsystem. Ingen kvittering");
+    }
+
+    @Test
+    void opprettEndretFørsteUttaksdatoPatchRequest() {
+        var beskjedTekst = "Første fraværsdag er endret fra 01.09.26 til 08.09.26.";
+        var patch = DialogportenRequestMapper.opprettEndretFørsteUttaksdatoPatchRequest(beskjedTekst);
+
+        assertThat(patch.op()).isEqualTo(DialogportenPatchRequest.OP_ADD);
+        assertThat(patch.path()).isEqualTo(DialogportenPatchRequest.PATH_TRANSMISSIONS);
+        var tittel = new DialogportenRequest.ContentValue(
+            List.of(new DialogportenRequest.ContentValueItem(beskjedTekst, DialogportenRequest.NB)), DialogportenRequest.TEXT_PLAIN);
+        assertThat(patch.value()).isEqualTo(List.of(
+            new DialogportenRequest.Transmission(DialogportenRequest.TransmissionType.Information,
+                DialogportenRequest.TransmissionExtendedType.INNTEKTSMELDING,
+                new DialogportenRequest.Sender("ServiceOwner", null),
+                new DialogportenRequest.Content(tittel, null, null),
+                List.of())));
     }
 
     @Test

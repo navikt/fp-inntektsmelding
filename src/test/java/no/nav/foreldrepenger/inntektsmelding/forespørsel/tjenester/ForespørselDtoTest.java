@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -89,13 +90,14 @@ class ForespørselDtoTest {
     void skal_opprette_med_konstruktor() {
         var dto = new ForespørselDto(null, UUID_1, ARBEIDSGIVER, AKTØR_ID, Ytelsetype.SVANGERSKAPSPENGER,
             ForespørselStatus.FERDIG, ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT,
-            STP, FØRSTE_UTTAKSDATO, SAKSNUMMER, OPPRETTET, "sak-2", "oppgave-2", null);
+            STP, FØRSTE_UTTAKSDATO, SAKSNUMMER, OPPRETTET, "sak-2", "oppgave-2", null, List.of());
 
         assertThat(dto.uuid()).isEqualTo(UUID_1);
         assertThat(dto.ytelseType()).isEqualTo(Ytelsetype.SVANGERSKAPSPENGER);
         assertThat(dto.status()).isEqualTo(ForespørselStatus.FERDIG);
         assertThat(dto.forespørselType()).isEqualTo(ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT);
         assertThat(dto.dialogportenUuid()).isNull();
+        assertThat(dto.historiskeEndringer()).isEmpty();
     }
 
     @Test
@@ -186,4 +188,3 @@ class ForespørselDtoTest {
             .contains("UNDER_BEHANDLING");
     }
 }
-
