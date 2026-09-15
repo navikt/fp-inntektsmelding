@@ -8,4 +8,12 @@ import jakarta.validation.constraints.NotNull;
  * flere språkvarianter samtidig (konsumenten velger riktig variant basert på brukerens språkinnstilling).
  */
 public record FlerspråkligTekst(@NotNull String nb, @NotNull String nn, @NotNull String en) {
+
+    /**
+     * Formaterer nb/nn/en-variantene samtidig med samme argumenter (jf. {@link String#formatted}).
+     * Brukes for tekstmaler der de samme innsatte verdiene (navn, dato, tall) gjelder uavhengig av språk.
+     */
+    public FlerspråkligTekst formatted(Object... args) {
+        return new FlerspråkligTekst(nb.formatted(args), nn.formatted(args), en.formatted(args));
+    }
 }
