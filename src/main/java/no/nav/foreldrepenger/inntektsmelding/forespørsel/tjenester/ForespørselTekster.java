@@ -13,16 +13,7 @@ import no.nav.foreldrepenger.inntektsmelding.integrasjoner.arbeidsgivernotifikas
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.organisasjon.Organisasjon;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 
-/**
- * Tekster brukes i to ulike kanaler med ulike språkbehov:
- * <ul>
- *     <li><b>Min side – arbeidsgiver</b> (arbeidsgivernotifikasjon): kontrakten støtter kun én tekst per felt,
- *     så disse tekstene er bokmål-only.</li>
- *     <li><b>Dialogporten</b>: kontrakten støtter flere språkvarianter per felt, så disse tekstene finnes som
- *     {@link FlerspråkligTekst} (bokmål/nynorsk/engelsk).</li>
- * </ul>
- * Metoder og konstanter er derfor gruppert etter kanal under, ikke etter innhold.
- */
+
 public class ForespørselTekster {
     protected static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yy");
 
