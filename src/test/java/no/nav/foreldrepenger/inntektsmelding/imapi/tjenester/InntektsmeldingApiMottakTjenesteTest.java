@@ -45,7 +45,7 @@ import no.nav.vedtak.konfig.Tid;
 /**
  * Tester REST-kontraktshåndteringen (duplikat-sjekk, feilkoder, statusmapping) i imapi-flyten.
  * Selve A-inntekt-kontroll-logikken (nedetid/avvik/godkjent) er dekket av
- * {@link no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektMotAInntektKontrollTjenesteTest},
+ * {@link no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektKontrollTjeneste},
  * og mockes her via {@link InntektKontrollResultat}.
  */
 @ExtendWith(MockitoExtension.class)
