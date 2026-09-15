@@ -150,7 +150,7 @@ public class DialogportenRequestMapper {
         //attachement med kvittering
         var attachements = inntektsmeldingUuid.map(imUuid -> {
             var innsendingTekst = førsteInnsending
-                                  ? new FlerspråkligTekst("Innsendt inntektsmelding", "Innsendt inntektsmelding", "Submitted income statement")
+                                  ? new FlerspråkligTekst("Innsendt inntektsmelding", "Innsend inntektsmelding", "Submitted income statement")
                                   : new FlerspråkligTekst("Oppdatert inntektsmelding", "Oppdatert inntektsmelding", "Updated income statement");
             var contentAttachement = lagContentValueItems(innsendingTekst);
             String urlPdf = new StringBuilder(inntektsmeldingSkjemaLenke)
