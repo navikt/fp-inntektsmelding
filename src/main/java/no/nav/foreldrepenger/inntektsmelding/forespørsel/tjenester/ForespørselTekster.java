@@ -104,12 +104,12 @@ public class ForespørselTekster {
     // ---------------------------------------------------------------------
 
     private static final FlerspråkligTekst SAKSTITTEL_MAL = new FlerspråkligTekst(
-        "Inntektsmelding for %s (%s)",
-        "Inntektsmelding for %s (%s)",
+        SAKSTITTEL,
+        SAKSTITTEL,
         "Income statement for %s (%s)");
 
     private static final FlerspråkligTekst BESKJED_FRA_SAKSBEHANDLER_MAL = new FlerspråkligTekst(
-        "Vi har ennå ikke mottatt inntektsmelding for %s. For at vi skal kunne behandle søknaden om %s, må inntektsmeldingen sendes inn så raskt som mulig.",
+        BESKJED_FRA_SAKSBEHANDLER_TEKST,
         "Vi har enno ikkje motteke inntektsmelding for %s. For at vi skal kunne behandle søknaden om %s, må inntektsmeldinga sendast inn så raskt som mogleg.",
         "We have not yet received the income statement for %s. To process the application for %s, the income statement must be submitted as soon as possible.");
 
