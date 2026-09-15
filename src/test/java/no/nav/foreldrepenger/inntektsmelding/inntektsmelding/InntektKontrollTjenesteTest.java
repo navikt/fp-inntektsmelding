@@ -170,7 +170,7 @@ class InntektKontrollTjenesteTest {
         var inntektsmeldingId = 123L;
         var imUuid = UUID.randomUUID();
         var forespørselDto = lagForespørselDtoMedSkjæringstidspunkt(UUID.randomUUID(), ForespørselStatus.UNDER_BEHANDLING);
-        var inntektsmelding = lagInntektsmeldingDtoMedForespørsel(imUuid, forespørselDto, false);
+        var inntektsmelding = lagInntektsmeldingDtoMedForespørsel(imUuid, forespørselDto, true);
         var inntektsopplysninger = new Inntektsopplysninger(BigDecimal.ZERO, ORGNR, List.of(
             new Inntektsopplysninger.InntektMåned(BigDecimal.ZERO, YearMonth.of(2026, Month.JANUARY), MånedslønnStatus.NEDETID_AINNTEKT)));
 
