@@ -153,7 +153,8 @@ public class InntektsmeldingMapper {
             refusjoner,
             bortfalteNaturalytelser,
             endringsårsaker,
-            forespørselType
+            forespørselType,
+            KodeverkMapper.mapInntektsmeldingStatus(dto.getStatus())
             );
     }
 
