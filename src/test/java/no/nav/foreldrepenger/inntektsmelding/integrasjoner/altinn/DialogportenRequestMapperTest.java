@@ -24,13 +24,14 @@ class DialogportenRequestMapperTest {
     private final String FORESPORSEL_API_LENKE = "https://foreldrepenger-inntektsmelding-api.ekstern.nav.no/foresporsel-ekstern/hent";
     private final String DOKUMENTASJONS_LENKE = "https://foreldrepenger-inntektsmelding-api.ekstern.dev.nav.no/swagger";
     private final LocalDate FØRSTE_UTTAKSDATO = LocalDate.now().plusWeeks(4);
+    private static final FlerspråkligTekst SAKSTITTEL = new FlerspråkligTekst("Sakstittel", "Sakstittel", "Sakstittel");
 
     @Test
     void opprettDialogRequest() {
         var party = "urn:altinn:organization:identifier-no:999999999";
 
         var opprettRequest = DialogportenRequestMapper.opprettDialogRequest(ARBEIDSGIVER,
-            FORESPØRSEL_UUID, "Sakstittel", FØRSTE_UTTAKSDATO, Ytelsetype.FORELDREPENGER,
+            FORESPØRSEL_UUID, SAKSTITTEL, FØRSTE_UTTAKSDATO, Ytelsetype.FORELDREPENGER,
             INNTEKTSMELDING_SKJEMA_LENKE, INNTEKTSMELDING_API_LENKE, FORESPORSEL_API_LENKE, DOKUMENTASJONS_LENKE);
 
         var transmissionContent = opprettRequest.transmissions().getFirst().content().title().value().getFirst().value();
@@ -58,7 +59,7 @@ class DialogportenRequestMapperTest {
 
     @Test
     void opprettFerdigstillPatchRequest() {
-        var ferdigstillPatchRequest = DialogportenRequestMapper.opprettFerdigstillPatchRequest("Sakstittel",
+        var ferdigstillPatchRequest = DialogportenRequestMapper.opprettFerdigstillPatchRequest(SAKSTITTEL,
             ARBEIDSGIVER,
             Ytelsetype.FORELDREPENGER,
             FØRSTE_UTTAKSDATO,
@@ -92,7 +93,7 @@ class DialogportenRequestMapperTest {
 
     @Test
     void opprettFerdigstillPatchRequestLukketEksternt() {
-        var ferdigstillPatchRequest = DialogportenRequestMapper.opprettFerdigstillPatchRequest("Sakstittel",
+        var ferdigstillPatchRequest = DialogportenRequestMapper.opprettFerdigstillPatchRequest(SAKSTITTEL,
             ARBEIDSGIVER,
             Ytelsetype.FORELDREPENGER,
             FØRSTE_UTTAKSDATO,
@@ -124,7 +125,9 @@ class DialogportenRequestMapperTest {
 
     @Test
     void inntektsmeldingPurringMelding() {
-        var purringTekst = "Vi har ennå ikke mottatt inntektsmelding for Motivert Hare.";
+        var purringTekst = new FlerspråkligTekst("Vi har ennå ikke mottatt inntektsmelding for Motivert Hare.",
+            "Vi har enno ikkje motteke inntektsmelding for Motivert Hare.",
+            "We have not yet received the income statement for Motivert Hare.");
         var purringPatchRequest = DialogportenRequestMapper.inntektsmeldingPurringMelding(purringTekst);
 
         assertThat(purringPatchRequest.op()).isEqualTo(DialogportenPatchRequest.OP_ADD);
@@ -135,14 +138,14 @@ class DialogportenRequestMapperTest {
             .singleElement()
             .satisfies(transmission -> {
                 var content = transmission.content();
-                assertThat(content.summary().value().getFirst().value()).isEqualTo(purringTekst);
-                assertThat(content.title().value().getFirst().value()).isNotEqualTo(purringTekst);
+                assertThat(content.summary().value().getFirst().value()).isEqualTo(purringTekst.nb());
+                assertThat(content.title().value().getFirst().value()).isNotEqualTo(purringTekst.nb());
             });
     }
 
     @Test
     void opprettUtgåttPatchRequest() {
-        var utgåttRequest = DialogportenRequestMapper.opprettUtgåttPatchRequest("sakstittel");
+        var utgåttRequest = DialogportenRequestMapper.opprettUtgåttPatchRequest(SAKSTITTEL);
 
         var ops = utgåttRequest.stream().map(DialogportenPatchRequest::op).toList();
         var paths = utgåttRequest.stream().map(DialogportenPatchRequest::path).toList();

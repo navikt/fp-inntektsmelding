@@ -52,7 +52,7 @@ public class DialogportenKlient {
 
     public String opprettDialog(UUID forespørselUuid,
                                 Arbeidsgiver arbeidsgiver,
-                                String sakstittel,
+                                FlerspråkligTekst sakstittel,
                                 LocalDate førsteUttaksdato,
                                 Ytelsetype ytelsetype) {
         var target = URI.create(restConfig.endpoint().toString() + "/dialogporten/api/v1/serviceowner/dialogs");
@@ -74,7 +74,7 @@ public class DialogportenKlient {
 
     public void ferdigstillDialog(UUID dialogUuid,
                                   Arbeidsgiver arbeidsgiver,
-                                  String sakstittel,
+                                  FlerspråkligTekst sakstittel,
                                   Ytelsetype ytelsetype,
                                   LocalDate førsteUttaksdato,
                                   Optional<UUID> inntektsmeldingUuid,
@@ -92,12 +92,12 @@ public class DialogportenKlient {
 
     public void sendMeldingOmAvvistInntektsmelding(UUID dialogUuid,
                                                    Arbeidsgiver arbeidsgiver,
-                                                   String avvistTekst) {
+                                                   FlerspråkligTekst avvistTekst) {
         var patchAvvistInntektsmelding = DialogportenRequestMapper.inntektsmeldingAvvistTransmission(arbeidsgiver, avvistTekst);
         sendPatchRequest(dialogUuid, List.of(patchAvvistInntektsmelding));
     }
 
-    public void sendMeldingOmPurring(UUID dialogUuid, String purringTekst) {
+    public void sendMeldingOmPurring(UUID dialogUuid, FlerspråkligTekst purringTekst) {
         var patchPurring = DialogportenRequestMapper.inntektsmeldingPurringMelding(purringTekst);
         sendPatchRequest(dialogUuid, List.of(patchPurring));
     }
@@ -113,7 +113,7 @@ public class DialogportenKlient {
         sendPatchRequest(dialogUuid, patchRequestInnsendt);
     }
 
-    public void settDialogTilUtgått(UUID dialogUuid, String sakstittel) {
+    public void settDialogTilUtgått(UUID dialogUuid, FlerspråkligTekst sakstittel) {
         var patchRequestUtgått = DialogportenRequestMapper.opprettUtgåttPatchRequest(sakstittel);
         sendPatchRequest(dialogUuid, patchRequestUtgått);
     }

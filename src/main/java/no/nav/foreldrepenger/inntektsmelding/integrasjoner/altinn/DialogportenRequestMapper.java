@@ -14,7 +14,18 @@ import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 public class DialogportenRequestMapper {
     private static final String ALTINN_RESSURS_PREFIX = "urn:altinn:resource:";
     private static final String SERVICE_OWNER = "ServiceOwner";
-    private static final String PURRING_TITTEL = "Vi har ennå ikke mottatt inntektsmelding";
+    private static final FlerspråkligTekst PURRING_TITTEL = new FlerspråkligTekst(
+        "Vi har ennå ikke mottatt inntektsmelding",
+        "Vi har enno ikkje motteke inntektsmelding",
+        "We have not yet received the income statement");
+    private static final FlerspråkligTekst SEND_INN_INNTEKTSMELDING = new FlerspråkligTekst(
+        "Send inn inntektsmelding",
+        "Send inn inntektsmelding",
+        "Submit income statement");
+    private static final FlerspråkligTekst INNSENDING_PA_MIN_SIDE = new FlerspråkligTekst(
+        "Innsending av inntektsmelding på min side - arbeidsgiver hos Nav",
+        "Innsending av inntektsmelding på Min side - arbeidsgivar hos Nav",
+        "Submission of the income statement on Min side – arbeidsgiver (Nav's employer portal)");
 
     private DialogportenRequestMapper(){
         //statisk klasse
@@ -22,7 +33,7 @@ public class DialogportenRequestMapper {
 
     public static DialogportenRequest opprettDialogRequest(Arbeidsgiver arbeidsgiver,
                                                            UUID forespørselUuid,
-                                                           String sakstittel,
+                                                           FlerspråkligTekst sakstittel,
                                                            LocalDate førsteUttaksdato,
                                                            Ytelsetype ytelsetype,
                                                            String inntektsmeldingSkjemaLenke,
@@ -31,23 +42,24 @@ public class DialogportenRequestMapper {
                                                            String dokumentasjonsLenke) {
         var party = String.format("urn:altinn:organization:identifier-no:%s", arbeidsgiver.orgnr());
         var altinnressursFP = ALTINN_RESSURS_PREFIX + AltinnRessurser.ALTINN_TRE_INNTEKTSMELDING_RESSURS;
+        var ytelsesnavn = mapYtelsestypeNavn(ytelsetype);
 
         //Oppretter dialog
-        var summaryDialog = String.format("Nav trenger inntektsmelding for å behandle søknad om %s med startdato %s.",
-            ytelsetype.name().toLowerCase(),
-            formaterDato(førsteUttaksdato));
+        var summaryDialog = new FlerspråkligTekst(
+            "Nav trenger inntektsmelding for å behandle søknad om %s med startdato %s.".formatted(ytelsesnavn.nb(), formaterDato(førsteUttaksdato)),
+            "Nav treng inntektsmelding for å behandle søknaden om %s med startdato %s.".formatted(ytelsesnavn.nn(), formaterDato(førsteUttaksdato)),
+            "Nav needs an income statement to process the application for %s with a start date of %s.".formatted(ytelsesnavn.en(), formaterDato(førsteUttaksdato)));
         var contentDialog = new DialogportenRequest.Content(lagContentValue(sakstittel), lagContentValue(summaryDialog), null);
 
         //Oppretter transmission
-        var contentTransmission = new DialogportenRequest.Content(lagContentValue("Send inn inntektsmelding"), null, null);
+        var contentTransmission = new DialogportenRequest.Content(lagContentValue(SEND_INN_INNTEKTSMELDING), null, null);
         var guiUrl = new DialogportenRequest.Url(inntektsmeldingSkjemaLenke + "/" + forespørselUuid.toString(), DialogportenRequest.TEXT_PLAIN,
             DialogportenRequest.AttachmentUrlConsumerType.Gui);
         var forespørselApiUrl = new DialogportenRequest.Url(forespørselApiLenke + "/" + forespørselUuid,
             DialogportenRequest.TEXT_PLAIN,
             DialogportenRequest.AttachmentUrlConsumerType.Api);
         var attachementTransmission = new DialogportenRequest.Attachment(
-            List.of(new DialogportenRequest.ContentValueItem("Innsending av inntektsmelding på min side - arbeidsgiver hos Nav",
-                DialogportenRequest.NB)),
+            lagContentValueItems(INNSENDING_PA_MIN_SIDE),
             List.of(guiUrl, forespørselApiUrl));
         var transmission = new DialogportenRequest.Transmission(DialogportenRequest.TransmissionType.Request,
             DialogportenRequest.TransmissionExtendedType.INNTEKTSMELDING,
@@ -55,10 +67,9 @@ public class DialogportenRequestMapper {
             contentTransmission,
             List.of(attachementTransmission));
 
-        //oppretter api action
-        var apiAction = new DialogportenRequest.ApiAction(String.format("Innsending av inntektsmelding for %s med startdato %s",
-            ytelsetype.name().toLowerCase(),
-            formaterDato(førsteUttaksdato)),
+        //oppretter api action (kun ett navn tillatt, bruker bokmål siden dette ikke er et rent visningsfelt for sluttbruker)
+        var apiActionNavn = "Innsending av inntektsmelding for %s med startdato %s".formatted(ytelsesnavn.nb(), formaterDato(førsteUttaksdato));
+        var apiAction = new DialogportenRequest.ApiAction(apiActionNavn,
             List.of(new DialogportenRequest.Endpoint(inntektsmeldingApiLenke, DialogportenRequest.HttpMethod.POST, dokumentasjonsLenke)),
             DialogportenRequest.ACTION_WRITE);
 
@@ -71,7 +82,7 @@ public class DialogportenRequestMapper {
             List.of(apiAction));
     }
 
-    public static List<DialogportenPatchRequest>  opprettFerdigstillPatchRequest(String sakstittel,
+    public static List<DialogportenPatchRequest>  opprettFerdigstillPatchRequest(FlerspråkligTekst sakstittel,
                                                                                  Arbeidsgiver arbeidsgiver,
                                                                                  Ytelsetype ytelsetype,
                                                                                  LocalDate førsteUttaksdato,
@@ -85,9 +96,11 @@ public class DialogportenRequestMapper {
             DialogportenRequest.DialogStatus.Completed);
 
         //oppdatere innholdet i dialogen
-        var summaryDialog = String.format("Nav har mottatt inntektsmelding for søknad om %s med startdato %s",
-            ytelsetype.name().toLowerCase(),
-            formaterDato(førsteUttaksdato));
+        var ytelsesnavn = mapYtelsestypeNavn(ytelsetype);
+        var summaryDialog = new FlerspråkligTekst(
+            "Nav har mottatt inntektsmelding for søknad om %s med startdato %s".formatted(ytelsesnavn.nb(), formaterDato(førsteUttaksdato)),
+            "Nav har motteke inntektsmelding for søknaden om %s med startdato %s".formatted(ytelsesnavn.nn(), formaterDato(førsteUttaksdato)),
+            "Nav has received the income statement for the application for %s with a start date of %s".formatted(ytelsesnavn.en(), formaterDato(førsteUttaksdato)));
         var contentRequest = new DialogportenRequest.Content(lagContentValue(sakstittel), lagContentValue(summaryDialog), null);
         var patchContent = new DialogportenPatchRequest(DialogportenPatchRequest.OP_REPLACE,
             DialogportenPatchRequest.PATH_CONTENT,
@@ -121,17 +134,25 @@ public class DialogportenRequestMapper {
                                                                                String hentInntektsmeldingApiLenke,
                                                                                boolean førsteInnsending) {
         //Ny transmission som sier at inntektsmelding er mottatt, og med en lenke til kvittering. Ekstern innsending har ingen kvittering.
-        var mottattTekst = førsteInnsending ? "Inntektsmelding er mottatt" : "Oppdatert inntektsmelding er mottatt";
+        var mottattTekst = førsteInnsending
+                           ? new FlerspråkligTekst("Inntektsmelding er mottatt", "Inntektsmelding er motteke", "Income statement received")
+                           : new FlerspråkligTekst("Oppdatert inntektsmelding er mottatt", "Oppdatert inntektsmelding er motteke", "Updated income statement received");
+        var eksternInnsendingTekst = new FlerspråkligTekst(
+            "Utført i Altinn eller i bedriftens lønns- og personalsystem. Ingen kvittering",
+            "Utført i Altinn eller i verksemda sitt løns- og personalsystem. Ingen kvittering",
+            "Submitted via Altinn or the employer's payroll/HR system. No receipt");
         var contentTransmission = årsak == LukkeÅrsak.EKSTERN_INNSENDING
-                                  ? lagContentValue("Utført i Altinn eller i bedriftens lønns- og personalsystem. Ingen kvittering")
+                                  ? lagContentValue(eksternInnsendingTekst)
                                   : lagContentValue(mottattTekst);
 
         var transmissionContent = new DialogportenRequest.Content(contentTransmission, null, null);
 
         //attachement med kvittering
         var attachements = inntektsmeldingUuid.map(imUuid -> {
-            var innsendingTekst = førsteInnsending ? "Innsendt inntektsmelding" : "Oppdatert inntektsmelding";
-            var contentAttachement = List.of(new DialogportenRequest.ContentValueItem(innsendingTekst, DialogportenRequest.NB));
+            var innsendingTekst = førsteInnsending
+                                  ? new FlerspråkligTekst("Innsendt inntektsmelding", "Innsendt inntektsmelding", "Submitted income statement")
+                                  : new FlerspråkligTekst("Oppdatert inntektsmelding", "Oppdatert inntektsmelding", "Updated income statement");
+            var contentAttachement = lagContentValueItems(innsendingTekst);
             String urlPdf = new StringBuilder(inntektsmeldingSkjemaLenke)
                 .append("/server/api")
                 .append(PdfDokumentRest.INNTEKTSMELDING_FULL_PATH)
@@ -159,7 +180,7 @@ public class DialogportenRequestMapper {
             List.of(transmission));
     }
 
-    public static DialogportenPatchRequest inntektsmeldingPurringMelding(String purringTekst) {
+    public static DialogportenPatchRequest inntektsmeldingPurringMelding(FlerspråkligTekst purringTekst) {
         var transmissionContent = new DialogportenRequest.Content(lagContentValue(PURRING_TITTEL), lagContentValue(purringTekst), null);
 
         return new DialogportenPatchRequest(DialogportenPatchRequest.OP_ADD,
@@ -172,7 +193,7 @@ public class DialogportenRequestMapper {
     }
 
     public static DialogportenPatchRequest inntektsmeldingAvvistTransmission(Arbeidsgiver arbeidsgiver,
-                                                                               String avvistTekst) {
+                                                                               FlerspråkligTekst avvistTekst) {
         var contentTransmission = lagContentValue(avvistTekst);
 
         var transmissionContent = new DialogportenRequest.Content(contentTransmission, null, null);
@@ -191,7 +212,7 @@ public class DialogportenRequestMapper {
             List.of(transmission));
     }
 
-    public static List<DialogportenPatchRequest> opprettUtgåttPatchRequest(String sakstittel) {
+    public static List<DialogportenPatchRequest> opprettUtgåttPatchRequest(FlerspråkligTekst sakstittel) {
         //oppdatere status på dialogen til not applicable
         var patchStatus = new DialogportenPatchRequest(DialogportenPatchRequest.OP_REPLACE,
             DialogportenPatchRequest.PATH_STATUS,
@@ -204,15 +225,24 @@ public class DialogportenRequestMapper {
             DialogportenRequest.ExtendedDialogStatus.FORESPOERSEL_UTGAATT);
 
         //oppdatere innholdet i dialogen
+        var utgåttSummary = new FlerspråkligTekst(
+            "Nav trenger ikke lenger denne inntektsmeldingen",
+            "Nav treng ikkje lenger denne inntektsmeldinga",
+            "Nav no longer needs this income statement");
+        var utgåttStatus = new FlerspråkligTekst("Utgått", "Utgått", "Expired");
         var contentRequest = new DialogportenRequest.Content(lagContentValue(sakstittel),
-            lagContentValue("Nav trenger ikke lenger denne inntektsmeldingen"),
-            lagContentValue("Utgått"));
+            lagContentValue(utgåttSummary),
+            lagContentValue(utgåttStatus));
         var patchContent = new DialogportenPatchRequest(DialogportenPatchRequest.OP_REPLACE,
             DialogportenPatchRequest.PATH_CONTENT,
             contentRequest);
 
         //Ny transmission som sier at inntektsmelding ikke lenger er påkrevd
-        var transmissionContent = new DialogportenRequest.Content(lagContentValue("Inntektsmeldingen er ikke lenger påkrevd"), null, null);
+        var ikkePåkrevdTekst = new FlerspråkligTekst(
+            "Inntektsmeldingen er ikke lenger påkrevd",
+            "Inntektsmeldinga er ikkje lenger påkravd",
+            "The income statement is no longer required");
+        var transmissionContent = new DialogportenRequest.Content(lagContentValue(ikkePåkrevdTekst), null, null);
         var transmission = new DialogportenRequest.Transmission(DialogportenRequest.TransmissionType.Correction,
             DialogportenRequest.TransmissionExtendedType.INNTEKTSMELDING,
             new DialogportenRequest.Sender(SERVICE_OWNER, null),
@@ -225,9 +255,21 @@ public class DialogportenRequestMapper {
         return List.of(patchStatus, patchExtendedStatus, patchContent, patchTransmission);
     }
 
-    private static DialogportenRequest.ContentValue lagContentValue(String verdi) {
-        return new DialogportenRequest.ContentValue(List.of(new DialogportenRequest.ContentValueItem(verdi, DialogportenRequest.NB)),
-            DialogportenRequest.TEXT_PLAIN);
+    private static DialogportenRequest.ContentValue lagContentValue(FlerspråkligTekst tekst) {
+        return new DialogportenRequest.ContentValue(lagContentValueItems(tekst), DialogportenRequest.TEXT_PLAIN);
+    }
+
+    private static List<DialogportenRequest.ContentValueItem> lagContentValueItems(FlerspråkligTekst tekst) {
+        return List.of(new DialogportenRequest.ContentValueItem(tekst.nb(), DialogportenRequest.NB),
+            new DialogportenRequest.ContentValueItem(tekst.nn(), DialogportenRequest.NN),
+            new DialogportenRequest.ContentValueItem(tekst.en(), DialogportenRequest.EN));
+    }
+
+    private static FlerspråkligTekst mapYtelsestypeNavn(Ytelsetype ytelsetype) {
+        return switch (ytelsetype) {
+            case FORELDREPENGER -> new FlerspråkligTekst("foreldrepenger", "foreldrepengar", "parental benefit");
+            case SVANGERSKAPSPENGER -> new FlerspråkligTekst("svangerskapspenger", "svangerskapspengar", "pregnancy benefit");
+        };
     }
 
     private static String formaterDato(LocalDate dato) {
