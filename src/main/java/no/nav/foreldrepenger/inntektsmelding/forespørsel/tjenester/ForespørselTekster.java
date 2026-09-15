@@ -121,16 +121,10 @@ public class ForespørselTekster {
     private static final FlerspråkligTekst YTELSESTYPE_FORELDREPENGER = new FlerspråkligTekst("foreldrepenger", "foreldrepengar", "parental benefit");
     private static final FlerspråkligTekst YTELSESTYPE_SVANGERSKAPSPENGER = new FlerspråkligTekst("svangerskapspenger", "svangerskapspengar", "pregnancy benefit");
 
-    /**
-     * Flerspråklig variant av sakstittel, brukt for dialoger i Dialogporten.
-     */
     public static FlerspråkligTekst lagSaksTittelFlerspråklig(String navn, LocalDate fødselsdato) {
         return SAKSTITTEL_MAL.formatted(capitalizeFully(navn), fødselsdato.format(DATE_TIME_FORMATTER));
     }
 
-    /**
-     * Flerspråklig variant av "beskjed fra saksbehandler" (purring), brukt for meldinger i Dialogporten.
-     */
     public static FlerspråkligTekst lagBeskjedFraSaksbehandlerTekstFlerspråklig(Ytelsetype ytelseType, String søkerNavn) {
         var ytelsesnavn = mapYtelsestypeNavnFlerspråklig(ytelseType);
         return new FlerspråkligTekst(BESKJED_FRA_SAKSBEHANDLER_MAL.nb().formatted(søkerNavn, ytelsesnavn.nb()),
@@ -138,9 +132,6 @@ public class ForespørselTekster {
             BESKJED_FRA_SAKSBEHANDLER_MAL.en().formatted(søkerNavn, ytelsesnavn.en()));
     }
 
-    /**
-     * Flerspråklig tekst for avvist inntektsmelding pga. avvik mot A-inntekt, brukt for meldinger i Dialogporten.
-     */
     public static FlerspråkligTekst lagAvvistInntektTekstFlerspråklig(BigDecimal gjennomsnittFraAInntekt, BigDecimal oppgittInntekt) {
         return AVVIST_INNTEKT_MAL.formatted(gjennomsnittFraAInntekt, oppgittInntekt);
     }
