@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import no.nav.foreldrepenger.inntektsmelding.felles.FeilkodeDto;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselTekster;
 import no.nav.foreldrepenger.inntektsmelding.imapi.inntektsmelding.SendInntektsmeldingResponse;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.FellesGrunnlagTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.FellesMottakTjeneste;
@@ -136,10 +137,7 @@ public class InntektsmeldingApiMottakTjeneste {
 
         if (inntektErUgyldig) {
             inntektsmeldingTjeneste.oppdatertStatusTilInntektsmelding(inntektsmelding.getInntektsmeldingUuid(), InntektsmeldingStatus.AVVIST);
-            var feilmelding = String.format(
-                "Inntekt i inntektsmelding er ulik inntekt fra A-inntekt, og ingen endringsårsak er oppgitt. Gjennomsnittlig inntekt fra A-inntekt: %s, oppgitt inntekt i inntektsmelding: %s",
-                inntekter.gjennomsnitt(),
-                inntektsmelding.getMånedInntekt());
+            var feilmelding = ForespørselTekster.lagAvvistInntektTekstFlerspråklig(inntekter.gjennomsnitt(), inntektsmelding.getMånedInntekt());
             forespørselBehandlingTjeneste.sendMeldingOmAvvistInntektsmelding(forespørsel, feilmelding);
         } else {
             inntektsmeldingTjeneste.oppdatertStatusTilInntektsmelding(inntektsmelding.getInntektsmeldingUuid(), InntektsmeldingStatus.GODKJENT);

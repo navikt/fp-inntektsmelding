@@ -36,6 +36,9 @@ class DialogportenTjenesteTest {
     private static final AktørId AKTØR_ID = AktørId.fra("1234567891234");
     private static final Arbeidsgiver ARBEIDSGIVER = Arbeidsgiver.fra("974760673");
     private static final LocalDate FØRSTE_UTTAKSDATO = LocalDate.of(2025, 1, 1);
+    private static final FlerspråkligTekst SAKSTITTEL = new FlerspråkligTekst("Inntektsmelding for Navn Navnesen (01.01.61)",
+        "Inntektsmelding for Navn Navnesen (01.01.61)",
+        "Income statement for Navn Navnesen (01.01.61)");
 
     @Mock
     private DialogportenKlient dialogportenKlient;
@@ -55,7 +58,7 @@ class DialogportenTjenesteTest {
         mockPerson();
         when(dialogportenKlient.opprettDialog(eq(FORESPOERSEL_UUID),
             eq(ARBEIDSGIVER),
-            eq("Inntektsmelding for Navn Navnesen (01.01.61)"),
+            eq(SAKSTITTEL),
             eq(FØRSTE_UTTAKSDATO),
             eq(Ytelsetype.FORELDREPENGER))).thenReturn("\"%s\"".formatted(DIALOG_UUID));
 
@@ -74,7 +77,7 @@ class DialogportenTjenesteTest {
 
         verify(dialogportenKlient).ferdigstillDialog(DIALOG_UUID,
             ARBEIDSGIVER,
-            "Inntektsmelding for Navn Navnesen (01.01.61)",
+            SAKSTITTEL,
             Ytelsetype.FORELDREPENGER,
             FØRSTE_UTTAKSDATO,
             Optional.of(inntektsmeldingUuid),
@@ -95,7 +98,8 @@ class DialogportenTjenesteTest {
 
         tjeneste.sendMeldingOmPurring(forespørsel);
 
-        verify(dialogportenKlient).sendMeldingOmPurring(eq(DIALOG_UUID), Mockito.contains("foreldrepenger"));
+        verify(dialogportenKlient).sendMeldingOmPurring(eq(DIALOG_UUID),
+            Mockito.argThat(tekst -> tekst.nb().contains("foreldrepenger")));
     }
 
     @Test

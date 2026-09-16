@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import io.swagger.v3.oas.annotations.Operation;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.altinn.DialogportenKlient;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.altinn.FlerspråkligTekst;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.AutentisertMedAzure;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.Tilgangskontrollert;
 import no.nav.foreldrepenger.inntektsmelding.server.tilgangsstyring.Tilgang;
@@ -66,7 +67,7 @@ public class DialogportenForvaltningRestTjeneste {
             opprettNyDialogDto.organisasjonsnummer().orgnr());
         return Response.accepted(dialogportenKlient.opprettDialog(opprettNyDialogDto.forespørselUuid(),
             Arbeidsgiver.fra(opprettNyDialogDto.organisasjonsnummer().orgnr()),
-            "Forespørsel om inntektsmelding",
+            new FlerspråkligTekst("Forespørsel om inntektsmelding", "Førespurnad om inntektsmelding", "Request for income statement"),
             LocalDate.now(),
             Ytelsetype.FORELDREPENGER)).build();
     }
@@ -84,7 +85,7 @@ public class DialogportenForvaltningRestTjeneste {
         LOG.info("Oppdatere en dialog med dialogUuid {}", dialogUuid);
         dialogportenKlient.ferdigstillDialog(UUID.fromString(dialogUuid),
             null,
-            "Sakstittel",
+            new FlerspråkligTekst("Sakstittel", "Sakstittel", "Case title"),
             Ytelsetype.FORELDREPENGER,
             LocalDate.now(),
             Optional.empty(),

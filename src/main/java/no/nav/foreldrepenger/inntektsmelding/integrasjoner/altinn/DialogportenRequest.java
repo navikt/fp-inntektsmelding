@@ -19,6 +19,8 @@ public record DialogportenRequest(@NotNull String serviceResource,
     public static final String APPLICATION_PDF = "application/pdf";
     public static final String APPLICATION_JSON = "application/json";
     public static final String NB = "nb";
+    public static final String NN = "nn";
+    public static final String EN = "en";
     public static final String ACTION_READ = "read";
     public static final String ACTION_WRITE = "write";
 
