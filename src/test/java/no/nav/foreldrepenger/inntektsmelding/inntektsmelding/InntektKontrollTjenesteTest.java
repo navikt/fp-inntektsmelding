@@ -187,6 +187,26 @@ class InntektKontrollTjenesteTest {
     }
 
     @Test
+    void kontrollerInntektsmeldingEtterNedetid_skal_kaste_TekniskException_når_inntekt_ikke_kan_hentes() {
+        var inntektsmeldingId = 123L;
+        var imUuid = UUID.randomUUID();
+        var forespørselDto = lagForespørselDtoMedSkjæringstidspunkt(UUID.randomUUID(), ForespørselStatus.UNDER_BEHANDLING);
+        var inntektsmelding = lagInntektsmeldingDtoMedForespørsel(imUuid, forespørselDto, true);
+
+        when(inntektsmeldingTjeneste.hentInntektsmelding(inntektsmeldingId)).thenReturn(inntektsmelding);
+        when(personTjeneste.hentPersonInfoFraAktørId(any(), any())).thenReturn(lagPersonInfo());
+        when(fellesGrunnlagTjeneste.harJobbetHeleBeregningsperioden(any(), any(), any())).thenReturn(false);
+        when(inntektTjeneste.hentInntekt(any(), any(), any(), any(), eq(false))).thenReturn(null);
+
+        assertThrows(TekniskException.class,
+            () -> inntektKontrollTjeneste.kontrollerInntektsmeldingEtterNedetid(inntektsmeldingId));
+
+        verify(inntektsmeldingTjeneste, never()).oppdatertStatusTilInntektsmelding(any(), any());
+        verify(fellesMottakTjeneste, never()).opprettTaskForSendTilJoark(any(), any());
+        verify(fellesMottakTjeneste, never()).ferdigstillOgOppdaterEksterneSystemer(any(), any());
+    }
+
+    @Test
     void kontrollerInntektsmeldingEtterNedetid_skal_ikke_gjøre_noe_når_inntektsmelding_er_utdatert() {
         var inntektsmeldingId = 123L;
         var imUuid = UUID.randomUUID();

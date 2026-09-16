@@ -108,6 +108,13 @@ public class InntektKontrollTjeneste {
         var inntekter = hentInntektFraAInntekt(inntektsmelding.getAktørId(), inntektsmelding.getYtelse(), forespørsel.skjæringstidspunkt(),
             inntektsmelding.getArbeidsgiver());
 
+        if (inntekter == null) {
+            LOG.warn(
+                "InntektTjeneste har ikke returnert inntekt, og vi kan ikke etterkontrollere inntektsmelding mot A-inntekt. inntektsmeldingId: {}",
+                inntektsmeldingId);
+            throw new TekniskException("F-523043", "Får ikke hentet inntekt fra A-inntekt, får ikke ferdigstilt inntektsmelding " + inntektsmeldingId);
+        }
+
         if (inntekter.harNedetid()) {
             //task feiler, vi oppdaterer status til venter vurdering
             inntektsmeldingTjeneste.oppdatertStatusTilInntektsmelding(inntektsmelding.getInntektsmeldingUuid(), InntektsmeldingStatus.VENTER_VURDERING);
@@ -150,7 +157,7 @@ public class InntektKontrollTjeneste {
             LOG.info("LIK_INNTEKT_OG_ÅRSAK: inntekt oppgitt av arbeidsgiver: {} er helt lik gjennomsnittlig inntekt fra a-inntekt. {}, og årsak(er) er oppgitt {}", inntektsmelding.getMånedInntekt(), gjennomsnittligInntekt, inntektsmelding.getEndringAvInntektÅrsaker());
         } else {
             var likInntektMedDifferanseOgÅrsak =
-                gjennomsnittligInntekt.subtract(inntektFraIm).abs().compareTo(AKSEPTERT_AVVIK) > 0
+                gjennomsnittligInntekt.subtract(inntektFraIm).abs().compareTo(AKSEPTERT_AVVIK) == 0
                     && inntektsmelding.getEndringAvInntektÅrsaker() != null && !inntektsmelding.getEndringAvInntektÅrsaker().isEmpty();
             if (likInntektMedDifferanseOgÅrsak) {
                 LOG.info(
