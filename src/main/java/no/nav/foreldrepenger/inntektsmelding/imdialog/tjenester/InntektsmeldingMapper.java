@@ -33,7 +33,7 @@ public class InntektsmeldingMapper {
         // Frontend sender kun inn liste med refusjon. Vi utleder startsum og opphørsdato utifra denne lista.
         var refusjonPrMnd = finnFørsteRefusjon(dto.refusjon(), dto.startdato())
             .orElseThrow(() -> new IllegalStateException("Finner ikke refusjon på arbeidsgiverinitiert inntektsmeldsing, ugyldig tilstand"));
-        var opphørsdato = refusjonPrMnd == null ? null : finnOpphørsdato(dto.refusjon(), dto.startdato()).orElse(Tid.TIDENES_ENDE);
+        var opphørsdato = finnOpphørsdato(dto.refusjon(), dto.startdato()).orElse(Tid.TIDENES_ENDE);
         var builder = opprettDtoBuilderOgSettFellesFelter(dto);
         // Vi ønsker ikke be arbeidsgiver om inntekt i disse tilfellene da de sjelden har hatt utbetaling som nyansatt, og dette uansett ikke vil brukes i saksbehandlingen.
         // Setter derfor samme beløp som refusjon
@@ -153,7 +153,8 @@ public class InntektsmeldingMapper {
             refusjoner,
             bortfalteNaturalytelser,
             endringsårsaker,
-            forespørselType
+            forespørselType,
+            KodeverkMapper.mapInntektsmeldingStatus(dto.getStatus())
             );
     }
 

@@ -13,12 +13,16 @@ import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.Forespørsel
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselValiderer;
 import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.InntektsmeldingResponseDto;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.FellesMottakTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektKontrollResultat;
+import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektKontrollTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.fpsak.FpsakFagsak;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.fpsak.FpsakTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.metrikker.MetrikkerTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.server.exceptions.InntektAvvikerFraAInntektException;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ArbeidsgiverinitiertÅrsak;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingStatus;
 import no.nav.vedtak.konfig.Tid;
 
 @ApplicationScoped
@@ -26,6 +30,7 @@ public class InntektsmeldingMottakTjeneste {
     private ForespørselBehandlingTjeneste forespørselBehandlingTjeneste;
     private FellesMottakTjeneste fellesMottakTjeneste;
     private FpsakTjeneste fpsakTjeneste;
+    private InntektKontrollTjeneste inntektKontrollTjeneste;
 
     InntektsmeldingMottakTjeneste() {
     }
@@ -33,10 +38,12 @@ public class InntektsmeldingMottakTjeneste {
     @Inject
     public InntektsmeldingMottakTjeneste(ForespørselBehandlingTjeneste forespørselBehandlingTjeneste,
                                          FellesMottakTjeneste fellesMottakTjeneste,
-                                         FpsakTjeneste fpsakTjeneste) {
+                                         FpsakTjeneste fpsakTjeneste,
+                                         InntektKontrollTjeneste inntektKontrollTjeneste) {
         this.forespørselBehandlingTjeneste = forespørselBehandlingTjeneste;
         this.fellesMottakTjeneste = fellesMottakTjeneste;
         this.fpsakTjeneste = fpsakTjeneste;
+        this.inntektKontrollTjeneste = inntektKontrollTjeneste;
     }
 
     public InntektsmeldingResponseDto mottaInntektsmelding(InntektsmeldingDto mottattInntektsmeldingDto, UUID forespørselUuid) {
@@ -49,6 +56,24 @@ public class InntektsmeldingMottakTjeneste {
         ForespørselValiderer.validerAktør(forespørsel, mottattInntektsmeldingDto.getAktørId());
         ForespørselValiderer.validerOrganisasjon(forespørsel, mottattInntektsmeldingDto.getArbeidsgiver());
         ForespørselValiderer.validerStartdato(forespørsel, mottattInntektsmeldingDto.getStartdato());
+
+        fellesMottakTjeneste.settForrigeInntektsmeldingUtdatertHvisVenterVurdering(forespørsel);
+
+        var kontrollResultat = inntektKontrollTjeneste.sjekkInntektMotAInntekt(forespørsel, mottattInntektsmeldingDto);
+
+        if (kontrollResultat instanceof InntektKontrollResultat.UlikInntekt ulikInntekt) {
+            throw new InntektAvvikerFraAInntektException(ulikInntekt.inntektFraAInntekt().gjennomsnitt(), mottattInntektsmeldingDto.getMånedInntekt());
+        }
+
+        if (kontrollResultat instanceof InntektKontrollResultat.Nedetid) {
+            // A-inntekt har nedetid - lagrer inntektsmeldingen med status VENTER_VURDERING og etterkontrollerer
+            // asynkront (se InntektKontrollTjeneste.kontrollerInntektsmeldingEtterNedetid). Forespørselen
+            // ferdigstilles ikke, og portalene varsles først når resultatet av etterkontrollen foreligger.
+            var inntektsmeldingMedStatus = InntektsmeldingDto.builder(mottattInntektsmeldingDto).medStatus(InntektsmeldingStatus.VENTER_VURDERING).build();
+            var lagretIm = fellesMottakTjeneste.lagreImOgOpprettTaskForEtterkontroll(inntektsmeldingMedStatus, forespørsel);
+            MetrikkerTjeneste.loggInnsendtInntektsmeldingUnderNedetid();
+            return InntektsmeldingMapper.mapFraDomene(lagretIm, forespørsel);
+        }
 
         var lagretIm = fellesMottakTjeneste.lagreImOgOpprettJournalførTask(mottattInntektsmeldingDto, forespørsel);
         fellesMottakTjeneste.ferdigstillOgOppdaterEksterneSystemer(forespørsel, Optional.ofNullable(lagretIm.getInntektsmeldingUuid()));

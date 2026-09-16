@@ -26,6 +26,7 @@ import no.nav.foreldrepenger.inntektsmelding.typer.dto.NaturalytelsetypeDto;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.YtelseTypeDto;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.NaturalytelseType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
@@ -205,6 +206,7 @@ class InntektsmeldingMapperTest {
                 new InntektsmeldingDto.Endringsårsak(EndringsårsakType.TARIFFENDRING, null, null, LocalDate.now())
             ))
             .medSøkteRefusjonsperioder(List.of())
+            .medStatus(InntektsmeldingStatus.GODKJENT)
             .build();
 
         var forespørselEntitet = new ForespørselEntitet("999999999",
@@ -255,6 +257,7 @@ class InntektsmeldingMapperTest {
             .medBortfaltNaturalytelsePerioder(List.of())
             .medEndringAvInntektÅrsaker(List.of())
             .medSøkteRefusjonsperioder(List.of())
+            .medStatus(InntektsmeldingStatus.GODKJENT)
             .build();
 
         var forespørselEntitet = new ForespørselEntitet("999999999",
@@ -296,6 +299,7 @@ class InntektsmeldingMapperTest {
                 new InntektsmeldingDto.Endringsårsak(EndringsårsakType.FERIE, LocalDate.now(), LocalDate.now().plusDays(10), null),
                 new InntektsmeldingDto.Endringsårsak(EndringsårsakType.TARIFFENDRING, null, null, LocalDate.now())
             ))
+            .medStatus(InntektsmeldingStatus.GODKJENT)
             .build();
 
         var forespørselEntitet = new ForespørselEntitet("999999999",
@@ -357,6 +361,7 @@ class InntektsmeldingMapperTest {
                 new InntektsmeldingDto.Endringsårsak(EndringsårsakType.FERIE, LocalDate.now(), LocalDate.now().plusDays(10), null),
                 new InntektsmeldingDto.Endringsårsak(EndringsårsakType.TARIFFENDRING, null, null, LocalDate.now())
             ))
+            .medStatus(InntektsmeldingStatus.GODKJENT)
             .build();
 
         var forespørselEntitet = new ForespørselEntitet("999999999",
@@ -408,6 +413,7 @@ class InntektsmeldingMapperTest {
             .medSøkteRefusjonsperioder(List.of())
             .medBortfaltNaturalytelsePerioder(List.of())
             .medEndringAvInntektÅrsaker(List.of())
+            .medStatus(InntektsmeldingStatus.GODKJENT)
             .build();
 
         var forespørselEntitet = new ForespørselEntitet("999999999",
