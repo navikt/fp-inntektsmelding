@@ -116,7 +116,7 @@ public class ForespørselTekster {
     private static final FlerspråkligTekst AVVIST_INNTEKT_MAL = new FlerspråkligTekst(
         "Inntekt i inntektsmelding er ulik inntekt fra A-inntekt, og ingen endringsårsak er oppgitt. Gjennomsnittlig inntekt fra A-inntekt: %s, oppgitt inntekt i inntektsmelding: %s",
         "Inntekt i inntektsmeldinga er ulik inntekt frå A-inntekt, og ingen endringsårsak er oppgitt. Gjennomsnittleg inntekt frå A-inntekt: %s, oppgitt inntekt i inntektsmeldinga: %s",
-        "The income in the income statement differs from the income reported to A-ordningen, and no reason for the change has been given. Average income from A-ordningen: %s, income stated in the income statement: %s");
+        "The income in the income statement differs from the income reported to A-ordningen, and no reason for the deviation has been given. Average income from A-ordningen: %s, income stated in the income statement: %s");
 
     private static final FlerspråkligTekst YTELSESTYPE_FORELDREPENGER = new FlerspråkligTekst("foreldrepenger", "foreldrepengar", "parental benefit");
     private static final FlerspråkligTekst YTELSESTYPE_SVANGERSKAPSPENGER = new FlerspråkligTekst("svangerskapspenger", "svangerskapspengar", "pregnancy benefit");
