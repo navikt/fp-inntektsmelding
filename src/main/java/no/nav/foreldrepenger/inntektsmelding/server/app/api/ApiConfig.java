@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.rest.ForespørselRest;
 import no.nav.foreldrepenger.inntektsmelding.imapi.rest.forespørsel.ForespørselApiRest;
+import no.nav.foreldrepenger.inntektsmelding.imapi.rest.inntekt.InntektApiRest;
 import no.nav.foreldrepenger.inntektsmelding.imapi.rest.inntektsmelding.InntektsmeldingApiRest;
 import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.InntektsmeldingDialogRest;
 import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.aginitiert.ArbeidsgiverinitiertDialogRest;
@@ -54,7 +55,8 @@ public class ApiConfig extends ResourceConfig {
             ArbeidsgiverinitiertDialogRest.class,
             PdfDokumentRest.class,
             ForespørselApiRest.class,
-            InntektsmeldingApiRest.class);
+            InntektsmeldingApiRest.class,
+            InntektApiRest.class);
     }
 
     private Map<String, Object> getApplicationProperties() {
