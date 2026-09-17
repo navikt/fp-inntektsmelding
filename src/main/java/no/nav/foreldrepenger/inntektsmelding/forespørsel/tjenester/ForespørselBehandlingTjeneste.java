@@ -25,6 +25,7 @@ import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.SettDialogTilUtg�
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.SettSakTilUtgåttTask;
 import no.nav.foreldrepenger.inntektsmelding.forvaltning.rest.InntektsmeldingForespørselDto;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.altinn.DialogportenTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.altinn.FlerspråkligTekst;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon.MinSideArbeidsgiverTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.metrikker.MetrikkerTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
@@ -132,11 +133,11 @@ public class ForespørselBehandlingTjeneste {
     }
 
     public void sendMeldingOmAvvistInntektsmelding(ForespørselDto forespørselDto,
-                                                   String feiltekst) {
+                                                   FlerspråkligTekst feiltekst) {
         // Send transmission til dialogporten
         dialogportenTjeneste.sendMeldingOmAvvistInntektsmelding(forespørselDto, feiltekst);
         // Send melding til fager
-        minSideArbeidsgiverTjeneste.sendNyBeskjedOmAvvistInntektsmelding(forespørselDto, feiltekst);
+        minSideArbeidsgiverTjeneste.sendNyBeskjedOmAvvistInntektsmelding(forespørselDto, feiltekst.nb());
     }
 
     // Vi skal aldri ha mer enn en forespørsel til under_behandling eller ferdig for samme sak med samme orgnummer og aktørid

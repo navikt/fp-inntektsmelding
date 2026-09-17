@@ -97,7 +97,7 @@ public class DialogportenTjeneste {
     }
 
     public void sendMeldingOmAvvistInntektsmelding(ForespørselDto forespørselDto,
-                                                   String avvistTekst) {
+                                                   FlerspråkligTekst avvistTekst) {
         if (forespørselDto.dialogportenUuid() == null) {
             return;
         }
@@ -113,13 +113,13 @@ public class DialogportenTjeneste {
         }
 
         var person = personTjeneste.hentPersonInfoFraAktørId(forespørsel.aktørId(), forespørsel.ytelseType());
-        var purringTekst = ForespørselTekster.lagBeskjedFraSaksbehandlerTekst(forespørsel.ytelseType(), person.mapFulltNavn());
+        var purringTekst = ForespørselTekster.lagBeskjedFraSaksbehandlerTekstFlerspråklig(forespørsel.ytelseType(), person.mapFulltNavn());
 
         dialogportenKlient.sendMeldingOmPurring(forespørsel.dialogportenUuid(), purringTekst);
     }
 
-    private String lagSaksTittel(ForespørselDto forespørsel) {
+    private FlerspråkligTekst lagSaksTittel(ForespørselDto forespørsel) {
         var person = personTjeneste.hentPersonInfoFraAktørId(forespørsel.aktørId(), forespørsel.ytelseType());
-        return ForespørselTekster.lagSaksTittel(person.mapFulltNavn(), person.fødselsdato());
+        return ForespørselTekster.lagSaksTittelFlerspråklig(person.mapFulltNavn(), person.fødselsdato());
     }
 }
