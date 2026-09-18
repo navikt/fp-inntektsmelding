@@ -4,5 +4,7 @@ import java.math.BigDecimal;
 import java.time.YearMonth;
 import java.util.Map;
 
-public record InntektResponse(Map<YearMonth, BigDecimal> inntektPerMåned, BigDecimal gjennomsnitt) {
+import jakarta.validation.constraints.NotNull;
+
+public record InntektResponse(@NotNull Map<YearMonth, BigDecimal> inntektPerMåned, @NotNull BigDecimal gjennomsnitt) {
 }
