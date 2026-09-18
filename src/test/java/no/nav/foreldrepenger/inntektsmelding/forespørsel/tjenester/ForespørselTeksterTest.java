@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
 
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.altinn.FlerspråkligTekst;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.organisasjon.Organisasjon;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 
@@ -98,6 +99,26 @@ class ForespørselTeksterTest {
         var tekst = lagBeskjedOmEndretFørsteUttaksdato(null, LocalDate.of(2026, 9, 8));
 
         assertThat(tekst).isEqualTo("Første fraværsdag er endret til 08.09.26.");
+    }
+
+    @Test
+    void skal_lage_flerspråklig_beskjed_med_tidligere_og_ny_første_uttaksdato() {
+        var tekst = lagBeskjedOmEndretFørsteUttaksdatoFlerspråklig(LocalDate.of(2026, 9, 1), LocalDate.of(2026, 9, 8));
+
+        assertThat(tekst).isEqualTo(new FlerspråkligTekst(
+            "Første fraværsdag er endret fra 01.09.26 til 08.09.26.",
+            "Første fråværsdag er endra frå 01.09.26 til 08.09.26.",
+            "The first day of absence has changed from 01.09.26 to 08.09.26."));
+    }
+
+    @Test
+    void skal_lage_flerspråklig_beskjed_når_tidligere_første_uttaksdato_mangler() {
+        var tekst = lagBeskjedOmEndretFørsteUttaksdatoFlerspråklig(null, LocalDate.of(2026, 9, 8));
+
+        assertThat(tekst).isEqualTo(new FlerspråkligTekst(
+            "Første fraværsdag er endret til 08.09.26.",
+            "Første fråværsdag er endra til 08.09.26.",
+            "The first day of absence has changed to 08.09.26."));
     }
 
     @Test

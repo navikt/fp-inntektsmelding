@@ -126,7 +126,7 @@ public class DialogportenTjeneste {
             throw new IllegalStateException("Mangler dialogportenUuid for forespørsel " + forespørsel.uuid());
         }
 
-        var beskjedTekst = ForespørselTekster.lagBeskjedOmEndretFørsteUttaksdato(tidligereFørsteUttaksdato, nyFørsteUttaksdato);
+        var beskjedTekst = ForespørselTekster.lagBeskjedOmEndretFørsteUttaksdatoFlerspråklig(tidligereFørsteUttaksdato, nyFørsteUttaksdato);
 
         dialogportenKlient.oppdaterDialogMedEndretFørsteUttaksdato(forespørsel.dialogportenUuid(), beskjedTekst);
     }

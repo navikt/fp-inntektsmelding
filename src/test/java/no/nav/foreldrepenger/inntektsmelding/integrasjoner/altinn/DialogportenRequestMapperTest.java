@@ -126,13 +126,17 @@ class DialogportenRequestMapperTest {
 
     @Test
     void opprettEndretFørsteUttaksdatoPatchRequest() {
-        var beskjedTekst = "Første fraværsdag er endret fra 01.09.26 til 08.09.26.";
+        var beskjedTekst = new FlerspråkligTekst("Første fraværsdag er endret fra 01.09.26 til 08.09.26.",
+            "Første fråværsdag er endra frå 01.09.26 til 08.09.26.",
+            "The first day of absence has changed from 01.09.26 to 08.09.26.");
         var patch = DialogportenRequestMapper.opprettEndretFørsteUttaksdatoPatchRequest(beskjedTekst);
 
         assertThat(patch.op()).isEqualTo(DialogportenPatchRequest.OP_ADD);
         assertThat(patch.path()).isEqualTo(DialogportenPatchRequest.PATH_TRANSMISSIONS);
         var tittel = new DialogportenRequest.ContentValue(
-            List.of(new DialogportenRequest.ContentValueItem(beskjedTekst, DialogportenRequest.NB)), DialogportenRequest.TEXT_PLAIN);
+            List.of(new DialogportenRequest.ContentValueItem(beskjedTekst.nb(), DialogportenRequest.NB),
+                new DialogportenRequest.ContentValueItem(beskjedTekst.nn(), DialogportenRequest.NN),
+                new DialogportenRequest.ContentValueItem(beskjedTekst.en(), DialogportenRequest.EN)), DialogportenRequest.TEXT_PLAIN);
         assertThat(patch.value()).isEqualTo(List.of(
             new DialogportenRequest.Transmission(DialogportenRequest.TransmissionType.Information,
                 DialogportenRequest.TransmissionExtendedType.INNTEKTSMELDING,

@@ -118,7 +118,7 @@ public class DialogportenKlient {
         sendPatchRequest(dialogUuid, patchRequestUtgått);
     }
 
-    public void oppdaterDialogMedEndretFørsteUttaksdato(UUID dialogUuid, String beskjedTekst) {
+    public void oppdaterDialogMedEndretFørsteUttaksdato(UUID dialogUuid, FlerspråkligTekst beskjedTekst) {
         var patchRequest = DialogportenRequestMapper.opprettEndretFørsteUttaksdatoPatchRequest(beskjedTekst);
         sendPatchRequest(dialogUuid, List.of(patchRequest));
     }

@@ -119,7 +119,9 @@ class DialogportenTjenesteTest {
         tjeneste.oppdaterDialogMedEndretFørsteUttaksdato(forespørsel, tidligereFørsteUttaksdato, nyFørsteUttaksdato);
 
         verify(dialogportenKlient).oppdaterDialogMedEndretFørsteUttaksdato(DIALOG_UUID,
-            "Første fraværsdag er endret fra 01.12.24 til 01.02.25.");
+            new FlerspråkligTekst("Første fraværsdag er endret fra 01.12.24 til 01.02.25.",
+                "Første fråværsdag er endra frå 01.12.24 til 01.02.25.",
+                "The first day of absence has changed from 01.12.24 to 01.02.25."));
         verifyNoInteractions(personTjeneste);
     }
 

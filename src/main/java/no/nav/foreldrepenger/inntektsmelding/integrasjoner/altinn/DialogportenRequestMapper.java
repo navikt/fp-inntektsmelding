@@ -180,7 +180,7 @@ public class DialogportenRequestMapper {
             List.of(transmission));
     }
 
-    public static DialogportenPatchRequest opprettEndretFørsteUttaksdatoPatchRequest(String beskjedTekst) {
+    public static DialogportenPatchRequest opprettEndretFørsteUttaksdatoPatchRequest(FlerspråkligTekst beskjedTekst) {
         var transmissionContent = new DialogportenRequest.Content(lagContentValue(beskjedTekst), null, null);
         var transmission = new DialogportenRequest.Transmission(DialogportenRequest.TransmissionType.Information,
             DialogportenRequest.TransmissionExtendedType.INNTEKTSMELDING,

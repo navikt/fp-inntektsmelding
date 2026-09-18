@@ -78,12 +78,7 @@ public class ForespørselTekster {
     }
 
     public static String lagBeskjedOmEndretFørsteUttaksdato(LocalDate tidligereFørsteUttaksdato, LocalDate nyFørsteUttaksdato) {
-        var nyDato = nyFørsteUttaksdato.format(DATE_TIME_FORMATTER);
-        if (tidligereFørsteUttaksdato == null) {
-            return "Første fraværsdag er endret til %s.".formatted(nyDato);
-        }
-        return "Første fraværsdag er endret fra %s til %s.".formatted(
-            tidligereFørsteUttaksdato.format(DATE_TIME_FORMATTER), nyDato);
+        return lagBeskjedOmEndretFørsteUttaksdatoFlerspråklig(tidligereFørsteUttaksdato, nyFørsteUttaksdato).nb();
     }
 
     public static String lagVarselFraSaksbehandlerTekst(Ytelsetype ytelsetype, Organisasjon org) {
@@ -127,6 +122,16 @@ public class ForespørselTekster {
         "Inntekt i inntektsmeldinga er ulik inntekt frå A-inntekt, og ingen endringsårsak er oppgitt. Gjennomsnittleg inntekt frå A-inntekt: %s, oppgitt inntekt i inntektsmeldinga: %s",
         "The income in the income statement differs from the income reported to A-ordningen, and no reason for the deviation has been given. Average income from A-ordningen: %s, income stated in the income statement: %s");
 
+    private static final FlerspråkligTekst ENDRET_FØRSTE_UTTAKSDATO_MAL = new FlerspråkligTekst(
+        "Første fraværsdag er endret fra %s til %s.",
+        "Første fråværsdag er endra frå %s til %s.",
+        "The first day of absence has changed from %s to %s.");
+
+    private static final FlerspråkligTekst ENDRET_FØRSTE_UTTAKSDATO_UTEN_TIDLIGERE_DATO_MAL = new FlerspråkligTekst(
+        "Første fraværsdag er endret til %s.",
+        "Første fråværsdag er endra til %s.",
+        "The first day of absence has changed to %s.");
+
     private static final FlerspråkligTekst YTELSESTYPE_FORELDREPENGER = new FlerspråkligTekst("foreldrepenger", "foreldrepengar", "parental benefit");
     private static final FlerspråkligTekst YTELSESTYPE_SVANGERSKAPSPENGER = new FlerspråkligTekst("svangerskapspenger", "svangerskapspengar", "pregnancy benefit");
 
@@ -143,6 +148,15 @@ public class ForespørselTekster {
 
     public static FlerspråkligTekst lagAvvistInntektTekstFlerspråklig(BigDecimal gjennomsnittFraAInntekt, BigDecimal oppgittInntekt) {
         return AVVIST_INNTEKT_MAL.formatted(gjennomsnittFraAInntekt, oppgittInntekt);
+    }
+
+    public static FlerspråkligTekst lagBeskjedOmEndretFørsteUttaksdatoFlerspråklig(LocalDate tidligereFørsteUttaksdato,
+                                                                                 LocalDate nyFørsteUttaksdato) {
+        var nyDato = nyFørsteUttaksdato.format(DATE_TIME_FORMATTER);
+        if (tidligereFørsteUttaksdato == null) {
+            return ENDRET_FØRSTE_UTTAKSDATO_UTEN_TIDLIGERE_DATO_MAL.formatted(nyDato);
+        }
+        return ENDRET_FØRSTE_UTTAKSDATO_MAL.formatted(tidligereFørsteUttaksdato.format(DATE_TIME_FORMATTER), nyDato);
     }
 
     private static FlerspråkligTekst mapYtelsestypeNavnFlerspråklig(Ytelsetype ytelsetype) {
