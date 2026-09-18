@@ -61,8 +61,8 @@ public class InntektsmeldingMottakTjeneste {
 
         var kontrollResultat = inntektKontrollTjeneste.sjekkInntektMotAInntekt(forespørsel, mottattInntektsmeldingDto);
 
-        if (kontrollResultat instanceof InntektKontrollResultat.UlikInntekt ulikInntekt) {
-            throw new InntektAvvikerFraAInntektException(ulikInntekt.inntektFraAInntekt().gjennomsnitt(), mottattInntektsmeldingDto.getMånedInntekt());
+        if (kontrollResultat instanceof InntektKontrollResultat.UlikInntekt(_, var inntektFraAInntekt)) {
+            throw new InntektAvvikerFraAInntektException(inntektFraAInntekt.gjennomsnitt(), mottattInntektsmeldingDto.getMånedInntekt());
         }
 
         if (kontrollResultat instanceof InntektKontrollResultat.Nedetid) {

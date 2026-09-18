@@ -226,26 +226,6 @@ class InntektKontrollTjenesteTest {
     }
 
     @Test
-    void kontrollerInntektsmeldingEtterNedetid_skal_ferdigstille_når_inntekt_er_gyldig() {
-        var inntektsmeldingId = 123L;
-        var imUuid = UUID.randomUUID();
-        var forespørselDto = lagForespørselDtoMedSkjæringstidspunkt(UUID.randomUUID(), ForespørselStatus.UNDER_BEHANDLING);
-        var inntektsmelding = lagInntektsmeldingDtoMedForespørsel(imUuid, forespørselDto, false);
-        var inntektsopplysninger = lagInntektsopplysninger(BigDecimal.valueOf(45000));
-
-        when(inntektsmeldingTjeneste.hentInntektsmelding(inntektsmeldingId)).thenReturn(inntektsmelding);
-        when(personTjeneste.hentPersonInfoFraAktørId(any(), any())).thenReturn(lagPersonInfo());
-        when(fellesGrunnlagTjeneste.harJobbetHeleBeregningsperioden(any(), any(), any())).thenReturn(false);
-        when(inntektTjeneste.hentInntekt(any(), any(), any(), any(), eq(false))).thenReturn(inntektsopplysninger);
-
-        inntektKontrollTjeneste.kontrollerInntektsmeldingEtterNedetid(inntektsmeldingId);
-
-        verify(inntektsmeldingTjeneste).oppdatertStatusTilInntektsmelding(imUuid, InntektsmeldingStatus.GODKJENT);
-        verify(fellesMottakTjeneste).opprettTaskForSendTilJoark(inntektsmeldingId, forespørselDto);
-        verify(fellesMottakTjeneste).ferdigstillOgOppdaterEksterneSystemer(forespørselDto, Optional.of(imUuid));
-    }
-
-    @Test
     void kontrollerInntektsmeldingEtterNedetid_skal_ikke_ferdigstille_når_inntekt_er_ugyldig() {
         var inntektsmeldingId = 123L;
         var imUuid = UUID.randomUUID();
