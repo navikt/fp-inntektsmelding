@@ -108,7 +108,7 @@ class ForespørselRestTest {
             .thenReturn(List.of(ForespørselResultat.FORESPØRSEL_OPPRETTET, ForespørselResultat.FORESPØRSEL_OPPRETTET));
 
         var fagsakSaksnummer = new SaksnummerDto("SAK");
-        var response = forespørselRest.opprettFlereForespørsler(
+        var response = forespørselRest.opprettForespørslerKomplettListe(
             new OpprettFlereForespørslerRequest(aktørId, LocalDate.now(), YtelseTypeDto.FORELDREPENGER, fagsakSaksnummer,
                 LocalDate.now().plusDays(5), List.of(orgnummer, orgnummer2)));
 
@@ -129,7 +129,7 @@ class ForespørselRestTest {
         when(forespørselBehandlingTjeneste.håndterKomplettListeMedForespørsler(any(), any(), any(), any(), any(), any()))
             .thenReturn(List.of());
 
-        var response = forespørselRest.opprettFlereForespørsler(
+        var response = forespørselRest.opprettForespørslerKomplettListe(
             new OpprettFlereForespørslerRequest(aktørId, LocalDate.now(), YtelseTypeDto.FORELDREPENGER, fagsakSaksnummer,
                 LocalDate.now().plusDays(5), List.of()));
 
