@@ -36,7 +36,7 @@ public class ForespørselEndringHistorikkEntitet {
     private final LocalDateTime opprettetTidspunkt = LocalDateTime.now();
 
     public ForespørselEndringHistorikkEntitet() {
-        // Hibernate
+        // Hibernate.
     }
 
     public ForespørselEndringHistorikkEntitet(ForespørselEntitet forespørsel,
