@@ -21,7 +21,7 @@ import no.nav.foreldrepenger.inntektsmelding.forespørsel.rest.ForespørselRest;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.rest.OpprettEnForespørselRequest;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.rest.OpprettFlereForespørslerRequest;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.rest.OpprettForespørselRequest;
-import no.nav.foreldrepenger.inntektsmelding.forespørsel.rest.OpprettForespørselResponsNy;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.rest.OpprettForespørselRespons;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.foreldrepenger.inntektsmelding.server.tilgangsstyring.Tilgang;
@@ -63,7 +63,7 @@ class ForespørselRestTest {
             new OpprettEnForespørselRequest(aktørId, orgnummer, LocalDate.now(), YtelseTypeDto.FORELDREPENGER, fagsakSaksnummer,
                 LocalDate.now().plusDays(5)));
 
-        var forventetResultat = new OpprettForespørselResponsNy(List.of(new OpprettForespørselResponsNy.OrganisasjonsnummerMedStatus(orgnummer, ForespørselResultat.FORESPØRSEL_OPPRETTET)));
+        var forventetResultat = new OpprettForespørselRespons.OrganisasjonsnummerMedStatus(orgnummer, ForespørselResultat.FORESPØRSEL_OPPRETTET);
 
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK_200);
         assertThat(response.getEntity()).isEqualTo(forventetResultat);
@@ -108,13 +108,13 @@ class ForespørselRestTest {
             .thenReturn(List.of(ForespørselResultat.FORESPØRSEL_OPPRETTET, ForespørselResultat.FORESPØRSEL_OPPRETTET));
 
         var fagsakSaksnummer = new SaksnummerDto("SAK");
-        var response = forespørselRest.opprettFlereForespørsler(
+        var response = forespørselRest.opprettForespørslerKomplettListe(
             new OpprettFlereForespørslerRequest(aktørId, LocalDate.now(), YtelseTypeDto.FORELDREPENGER, fagsakSaksnummer,
                 LocalDate.now().plusDays(5), List.of(orgnummer, orgnummer2)));
 
-        var forventetResultat = new OpprettForespørselResponsNy(List.of(
-            new OpprettForespørselResponsNy.OrganisasjonsnummerMedStatus(orgnummer, ForespørselResultat.FORESPØRSEL_OPPRETTET),
-            new OpprettForespørselResponsNy.OrganisasjonsnummerMedStatus(orgnummer2, ForespørselResultat.FORESPØRSEL_OPPRETTET)));
+        var forventetResultat = new OpprettForespørselRespons(List.of(
+            new OpprettForespørselRespons.OrganisasjonsnummerMedStatus(orgnummer, ForespørselResultat.FORESPØRSEL_OPPRETTET),
+            new OpprettForespørselRespons.OrganisasjonsnummerMedStatus(orgnummer2, ForespørselResultat.FORESPØRSEL_OPPRETTET)));
 
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK_200);
         assertThat(response.getEntity()).isEqualTo(forventetResultat);
@@ -129,12 +129,12 @@ class ForespørselRestTest {
         when(forespørselBehandlingTjeneste.håndterKomplettListeMedForespørsler(any(), any(), any(), any(), any(), any()))
             .thenReturn(List.of());
 
-        var response = forespørselRest.opprettFlereForespørsler(
+        var response = forespørselRest.opprettForespørslerKomplettListe(
             new OpprettFlereForespørslerRequest(aktørId, LocalDate.now(), YtelseTypeDto.FORELDREPENGER, fagsakSaksnummer,
                 LocalDate.now().plusDays(5), List.of()));
 
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK_200);
-        assertThat(response.getEntity()).isEqualTo(new OpprettForespørselResponsNy(List.of()));
+        assertThat(response.getEntity()).isEqualTo(new OpprettForespørselRespons(List.of()));
         verify(forespørselBehandlingTjeneste).håndterKomplettListeMedForespørsler(any(), any(), any(), any(), any(), any());
     }
 

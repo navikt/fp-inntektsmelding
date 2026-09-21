@@ -1,6 +1,7 @@
 package no.nav.foreldrepenger.inntektsmelding.forespørsel.lager;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 import java.time.LocalDate;
 import java.util.UUID;
@@ -8,6 +9,8 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import no.nav.foreldrepenger.inntektsmelding.database.JpaExtension;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
@@ -96,6 +99,96 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
         assertThat(hentet.getFagsystemSaksnummer().orElse(null)).isEqualTo("123");
         assertThat(hentet.getFørsteUttaksdato()).isEqualTo(LocalDate.now());
         assertThat(hentet.getDialogportenUuid().orElse(null)).isEqualTo(dialogportenUuid);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "2026-09-08, 2026-08-01",
+        "2026-09-01, 2026-08-08",
+        "2026-09-08, 2026-08-08"
+    })
+    void skal_lagre_tidligere_datoer_i_historikk_ved_datoendring(LocalDate nyFørsteUttaksdato, LocalDate nyttSkjæringstidspunkt) {
+        var tidligereSkjæringstidspunkt = LocalDate.of(2026, 8, 1);
+        var tidligereFørsteUttaksdato = LocalDate.of(2026, 9, 1);
+        var uuid = lagreForespørsel(tidligereSkjæringstidspunkt, Ytelsetype.FORELDREPENGER,
+            "9999999999999", "999999999", "123", tidligereFørsteUttaksdato, ForespørselType.BESTILT_AV_FAGSYSTEM);
+
+        forespørselRepository.oppdaterUttaksdatoOgSkjæringstidspunkt(uuid, nyFørsteUttaksdato, nyttSkjæringstidspunkt);
+        getEntityManager().flush();
+        getEntityManager().clear();
+
+        var hentet = forespørselRepository.hentForespørsel(uuid).orElseThrow();
+        assertThat(hentet.getFørsteUttaksdato()).isEqualTo(nyFørsteUttaksdato);
+        assertThat(hentet.getSkjæringstidspunkt()).contains(nyttSkjæringstidspunkt);
+        assertThat(hentet.getEndringer()).singleElement().satisfies(endring -> {
+            assertThat(endring.getId()).isPositive();
+            assertThat(endring.getForespørsel().getUuid()).isEqualTo(uuid);
+            assertThat(endring.getFørsteUttaksdato()).contains(tidligereFørsteUttaksdato);
+            assertThat(endring.getSkjæringstidspunkt()).contains(tidligereSkjæringstidspunkt);
+            assertThat(endring.getOpprettetTidspunkt()).isNotNull();
+        });
+    }
+
+    @Test
+    void skal_beholde_tidligere_historikk_ved_flere_datoendringer() {
+        var opprinneligSkjæringstidspunkt = LocalDate.of(2026, 8, 1);
+        var opprinneligFørsteUttaksdato = LocalDate.of(2026, 9, 1);
+        var uuid = lagreForespørsel(opprinneligSkjæringstidspunkt, Ytelsetype.FORELDREPENGER,
+            "9999999999999", "999999999", "123", opprinneligFørsteUttaksdato, ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var mellomliggendeSkjæringstidspunkt = opprinneligSkjæringstidspunkt.plusWeeks(1);
+        var mellomliggendeFørsteUttaksdato = opprinneligFørsteUttaksdato.plusWeeks(1);
+
+        forespørselRepository.oppdaterUttaksdatoOgSkjæringstidspunkt(uuid, mellomliggendeFørsteUttaksdato, mellomliggendeSkjæringstidspunkt);
+        getEntityManager().flush();
+        getEntityManager().clear();
+
+        var etterFørsteEndring = forespørselRepository.hentForespørsel(uuid).orElseThrow();
+        assertThat(etterFørsteEndring.getEndringer()).hasSize(1);
+        var førsteHistorikkId = etterFørsteEndring.getEndringer().getFirst().getId();
+        var sisteFørsteUttaksdato = mellomliggendeFørsteUttaksdato.plusWeeks(1);
+        var sisteSkjæringstidspunkt = mellomliggendeSkjæringstidspunkt.plusWeeks(1);
+
+        forespørselRepository.oppdaterUttaksdatoOgSkjæringstidspunkt(uuid, sisteFørsteUttaksdato, sisteSkjæringstidspunkt);
+        getEntityManager().flush();
+        getEntityManager().clear();
+
+        var hentet = forespørselRepository.hentForespørsel(uuid).orElseThrow();
+        assertThat(hentet.getFørsteUttaksdato()).isEqualTo(sisteFørsteUttaksdato);
+        assertThat(hentet.getSkjæringstidspunkt()).contains(sisteSkjæringstidspunkt);
+        assertThat(hentet.getEndringer()).hasSize(2)
+            .extracting(endring -> endring.getSkjæringstidspunkt().orElseThrow(),
+                endring -> endring.getFørsteUttaksdato().orElseThrow())
+            .containsExactlyInAnyOrder(
+                tuple(opprinneligSkjæringstidspunkt, opprinneligFørsteUttaksdato),
+                tuple(mellomliggendeSkjæringstidspunkt, mellomliggendeFørsteUttaksdato));
+        assertThat(hentet.getEndringer()).extracting(ForespørselEndringHistorikkEntitet::getId)
+            .contains(førsteHistorikkId)
+            .doesNotContainNull()
+            .doesNotHaveDuplicates();
+    }
+
+    @Test
+    void skal_lagre_historikk_uten_tidligere_skjæringstidspunkt() {
+        var tidligereFørsteUttaksdato = LocalDate.of(2026, 9, 1);
+        var uuid = lagreForespørsel(null, Ytelsetype.FORELDREPENGER,
+            "9999999999999", "999999999", "123", tidligereFørsteUttaksdato, ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT);
+        var nyFørsteUttaksdato = tidligereFørsteUttaksdato.plusWeeks(1);
+        var nyttSkjæringstidspunkt = LocalDate.of(2026, 8, 1);
+
+        forespørselRepository.oppdaterUttaksdatoOgSkjæringstidspunkt(uuid, nyFørsteUttaksdato, nyttSkjæringstidspunkt);
+        getEntityManager().flush();
+        getEntityManager().clear();
+
+        var hentet = forespørselRepository.hentForespørsel(uuid).orElseThrow();
+        assertThat(hentet.getFørsteUttaksdato()).isEqualTo(nyFørsteUttaksdato);
+        assertThat(hentet.getSkjæringstidspunkt()).contains(nyttSkjæringstidspunkt);
+        assertThat(hentet.getEndringer()).singleElement().satisfies(endring -> {
+            assertThat(endring.getId()).isPositive();
+            assertThat(endring.getForespørsel().getUuid()).isEqualTo(uuid);
+            assertThat(endring.getFørsteUttaksdato()).contains(tidligereFørsteUttaksdato);
+            assertThat(endring.getSkjæringstidspunkt()).isEmpty();
+            assertThat(endring.getOpprettetTidspunkt()).isNotNull();
+        });
     }
 
     @Test

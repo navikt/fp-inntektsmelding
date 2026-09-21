@@ -1,6 +1,7 @@
 package no.nav.foreldrepenger.inntektsmelding.integrasjoner.altinn;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -105,6 +106,36 @@ class DialogportenTjenesteTest {
     @Test
     void skal_ikke_sende_melding_om_purring_når_dialog_uuid_mangler() {
         tjeneste.sendMeldingOmPurring(forespørsel(null));
+
+        verifyNoInteractions(dialogportenKlient);
+    }
+
+    @Test
+    void skal_oppdatere_dialog_med_endret_første_uttaksdato() {
+        var forespørsel = forespørsel(DIALOG_UUID);
+        var tidligereFørsteUttaksdato = LocalDate.of(2024, 12, 1);
+        var nyFørsteUttaksdato = LocalDate.of(2025, 2, 1);
+
+        tjeneste.oppdaterDialogMedEndretFørsteUttaksdato(forespørsel, tidligereFørsteUttaksdato, nyFørsteUttaksdato);
+
+        verify(dialogportenKlient).oppdaterDialogMedEndretFørsteUttaksdato(DIALOG_UUID,
+            new FlerspråkligTekst("Første fraværsdag er endret fra 01.12.24 til 01.02.25.",
+                "Første fråværsdag er endra frå 01.12.24 til 01.02.25.",
+                "The first day of absence has changed from 01.12.24 to 01.02.25."));
+        verifyNoInteractions(personTjeneste);
+    }
+
+    @Test
+    void skal_kaste_illegal_state_exception_med_forespørsel_uuid_når_dialog_uuid_mangler_ved_endret_første_uttaksdato() {
+        var forespørsel = forespørsel(null);
+        var tidligereFørsteUttaksdato = LocalDate.of(2024, 12, 1);
+        var nyFørsteUttaksdato = LocalDate.of(2025, 2, 1);
+
+        assertThatThrownBy(() -> tjeneste.oppdaterDialogMedEndretFørsteUttaksdato(forespørsel,
+            tidligereFørsteUttaksdato,
+            nyFørsteUttaksdato))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("Mangler dialogportenUuid for forespørsel " + FORESPOERSEL_UUID);
 
         verifyNoInteractions(dialogportenKlient);
     }

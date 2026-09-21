@@ -1,5 +1,6 @@
 package no.nav.foreldrepenger.inntektsmelding.integrasjoner.altinn;
 
+import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -116,6 +117,18 @@ public class DialogportenTjeneste {
         var purringTekst = ForespørselTekster.lagBeskjedFraSaksbehandlerTekstFlerspråklig(forespørsel.ytelseType(), person.mapFulltNavn());
 
         dialogportenKlient.sendMeldingOmPurring(forespørsel.dialogportenUuid(), purringTekst);
+    }
+
+    public void oppdaterDialogMedEndretFørsteUttaksdato(ForespørselDto forespørsel,
+                                                        LocalDate tidligereFørsteUttaksdato,
+                                                        LocalDate nyFørsteUttaksdato) {
+        if (forespørsel.dialogportenUuid() == null) {
+            throw new IllegalStateException("Mangler dialogportenUuid for forespørsel " + forespørsel.uuid());
+        }
+
+        var beskjedTekst = ForespørselTekster.lagBeskjedOmEndretFørsteUttaksdatoFlerspråklig(tidligereFørsteUttaksdato, nyFørsteUttaksdato);
+
+        dialogportenKlient.oppdaterDialogMedEndretFørsteUttaksdato(forespørsel.dialogportenUuid(), beskjedTekst);
     }
 
     private FlerspråkligTekst lagSaksTittel(ForespørselDto forespørsel) {
