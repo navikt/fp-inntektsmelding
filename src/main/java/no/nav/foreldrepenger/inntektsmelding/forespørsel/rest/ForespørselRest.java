@@ -80,7 +80,7 @@ public class ForespørselRest {
                 skjæringstidspunkt,
                 førsteUttaksdato,
                 request.organisasjonsnumre());
-            List<OpprettForespørselResponsNy.OrganisasjonsnummerMedStatus> organisasjonsnumreMedStatus = new ArrayList<>();
+            List<OpprettForespørselRespons.OrganisasjonsnummerMedStatus> organisasjonsnumreMedStatus = new ArrayList<>();
 
             request.organisasjonsnumre().forEach(organisasjonsnummer -> {
                 var bleForespørselOpprettet = forespørselBehandlingTjeneste.håndterInnkommendeForespørsel(skjæringstidspunkt,
@@ -94,10 +94,10 @@ public class ForespørselRest {
                     MetrikkerTjeneste.loggForespørselOpprettet(KodeverkMapper.mapYtelsetype(request.ytelsetype()));
                 }
 
-                organisasjonsnumreMedStatus.add(new OpprettForespørselResponsNy.OrganisasjonsnummerMedStatus(organisasjonsnummer,
+                organisasjonsnumreMedStatus.add(new OpprettForespørselRespons.OrganisasjonsnummerMedStatus(organisasjonsnummer,
                     bleForespørselOpprettet));
             });
-            return Response.ok(new OpprettForespørselResponsNy(organisasjonsnumreMedStatus)).build();
+            return Response.ok(new OpprettForespørselRespons(organisasjonsnumreMedStatus)).build();
         } else {
             return Response.status(Response.Status.BAD_REQUEST).build();
         }
@@ -119,8 +119,7 @@ public class ForespørselRest {
             request.orgnummer(),
             request.fagsakSaksnummer(),
             request.førsteUttaksdato());
-        return Response.ok(new OpprettForespørselResponsNy(
-            List.of(new OpprettForespørselResponsNy.OrganisasjonsnummerMedStatus(request.orgnummer(), resultat)))).build();
+        return Response.ok(new OpprettForespørselRespons.OrganisasjonsnummerMedStatus(request.orgnummer(), resultat)).build();
     }
 
     @POST
@@ -137,15 +136,15 @@ public class ForespørselRest {
         var resultater = forespørselBehandlingTjeneste.håndterKomplettListeMedForespørsler(request.skjæringstidspunkt(),
             ytelsetype,
             AktørId.fra(request.aktørId().id()),
-            request.organisasjonsnumre().stream().map(OrganisasjonsnummerDto::orgnr).map(Arbeidsgiver::fra).toList(),
+            request.organisasjonsnummer().stream().map(OrganisasjonsnummerDto::orgnr).map(Arbeidsgiver::fra).toList(),
             Saksnummer.fra(request.fagsakSaksnummer().saksnr()),
             request.førsteUttaksdato());
 
-        var organisasjonsnumreMedStatus = IntStream.range(0, request.organisasjonsnumre().size())
-            .mapToObj(i -> new OpprettForespørselResponsNy.OrganisasjonsnummerMedStatus(request.organisasjonsnumre().get(i), resultater.get(i)))
+        var organisasjonsnumreMedStatus = IntStream.range(0, request.organisasjonsnummer().size())
+            .mapToObj(i -> new OpprettForespørselRespons.OrganisasjonsnummerMedStatus(request.organisasjonsnummer().get(i), resultater.get(i)))
             .toList();
         resultater.forEach(resultat -> loggOpprettetMetrikk(request.ytelsetype(), resultat));
-        return Response.ok(new OpprettForespørselResponsNy(organisasjonsnumreMedStatus)).build();
+        return Response.ok(new OpprettForespørselRespons(organisasjonsnumreMedStatus)).build();
     }
 
     private void loggOpprettetMetrikk(YtelseTypeDto ytelsetype, ForespørselResultat resultat) {

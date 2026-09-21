@@ -16,5 +16,5 @@ public record OpprettFlereForespørslerRequest(@NotNull @Valid AktørIdDto aktø
                                               @NotNull @Valid YtelseTypeDto ytelsetype,
                                               @NotNull @Valid SaksnummerDto fagsakSaksnummer,
                                               @Valid LocalDate førsteUttaksdato,
-                                              @NotNull List<@NotNull @Valid OrganisasjonsnummerDto> organisasjonsnumre) {
+                                              @NotNull List<@NotNull @Valid OrganisasjonsnummerDto> organisasjonsnummer) {
 }
