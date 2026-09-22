@@ -68,7 +68,7 @@ public class InntektTjeneste {
         var tommeMåneder = Set.of(1, 2, 3).stream().map(i -> new Inntektsopplysninger.InntektMåned(null,
             YearMonth.from(skjæringstidspunkt.minusMonths(i)),
             MånedslønnStatus.NEDETID_AINNTEKT)).toList();
-        return new Inntektsopplysninger(null, organisasjonsnummer, tommeMåneder);
+        return new Inntektsopplysninger(BigDecimal.ZERO, organisasjonsnummer, tommeMåneder);
     }
 
     private Inntektsopplysninger beregnSnittOgLeggPåStatus(List<Månedsinntekt> inntekter, LocalDate dagensDato, String organisasjonsnummer,
