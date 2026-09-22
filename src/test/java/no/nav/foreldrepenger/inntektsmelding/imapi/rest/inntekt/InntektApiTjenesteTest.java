@@ -119,7 +119,7 @@ class InntektApiTjenesteTest {
         when(fellesGrunnlagTjeneste.harJobbetHeleBeregningsperioden(personinfo, skjæringstidspunkt, arbeidsgiver)).thenReturn(true);
 
         var månedUnderNedetid = new Inntektsopplysninger.InntektMåned(null, YearMonth.of(2025, 3), MånedslønnStatus.NEDETID_AINNTEKT);
-        var inntektsopplysninger = new Inntektsopplysninger(BigDecimal.ZERO, orgnr, List.of(månedUnderNedetid));
+        var inntektsopplysninger = new Inntektsopplysninger(null, orgnr, List.of(månedUnderNedetid));
         when(inntektTjeneste.hentInntekt(ArgumentMatchers.eq(aktørId), ArgumentMatchers.eq(skjæringstidspunkt), ArgumentMatchers.any(),
             ArgumentMatchers.eq(arbeidsgiver), ArgumentMatchers.eq(true))).thenReturn(inntektsopplysninger);
 

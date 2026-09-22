@@ -305,7 +305,7 @@ class InntektTjenesteTest {
         var forventetListe = List.of(new Inntektsopplysninger.InntektMåned(null, YearMonth.of(2024, 9), MånedslønnStatus.NEDETID_AINNTEKT)
             , new Inntektsopplysninger.InntektMåned(null, YearMonth.of(2024, 10), MånedslønnStatus.NEDETID_AINNTEKT)
             , new Inntektsopplysninger.InntektMåned(null, YearMonth.of(2024, 11), MånedslønnStatus.NEDETID_AINNTEKT));
-        assertResultat(inntektsopplysinger, forventetListe, ORGNR, BigDecimal.ZERO);
+        assertResultat(inntektsopplysinger, forventetListe, ORGNR, null);
     }
 
     @Test
