@@ -11,6 +11,9 @@ import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.imapi.inntekt.InntektResponse;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.FellesGrunnlagTjeneste;
@@ -20,6 +23,7 @@ import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste
 
 @ApplicationScoped
 public class InntektApiTjeneste {
+    private static final Logger LOG = LoggerFactory.getLogger(InntektApiTjeneste.class);
     private ForespørselBehandlingTjeneste forespørselBehandlingTjeneste;
     private PersonTjeneste personTjeneste;
     private FellesGrunnlagTjeneste fellesGrunnlagTjeneste;
@@ -41,14 +45,19 @@ public class InntektApiTjeneste {
     }
 
     public Optional<InntektResponse> hentInntektDto(UUID forespørselUuid) {
-        return forespørselBehandlingTjeneste.hentForespørselOptional(forespørselUuid).map(forespørsel -> {
+        return forespørselBehandlingTjeneste.hentForespørselOptional(forespørselUuid).flatMap(forespørsel -> {
             var personinfo = personTjeneste.hentPersonInfoFraAktørId(forespørsel.aktørId(), forespørsel.ytelseType());
             var skjæringstidspunkt = forespørsel.skjæringstidspunkt();
             var harJobbetHeleBeregningsperioden = fellesGrunnlagTjeneste.harJobbetHeleBeregningsperioden(personinfo, skjæringstidspunkt,
                 forespørsel.arbeidsgiver());
             var inntektsopplysninger = inntektTjeneste.hentInntekt(personinfo.aktørId(), skjæringstidspunkt, LocalDate.now(),
                 forespørsel.arbeidsgiver(), harJobbetHeleBeregningsperioden);
-            return mapTilDto(inntektsopplysninger);
+            if (inntektsopplysninger.harNedetid()) {
+                LOG.info("Inntekt er ikke rapportert (nedetid i inntektskomponenten) for forespørsel med uuid {}, returnerer ikke funnet",
+                    forespørselUuid);
+                return Optional.empty();
+            }
+            return Optional.of(mapTilDto(inntektsopplysninger));
         });
     }
 

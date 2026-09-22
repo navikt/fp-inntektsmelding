@@ -93,4 +93,38 @@ class InntektApiTjenesteTest {
         assertThat(resultat.get().inntektPerMåned()).containsEntry(YearMonth.of(2025, 3), BigDecimal.valueOf(30000));
         assertThat(resultat.get().inntektPerMåned()).containsEntry(YearMonth.of(2025, 4), null);
     }
+
+    @Test
+    void skal_returnere_tomt_resultat_når_inntekt_ikke_er_rapportert_grunnet_nedetid() {
+        inntektApiTjeneste = new InntektApiTjeneste(forespørselBehandlingTjeneste, personTjeneste, fellesGrunnlagTjeneste, inntektTjeneste);
+        var orgnr = "999999999";
+        var skjæringstidspunkt = LocalDate.of(2025, 6, 1);
+        var aktørIdEntitet = new AktørIdEntitet("9999999999999");
+        var forespørsel = new ForespørselEntitet(orgnr,
+            skjæringstidspunkt,
+            aktørIdEntitet,
+            Ytelsetype.FORELDREPENGER,
+            "123",
+            skjæringstidspunkt,
+            ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var forespørselDto = ForespørselDtoMapper.mapFraEntitet(forespørsel);
+        var forespørselUuid = UUID.randomUUID();
+        when(forespørselBehandlingTjeneste.hentForespørselOptional(forespørselUuid)).thenReturn(Optional.of(forespørselDto));
+
+        var aktørId = new AktørId(aktørIdEntitet.getAktørId());
+        var personinfo = new PersonInfo("Fornavn", null, "Etternavn", new PersonIdent("11111111111"), aktørId, null, null, null);
+        when(personTjeneste.hentPersonInfoFraAktørId(aktørId, Ytelsetype.FORELDREPENGER)).thenReturn(personinfo);
+
+        var arbeidsgiver = Arbeidsgiver.fra(orgnr);
+        when(fellesGrunnlagTjeneste.harJobbetHeleBeregningsperioden(personinfo, skjæringstidspunkt, arbeidsgiver)).thenReturn(true);
+
+        var månedUnderNedetid = new Inntektsopplysninger.InntektMåned(null, YearMonth.of(2025, 3), MånedslønnStatus.NEDETID_AINNTEKT);
+        var inntektsopplysninger = new Inntektsopplysninger(BigDecimal.ZERO, orgnr, List.of(månedUnderNedetid));
+        when(inntektTjeneste.hentInntekt(ArgumentMatchers.eq(aktørId), ArgumentMatchers.eq(skjæringstidspunkt), ArgumentMatchers.any(),
+            ArgumentMatchers.eq(arbeidsgiver), ArgumentMatchers.eq(true))).thenReturn(inntektsopplysninger);
+
+        var resultat = inntektApiTjeneste.hentInntektDto(forespørselUuid);
+
+        assertThat(resultat).isEmpty();
+    }
 }

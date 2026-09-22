@@ -48,7 +48,7 @@ public class InntektApiRest {
         var inntektDto = inntektApiTjeneste.hentInntektDto(forespørselUuid);
 
         if (inntektDto.isEmpty()) {
-            LOG.info("Forespørsel med uuid {} finnes ikke", forespørselUuid);
+            LOG.info("Fant ikke inntekt for forespørsel med uuid {} (finnes ikke eller inntekt kunne ikke hentes)", forespørselUuid);
             return Response.status(Response.Status.NOT_FOUND).build();
         }
 
