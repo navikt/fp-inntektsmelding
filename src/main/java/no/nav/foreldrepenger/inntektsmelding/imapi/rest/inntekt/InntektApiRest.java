@@ -15,6 +15,13 @@ import jakarta.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+
+import no.nav.foreldrepenger.inntektsmelding.imapi.inntekt.InntektResponse;
+
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.AutentisertMedAzure;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.Tilgangskontrollert;
 import no.nav.foreldrepenger.inntektsmelding.server.tilgangsstyring.Tilgang;
@@ -41,6 +48,30 @@ public class InntektApiRest {
 
     @GET
     @Path("/{forespørselUuid}")
+    @Operation(
+        summary = "Henter inntekt fra A-ordningen for en forespørsel",
+        description = """
+            Henter inntekt rapportert til A-ordningen for arbeidstakeren i forespørselen, per måned og som gjennomsnitt.
+
+            Verdier i `inntektPerMåned`:
+            - Et tall (også `0`) betyr at arbeidsgiver har rapportert inntekt for måneden. `0` betyr at det er rapportert en inntekt på 0 kr.
+            - `null` betyr at det ikke er rapportert inntekt for måneden, for eksempel fordi rapporteringsfristen ikke er passert eller
+              arbeidstakeren er nyansatt. Måneden er likevel med i responsen.
+
+            Hvis rapporteringsfristen ikke er passert for de nyeste månedene, kan responsen inneholde opptil fem måneder,
+            slik at eldre rapporterte måneder kan brukes i gjennomsnittet.
+
+            `gjennomsnitt` er gjennomsnittlig månedsinntekt for tre måneder. Måneder med `null` der rapporteringsfristen er passert,
+            teller som 0 kr. For nyansatte regnes gjennomsnittet bare av månedene med rapportert inntekt, og er 0 hvis ingen er rapportert.
+
+            Hvis inntekt ikke kan hentes fra A-ordningen (for eksempel ved nedetid), eller forespørselen ikke finnes, svarer endepunktet 404.
+            """,
+        tags = "ekstern-api",
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Inntekt per måned og gjennomsnitt. `null` = ikke rapportert, `0` = rapportert inntekt på 0 kr.",
+                content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = InntektResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Forespørselen finnes ikke, eller inntekt kunne ikke hentes fra A-ordningen.")
+        })
     @Tilgangskontrollert
     public Response hentInntekt(@Valid @PathParam("forespørselUuid") UUID forespørselUuid) {
         tilgang.sjekkErSystembruker();
