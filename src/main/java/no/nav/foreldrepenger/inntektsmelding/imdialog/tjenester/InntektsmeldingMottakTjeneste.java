@@ -61,22 +61,23 @@ public class InntektsmeldingMottakTjeneste {
 
         //Vi trenger ikke å sjekke inntekt om årsak allerede er oppgitt
         if (mottattInntektsmeldingDto.getEndringAvInntektÅrsaker().isEmpty()) {
-            var kontrollResultat = inntektKontrollTjeneste.sjekkInntektMotAInntekt(forespørsel, mottattInntektsmeldingDto);
-
-            if (kontrollResultat instanceof InntektKontrollResultat.UlikInntekt(_, var inntektFraAInntekt)) {
-                throw new InntektAvvikerFraAInntektException(inntektFraAInntekt.gjennomsnitt(), mottattInntektsmeldingDto.getMånedInntekt());
-            }
-
-            if (kontrollResultat instanceof InntektKontrollResultat.Nedetid) {
-                // A-inntekt har nedetid - lagrer inntektsmeldingen med status VENTER_VURDERING og etterkontrollerer
-                // asynkront (se InntektKontrollTjeneste.kontrollerInntektsmeldingEtterNedetid). Forespørselen
-                // ferdigstilles ikke, og portalene varsles først når resultatet av etterkontrollen foreligger.
-                var inntektsmeldingMedStatus = InntektsmeldingDto.builder(mottattInntektsmeldingDto)
-                    .medStatus(InntektsmeldingStatus.VENTER_VURDERING)
-                    .build();
-                var lagretIm = fellesMottakTjeneste.lagreImOgOpprettTaskForEtterkontroll(inntektsmeldingMedStatus, forespørsel);
-                MetrikkerTjeneste.loggInnsendtInntektsmeldingUnderNedetid();
-                return InntektsmeldingMapper.mapFraDomene(lagretIm, forespørsel);
+            switch (inntektKontrollTjeneste.sjekkInntektMotAInntekt(forespørsel, mottattInntektsmeldingDto)) {
+                case InntektKontrollResultat.Godkjent _ -> {
+                    // Fortsetter til ordinær lagring og ferdigstilling under
+                }
+                case InntektKontrollResultat.UlikInntekt(_, var inntektFraAInntekt) ->
+                    throw new InntektAvvikerFraAInntektException(inntektFraAInntekt.gjennomsnitt(), mottattInntektsmeldingDto.getMånedInntekt());
+                case InntektKontrollResultat.Nedetid _ -> {
+                    // A-inntekt har nedetid - lagrer inntektsmeldingen med status VENTER_VURDERING og etterkontrollerer
+                    // asynkront (se InntektKontrollTjeneste.kontrollerInntektsmeldingEtterNedetid). Forespørselen
+                    // ferdigstilles ikke, og portalene varsles først når resultatet av etterkontrollen foreligger.
+                    var inntektsmeldingMedStatus = InntektsmeldingDto.builder(mottattInntektsmeldingDto)
+                        .medStatus(InntektsmeldingStatus.VENTER_VURDERING)
+                        .build();
+                    var lagretIm = fellesMottakTjeneste.lagreImOgOpprettTaskForEtterkontroll(inntektsmeldingMedStatus, forespørsel);
+                    MetrikkerTjeneste.loggInnsendtInntektsmeldingUnderNedetid();
+                    return InntektsmeldingMapper.mapFraDomene(lagretIm, forespørsel);
+                }
             }
         }
 

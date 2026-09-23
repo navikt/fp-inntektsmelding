@@ -99,25 +99,21 @@ public class InntektsmeldingApiMottakTjeneste {
     }
 
     private SendInntektsmeldingResponse sjekkMånedInntektMotRapportertInntekt(ForespørselDto forespørsel, InntektsmeldingDto inntektsmelding) {
-        var resultat = inntektKontrollTjeneste.sjekkInntektMotAInntekt(forespørsel, inntektsmelding);
-
-        if (resultat instanceof InntektKontrollResultat.Nedetid(var melding)) {
-            var inntektsmeldingMedStatus = InntektsmeldingDto.builder(inntektsmelding).medStatus(InntektsmeldingStatus.VENTER_VURDERING).build();
-            var lagretInntektsmelding = fellesMottakTjeneste.lagreImOgOpprettTaskForEtterkontroll(inntektsmeldingMedStatus, forespørsel);
-            MetrikkerTjeneste.loggInnsendtInntektsmeldingUnderNedetid();
-            return new SendInntektsmeldingResponse(true,
-                lagretInntektsmelding.getInntektsmeldingUuid(),
-                InntektsmeldingStatusDto.VENTER_VURDERING,
-                new SendInntektsmeldingResponse.FeilInfo(FeilkodeDto.NEDETID_AINNTEKT, melding, forespørsel.uuid().toString()));
-        }
-
-        if (resultat instanceof InntektKontrollResultat.UlikInntekt(var feilmelding, _)) {
-            return new SendInntektsmeldingResponse(false,
+        return switch (inntektKontrollTjeneste.sjekkInntektMotAInntekt(forespørsel, inntektsmelding)) {
+            case InntektKontrollResultat.Godkjent _ -> new SendInntektsmeldingResponse(true, null, null, null);
+            case InntektKontrollResultat.Nedetid(var melding) -> {
+                var inntektsmeldingMedStatus = InntektsmeldingDto.builder(inntektsmelding).medStatus(InntektsmeldingStatus.VENTER_VURDERING).build();
+                var lagretInntektsmelding = fellesMottakTjeneste.lagreImOgOpprettTaskForEtterkontroll(inntektsmeldingMedStatus, forespørsel);
+                MetrikkerTjeneste.loggInnsendtInntektsmeldingUnderNedetid();
+                yield new SendInntektsmeldingResponse(true,
+                    lagretInntektsmelding.getInntektsmeldingUuid(),
+                    InntektsmeldingStatusDto.VENTER_VURDERING,
+                    new SendInntektsmeldingResponse.FeilInfo(FeilkodeDto.NEDETID_AINNTEKT, melding, forespørsel.uuid().toString()));
+            }
+            case InntektKontrollResultat.UlikInntekt(var feilmelding, _) -> new SendInntektsmeldingResponse(false,
                 null, null,
                 new SendInntektsmeldingResponse.FeilInfo(FeilkodeDto.ULIK_INNTEKT, feilmelding, forespørsel.uuid().toString()));
-        }
-
-        return new SendInntektsmeldingResponse(true, null, null, null);
+        };
     }
 
     private boolean inntektsmeldingerErLike(InntektsmeldingDto nyInntektsmelding, InntektsmeldingDto tidligereInntektsmelding) {
