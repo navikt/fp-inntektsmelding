@@ -309,6 +309,26 @@ class InntektTjenesteTest {
     }
 
     @Test
+    void skal_skille_mellom_rapportert_inntekt_på_0_og_ikke_rapportert_inntekt() {
+        var aktørId = AktørId.fra(AKTØR_ID);
+        var stp = LocalDate.of(2024,10,15);
+        var dagensDato = stp.plusDays(10);
+        var forventetRequest = new FinnInntektRequest(aktørId.getAktørId(), YearMonth.of(2024, 7), YearMonth.of(2024, 9));
+
+        var inntekt1 = getInntekt(YearMonth.of(2024,7), BigDecimal.valueOf(30_000));
+        var inntekt2 = getInntekt(YearMonth.of(2024,8), BigDecimal.ZERO);
+        var response = List.of(inntekt1, inntekt2);
+        when(klient.finnInntekt(forventetRequest)).thenReturn(response);
+
+        var inntektsopplysinger = tjeneste.hentInntekt(aktørId, stp, dagensDato, ORGNR, true);
+
+        var forventetListe = List.of(new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(30_000), YearMonth.of(2024, 7), MånedslønnStatus.BRUKT_I_GJENNOMSNITT)
+            , new Inntektsopplysninger.InntektMåned(BigDecimal.ZERO, YearMonth.of(2024, 8), MånedslønnStatus.BRUKT_I_GJENNOMSNITT)
+            , new Inntektsopplysninger.InntektMåned(null, YearMonth.of(2024, 9), MånedslønnStatus.IKKE_RAPPORTERT_MEN_BRUKT_I_GJENNOMSNITT));
+        assertResultat(inntektsopplysinger, forventetListe, ORGNR, BigDecimal.valueOf(10_000));
+    }
+
+    @Test
     void skal_teste_negative_inntekter_blir_til_0() {
         var aktørId = AktørId.fra(AKTØR_ID);
         var stp = LocalDate.of(2024,10,15);
