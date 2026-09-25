@@ -3,9 +3,12 @@ package no.nav.foreldrepenger.inntektsmelding.inntektsmelding;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Optional;
+import java.util.UUID;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,6 +62,11 @@ public class InntektKontrollTjeneste {
         this.forespørselBehandlingTjeneste = forespørselBehandlingTjeneste;
     }
 
+    private static boolean erOppgittInntektUgyldig(InntektsmeldingDto inntektsmelding, Inntektsopplysninger inntektFraAInntekt) {
+        return inntektFraAInntekt.gjennomsnitt().subtract(inntektsmelding.getMånedInntekt()).abs().compareTo(AKSEPTERT_AVVIK) > 0
+            && (inntektsmelding.getEndringAvInntektÅrsaker() == null || inntektsmelding.getEndringAvInntektÅrsaker().isEmpty());
+    }
+
     /**
      * Kontrollerer oppgitt månedsinntekt i en nylig mottatt (ikke ennå lagret) inntektsmelding mot A-inntekt.
      * Gjør ingen sideeffekter (lagring/varsling) - det er kallers ansvar å håndtere resultatet.
@@ -69,15 +77,16 @@ public class InntektKontrollTjeneste {
 
         if (inntektFraAInntekt == null) {
             LOG.warn(
-                "InntektTjeneste har ikke returnert inntekt, og vi kan ikke verifisere inntekt i inntektsmeldingen mot A-inntekt. inntektsmeldingId: {}",
-                inntektsmelding.getId());
-            throw new IllegalStateException("InntektKontrollTjeneste: utviklerfeil - får tom inntekt fra A-inntekt");
+                "InntektTjeneste har ikke returnert inntekt, og vi kan ikke verifisere inntekt i inntektsmeldingen mot A-inntekt for forespørsel: {}",
+                forespørsel.uuid());
+            throw new IllegalStateException("InntektKontrollTjeneste: noe er feil - får tom inntekt fra A-inntekt");
         }
 
-        if (inntektFraAInntekt.harNedetid()) {
+        var hardkodetOrgnummerForTest = "315786940";
+        if (inntektFraAInntekt.harNedetid() || inntektsmelding.getArbeidsgiver().orgnr().equals(hardkodetOrgnummerForTest)) {
             LOG.warn(
-                "Inntektskomponenten har nedetid, og vi kan ikke verifisere inntekt i inntektsmeldingen mot A-inntekt. inntektsmeldingId: {}",
-                inntektsmelding.getId());
+                "Inntektskomponenten har nedetid, og vi kan ikke verifisere inntekt i inntektsmeldingen mot A-inntekt for forespørsel: {}",
+                forespørsel.uuid());
             return new InntektKontrollResultat.Nedetid(
                 "Inntektskomponenten har nedetid, og vi kan ikke verifisere inntekt i inntektsmeldingen mot A-inntekt. "
                     + "Vi prøver igjen om litt. Resultatet vil publiseres i Altinn og på arbeidsgivers side på nav.no når A-inntekt er oppe igjen.");
@@ -91,7 +100,9 @@ public class InntektKontrollTjeneste {
             return new InntektKontrollResultat.UlikInntekt(feilmelding, inntektFraAInntekt);
         }
 
-        loggTilfellerMedLikInntektOgHarÅrsak(inntektsmelding, inntektFraAInntekt.gjennomsnitt());
+        if (Kildesystem.LØNN_OG_PERSONAL_SYSTEM.equals(inntektsmelding.getKildesystem())) {
+            loggTilfellerMedLikInntektOgHarÅrsak(inntektsmelding, inntektFraAInntekt.gjennomsnitt(), forespørsel.uuid());
+        }
         return new InntektKontrollResultat.Godkjent(inntektFraAInntekt);
     }
 
@@ -113,12 +124,14 @@ public class InntektKontrollTjeneste {
             LOG.warn(
                 "InntektTjeneste har ikke returnert inntekt, og vi kan ikke etterkontrollere inntektsmelding mot A-inntekt. inntektsmeldingId: {}",
                 inntektsmeldingId);
-            throw new TekniskException("F-523043", "Får ikke hentet inntekt fra A-inntekt, får ikke ferdigstilt inntektsmelding " + inntektsmeldingId);
+            throw new TekniskException("F-523043",
+                "Får ikke hentet inntekt fra A-inntekt, får ikke ferdigstilt inntektsmelding " + inntektsmeldingId);
         }
 
         if (inntekter.harNedetid()) {
             //task feiler, vi oppdaterer status til venter vurdering
-            inntektsmeldingTjeneste.oppdatertStatusTilInntektsmelding(inntektsmelding.getInntektsmeldingUuid(), InntektsmeldingStatus.VENTER_VURDERING);
+            inntektsmeldingTjeneste.oppdatertStatusTilInntektsmelding(inntektsmelding.getInntektsmeldingUuid(),
+                InntektsmeldingStatus.VENTER_VURDERING);
             throw new TekniskException("F-523043", "Nedetid i a-inntekt, får ikke ferdigstilt inntektsmelding " + inntektsmeldingId);
         }
 
@@ -136,34 +149,36 @@ public class InntektKontrollTjeneste {
         }
     }
 
-    private Inntektsopplysninger hentInntektFraAInntekt(AktørId aktørId, Ytelsetype ytelseType, LocalDate skjæringstidspunkt, Arbeidsgiver arbeidsgiver) {
+    private Inntektsopplysninger hentInntektFraAInntekt(AktørId aktørId,
+                                                        Ytelsetype ytelseType,
+                                                        LocalDate skjæringstidspunkt,
+                                                        Arbeidsgiver arbeidsgiver) {
         var personInfo = personTjeneste.hentPersonInfoFraAktørId(aktørId, ytelseType);
         var harJobbetHeleBeregningsperioden = fellesGrunnlagTjeneste.harJobbetHeleBeregningsperioden(personInfo, skjæringstidspunkt, arbeidsgiver);
         return inntektTjeneste.hentInntekt(aktørId, skjæringstidspunkt, LocalDate.now(), arbeidsgiver, harJobbetHeleBeregningsperioden);
     }
 
-    private static boolean erOppgittInntektUgyldig(InntektsmeldingDto inntektsmelding, Inntektsopplysninger inntektFraAInntekt) {
-        return inntektFraAInntekt.gjennomsnitt().subtract(inntektsmelding.getMånedInntekt()).abs().compareTo(AKSEPTERT_AVVIK) > 0
-                && (inntektsmelding.getEndringAvInntektÅrsaker() == null || inntektsmelding.getEndringAvInntektÅrsaker().isEmpty());
-    }
-
-    private void loggTilfellerMedLikInntektOgHarÅrsak(InntektsmeldingDto inntektsmelding, BigDecimal gjennomsnittligInntekt) {
+    private void loggTilfellerMedLikInntektOgHarÅrsak(InntektsmeldingDto inntektsmelding, BigDecimal gjennomsnittligInntekt, UUID forespørselUuid) {
         var inntektFraIm = inntektsmelding.getMånedInntekt();
         var likInntektMedÅrsak = inntektFraIm.compareTo(gjennomsnittligInntekt) == 0
             && inntektsmelding.getEndringAvInntektÅrsaker() != null && !inntektsmelding.getEndringAvInntektÅrsaker().isEmpty();
         if (likInntektMedÅrsak) {
-            LOG.info("LIK_INNTEKT_OG_ÅRSAK: inntekt oppgitt av arbeidsgiver: {} er helt lik gjennomsnittlig inntekt fra a-inntekt. {}, og årsak(er) er oppgitt {}", inntektsmelding.getMånedInntekt(), gjennomsnittligInntekt, inntektsmelding.getEndringAvInntektÅrsaker());
+            LOG.info("LIK_INNTEKT_OG_ÅRSAK: inntekt oppgitt av arbeidsgiver: {} er helt lik gjennomsnittlig inntekt fra a-inntekt. {}, og årsak(er) "
+                    + "er oppgitt {} for forespørselUuid {}", inntektsmelding.getMånedInntekt(), gjennomsnittligInntekt,
+                inntektsmelding.getEndringAvInntektÅrsaker(), forespørselUuid);
         } else {
             var likInntektMedDifferanseOgÅrsak =
                 gjennomsnittligInntekt.subtract(inntektFraIm).abs().compareTo(AKSEPTERT_AVVIK) == 0
                     && inntektsmelding.getEndringAvInntektÅrsaker() != null && !inntektsmelding.getEndringAvInntektÅrsaker().isEmpty();
             if (likInntektMedDifferanseOgÅrsak) {
                 LOG.info(
-                    "LIK_INNTEKT_INNENFOR_DIFFERANSE: inntekt oppgitt av arbeidsgiver: {} er lik gjennomsnittlig inntekt fra a-inntekt. {} med en margin på {} kroner. Endringsårsak(er) oppgitt: {}",
+                    "LIK_INNTEKT_INNENFOR_DIFFERANSE: inntekt oppgitt av arbeidsgiver: {} er lik gjennomsnittlig inntekt fra a-inntekt. {} med en margin på {} kroner. "
+                        + "Endringsårsak(er) oppgitt: {} for forespørselUuid {}",
                     inntektsmelding.getMånedInntekt(),
                     gjennomsnittligInntekt,
                     AKSEPTERT_AVVIK,
-                    inntektsmelding.getEndringAvInntektÅrsaker());
+                    inntektsmelding.getEndringAvInntektÅrsaker(),
+                    forespørselUuid);
             }
         }
     }
