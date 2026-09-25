@@ -226,7 +226,7 @@ class GrunnlagDtoTjenesteTest {
         var fnr = new PersonIdent("11111111111");
         var førsteFraværsdag = LocalDate.now();
         var aktørId = new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId("9999999999999");
-        var personInfo = new PersonInfo("Navn", null, "Navnesen", fnr, aktørId, LocalDate.now(), null, null);
+        var personInfo = new PersonInfo("Navn", "Mellomnavn", "Navnesen", fnr, aktørId, LocalDate.now(), null, null);
         var orgnr = "999999999";
         when(arbeidstakerTjeneste.finnSøkersArbeidsforholdSomArbeidsgiverHarTilgangTil(fnr, førsteFraværsdag)).thenReturn(List.of(new Arbeidsforhold(orgnr,
             new Arbeidsforhold.Ansettelsesperiode(LocalDate.now().minusMonths(2), Tid.TIDENES_ENDE))));
@@ -237,6 +237,7 @@ class GrunnlagDtoTjenesteTest {
         // Assert
         assertThat(response).isNotNull();
         assertThat(response.fornavn()).isEqualTo("Navn");
+        assertThat(response.mellomnavn()).isEqualTo("Mellomnavn");
         assertThat(response.etternavn()).isEqualTo("Navnesen");
         assertThat(response.arbeidsforhold()).hasSize(1);
         assertThat(response.arbeidsforhold().stream().toList().getFirst().organisasjonsnavn()).isEqualTo("Bedriften");
@@ -249,7 +250,7 @@ class GrunnlagDtoTjenesteTest {
         // Arrange
         var fnr = new PersonIdent("11111111111");
         var aktørId = new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId("9999999999999");
-        var personInfo = new PersonInfo("Navn", null, "Navnesen", fnr, aktørId, LocalDate.now(), null, null);
+        var personInfo = new PersonInfo("Navn", "Mellomnavn", "Navnesen", fnr, aktørId, LocalDate.now(), null, null);
         var orgnr1 = Arbeidsgiver.fra("123456789");
         var orgnr2 = Arbeidsgiver.fra("987654321");
         var navn1 = "Organisasjon 1";
@@ -262,8 +263,9 @@ class GrunnlagDtoTjenesteTest {
 
         // Assert
         assertThat(response).isNotNull();
-        assertThat(response.fornavn()).isEqualTo("Navn");
-        assertThat(response.etternavn()).isEqualTo("Navnesen");
+        assertThat(response.fornavn()).isEqualTo("Ukjent");
+        assertThat(response.mellomnavn()).isNull();
+        assertThat(response.etternavn()).isEqualTo("Ukjent");
         assertThat(response.arbeidsforhold()).hasSize(2);
         assertThat(response.arbeidsforhold().stream()).anyMatch(o -> o.organisasjonsnavn().equals(navn1));
         assertThat(response.arbeidsforhold().stream()).anyMatch(o -> o.organisasjonsnavn().equals(navn2));
@@ -464,7 +466,7 @@ class GrunnlagDtoTjenesteTest {
             "123",
             eksForespørselDato, ForespørselType.ARBEIDSGIVERINITIERT_UREGISTRERT);
 
-        var personInfo = new PersonInfo("Navn", null, "Navnesen", personIdent, new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(aktørId.getAktørId()), LocalDate.now(), null, PersonInfo.Kjønn.MANN);
+        var personInfo = new PersonInfo("Navn", "Mellomnavn", "Navnesen", personIdent, new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(aktørId.getAktørId()), LocalDate.now(), null, PersonInfo.Kjønn.MANN);
 
         var inntekt1 = new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(35000), YearMonth.of(2025, 1), MånedslønnStatus.BRUKT_I_GJENNOMSNITT);
         var inntekt2 = new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(35000), YearMonth.of(2025, 2), MånedslønnStatus.BRUKT_I_GJENNOMSNITT);
@@ -493,8 +495,9 @@ class GrunnlagDtoTjenesteTest {
 
         // Assert
         assertThat(imDialogDto.person().aktørId()).isEqualTo(aktørId.getAktørId());
-        assertThat(imDialogDto.person().fornavn()).isEqualTo("Navn");
-        assertThat(imDialogDto.person().etternavn()).isEqualTo("Navnesen");
+        assertThat(imDialogDto.person().fornavn()).isEqualTo("Ukjent");
+        assertThat(imDialogDto.person().mellomnavn()).isEmpty();
+        assertThat(imDialogDto.person().etternavn()).isEqualTo("Ukjent");
         assertThat(imDialogDto.arbeidsgiver().organisasjonNavn()).isEqualTo("Bedriften");
         assertThat(imDialogDto.arbeidsgiver().organisasjonNummer()).isEqualTo(orgnr);
         assertThat(imDialogDto.førsteUttaksdato()).isEqualTo(førsteUttaksdato);
@@ -516,7 +519,7 @@ class GrunnlagDtoTjenesteTest {
         var orgnr = "999999999";
         var aktørId = AktørId.fra("9999999999999");
         var forespørsel = new ForespørselEntitet("999999999", førsteUttaksdato, new AktørIdEntitet(aktørId.getAktørId()), ytelsetype, "123", førsteUttaksdato, ForespørselType.BESTILT_AV_FAGSYSTEM);
-        var personInfo = new PersonInfo("Navn", null, "Navnesen", personIdent, new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(aktørId.getAktørId()), LocalDate.now(), null, null);
+        var personInfo = new PersonInfo("Navn", "Mellomnavn", "Navnesen", personIdent, new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(aktørId.getAktørId()), LocalDate.now(), null, null);
 
         when(personTjeneste.hentPersonFraIdent(personIdent, ytelsetype)).thenReturn(personInfo);
         when(personTjeneste.hentPersonInfoFraAktørId(new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(aktørId.getAktørId()), ytelsetype)).thenReturn(personInfo);
@@ -537,6 +540,7 @@ class GrunnlagDtoTjenesteTest {
         // Assert
         assertThat(imDialogDto.person().aktørId()).isEqualTo(aktørId.getAktørId());
         assertThat(imDialogDto.person().fornavn()).isEqualTo("Navn");
+        assertThat(imDialogDto.person().mellomnavn()).isEqualTo("Mellomnavn");
         assertThat(imDialogDto.person().etternavn()).isEqualTo("Navnesen");
         assertThat(imDialogDto.arbeidsgiver().organisasjonNavn()).isEqualTo("Bedriften");
         assertThat(imDialogDto.arbeidsgiver().organisasjonNummer()).isEqualTo(orgnr);
@@ -569,4 +573,3 @@ class GrunnlagDtoTjenesteTest {
         AssertionsForClassTypes.assertThat(ex.getFeilkode()).isEqualTo(InntektsmeldingException.LokalFeilKode.FINNES_I_AAREG.name());
     }
 }
-
