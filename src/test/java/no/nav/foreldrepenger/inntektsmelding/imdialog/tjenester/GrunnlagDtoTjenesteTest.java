@@ -502,9 +502,9 @@ class GrunnlagDtoTjenesteTest {
         assertThat(imDialogDto.forespørselUuid()).isNull();
         assertThat(imDialogDto.inntektsopplysninger().gjennomsnittLønn()).isEqualByComparingTo(gjennomsnittInntekt);
         assertThat(imDialogDto.inntektsopplysninger().månedsinntekter()).hasSize(3);
-        assertThat(imDialogDto.inntektsopplysninger().månedsinntekter()).anyMatch(m -> m.beløp().equals(inntekt1.beløp()));
-        assertThat(imDialogDto.inntektsopplysninger().månedsinntekter()).anyMatch(m -> m.beløp().equals(inntekt2.beløp()));
-        assertThat(imDialogDto.inntektsopplysninger().månedsinntekter()).anyMatch(m -> m.beløp().equals(inntekt3.beløp()));
+        assertThat(imDialogDto.inntektsopplysninger().månedsinntekter()).anyMatch(m -> m.beløp().compareTo(inntekt1.beløp()) == 0);
+        assertThat(imDialogDto.inntektsopplysninger().månedsinntekter()).anyMatch(m -> m.beløp().compareTo(inntekt2.beløp()) == 0);
+        assertThat(imDialogDto.inntektsopplysninger().månedsinntekter()).anyMatch(m -> m.beløp().compareTo(inntekt3.beløp()) == 0);
     }
 
     @Test

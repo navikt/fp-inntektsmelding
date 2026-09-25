@@ -169,7 +169,7 @@ public class ForespørselForvaltningRestTjeneste {
             if (!dryRun) {
                 try {
                     minSideArbeidsgiverTjeneste.slettSak(sak.sakId().toString());
-                } catch (Exception e) {
+                } catch (Exception _) {
                     sakerSomIkkeBleSlettet.add(sak);
                 }
             }

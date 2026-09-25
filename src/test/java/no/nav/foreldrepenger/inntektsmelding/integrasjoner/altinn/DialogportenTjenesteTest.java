@@ -57,11 +57,11 @@ class DialogportenTjenesteTest {
     void skal_opprette_dialog_med_sakstittel_fra_person() {
         var forespørsel = forespørsel(null);
         mockPerson();
-        when(dialogportenKlient.opprettDialog(eq(FORESPOERSEL_UUID),
-            eq(ARBEIDSGIVER),
-            eq(SAKSTITTEL),
-            eq(FØRSTE_UTTAKSDATO),
-            eq(Ytelsetype.FORELDREPENGER))).thenReturn("\"%s\"".formatted(DIALOG_UUID));
+        when(dialogportenKlient.opprettDialog(FORESPOERSEL_UUID,
+            ARBEIDSGIVER,
+            SAKSTITTEL,
+            FØRSTE_UTTAKSDATO,
+            Ytelsetype.FORELDREPENGER)).thenReturn("\"%s\"".formatted(DIALOG_UUID));
 
         var resultat = tjeneste.opprettDialog(forespørsel);
 
