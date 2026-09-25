@@ -539,9 +539,9 @@ class GrunnlagDtoTjenesteTest {
 
         // Assert
         assertThat(imDialogDto.person().aktørId()).isEqualTo(aktørId.getAktørId());
-        assertThat(imDialogDto.person().fornavn()).isEqualTo("Ukjent");
-        assertThat(imDialogDto.person().mellomnavn()).isEmpty();
-        assertThat(imDialogDto.person().etternavn()).isEqualTo("Ukjent");
+        assertThat(imDialogDto.person().fornavn()).isEqualTo("Navn");
+        assertThat(imDialogDto.person().mellomnavn()).isEqualTo("Mellomnavn");
+        assertThat(imDialogDto.person().etternavn()).isEqualTo("Navnesen");
         assertThat(imDialogDto.arbeidsgiver().organisasjonNavn()).isEqualTo("Bedriften");
         assertThat(imDialogDto.arbeidsgiver().organisasjonNummer()).isEqualTo(orgnr);
         assertThat(imDialogDto.førsteUttaksdato()).isEqualTo(førsteUttaksdato);

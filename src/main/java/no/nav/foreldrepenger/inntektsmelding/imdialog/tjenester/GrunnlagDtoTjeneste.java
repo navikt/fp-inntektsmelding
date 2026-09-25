@@ -68,15 +68,14 @@ public class GrunnlagDtoTjeneste {
     }
 
     public InntektsmeldingDialogDto lagDialogDto(UUID forespørselUuid) {
-        return lagDialogDto(forespørselUuid, false);
-    }
-
-    private InntektsmeldingDialogDto lagDialogDto(UUID forespørselUuid, boolean skjulSøkernavn) {
         var forespørsel = forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid);
 
         var organisasjonsnummer = forespørsel.arbeidsgiver();
         var personInfo = personTjeneste.hentPersonInfoFraAktørId(forespørsel.aktørId(), forespørsel.ytelseType());
-        var personDto = lagPersonDto(personInfo, skjulSøkernavn);
+        var personDto = new InntektsmeldingDialogDto.PersonInfoResponseDto(personInfo.fornavn(), personInfo.mellomnavn(),
+            personInfo.etternavn(),
+            personInfo.fødselsnummer().getIdent(), personInfo.aktørId().getAktørId());
+
         var organisasjonDto = lagOrganisasjonDto(organisasjonsnummer);
         var innmelderDto = lagInnmelderDto(forespørsel.ytelseType());
         var erArbeidsgiverInitiertNyansatt = ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT.equals(forespørsel.forespørselType());
@@ -154,15 +153,15 @@ public class GrunnlagDtoTjeneste {
             if (forespørsel.forespørselType().equals(ForespørselType.BESTILT_AV_FAGSYSTEM)) {
                 MetrikkerTjeneste.loggRedirectFraAGITilVanligForespørsel(forespørsel);
             }
-            return lagDialogDto(forespørsel.uuid(), true);
+            return lagDialogDto(forespørsel.uuid());
         }
         //Er denne sjekken i det hele tatt er nødvendig?
         var finnesOrgnummerIAaReg = finnesOrgnummerIAaregPåPerson(fødselsnummer, arbeidsgiver.orgnr(), førsteUttaksdato);
         if (finnesOrgnummerIAaReg) {
             throw new InntektsmeldingException(InntektsmeldingException.LokalFeilKode.FINNES_I_AAREG);
         }
-
-        var personDto = lagPersonDto(personInfo, true);
+        var personDto = new InntektsmeldingDialogDto.PersonInfoResponseDto(UKJENT_NAVN,"", UKJENT_NAVN,
+            personInfo.fødselsnummer().getIdent(), personInfo.aktørId().getAktørId());
         var organisasjonDto = lagOrganisasjonDto(arbeidsgiver);
         var innmelderDto = lagInnmelderDto(ytelsetype);
 
@@ -242,13 +241,6 @@ public class GrunnlagDtoTjeneste {
     private InntektsmeldingDialogDto.OrganisasjonInfoResponseDto lagOrganisasjonDto(Arbeidsgiver arbeidsgiver) {
         var orgdata = organisasjonTjeneste.finnOrganisasjon(arbeidsgiver);
         return new InntektsmeldingDialogDto.OrganisasjonInfoResponseDto(orgdata.navn(), orgdata.orgnr());
-    }
-
-    private InntektsmeldingDialogDto.PersonInfoResponseDto lagPersonDto(PersonInfo personInfo, boolean skjulSøkernavn) {
-        return new InntektsmeldingDialogDto.PersonInfoResponseDto(skjulSøkernavn ? UKJENT_NAVN : personInfo.fornavn(),
-            skjulSøkernavn ? "" : personInfo.mellomnavn(),
-            skjulSøkernavn ? UKJENT_NAVN : personInfo.etternavn(),
-            personInfo.fødselsnummer().getIdent(), personInfo.aktørId().getAktørId());
     }
 
     public Optional<SlåOppArbeidstakerResponseDto> finnArbeidsforholdForFnr(PersonInfo personInfo,
