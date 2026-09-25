@@ -54,8 +54,7 @@ class FpsakKlientTest {
 
     @Test
     void test_sjekk_forespørsel_status() {
-        var forespørsel = new FpsakKlient.ForespørselStatusRequest.ForespørselStatusForespørsel("SAK123", "999999999",
-            FpsakKlient.ForespørselStatusRequest.Ytelse.FORELDREPENGER);
+        var forespørsel = new FpsakKlient.ForespørselStatusRequest.Forespørsel("SAK123", "999999999");
 
         when(restClient.sendReturnList(any(), any())).thenReturn(
             List.of(new FpsakKlient.ForespørselStatusResponse("SAK123", "999999999", FpsakKlient.ForespørselStatusResponse.Vurdering.TRENGS_IKKE,
@@ -73,10 +72,9 @@ class FpsakKlientTest {
 
     @Test
     void test_sjekk_forespørsel_status_skal_feile_ved_for_stor_batch() {
-        var forForMange = new ArrayList<FpsakKlient.ForespørselStatusRequest.ForespørselStatusForespørsel>();
+        var forForMange = new ArrayList<FpsakKlient.ForespørselStatusRequest.Forespørsel>();
         for (var i = 0; i < FpsakKlient.MAKS_ANTALL_FORESPØRSLER_PER_KALL + 1; i++) {
-            forForMange.add(new FpsakKlient.ForespørselStatusRequest.ForespørselStatusForespørsel("SAK" + i, "999999999",
-                FpsakKlient.ForespørselStatusRequest.Ytelse.FORELDREPENGER));
+            forForMange.add(new FpsakKlient.ForespørselStatusRequest.Forespørsel("SAK" + i, "999999999"));
         }
 
         assertThatThrownBy(() -> fpsakKlient.sjekkForespørselStatus(forForMange)).isInstanceOf(IllegalArgumentException.class);

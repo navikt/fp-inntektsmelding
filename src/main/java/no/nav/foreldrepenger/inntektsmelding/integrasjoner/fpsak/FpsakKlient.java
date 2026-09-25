@@ -62,7 +62,7 @@ public class FpsakKlient {
      * Sjekker mot fp-sak om det fortsatt er behov for inntektsmelding for et sett med forespørsler, gruppert på
      * (fagsakSaksnummer, orgnummer). Brukes av forvaltningsjobber for å rydde opp forespørsler uten behov.
      */
-    public List<ForespørselStatusResponse> sjekkForespørselStatus(List<ForespørselStatusRequest.ForespørselStatusForespørsel> forespørsler) {
+    public List<ForespørselStatusResponse> sjekkForespørselStatus(List<ForespørselStatusRequest.Forespørsel> forespørsler) {
         if (forespørsler.size() > MAKS_ANTALL_FORESPØRSLER_PER_KALL) {
             throw new IllegalArgumentException(
                 "Kan maks sjekke %d forespørsler per kall til fp-sak, fikk %d".formatted(MAKS_ANTALL_FORESPØRSLER_PER_KALL, forespørsler.size()));
@@ -93,22 +93,20 @@ public class FpsakKlient {
         INGEN_BEHANDLING
     }
 
-    public record ForespørselStatusRequest(@Valid @NotNull List<@Valid ForespørselStatusForespørsel> forespørsler) {
-        public record ForespørselStatusForespørsel(@NotNull String fagsakSaksnummer, @NotNull String orgnummer, @NotNull Ytelse ytelsetype) {}
-        public enum Ytelse {FORELDREPENGER, SVANGERSKAPSPENGER}
+    public record ForespørselStatusRequest(@Valid @NotNull List<@Valid Forespørsel> forespørsler) {
+        public record Forespørsel(@NotNull String fagsakSaksnummer, @NotNull String orgnummer) {}
     }
 
     public record ForespørselStatusResponse(@NotNull String fagsakSaksnummer, @NotNull String orgnummer, @NotNull Vurdering vurdering, Årsak årsak) {
         public enum Vurdering {TRENGS, TRENGS_IKKE, UKJENT}
 
         public enum Årsak {
-            MANGLER_INNTEKTSMELDING,
+            IM_MANGLER,
             SAK_AVSLUTTET,
-            BEHANDLING_AVSLÅTT,
-            BEHANDLING_HENLAGT,
-            INNTEKTSMELDING_MOTTATT,
-            AVKLART_IKKE_PÅKREVD,
-            ORGNR_IKKE_PÅKREVD,
+            BEHANDLING_AVSLUTTET,
+            IM_MOTTATT,
+            IM_AVKLART_IKKE_PÅKREVD,
+            IM_ALDRI_PÅKREVD,
             SAK_IKKE_FUNNET,
             INGEN_BEHANDLING
         }

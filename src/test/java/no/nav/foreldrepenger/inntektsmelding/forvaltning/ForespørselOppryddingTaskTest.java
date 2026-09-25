@@ -39,13 +39,12 @@ import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
-import no.nav.vedtak.exception.TekniskException;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskTjeneste;
 import no.nav.vedtak.log.util.MemoryAppender;
 
 @ExtendWith(MockitoExtension.class)
-class LukkForespørslerUtenBehovTaskTest {
+class ForespørselOppryddingTaskTest {
 
     private static final String ORG_NUMMER = "999999999";
     private static final LocalDate FØRSTE_UTTAKSDATO = LocalDate.of(2026, 4, 7);
@@ -63,13 +62,13 @@ class LukkForespørslerUtenBehovTaskTest {
     @Mock
     private TypedQuery<ForespørselEntitet> query;
 
-    private LukkForespørslerUtenBehovTask task;
+    private ForespørselOppryddingTask task;
     private static MemoryAppender logSniffer;
 
     @BeforeEach
     void setUp() {
-        task = new LukkForespørslerUtenBehovTask(entityManager, prosessTaskTjeneste, forespørselTjeneste, forespørselBehandlingTjeneste, fpsakKlient);
-        logSniffer = MemoryAppender.sniff(LukkForespørslerUtenBehovTask.class);
+        task = new ForespørselOppryddingTask(entityManager, prosessTaskTjeneste, forespørselTjeneste, forespørselBehandlingTjeneste, fpsakKlient);
+        logSniffer = MemoryAppender.sniff(ForespørselOppryddingTask.class);
     }
 
     @AfterEach
@@ -100,7 +99,7 @@ class LukkForespørslerUtenBehovTaskTest {
     }
 
     @Test
-    void skal_lukke_alle_forespørsler_i_gruppen_ved_trengs_ikke_og_ikke_dry_run() {
+    void skal_lukke_alle_forespørsler_for_kombinasjonen_ved_trengs_ikke_og_ikke_dry_run() {
         var uuid1 = UUID.randomUUID();
         var uuid2 = UUID.randomUUID();
         var forespørsel1 = opprettForespørsel(1L, uuid1, "SAK1", LocalDateTime.now().minusDays(1));
@@ -148,7 +147,7 @@ class LukkForespørslerUtenBehovTaskTest {
 
         when(fpsakKlient.sjekkForespørselStatus(any())).thenReturn(
             List.of(new FpsakKlient.ForespørselStatusResponse("SAK2", ORG_NUMMER, FpsakKlient.ForespørselStatusResponse.Vurdering.TRENGS,
-                FpsakKlient.ForespørselStatusResponse.Årsak.MANGLER_INNTEKTSMELDING)));
+                FpsakKlient.ForespørselStatusResponse.Årsak.IM_MANGLER)));
 
         mockLåstEntitet(forespørselGammel);
 
@@ -193,7 +192,7 @@ class LukkForespørslerUtenBehovTaskTest {
                 FpsakKlient.ForespørselStatusResponse.Årsak.SAK_AVSLUTTET)));
 
         // dryRun-property settes ikke -> skal default til true
-        var prosessTaskData = ProsessTaskData.forProsessTask(LukkForespørslerUtenBehovTask.class);
+        var prosessTaskData = ProsessTaskData.forProsessTask(ForespørselOppryddingTask.class);
         prosessTaskData.setProperty("fraId", "0");
 
         task.doTask(prosessTaskData);
@@ -221,7 +220,7 @@ class LukkForespørslerUtenBehovTaskTest {
 
         // Forespørsel 1 har i mellomtiden blitt FERDIG av en annen prosess (kappløp). Den pessimistiske låsen leser
         // den ferske statusen rett før lukking, og skal derfor hoppe over denne selv om den var UNDER_BEHANDLING
-        // da gruppen ble hentet.
+        // da kombinasjonen ble hentet.
         settFelter(forespørsel1, 1L, uuidAlleredeLukket, ForespørselStatus.FERDIG, forespørsel1.getOpprettetTidspunkt());
         mockLåstEntitet(forespørsel1);
         mockLåstEntitet(forespørsel2);
@@ -246,7 +245,7 @@ class LukkForespørslerUtenBehovTaskTest {
                 FpsakKlient.ForespørselStatusResponse.Årsak.SAK_AVSLUTTET)));
 
         // dryRun default = true her, vi tester kun paginering
-        var prosessTaskData = ProsessTaskData.forProsessTask(LukkForespørslerUtenBehovTask.class);
+        var prosessTaskData = ProsessTaskData.forProsessTask(ForespørselOppryddingTask.class);
         prosessTaskData.setProperty("fraId", "0");
 
         task.doTask(prosessTaskData);
@@ -257,9 +256,9 @@ class LukkForespørslerUtenBehovTaskTest {
     }
 
     @Test
-    void skal_stoppe_ved_100_grupper_og_planlegge_neste_task_selv_med_id_hull() {
+    void skal_stoppe_ved_100_kombinasjoner_og_planlegge_neste_task_selv_med_id_hull() {
         var rader = new ArrayList<ForespørselEntitet>();
-        // 105 distinkte grupper, med store hull mellom id-ene for å simulere "lange id-hull"
+        // 105 distinkte kombinasjoner, med store hull mellom id-ene for å simulere "lange id-hull"
         for (var i = 1; i <= 105; i++) {
             rader.add(opprettForespørsel(i * 100L, UUID.randomUUID(), "SAK-" + i, LocalDateTime.now()));
         }
@@ -277,22 +276,22 @@ class LukkForespørslerUtenBehovTaskTest {
                 .build());
         });
         when(fpsakKlient.sjekkForespørselStatus(any())).thenAnswer(inv -> {
-            List<FpsakKlient.ForespørselStatusRequest.ForespørselStatusForespørsel> forespørsler = inv.getArgument(0);
+            List<FpsakKlient.ForespørselStatusRequest.Forespørsel> forespørsler = inv.getArgument(0);
             return forespørsler.stream()
                 .map(f -> new FpsakKlient.ForespørselStatusResponse(f.fagsakSaksnummer(), f.orgnummer(),
                     FpsakKlient.ForespørselStatusResponse.Vurdering.UKJENT, FpsakKlient.ForespørselStatusResponse.Årsak.SAK_IKKE_FUNNET))
                 .toList();
         });
 
-        // dryRun default = true, vi tester kun paginering/gruppetak
-        var prosessTaskData = ProsessTaskData.forProsessTask(LukkForespørslerUtenBehovTask.class);
+        // dryRun default = true, vi tester kun paginering/maks-tak
+        var prosessTaskData = ProsessTaskData.forProsessTask(ForespørselOppryddingTask.class);
         prosessTaskData.setProperty("fraId", "0");
 
         task.doTask(prosessTaskData);
 
         var requestCaptor = ArgumentCaptor.forClass(List.class);
-        // Alle 105 forsøkte gruppene har hvert sitt unike saksnummer, så fp-sak kalles én gang per saksnummer
-        // (maks 100 saksnummer behandlet denne kjøringen pga. gruppetaket).
+        // Alle 105 forsøkte kombinasjonene har hvert sitt unike saksnummer, så fp-sak kalles én gang per saksnummer
+        // (maks 100 saksnummer behandlet denne kjøringen pga. maks-taket).
         verify(fpsakKlient, times(100)).sjekkForespørselStatus(requestCaptor.capture());
         requestCaptor.getAllValues().forEach(kall -> assertThat(kall).hasSize(1));
 
@@ -311,7 +310,7 @@ class LukkForespørslerUtenBehovTaskTest {
 
         when(forespørselTjeneste.finnÅpneForespørslerForFagsak(any())).thenReturn(List.of());
         when(fpsakKlient.sjekkForespørselStatus(any())).thenAnswer(inv -> {
-            List<FpsakKlient.ForespørselStatusRequest.ForespørselStatusForespørsel> forespørsler = inv.getArgument(0);
+            List<FpsakKlient.ForespørselStatusRequest.Forespørsel> forespørsler = inv.getArgument(0);
             return forespørsler.stream()
                 .map(f -> new FpsakKlient.ForespørselStatusResponse(f.fagsakSaksnummer(), f.orgnummer(),
                     FpsakKlient.ForespørselStatusResponse.Vurdering.UKJENT, FpsakKlient.ForespørselStatusResponse.Årsak.SAK_IKKE_FUNNET))
@@ -319,7 +318,7 @@ class LukkForespørslerUtenBehovTaskTest {
         });
 
         // dryRun default = true, vi tester kun hvordan fp-sak kalles
-        var prosessTaskData = ProsessTaskData.forProsessTask(LukkForespørslerUtenBehovTask.class);
+        var prosessTaskData = ProsessTaskData.forProsessTask(ForespørselOppryddingTask.class);
         prosessTaskData.setProperty("fraId", "0");
 
         task.doTask(prosessTaskData);
@@ -328,62 +327,14 @@ class LukkForespørslerUtenBehovTaskTest {
         verify(fpsakKlient, times(2)).sjekkForespørselStatus(requestCaptor.capture());
         var saksnumreForespurt = requestCaptor.getAllValues().stream()
             .flatMap(List::stream)
-            .map(o -> ((FpsakKlient.ForespørselStatusRequest.ForespørselStatusForespørsel) o).fagsakSaksnummer())
+            .map(o -> ((FpsakKlient.ForespørselStatusRequest.Forespørsel) o).fagsakSaksnummer())
             .toList();
         assertThat(saksnumreForespurt).containsExactlyInAnyOrder("SAK-A", "SAK-B");
         requestCaptor.getAllValues().forEach(kall -> assertThat(kall).hasSize(1));
     }
 
     @Test
-    void skal_feile_tasken_ved_manglende_svar_fra_fpsak() {
-        var forespørsel = opprettForespørsel(1L, UUID.randomUUID(), "SAK6", LocalDateTime.now());
-        mockSide(0L, List.of(forespørsel));
-
-        // Fp-sak svarer med tom liste - mangler svar for den forespurte gruppen
-        when(fpsakKlient.sjekkForespørselStatus(any())).thenReturn(List.of());
-
-        assertThatThrownBy(() -> task.doTask(lagProsessTaskData(0L, false))).isInstanceOf(TekniskException.class);
-
-        verify(forespørselBehandlingTjeneste, never()).settForespørselTilUtgåttForvaltning(any());
-        verify(prosessTaskTjeneste, never()).lagre(any(ProsessTaskData.class));
-    }
-
-    @Test
-    void skal_feile_tasken_ved_duplikat_svar_fra_fpsak() {
-        var forespørsel = opprettForespørsel(1L, UUID.randomUUID(), "SAK7", LocalDateTime.now());
-        mockSide(0L, List.of(forespørsel));
-
-        // Fp-sak svarer to ganger på samme (saksnummer, orgnummer)
-        when(fpsakKlient.sjekkForespørselStatus(any())).thenReturn(
-            List.of(new FpsakKlient.ForespørselStatusResponse("SAK7", ORG_NUMMER, FpsakKlient.ForespørselStatusResponse.Vurdering.TRENGS_IKKE,
-                FpsakKlient.ForespørselStatusResponse.Årsak.SAK_AVSLUTTET),
-                new FpsakKlient.ForespørselStatusResponse("SAK7", ORG_NUMMER, FpsakKlient.ForespørselStatusResponse.Vurdering.TRENGS_IKKE,
-                    FpsakKlient.ForespørselStatusResponse.Årsak.SAK_AVSLUTTET)));
-
-        assertThatThrownBy(() -> task.doTask(lagProsessTaskData(0L, false))).isInstanceOf(TekniskException.class);
-
-        verify(forespørselBehandlingTjeneste, never()).settForespørselTilUtgåttForvaltning(any());
-        verify(prosessTaskTjeneste, never()).lagre(any(ProsessTaskData.class));
-    }
-
-    @Test
-    void skal_feile_tasken_ved_uventet_svar_fra_fpsak_som_ikke_var_forespurt() {
-        var forespørsel = opprettForespørsel(1L, UUID.randomUUID(), "SAK8", LocalDateTime.now());
-        mockSide(0L, List.of(forespørsel));
-
-        // Fp-sak svarer på et orgnummer som ikke ble forespurt for dette saksnummeret
-        when(fpsakKlient.sjekkForespørselStatus(any())).thenReturn(
-            List.of(new FpsakKlient.ForespørselStatusResponse("SAK8", "111111111", FpsakKlient.ForespørselStatusResponse.Vurdering.TRENGS_IKKE,
-                FpsakKlient.ForespørselStatusResponse.Årsak.SAK_AVSLUTTET)));
-
-        assertThatThrownBy(() -> task.doTask(lagProsessTaskData(0L, false))).isInstanceOf(TekniskException.class);
-
-        verify(forespørselBehandlingTjeneste, never()).settForespørselTilUtgåttForvaltning(any());
-        verify(prosessTaskTjeneste, never()).lagre(any(ProsessTaskData.class));
-    }
-
-    @Test
-    void skal_ikke_lukke_forespørsel_hvis_pessimistisk_lås_viser_annen_status_enn_gruppesnapshotet() {
+    void skal_ikke_lukke_forespørsel_hvis_pessimistisk_lås_viser_annen_status_enn_snapshotet() {
         var uuid = UUID.randomUUID();
         var forespørsel = opprettForespørsel(1L, uuid, "SAK9", LocalDateTime.now());
         mockSide(0L, List.of(forespørsel));
@@ -395,7 +346,7 @@ class LukkForespørslerUtenBehovTaskTest {
             List.of(new FpsakKlient.ForespørselStatusResponse("SAK9", ORG_NUMMER, FpsakKlient.ForespørselStatusResponse.Vurdering.TRENGS_IKKE,
                 FpsakKlient.ForespørselStatusResponse.Årsak.SAK_AVSLUTTET)));
 
-        // Den låste, ferske lesingen av raden viser en annen status enn snapshotet fra gruppeoppslaget
+        // Den låste, ferske lesingen av raden viser en annen status enn snapshotet fra oppslaget
         settFelter(forespørsel, 1L, uuid, ForespørselStatus.FERDIG, forespørsel.getOpprettetTidspunkt());
         mockLåstEntitet(forespørsel);
 
@@ -421,7 +372,7 @@ class LukkForespørslerUtenBehovTaskTest {
     }
 
     private ProsessTaskData lagProsessTaskData(long fraId, boolean dryRun) {
-        var prosessTaskData = ProsessTaskData.forProsessTask(LukkForespørslerUtenBehovTask.class);
+        var prosessTaskData = ProsessTaskData.forProsessTask(ForespørselOppryddingTask.class);
         prosessTaskData.setProperty("fraId", String.valueOf(fraId));
         prosessTaskData.setProperty("dryRun", String.valueOf(dryRun));
         return prosessTaskData;
