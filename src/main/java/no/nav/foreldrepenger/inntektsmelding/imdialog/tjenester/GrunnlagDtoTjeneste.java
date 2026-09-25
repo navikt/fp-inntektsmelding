@@ -275,7 +275,7 @@ public class GrunnlagDtoTjeneste {
             null,
             UKJENT_NAVN,
             organisasjoner,
-            personInfo.kjønn()));
+            PersonInfo.Kjønn.UKJENT));
     }
 
     public PersonInfo finnPersoninfo(PersonIdent fødselsnummer, Ytelsetype ytelsetype) {
