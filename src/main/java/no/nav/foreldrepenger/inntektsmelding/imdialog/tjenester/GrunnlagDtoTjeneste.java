@@ -38,6 +38,7 @@ import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
 
 @ApplicationScoped
 public class GrunnlagDtoTjeneste {
+    private static final String UKJENT_NAVN = "Ukjent";
     private ForespørselBehandlingTjeneste forespørselBehandlingTjeneste;
     private PersonTjeneste personTjeneste;
     private OrganisasjonTjeneste organisasjonTjeneste;
@@ -67,11 +68,15 @@ public class GrunnlagDtoTjeneste {
     }
 
     public InntektsmeldingDialogDto lagDialogDto(UUID forespørselUuid) {
+        return lagDialogDto(forespørselUuid, false);
+    }
+
+    private InntektsmeldingDialogDto lagDialogDto(UUID forespørselUuid, boolean skjulSøkernavn) {
         var forespørsel = forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid);
 
         var organisasjonsnummer = forespørsel.arbeidsgiver();
         var personInfo = personTjeneste.hentPersonInfoFraAktørId(forespørsel.aktørId(), forespørsel.ytelseType());
-        var personDto = lagPersonDto(personInfo);
+        var personDto = lagPersonDto(personInfo, skjulSøkernavn);
         var organisasjonDto = lagOrganisasjonDto(organisasjonsnummer);
         var innmelderDto = lagInnmelderDto(forespørsel.ytelseType());
         var erArbeidsgiverInitiertNyansatt = ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT.equals(forespørsel.forespørselType());
@@ -149,7 +154,7 @@ public class GrunnlagDtoTjeneste {
             if (forespørsel.forespørselType().equals(ForespørselType.BESTILT_AV_FAGSYSTEM)) {
                 MetrikkerTjeneste.loggRedirectFraAGITilVanligForespørsel(forespørsel);
             }
-            return lagDialogDto(forespørsel.uuid());
+            return lagDialogDto(forespørsel.uuid(), true);
         }
         //Er denne sjekken i det hele tatt er nødvendig?
         var finnesOrgnummerIAaReg = finnesOrgnummerIAaregPåPerson(fødselsnummer, arbeidsgiver.orgnr(), førsteUttaksdato);
@@ -157,8 +162,7 @@ public class GrunnlagDtoTjeneste {
             throw new InntektsmeldingException(InntektsmeldingException.LokalFeilKode.FINNES_I_AAREG);
         }
 
-        var personDto = new InntektsmeldingDialogDto.PersonInfoResponseDto(personInfo.fornavn(), personInfo.mellomnavn(), personInfo.etternavn(),
-            personInfo.fødselsnummer().getIdent(), personInfo.aktørId().getAktørId());
+        var personDto = lagPersonDto(personInfo, true);
         var organisasjonDto = lagOrganisasjonDto(arbeidsgiver);
         var innmelderDto = lagInnmelderDto(ytelsetype);
 
@@ -240,8 +244,10 @@ public class GrunnlagDtoTjeneste {
         return new InntektsmeldingDialogDto.OrganisasjonInfoResponseDto(orgdata.navn(), orgdata.orgnr());
     }
 
-    private InntektsmeldingDialogDto.PersonInfoResponseDto lagPersonDto(PersonInfo personInfo) {
-        return new InntektsmeldingDialogDto.PersonInfoResponseDto(personInfo.fornavn(), personInfo.mellomnavn(), personInfo.etternavn(),
+    private InntektsmeldingDialogDto.PersonInfoResponseDto lagPersonDto(PersonInfo personInfo, boolean skjulSøkernavn) {
+        return new InntektsmeldingDialogDto.PersonInfoResponseDto(skjulSøkernavn ? UKJENT_NAVN : personInfo.fornavn(),
+            skjulSøkernavn ? "" : personInfo.mellomnavn(),
+            skjulSøkernavn ? UKJENT_NAVN : personInfo.etternavn(),
             personInfo.fødselsnummer().getIdent(), personInfo.aktørId().getAktørId());
     }
 
@@ -273,9 +279,9 @@ public class GrunnlagDtoTjeneste {
                 .map(org -> new SlåOppArbeidstakerResponseDto.ArbeidsforholdDto(org.navn(), orgnrDto.orgnr()))
                 .stream())
             .collect(Collectors.toSet());
-        return Optional.of(new SlåOppArbeidstakerResponseDto(personInfo.fornavn(),
-            personInfo.mellomnavn(),
-            personInfo.etternavn(),
+        return Optional.of(new SlåOppArbeidstakerResponseDto(UKJENT_NAVN,
+            null,
+            UKJENT_NAVN,
             organisasjoner,
             personInfo.kjønn()));
     }
