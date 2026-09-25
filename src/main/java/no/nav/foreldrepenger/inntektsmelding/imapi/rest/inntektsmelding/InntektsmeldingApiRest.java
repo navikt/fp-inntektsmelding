@@ -127,7 +127,7 @@ public class InntektsmeldingApiRest {
         List<HentInntektsmeldingResponse> responsListe;
 
         if (filterRequest.forespørselUuid() != null) {
-            responsListe = inntektsmeldingTjeneste.hentInntektsmeldinger(filterRequest.forespørselUuid()).stream()
+            responsListe = inntektsmeldingTjeneste.hentAlleInntektsmeldinger(filterRequest.forespørselUuid()).stream()
                 .map(inntektsmelding -> InntektsmeldingKontraktMapper.mapTilKontrakt(inntektsmelding, personTjeneste.finnPersonIdentForAktørId(inntektsmelding.getAktørId())))
                 .toList();
         } else {
