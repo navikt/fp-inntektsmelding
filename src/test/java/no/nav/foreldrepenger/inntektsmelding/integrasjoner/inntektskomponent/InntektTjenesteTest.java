@@ -1,6 +1,9 @@
 package no.nav.foreldrepenger.inntektsmelding.integrasjoner.inntektskomponent;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
@@ -14,11 +17,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.MånedslønnStatus;
+import no.nav.foreldrepenger.konfig.Environment;
 import no.nav.vedtak.exception.IntegrasjonException;
 
 @ExtendWith(MockitoExtension.class)
@@ -306,6 +311,63 @@ class InntektTjenesteTest {
             , new Inntektsopplysninger.InntektMåned(null, YearMonth.of(2024, 10), MånedslønnStatus.NEDETID_AINNTEKT)
             , new Inntektsopplysninger.InntektMåned(null, YearMonth.of(2024, 11), MånedslønnStatus.NEDETID_AINNTEKT));
         assertResultat(inntektsopplysinger, forventetListe, ORGNR, null);
+    }
+
+    @Test
+    void skal_simulere_nedetid_for_testarbeidsgiver_i_dev_uten_kall_til_inntektskomponenten() {
+        var arbeidsgiver = Arbeidsgiver.fra("315786940");
+        var stp = LocalDate.of(2024, 12, 15);
+        var dev = mock(Environment.class);
+        when(dev.isDev()).thenReturn(true);
+
+        try (MockedStatic<Environment> environment = mockStatic(Environment.class)) {
+            environment.when(Environment::current).thenReturn(dev);
+
+            var inntekt = tjeneste.hentInntekt(AktørId.fra(AKTØR_ID), stp, stp, arbeidsgiver, true);
+
+            assertThat(inntekt.harNedetid()).isTrue();
+            assertThat(inntekt.gjennomsnitt()).isNull();
+            assertThat(inntekt.orgnummer()).isEqualTo(arbeidsgiver.orgnr());
+            assertThat(inntekt.måneder()).containsExactlyInAnyOrder(
+                new Inntektsopplysninger.InntektMåned(null, YearMonth.of(2024, 9), MånedslønnStatus.NEDETID_AINNTEKT),
+                new Inntektsopplysninger.InntektMåned(null, YearMonth.of(2024, 10), MånedslønnStatus.NEDETID_AINNTEKT),
+                new Inntektsopplysninger.InntektMåned(null, YearMonth.of(2024, 11), MånedslønnStatus.NEDETID_AINNTEKT));
+            verifyNoInteractions(klient);
+        }
+    }
+
+    @Test
+    void skal_ikke_simulere_nedetid_for_testarbeidsgiver_utenfor_dev() {
+        var arbeidsgiver = Arbeidsgiver.fra("315786940");
+        var stp = LocalDate.of(2024, 10, 15);
+        var request = new FinnInntektRequest(AKTØR_ID, YearMonth.of(2024, 7), YearMonth.of(2024, 9));
+        var environment = mock(Environment.class);
+        when(klient.finnInntekt(request)).thenReturn(List.of());
+
+        try (MockedStatic<Environment> current = mockStatic(Environment.class)) {
+            current.when(Environment::current).thenReturn(environment);
+
+            var inntekt = tjeneste.hentInntekt(AktørId.fra(AKTØR_ID), stp, stp, arbeidsgiver, true);
+
+            assertThat(inntekt.harNedetid()).isFalse();
+        }
+    }
+
+    @Test
+    void skal_ikke_simulere_nedetid_for_andre_arbeidsgivere_i_dev() {
+        var stp = LocalDate.of(2024, 10, 15);
+        var request = new FinnInntektRequest(AKTØR_ID, YearMonth.of(2024, 7), YearMonth.of(2024, 9));
+        var dev = mock(Environment.class);
+        when(dev.isDev()).thenReturn(true);
+        when(klient.finnInntekt(request)).thenReturn(List.of());
+
+        try (MockedStatic<Environment> environment = mockStatic(Environment.class)) {
+            environment.when(Environment::current).thenReturn(dev);
+
+            var inntekt = tjeneste.hentInntekt(AktørId.fra(AKTØR_ID), stp, stp, ORGNR, true);
+
+            assertThat(inntekt.harNedetid()).isFalse();
+        }
     }
 
     @Test
