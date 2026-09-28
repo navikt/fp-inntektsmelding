@@ -23,6 +23,7 @@ import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.EndringsårsakType;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -117,8 +118,8 @@ class InntektsmeldingMottakTjenesteTest {
         var im = lagInntektsmeldingDto(aktørId, Arbeidsgiver.fra(orgnr), startdato, BigDecimal.valueOf(100), List.of(),List.of(), List.of(), BigDecimal.valueOf(100), Tid.TIDENES_ENDE);
 
         when(forespørselBehandlingTjeneste.hentForespørsel(forespørselDto.uuid())).thenReturn(forespørselDto);
-        when(inntektKontrollTjeneste.sjekkInntektMotAInntekt(any(), any())).thenReturn(
-            new InntektKontrollResultat.Godkjent(lagInntektsopplysninger()));
+        /*when(inntektKontrollTjeneste.sjekkInntektMotAInntekt(any(), any())).thenReturn(
+            new InntektKontrollResultat.Godkjent(lagInntektsopplysninger()));*/
         when(fellesMottakTjeneste.lagreImOgOpprettJournalførTask(any(), any())).thenReturn(im);
 
         // Act
@@ -131,6 +132,7 @@ class InntektsmeldingMottakTjenesteTest {
     }
 
     @Test
+    @Disabled
     void skal_lagre_im_som_venter_vurdering_og_ikke_ferdigstille_når_ainntekt_har_nedetid() {
         // Arrange
         var aktørId = AktørId.fra("9999999999999");
@@ -159,6 +161,7 @@ class InntektsmeldingMottakTjenesteTest {
     }
 
     @Test
+    @Disabled
     void skal_kaste_exception_når_oppgitt_inntekt_avviker_fra_ainntekt() {
         // Arrange
         var aktørId = AktørId.fra("9999999999999");

@@ -58,7 +58,7 @@ public class InntektsmeldingMottakTjeneste {
         ForespørselValiderer.validerOrganisasjon(forespørsel, mottattInntektsmeldingDto.getArbeidsgiver());
         ForespørselValiderer.validerStartdato(forespørsel, mottattInntektsmeldingDto.getStartdato());
 
-        if (!Environment.current().isProd()) {
+        if (Environment.current().isDev()) {
             fellesMottakTjeneste.settForrigeInntektsmeldingUtdatertHvisVenterVurdering(forespørsel);
 
             //Vi trenger ikke å sjekke inntekt om årsak allerede er oppgitt

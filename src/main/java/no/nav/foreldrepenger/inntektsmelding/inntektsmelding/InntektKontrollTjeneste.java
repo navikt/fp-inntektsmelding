@@ -82,8 +82,7 @@ public class InntektKontrollTjeneste {
             throw new IllegalStateException("InntektKontrollTjeneste: noe er feil - får tom inntekt fra A-inntekt");
         }
 
-        var hardkodetOrgnummerForTest = "315786940";
-        if (inntektFraAInntekt.harNedetid() || inntektsmelding.getArbeidsgiver().orgnr().equals(hardkodetOrgnummerForTest)) {
+        if (inntektFraAInntekt.harNedetid()) {
             LOG.warn(
                 "Inntektskomponenten har nedetid, og vi kan ikke verifisere inntekt i inntektsmeldingen mot A-inntekt for forespørsel: {}",
                 forespørsel.uuid());
