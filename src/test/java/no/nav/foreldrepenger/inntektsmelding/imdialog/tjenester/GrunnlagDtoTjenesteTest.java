@@ -271,7 +271,7 @@ class GrunnlagDtoTjenesteTest {
         assertThat(response.arbeidsforhold().stream()).anyMatch(o -> o.organisasjonsnavn().equals(navn2));
         assertThat(response.arbeidsforhold().stream()).anyMatch(o -> o.organisasjonsnummer().equals(orgnr1.orgnr()));
         assertThat(response.arbeidsforhold().stream()).anyMatch(o -> o.organisasjonsnummer().equals(orgnr2.orgnr()));
-        assertThat(response.kjønn()).isNull();
+        assertThat(response.kjønn()).isEqualTo(PersonInfo.Kjønn.UKJENT);
     }
 
     @Test
