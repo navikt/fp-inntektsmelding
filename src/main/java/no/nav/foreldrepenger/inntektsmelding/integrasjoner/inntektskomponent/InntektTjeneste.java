@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.MånedslønnStatus;
+import no.nav.foreldrepenger.konfig.Environment;
 import no.nav.vedtak.exception.IntegrasjonException;
 import no.nav.vedtak.exception.TekniskException;
 
@@ -31,6 +32,7 @@ import no.nav.vedtak.exception.TekniskException;
 public class InntektTjeneste {
     private static final Logger LOG = LoggerFactory.getLogger(InntektTjeneste.class);
     private static final int DAG_I_MÅNED_RAPPORTERINGSFRIST = 5;
+    private static final String ORGNUMMER_SIMULERT_NEDETID_DEV = "315786940";
     private InntektskomponentKlient inntektskomponentKlient;
 
     InntektTjeneste() {
@@ -45,6 +47,10 @@ public class InntektTjeneste {
     // Tar inn dagens dato som parameter for å gjøre det enklere å skrive tester
     public Inntektsopplysninger hentInntekt(AktørId aktørId, LocalDate skjæringstidspunkt, LocalDate dagensDato, Arbeidsgiver arbeidsgiver,
                                             boolean harJobbetHeleBeregningsperioden) {
+        if (Environment.current().isDev() && ORGNUMMER_SIMULERT_NEDETID_DEV.equals(arbeidsgiver.orgnr())) {
+            LOG.info("Simulerer nedetid i inntektskomponenten for testarbeidsgiver i dev");
+            return lagTomRespons(skjæringstidspunkt, arbeidsgiver.orgnr());
+        }
         // Hvis søker ikke har jobbet hele beregningsperioden, bryr vi oss ikke med å justere innhenting etter rapporteringsfrist
         var antallMånederViBerOm = harJobbetHeleBeregningsperioden ? finnAntallMånederViMåBeOm(skjæringstidspunkt, dagensDato) : 3;
         var fomDato = skjæringstidspunkt.minusMonths(antallMånederViBerOm);
