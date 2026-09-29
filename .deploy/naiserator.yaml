@@ -43,6 +43,7 @@ spec:
       cpu:
         thresholdPercentage: 50
       scaleUpStabilizationWindowSeconds: 20
+      scaleDownStabilizationWindowSeconds: 1800
   resources:
     limits:
       memory: "{{limits.mem}}"
