@@ -88,17 +88,6 @@ class ForespørselOppryddingTaskTest {
     }
 
     @Test
-    void skal_hoppe_over_forespørsler_uten_saksnummer_og_avslutte() {
-        var forespørsel = opprettForespørselUtenSaksnummer(1L);
-        mockSide(0L, List.of(forespørsel));
-
-        task.doTask(lagProsessTaskData(0L, false));
-
-        verify(fpsakKlient, never()).sjekkForespørselStatus(any());
-        verify(prosessTaskTjeneste, never()).lagre(any(ProsessTaskData.class));
-    }
-
-    @Test
     void skal_lukke_alle_forespørsler_for_kombinasjonen_ved_trengs_ikke_og_ikke_dry_run() {
         var uuid1 = UUID.randomUUID();
         var uuid2 = UUID.randomUUID();
@@ -158,6 +147,26 @@ class ForespørselOppryddingTaskTest {
     }
 
     @Test
+    void skal_ikke_lukke_noe_ved_trengs_og_kun_en_åpen_forespørsel() {
+        // Vanligste tilfellet i praksis: fp-sak trenger fortsatt forespørselen, og det finnes ingen duplikater å lukke.
+        var uuid = UUID.randomUUID();
+        var forespørsel = opprettForespørsel(1L, uuid, "SAK2B", LocalDateTime.now());
+        mockSide(0L, List.of(forespørsel));
+
+        var dto = byggDto(1L, uuid, "SAK2B", forespørsel.getOpprettetTidspunkt());
+        when(forespørselTjeneste.finnÅpneForespørslerForFagsak(new Saksnummer("SAK2B"))).thenReturn(List.of(dto));
+
+        when(fpsakKlient.sjekkForespørselStatus(any())).thenReturn(
+            List.of(new FpsakKlient.ForespørselStatusResponse("SAK2B", ORG_NUMMER, FpsakKlient.ForespørselStatusResponse.Vurdering.TRENGS,
+                FpsakKlient.ForespørselStatusResponse.Årsak.IM_MANGLER)));
+
+        task.doTask(lagProsessTaskData(0L, false));
+
+        verify(forespørselBehandlingTjeneste, never()).settForespørselTilUtgåttForvaltning(any());
+        verify(entityManager, never()).find(eq(ForespørselEntitet.class), any(), eq(LockModeType.PESSIMISTIC_WRITE));
+    }
+
+    @Test
     void skal_ikke_lukke_noe_ved_ukjent_vurdering() {
         var uuid1 = UUID.randomUUID();
         var forespørsel1 = opprettForespørsel(1L, uuid1, "SAK3", LocalDateTime.now());
@@ -200,6 +209,14 @@ class ForespørselOppryddingTaskTest {
         verify(fpsakKlient).sjekkForespørselStatus(any());
         verify(forespørselBehandlingTjeneste, never()).settForespørselTilUtgåttForvaltning(any());
         verify(entityManager, never()).find(eq(ForespørselEntitet.class), any(), eq(LockModeType.PESSIMISTIC_WRITE));
+
+        var loggetDryRun = logSniffer.getLoggedEvents().stream()
+            .map(ILoggingEvent::getFormattedMessage)
+            .filter(m -> m.contains("Skulle lukket forespørsel"))
+            .toList();
+        assertThat(loggetDryRun).hasSize(2)
+            .anyMatch(m -> m.contains("id=1") && m.contains(uuid1.toString()))
+            .anyMatch(m -> m.contains("id=2") && m.contains(uuid2.toString()));
     }
 
     @Test
@@ -234,7 +251,7 @@ class ForespørselOppryddingTaskTest {
     @Test
     void skal_planlegge_neste_task_ved_full_side() {
         var rader = new ArrayList<ForespørselEntitet>();
-        for (var i = 1; i <= 500; i++) {
+        for (var i = 1; i <= 50; i++) {
             rader.add(opprettForespørsel(i, UUID.randomUUID(), "SAK-FULL", LocalDateTime.now()));
         }
         mockSide(0L, rader);
@@ -252,29 +269,19 @@ class ForespørselOppryddingTaskTest {
 
         var captor = ArgumentCaptor.forClass(ProsessTaskData.class);
         verify(prosessTaskTjeneste).lagre(captor.capture());
-        assertThat(captor.getValue().getPropertyValue("fraId")).isEqualTo("500");
+        assertThat(captor.getValue().getPropertyValue("fraId")).isEqualTo("50");
     }
 
     @Test
-    void skal_stoppe_ved_100_kombinasjoner_og_planlegge_neste_task_selv_med_id_hull() {
+    void skal_stoppe_ved_100_orgnumre_for_samme_saksnummer_og_planlegge_neste_task() {
         var rader = new ArrayList<ForespørselEntitet>();
-        // 105 distinkte kombinasjoner, med store hull mellom id-ene for å simulere "lange id-hull"
+        // Ett saksnummer med 105 ulike orgnumre. Fp-sak tillater maks 100 orgnumre for ett saksnummer i ett kall.
         for (var i = 1; i <= 105; i++) {
-            rader.add(opprettForespørsel(i * 100L, UUID.randomUUID(), "SAK-" + i, LocalDateTime.now()));
+            rader.add(opprettForespørselMedOrgnummer(i, UUID.randomUUID(), "SAK-STOR", String.format("%09d", i), LocalDateTime.now()));
         }
         mockSide(0L, rader);
 
-        when(forespørselTjeneste.finnÅpneForespørslerForFagsak(any())).thenAnswer(inv -> {
-            Saksnummer saksnummer = inv.getArgument(0);
-            return List.of(ForespørselDto.builder()
-                .loepenr(1L)
-                .uuid(UUID.randomUUID())
-                .arbeidsgiver(Arbeidsgiver.fra(ORG_NUMMER))
-                .status(ForespørselStatus.UNDER_BEHANDLING)
-                .opprettetTidspunkt(LocalDateTime.now())
-                .fagsystemSaksnummer(saksnummer)
-                .build());
-        });
+        when(forespørselTjeneste.finnÅpneForespørslerForFagsak(new Saksnummer("SAK-STOR"))).thenReturn(List.of());
         when(fpsakKlient.sjekkForespørselStatus(any())).thenAnswer(inv -> {
             List<FpsakKlient.ForespørselStatusRequest.Forespørsel> forespørsler = inv.getArgument(0);
             return forespørsler.stream()
@@ -290,15 +297,14 @@ class ForespørselOppryddingTaskTest {
         task.doTask(prosessTaskData);
 
         var requestCaptor = ArgumentCaptor.forClass(List.class);
-        // Alle 105 forsøkte kombinasjonene har hvert sitt unike saksnummer, så fp-sak kalles én gang per saksnummer
-        // (maks 100 saksnummer behandlet denne kjøringen pga. maks-taket).
-        verify(fpsakKlient, times(100)).sjekkForespørselStatus(requestCaptor.capture());
-        requestCaptor.getAllValues().forEach(kall -> assertThat(kall).hasSize(1));
+        // Kun de 100 første orgnumrene sendes til fp-sak i denne kjøringen, resten venter til neste task.
+        verify(fpsakKlient).sjekkForespørselStatus(requestCaptor.capture());
+        assertThat(requestCaptor.getValue()).hasSize(100);
 
         var captor = ArgumentCaptor.forClass(ProsessTaskData.class);
         verify(prosessTaskTjeneste).lagre(captor.capture());
-        // Rad 100 har id 100*100=10000, rad 101 (som forårsaket bruddet) skal IKKE regnes som behandlet
-        assertThat(captor.getValue().getPropertyValue("fraId")).isEqualTo("10000");
+        // Rad 100 er siste behandlede, rad 101 (som forårsaket bruddet) skal IKKE regnes som behandlet
+        assertThat(captor.getValue().getPropertyValue("fraId")).isEqualTo("100");
         assertThat(captor.getValue().getPropertyValue("dryRun")).isEqualTo("true");
     }
 
@@ -331,6 +337,49 @@ class ForespørselOppryddingTaskTest {
             .toList();
         assertThat(saksnumreForespurt).containsExactlyInAnyOrder("SAK-A", "SAK-B");
         requestCaptor.getAllValues().forEach(kall -> assertThat(kall).hasSize(1));
+    }
+
+    @Test
+    void skal_behandle_flere_orgnumre_for_samme_saksnummer_uavhengig_av_hverandre() {
+        // Ett saksnummer med to ulike orgnumre skal grupperes og vurderes hver for seg, ikke slås sammen.
+        var orgnummerA = "111111111";
+        var orgnummerB = "222222222";
+        var uuidA = UUID.randomUUID();
+        var uuidB = UUID.randomUUID();
+        var forespørselA = opprettForespørselMedOrgnummer(1L, uuidA, "SAK-MULTI-ORG", orgnummerA, LocalDateTime.now());
+        var forespørselB = opprettForespørselMedOrgnummer(2L, uuidB, "SAK-MULTI-ORG", orgnummerB, LocalDateTime.now());
+        mockSide(0L, List.of(forespørselA, forespørselB));
+
+        var dtoA = ForespørselDto.builder()
+            .loepenr(1L)
+            .uuid(uuidA)
+            .arbeidsgiver(Arbeidsgiver.fra(orgnummerA))
+            .status(ForespørselStatus.UNDER_BEHANDLING)
+            .opprettetTidspunkt(forespørselA.getOpprettetTidspunkt())
+            .fagsystemSaksnummer(new Saksnummer("SAK-MULTI-ORG"))
+            .build();
+        var dtoB = ForespørselDto.builder()
+            .loepenr(2L)
+            .uuid(uuidB)
+            .arbeidsgiver(Arbeidsgiver.fra(orgnummerB))
+            .status(ForespørselStatus.UNDER_BEHANDLING)
+            .opprettetTidspunkt(forespørselB.getOpprettetTidspunkt())
+            .fagsystemSaksnummer(new Saksnummer("SAK-MULTI-ORG"))
+            .build();
+        when(forespørselTjeneste.finnÅpneForespørslerForFagsak(new Saksnummer("SAK-MULTI-ORG"))).thenReturn(List.of(dtoA, dtoB));
+
+        when(fpsakKlient.sjekkForespørselStatus(any())).thenReturn(List.of(
+            new FpsakKlient.ForespørselStatusResponse("SAK-MULTI-ORG", orgnummerA, FpsakKlient.ForespørselStatusResponse.Vurdering.TRENGS_IKKE,
+                FpsakKlient.ForespørselStatusResponse.Årsak.SAK_AVSLUTTET),
+            new FpsakKlient.ForespørselStatusResponse("SAK-MULTI-ORG", orgnummerB, FpsakKlient.ForespørselStatusResponse.Vurdering.UKJENT,
+                FpsakKlient.ForespørselStatusResponse.Årsak.SAK_IKKE_FUNNET)));
+
+        mockLåstEntitet(forespørselA);
+
+        task.doTask(lagProsessTaskData(0L, false));
+
+        verify(forespørselBehandlingTjeneste).settForespørselTilUtgåttForvaltning(uuidA);
+        verify(forespørselBehandlingTjeneste, never()).settForespørselTilUtgåttForvaltning(uuidB);
     }
 
     @Test
@@ -367,7 +416,7 @@ class ForespørselOppryddingTaskTest {
             ForespørselEntitet.class)).thenReturn(query);
         when(query.setParameter("fraId", fraId)).thenReturn(query);
         when(query.setParameter("status", ForespørselStatus.UNDER_BEHANDLING)).thenReturn(query);
-        when(query.setMaxResults(500)).thenReturn(query);
+        when(query.setMaxResults(50)).thenReturn(query);
         when(query.getResultList()).thenReturn(resultat);
     }
 
@@ -390,16 +439,14 @@ class ForespørselOppryddingTaskTest {
     }
 
     private ForespørselEntitet opprettForespørsel(long id, UUID uuid, String saksnummer, LocalDateTime opprettetTidspunkt) {
-        var forespørsel = new ForespørselEntitet(ORG_NUMMER, LocalDate.of(2026, 4, 1), AktørIdEntitet.dummy(), Ytelsetype.FORELDREPENGER,
-            saksnummer, FØRSTE_UTTAKSDATO, ForespørselType.BESTILT_AV_FAGSYSTEM);
-        settFelter(forespørsel, id, uuid, ForespørselStatus.UNDER_BEHANDLING, opprettetTidspunkt);
-        return forespørsel;
+        return opprettForespørselMedOrgnummer(id, uuid, saksnummer, ORG_NUMMER, opprettetTidspunkt);
     }
 
-    private ForespørselEntitet opprettForespørselUtenSaksnummer(long id) {
-        var forespørsel = new ForespørselEntitet(ORG_NUMMER, null, AktørIdEntitet.dummy(), Ytelsetype.FORELDREPENGER, null, FØRSTE_UTTAKSDATO,
-            ForespørselType.ARBEIDSGIVERINITIERT_UREGISTRERT);
-        settFelter(forespørsel, id, UUID.randomUUID(), ForespørselStatus.UNDER_BEHANDLING, LocalDateTime.now());
+    private ForespørselEntitet opprettForespørselMedOrgnummer(long id, UUID uuid, String saksnummer, String orgnummer,
+                                                               LocalDateTime opprettetTidspunkt) {
+        var forespørsel = new ForespørselEntitet(orgnummer, LocalDate.of(2026, 4, 1), AktørIdEntitet.dummy(), Ytelsetype.FORELDREPENGER,
+            saksnummer, FØRSTE_UTTAKSDATO, ForespørselType.BESTILT_AV_FAGSYSTEM);
+        settFelter(forespørsel, id, uuid, ForespørselStatus.UNDER_BEHANDLING, opprettetTidspunkt);
         return forespørsel;
     }
 
