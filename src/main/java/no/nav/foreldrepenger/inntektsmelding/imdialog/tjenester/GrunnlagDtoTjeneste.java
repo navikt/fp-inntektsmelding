@@ -38,6 +38,7 @@ import no.nav.vedtak.sikkerhet.kontekst.KontekstHolder;
 
 @ApplicationScoped
 public class GrunnlagDtoTjeneste {
+    private static final String UKJENT_NAVN = "Ukjent";
     private ForespørselBehandlingTjeneste forespørselBehandlingTjeneste;
     private PersonTjeneste personTjeneste;
     private OrganisasjonTjeneste organisasjonTjeneste;
@@ -71,7 +72,10 @@ public class GrunnlagDtoTjeneste {
 
         var organisasjonsnummer = forespørsel.arbeidsgiver();
         var personInfo = personTjeneste.hentPersonInfoFraAktørId(forespørsel.aktørId(), forespørsel.ytelseType());
-        var personDto = lagPersonDto(personInfo);
+        var personDto = new InntektsmeldingDialogDto.PersonInfoResponseDto(personInfo.fornavn(), personInfo.mellomnavn(),
+            personInfo.etternavn(),
+            personInfo.fødselsnummer().getIdent(), personInfo.aktørId().getAktørId());
+
         var organisasjonDto = lagOrganisasjonDto(organisasjonsnummer);
         var innmelderDto = lagInnmelderDto(forespørsel.ytelseType());
         var erArbeidsgiverInitiertNyansatt = ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT.equals(forespørsel.forespørselType());
@@ -156,8 +160,7 @@ public class GrunnlagDtoTjeneste {
         if (finnesOrgnummerIAaReg) {
             throw new InntektsmeldingException(InntektsmeldingException.LokalFeilKode.FINNES_I_AAREG);
         }
-
-        var personDto = new InntektsmeldingDialogDto.PersonInfoResponseDto(personInfo.fornavn(), personInfo.mellomnavn(), personInfo.etternavn(),
+        var personDto = new InntektsmeldingDialogDto.PersonInfoResponseDto(UKJENT_NAVN,"", UKJENT_NAVN,
             personInfo.fødselsnummer().getIdent(), personInfo.aktørId().getAktørId());
         var organisasjonDto = lagOrganisasjonDto(arbeidsgiver);
         var innmelderDto = lagInnmelderDto(ytelsetype);
@@ -240,11 +243,6 @@ public class GrunnlagDtoTjeneste {
         return new InntektsmeldingDialogDto.OrganisasjonInfoResponseDto(orgdata.navn(), orgdata.orgnr());
     }
 
-    private InntektsmeldingDialogDto.PersonInfoResponseDto lagPersonDto(PersonInfo personInfo) {
-        return new InntektsmeldingDialogDto.PersonInfoResponseDto(personInfo.fornavn(), personInfo.mellomnavn(), personInfo.etternavn(),
-            personInfo.fødselsnummer().getIdent(), personInfo.aktørId().getAktørId());
-    }
-
     public Optional<SlåOppArbeidstakerResponseDto> finnArbeidsforholdForFnr(PersonInfo personInfo,
                                                                             LocalDate førsteFraværsdag) {
         var arbeidsforholdSøkerHarHosArbeidsgiver = arbeidstakerTjeneste.finnSøkersArbeidsforholdSomArbeidsgiverHarTilgangTil(personInfo.fødselsnummer(),
@@ -273,11 +271,11 @@ public class GrunnlagDtoTjeneste {
                 .map(org -> new SlåOppArbeidstakerResponseDto.ArbeidsforholdDto(org.navn(), orgnrDto.orgnr()))
                 .stream())
             .collect(Collectors.toSet());
-        return Optional.of(new SlåOppArbeidstakerResponseDto(personInfo.fornavn(),
-            personInfo.mellomnavn(),
-            personInfo.etternavn(),
+        return Optional.of(new SlåOppArbeidstakerResponseDto(UKJENT_NAVN,
+            null,
+            UKJENT_NAVN,
             organisasjoner,
-            personInfo.kjønn()));
+            PersonInfo.Kjønn.UKJENT));
     }
 
     public PersonInfo finnPersoninfo(PersonIdent fødselsnummer, Ytelsetype ytelsetype) {
