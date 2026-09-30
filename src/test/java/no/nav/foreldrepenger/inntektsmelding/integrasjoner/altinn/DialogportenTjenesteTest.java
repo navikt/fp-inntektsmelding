@@ -119,9 +119,10 @@ class DialogportenTjenesteTest {
         tjeneste.oppdaterDialogMedEndretFørsteUttaksdato(forespørsel, tidligereFørsteUttaksdato, nyFørsteUttaksdato);
 
         verify(dialogportenKlient).oppdaterDialogMedEndretFørsteUttaksdato(DIALOG_UUID,
-            new FlerspråkligTekst("Første fraværsdag er endret fra 01.12.24 til 01.02.25.",
-                "Første fråværsdag er endra frå 01.12.24 til 01.02.25.",
-                "The first day of absence has changed from 01.12.24 to 01.02.25."));
+            new FlerspråkligTekst(
+                "Første fraværsdag er endret fra 01.12.24 til 01.02.25. Nav sender ikke ny forespørsel for inntektsmelding. Hvis du skal korrigere informasjonen, endrer du dette gjennom inntektsmeldingen som du har sendt til Nav.",
+                "Første fråværsdag er endra frå 01.12.24 til 01.02.25. Nav sender ikkje ny førespurnad om inntektsmelding. Dersom du skal korrigere informasjonen, endrar du dette gjennom inntektsmeldinga som du har sendt til Nav.",
+                "The first day of absence has changed from 01.12.24 to 01.02.25. Nav will not send a new request for an income statement. If you need to correct the information, make the changes in the income statement you submitted to Nav."));
         verifyNoInteractions(personTjeneste);
     }
 
