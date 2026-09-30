@@ -54,6 +54,14 @@ public class InntektsmeldingRepository {
         return query.getResultList();
     }
 
+    public Optional<InntektsmeldingEntitet> hentInntektsmeldingerForForespørsel(Long forespørselId) {
+        var query = entityManager.createQuery(
+                "FROM InntektsmeldingEntitet where forespørsel = :forespørselId",
+                InntektsmeldingEntitet.class)
+            .setParameter("forespørselId", forespørselId);
+        return Optional.ofNullable(query.getSingleResultOrNull());
+    }
+
     public Optional<InntektsmeldingEntitet> finnInntektsmelding(UUID inntektsmeldingUuid) {
         var query = entityManager.createQuery(
                 "FROM InntektsmeldingEntitet where uuid = :oppgittUuid",

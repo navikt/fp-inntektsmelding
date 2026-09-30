@@ -18,6 +18,10 @@ public class DialogportenRequestMapper {
         "Vi har ennå ikke mottatt inntektsmelding",
         "Vi har enno ikkje motteke inntektsmelding",
         "We have not yet received the income statement");
+    private static final FlerspråkligTekst OPPDATERT_UTTAKSDATO_TITTEL = new FlerspråkligTekst(
+        "Første fraværsdag er endret",
+        "Første fråværsdag er endra",
+        "The first day of absence has changed");
     private static final FlerspråkligTekst SEND_INN_INNTEKTSMELDING = new FlerspråkligTekst(
         "Send inn inntektsmelding",
         "Send inn inntektsmelding",
@@ -181,7 +185,8 @@ public class DialogportenRequestMapper {
     }
 
     public static DialogportenPatchRequest opprettEndretFørsteUttaksdatoPatchRequest(FlerspråkligTekst beskjedTekst) {
-        var transmissionContent = new DialogportenRequest.Content(lagContentValue(beskjedTekst), null, null);
+        var transmissionContent = new DialogportenRequest.Content(lagContentValue(OPPDATERT_UTTAKSDATO_TITTEL),
+            lagContentValue(beskjedTekst), null);
         var transmission = new DialogportenRequest.Transmission(DialogportenRequest.TransmissionType.Information,
             DialogportenRequest.TransmissionExtendedType.INNTEKTSMELDING,
             new DialogportenRequest.Sender(SERVICE_OWNER, null),
