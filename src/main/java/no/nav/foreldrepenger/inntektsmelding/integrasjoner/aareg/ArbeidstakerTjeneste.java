@@ -35,7 +35,7 @@ public class ArbeidstakerTjeneste {
         LOG.info("Fant {} arbeidsforhold i Aa-registeret for {}", alleArbeidsforholdTilSøker.size(), ident);
 
         if (alleArbeidsforholdTilSøker.isEmpty()) {
-            LOG.warn("Fant ingen arbeidsforhold i Aa-registeret for {}", ident);
+            LOG.info("Fant ingen arbeidsforhold i Aa-registeret for {}", ident);
             return Collections.emptyList();
         }
 
