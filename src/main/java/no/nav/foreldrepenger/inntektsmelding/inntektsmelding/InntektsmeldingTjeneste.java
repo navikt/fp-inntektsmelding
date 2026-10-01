@@ -1,6 +1,7 @@
 package no.nav.foreldrepenger.inntektsmelding.inntektsmelding;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
@@ -51,16 +52,12 @@ public class InntektsmeldingTjeneste {
 
     public InntektsmeldingDto hentSisteInntektsmeldingForForespørsel(UUID forespørselUuid) {
         var inntekstmeldinger = hentAktiveInntektsmeldinger(forespørselUuid);
-        return inntekstmeldinger.isEmpty() ? null : inntekstmeldinger.getFirst();
+        return inntekstmeldinger.isEmpty() ? null : inntekstmeldinger.stream().max(Comparator.comparing(InntektsmeldingDto::getInnsendtTidspunkt)).orElseThrow();
     }
 
     public List<InntektsmeldingDto> hentAktiveInntektsmeldinger(UUID forespørselUuid) {
-        var forespørsel = forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid);
-
-        return inntektsmeldingRepository.hentInntektsmeldingerSortertNyesteFørst(new AktørIdEntitet(forespørsel.aktørId().getAktørId()),
-                forespørsel.arbeidsgiver().orgnr(),
-                forespørsel.førsteUttaksdato(),
-                forespørsel.ytelseType())
+        var forespørsel = forespørselRepository.hentForespørsel(forespørselUuid).orElseThrow();
+        return inntektsmeldingRepository.hentInntektsmeldingerForForespørsel(forespørsel)
             .stream()
             .filter(inntektsmelding -> !STATUS_AVVIST_OG_UTDADERT.contains(inntektsmelding.getStatus()))
             .map(InntektsmeldingDtoMapper::mapFraEntitet)

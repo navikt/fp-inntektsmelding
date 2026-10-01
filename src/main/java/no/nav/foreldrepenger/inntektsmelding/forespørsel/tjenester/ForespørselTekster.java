@@ -123,14 +123,14 @@ public class ForespørselTekster {
         "The income in the income statement differs from the income reported to A-ordningen, and no reason for the deviation has been given. Average income from A-ordningen: %s, income stated in the income statement: %s");
 
     private static final FlerspråkligTekst ENDRET_FØRSTE_UTTAKSDATO_MAL = new FlerspråkligTekst(
-        "Første fraværsdag er endret fra %s til %s.",
-        "Første fråværsdag er endra frå %s til %s.",
-        "The first day of absence has changed from %s to %s.");
+        "Første fraværsdag er endret fra %s til %s. Nav sender ikke ny forespørsel for inntektsmelding. Hvis du skal korrigere informasjonen, endrer du dette gjennom inntektsmeldingen som du har sendt til Nav.",
+        "Første fråværsdag er endra frå %s til %s. Nav sender ikkje ny førespurnad om inntektsmelding. Dersom du skal korrigere informasjonen, endrar du dette gjennom inntektsmeldinga som du har sendt til Nav.",
+        "The first day of absence has changed from %s to %s. Nav will not send a new request for an income statement. If you need to correct the information, make the changes in the income statement you submitted to Nav.");
 
     private static final FlerspråkligTekst ENDRET_FØRSTE_UTTAKSDATO_UTEN_TIDLIGERE_DATO_MAL = new FlerspråkligTekst(
-        "Første fraværsdag er endret til %s.",
-        "Første fråværsdag er endra til %s.",
-        "The first day of absence has changed to %s.");
+        "Første fraværsdag er endret til %s. Nav sender ikke ny forespørsel for inntektsmelding. Hvis du skal korrigere informasjonen, endrer du dette gjennom inntektsmeldingen som du har sendt til Nav.",
+        "Første fråværsdag er endra til %s. Nav sender ikkje ny førespurnad om inntektsmelding. Dersom du skal korrigere informasjonen, endrar du dette gjennom inntektsmeldinga som du har sendt til Nav.",
+        "The first day of absence has changed to %s. Nav will not send a new request for an income statement. If you need to correct the information, make the changes in the income statement you submitted to Nav.");
 
     private static final FlerspråkligTekst YTELSESTYPE_FORELDREPENGER = new FlerspråkligTekst("foreldrepenger", "foreldrepengar", "parental benefit");
     private static final FlerspråkligTekst YTELSESTYPE_SVANGERSKAPSPENGER = new FlerspråkligTekst("svangerskapspenger", "svangerskapspengar", "pregnancy benefit");

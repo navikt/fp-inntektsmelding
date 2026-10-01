@@ -91,14 +91,16 @@ class ForespørselTeksterTest {
     void skal_lage_beskjed_med_tidligere_og_ny_første_uttaksdato() {
         var tekst = lagBeskjedOmEndretFørsteUttaksdato(LocalDate.of(2026, 9, 1), LocalDate.of(2026, 9, 8));
 
-        assertThat(tekst).isEqualTo("Første fraværsdag er endret fra 01.09.26 til 08.09.26.");
+        assertThat(tekst).isEqualTo(
+            "Første fraværsdag er endret fra 01.09.26 til 08.09.26. Nav sender ikke ny forespørsel for inntektsmelding. Hvis du skal korrigere informasjonen, endrer du dette gjennom inntektsmeldingen som du har sendt til Nav.");
     }
 
     @Test
     void skal_lage_beskjed_når_tidligere_første_uttaksdato_mangler() {
         var tekst = lagBeskjedOmEndretFørsteUttaksdato(null, LocalDate.of(2026, 9, 8));
 
-        assertThat(tekst).isEqualTo("Første fraværsdag er endret til 08.09.26.");
+        assertThat(tekst).isEqualTo(
+            "Første fraværsdag er endret til 08.09.26. Nav sender ikke ny forespørsel for inntektsmelding. Hvis du skal korrigere informasjonen, endrer du dette gjennom inntektsmeldingen som du har sendt til Nav.");
     }
 
     @Test
@@ -106,9 +108,9 @@ class ForespørselTeksterTest {
         var tekst = lagBeskjedOmEndretFørsteUttaksdatoFlerspråklig(LocalDate.of(2026, 9, 1), LocalDate.of(2026, 9, 8));
 
         assertThat(tekst).isEqualTo(new FlerspråkligTekst(
-            "Første fraværsdag er endret fra 01.09.26 til 08.09.26.",
-            "Første fråværsdag er endra frå 01.09.26 til 08.09.26.",
-            "The first day of absence has changed from 01.09.26 to 08.09.26."));
+            "Første fraværsdag er endret fra 01.09.26 til 08.09.26. Nav sender ikke ny forespørsel for inntektsmelding. Hvis du skal korrigere informasjonen, endrer du dette gjennom inntektsmeldingen som du har sendt til Nav.",
+            "Første fråværsdag er endra frå 01.09.26 til 08.09.26. Nav sender ikkje ny førespurnad om inntektsmelding. Dersom du skal korrigere informasjonen, endrar du dette gjennom inntektsmeldinga som du har sendt til Nav.",
+            "The first day of absence has changed from 01.09.26 to 08.09.26. Nav will not send a new request for an income statement. If you need to correct the information, make the changes in the income statement you submitted to Nav."));
     }
 
     @Test
@@ -116,9 +118,9 @@ class ForespørselTeksterTest {
         var tekst = lagBeskjedOmEndretFørsteUttaksdatoFlerspråklig(null, LocalDate.of(2026, 9, 8));
 
         assertThat(tekst).isEqualTo(new FlerspråkligTekst(
-            "Første fraværsdag er endret til 08.09.26.",
-            "Første fråværsdag er endra til 08.09.26.",
-            "The first day of absence has changed to 08.09.26."));
+            "Første fraværsdag er endret til 08.09.26. Nav sender ikke ny forespørsel for inntektsmelding. Hvis du skal korrigere informasjonen, endrer du dette gjennom inntektsmeldingen som du har sendt til Nav.",
+            "Første fråværsdag er endra til 08.09.26. Nav sender ikkje ny førespurnad om inntektsmelding. Dersom du skal korrigere informasjonen, endrar du dette gjennom inntektsmeldinga som du har sendt til Nav.",
+            "The first day of absence has changed to 08.09.26. Nav will not send a new request for an income statement. If you need to correct the information, make the changes in the income statement you submitted to Nav."));
     }
 
     @Test
