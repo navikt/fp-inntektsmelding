@@ -12,6 +12,8 @@ import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.Predicate;
 
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,11 +56,11 @@ public class InntektsmeldingRepository {
         return query.getResultList();
     }
 
-    public Optional<InntektsmeldingEntitet> hentInntektsmeldingerForForespørsel(Long forespørselId) {
+    public Optional<InntektsmeldingEntitet> hentInntektsmeldingerForForespørsel(ForespørselEntitet forespørsel) {
         var query = entityManager.createQuery(
-                "FROM InntektsmeldingEntitet where forespørsel = :forespørselId",
+                "FROM InntektsmeldingEntitet where forespørsel = :forespørsel",
                 InntektsmeldingEntitet.class)
-            .setParameter("forespørselId", forespørselId);
+            .setParameter("forespørsel", forespørsel);
         return Optional.ofNullable(query.getSingleResultOrNull());
     }
 

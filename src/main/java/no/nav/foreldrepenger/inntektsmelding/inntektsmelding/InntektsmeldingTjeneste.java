@@ -57,7 +57,7 @@ public class InntektsmeldingTjeneste {
 
     public List<InntektsmeldingDto> hentAktiveInntektsmeldinger(UUID forespørselUuid) {
         var forespørsel = forespørselRepository.hentForespørsel(forespørselUuid).orElseThrow();
-        return inntektsmeldingRepository.hentInntektsmeldingerForForespørsel(forespørsel.getId())
+        return inntektsmeldingRepository.hentInntektsmeldingerForForespørsel(forespørsel)
             .stream()
             .filter(inntektsmelding -> !STATUS_AVVIST_OG_UTDADERT.contains(inntektsmelding.getStatus()))
             .map(InntektsmeldingDtoMapper::mapFraEntitet)

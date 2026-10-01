@@ -305,6 +305,45 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
     }
 
     @Test
+    void skal_hente_inntektsmelding_for_forespørsel() {
+        // Arrange
+        var forespørsel = lagreForespørsel("9999999999999", "999999999", Ytelsetype.FORELDREPENGER);
+        var annenForespørsel = lagreForespørsel("8888888888888", "888888888", Ytelsetype.FORELDREPENGER);
+        var forventetInntektsmelding = InntektsmeldingEntitet.builder()
+            .medAktørId(new AktørIdEntitet("9999999999999"))
+            .medKontaktperson(new KontaktpersonEntitet("Testy test", "999999999"))
+            .medYtelsetype(Ytelsetype.FORELDREPENGER)
+            .medMånedInntekt(BigDecimal.valueOf(4000))
+            .medStartDato(LocalDate.now())
+            .medArbeidsgiverIdent("999999999")
+            .medForespørsel(forespørsel)
+            .medKildesystem(Kildesystem.ARBEIDSGIVERPORTAL)
+            .build();
+        var annenInntektsmelding = InntektsmeldingEntitet.builder()
+            .medAktørId(new AktørIdEntitet("8888888888888"))
+            .medKontaktperson(new KontaktpersonEntitet("Annen test", "888888888"))
+            .medYtelsetype(Ytelsetype.FORELDREPENGER)
+            .medMånedInntekt(BigDecimal.valueOf(5000))
+            .medStartDato(LocalDate.now())
+            .medArbeidsgiverIdent("888888888")
+            .medForespørsel(annenForespørsel)
+            .medKildesystem(Kildesystem.ARBEIDSGIVERPORTAL)
+            .build();
+        var forventetUuid = forventetInntektsmelding.getUuid();
+        inntektsmeldingRepository.lagreInntektsmelding(forventetInntektsmelding);
+        inntektsmeldingRepository.lagreInntektsmelding(annenInntektsmelding);
+        getEntityManager().clear();
+
+        // Act
+        var resultat = inntektsmeldingRepository.hentInntektsmeldingerForForespørsel(forespørsel);
+
+        // Assert
+        assertThat(resultat).isPresent();
+        assertThat(resultat.get().getUuid()).isEqualTo(forventetUuid);
+        assertThat(resultat.get().getForespørsel().orElseThrow().getId()).isEqualTo(forespørsel.getId());
+    }
+
+    @Test
     void skal_filtrere_kun_på_orgnr() {
         var orgnr = "999999999";
         var annetOrgnr = "888888888";
