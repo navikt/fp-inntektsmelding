@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -40,6 +41,7 @@ class InntektsmeldingTjenesteTest {
     private static final String ORGNR = "999999999";
     private static final String AKTØR_ID = "9999999999999";
     private static final LocalDate STARTDATO = LocalDate.of(2026, 1, 10);
+    private static final long FORESPØRSEL_ID = 1L;
 
     private InntektsmeldingTjeneste inntektsmeldingTjeneste;
 
@@ -49,6 +51,8 @@ class InntektsmeldingTjenesteTest {
     private InntektsmeldingRepository inntektsmeldingRepository;
     @Mock
     private ForespørselRepository forespørselRepository;
+    @Mock
+    private ForespørselEntitet forespørselEntitet;
 
     private UUID forespørselUuid;
 
@@ -56,14 +60,12 @@ class InntektsmeldingTjenesteTest {
     void setup() {
         inntektsmeldingTjeneste = new InntektsmeldingTjeneste(forespørselBehandlingTjeneste, inntektsmeldingRepository, forespørselRepository);
         forespørselUuid = UUID.randomUUID();
-        var forespørselDto = lagForespørselDto(forespørselUuid);
-        when(forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid)).thenReturn(forespørselDto);
     }
 
     @Test
     void skal_ikke_returnere_avvist_inntektsmelding_som_siste_slik_at_ny_innsending_ikke_avvises_som_duplikat() {
         var avvistIm = lagInntektsmelding(InntektsmeldingStatus.AVVIST);
-        when(inntektsmeldingRepository.hentInntektsmeldingerSortertNyesteFørst(any(), any(), any(), any())).thenReturn(List.of(avvistIm));
+        mockInntektsmeldingForForespørsel(avvistIm);
 
         var siste = inntektsmeldingTjeneste.hentSisteInntektsmeldingForForespørsel(forespørselUuid);
 
@@ -73,7 +75,7 @@ class InntektsmeldingTjenesteTest {
     @Test
     void skal_ikke_returnere_utdatert_inntektsmelding_som_siste_slik_at_ny_innsending_ikke_avvises_som_duplikat() {
         var utdatertIm = lagInntektsmelding(InntektsmeldingStatus.UTDATERT);
-        when(inntektsmeldingRepository.hentInntektsmeldingerSortertNyesteFørst(any(), any(), any(), any())).thenReturn(List.of(utdatertIm));
+        mockInntektsmeldingForForespørsel(utdatertIm);
 
         var siste = inntektsmeldingTjeneste.hentSisteInntektsmeldingForForespørsel(forespørselUuid);
 
@@ -83,7 +85,7 @@ class InntektsmeldingTjenesteTest {
     @Test
     void skal_fortsatt_returnere_inntektsmelding_som_venter_vurdering_som_siste_slik_at_ny_lik_innsending_fortsatt_er_duplikat() {
         var venterVurderingIm = lagInntektsmelding(InntektsmeldingStatus.VENTER_VURDERING);
-        when(inntektsmeldingRepository.hentInntektsmeldingerSortertNyesteFørst(any(), any(), any(), any())).thenReturn(List.of(venterVurderingIm));
+        mockInntektsmeldingForForespørsel(venterVurderingIm);
 
         var siste = inntektsmeldingTjeneste.hentSisteInntektsmeldingForForespørsel(forespørselUuid);
 
@@ -92,11 +94,9 @@ class InntektsmeldingTjenesteTest {
     }
 
     @Test
-    void skal_hoppe_over_avvist_og_finne_godkjent_som_siste_gyldige_inntektsmelding() {
-        var avvistIm = lagInntektsmelding(InntektsmeldingStatus.AVVIST);
+    void skal_returnere_godkjent_inntektsmelding_som_siste_gyldige_inntektsmelding() {
         var godkjentIm = lagInntektsmelding(InntektsmeldingStatus.GODKJENT);
-        // Repositoriet returnerer nyeste først - avvist ligger foran den eldre, godkjente
-        when(inntektsmeldingRepository.hentInntektsmeldingerSortertNyesteFørst(any(), any(), any(), any())).thenReturn(List.of(avvistIm, godkjentIm));
+        mockInntektsmeldingForForespørsel(godkjentIm);
 
         var siste = inntektsmeldingTjeneste.hentSisteInntektsmeldingForForespørsel(forespørselUuid);
 
@@ -108,11 +108,19 @@ class InntektsmeldingTjenesteTest {
     void hentAlleInntektsmeldinger_skal_ikke_filtrere_bort_avvist_eller_utdatert() {
         var avvistIm = lagInntektsmelding(InntektsmeldingStatus.AVVIST);
         var utdatertIm = lagInntektsmelding(InntektsmeldingStatus.UTDATERT);
+        var forespørselDto = lagForespørselDto(forespørselUuid);
+        when(forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid)).thenReturn(forespørselDto);
         when(inntektsmeldingRepository.hentInntektsmeldingerSortertNyesteFørst(any(), any(), any(), any())).thenReturn(List.of(avvistIm, utdatertIm));
 
         var alle = inntektsmeldingTjeneste.hentAlleInntektsmeldinger(forespørselUuid);
 
         assertThat(alle).hasSize(2);
+    }
+
+    private void mockInntektsmeldingForForespørsel(InntektsmeldingEntitet inntektsmelding) {
+        when(forespørselRepository.hentForespørsel(forespørselUuid)).thenReturn(Optional.of(forespørselEntitet));
+        when(forespørselEntitet.getId()).thenReturn(FORESPØRSEL_ID);
+        when(inntektsmeldingRepository.hentInntektsmeldingerForForespørsel(FORESPØRSEL_ID)).thenReturn(Optional.of(inntektsmelding));
     }
 
     private static ForespørselDto lagForespørselDto(UUID uuid) {
