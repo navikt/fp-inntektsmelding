@@ -119,7 +119,7 @@ class InntektsmeldingTjenesteTest {
 
     private void mockInntektsmeldingForForespørsel(InntektsmeldingEntitet inntektsmelding) {
         when(forespørselRepository.hentForespørsel(forespørselUuid)).thenReturn(Optional.of(forespørselEntitet));
-        when(inntektsmeldingRepository.hentInntektsmeldingerForForespørsel(forespørselEntitet)).thenReturn(Optional.of(inntektsmelding));
+        when(inntektsmeldingRepository.hentInntektsmeldingerForForespørsel(forespørselEntitet)).thenReturn(List.of(inntektsmelding));
     }
 
     private static ForespørselDto lagForespørselDto(UUID uuid) {

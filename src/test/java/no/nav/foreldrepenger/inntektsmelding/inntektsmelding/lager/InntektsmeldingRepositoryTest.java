@@ -338,9 +338,9 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
         var resultat = inntektsmeldingRepository.hentInntektsmeldingerForForespørsel(forespørsel);
 
         // Assert
-        assertThat(resultat).isPresent();
-        assertThat(resultat.get().getUuid()).isEqualTo(forventetUuid);
-        assertThat(resultat.get().getForespørsel().orElseThrow().getId()).isEqualTo(forespørsel.getId());
+        assertThat(resultat).hasSize(1);
+        assertThat(resultat.getFirst().getUuid()).isEqualTo(forventetUuid);
+        assertThat(resultat.getFirst().getForespørsel().orElseThrow().getId()).isEqualTo(forespørsel.getId());
     }
 
     @Test

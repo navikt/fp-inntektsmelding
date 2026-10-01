@@ -56,12 +56,12 @@ public class InntektsmeldingRepository {
         return query.getResultList();
     }
 
-    public Optional<InntektsmeldingEntitet> hentInntektsmeldingerForForespørsel(ForespørselEntitet forespørsel) {
+    public List<InntektsmeldingEntitet> hentInntektsmeldingerForForespørsel(ForespørselEntitet forespørsel) {
         var query = entityManager.createQuery(
-                "FROM InntektsmeldingEntitet where forespørsel = :forespørsel",
+                "FROM InntektsmeldingEntitet where forespørsel = :forespørsel order by opprettetTidspunkt desc",
                 InntektsmeldingEntitet.class)
             .setParameter("forespørsel", forespørsel);
-        return Optional.ofNullable(query.getSingleResultOrNull());
+        return query.getResultList();
     }
 
     public Optional<InntektsmeldingEntitet> finnInntektsmelding(UUID inntektsmeldingUuid) {
