@@ -134,6 +134,11 @@ class DialogportenRequestMapperTest {
         assertThat(patch.op()).isEqualTo(DialogportenPatchRequest.OP_ADD);
         assertThat(patch.path()).isEqualTo(DialogportenPatchRequest.PATH_TRANSMISSIONS);
         var tittel = new DialogportenRequest.ContentValue(
+            List.of(new DialogportenRequest.ContentValueItem("Første fraværsdag er endret", DialogportenRequest.NB),
+                new DialogportenRequest.ContentValueItem("Første fråværsdag er endra", DialogportenRequest.NN),
+                new DialogportenRequest.ContentValueItem("The first day of absence has changed", DialogportenRequest.EN)),
+            DialogportenRequest.TEXT_PLAIN);
+        var sammendrag = new DialogportenRequest.ContentValue(
             List.of(new DialogportenRequest.ContentValueItem(beskjedTekst.nb(), DialogportenRequest.NB),
                 new DialogportenRequest.ContentValueItem(beskjedTekst.nn(), DialogportenRequest.NN),
                 new DialogportenRequest.ContentValueItem(beskjedTekst.en(), DialogportenRequest.EN)), DialogportenRequest.TEXT_PLAIN);
@@ -141,7 +146,7 @@ class DialogportenRequestMapperTest {
             new DialogportenRequest.Transmission(DialogportenRequest.TransmissionType.Information,
                 DialogportenRequest.TransmissionExtendedType.INNTEKTSMELDING,
                 new DialogportenRequest.Sender("ServiceOwner", null),
-                new DialogportenRequest.Content(tittel, null, null),
+                new DialogportenRequest.Content(tittel, sammendrag, null),
                 List.of())));
     }
 
