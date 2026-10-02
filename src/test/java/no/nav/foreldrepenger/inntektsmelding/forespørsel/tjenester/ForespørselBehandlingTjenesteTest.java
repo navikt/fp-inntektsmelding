@@ -734,7 +734,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             SKJÆRINGSTIDSPUNKT, ForespørselType.BESTILT_AV_FAGSYSTEM);
         var imUuid = UUID.randomUUID();
         forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, SAK_ID);
-        forespørselRepository.ferdigstillForespørsel(SAK_ID);
+        forespørselRepository.ferdigstillForespørsel(forespørselUuid);
 
         var res = forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørselUuid,
             LukkeÅrsak.EKSTERN_INNSENDING, Optional.of(imUuid));
@@ -759,7 +759,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             SAKSNUMMER,
             SKJÆRINGSTIDSPUNKT, ForespørselType.BESTILT_AV_FAGSYSTEM);
         forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, SAK_ID);
-        forespørselRepository.ferdigstillForespørsel(SAK_ID);
+        forespørselRepository.ferdigstillForespørsel(forespørselUuid);
 
         var resultat = forespørselBehandlingTjeneste.opprettNyBeskjedMedEksternVarsling(Saksnummer.fra(SAKSNUMMER),
             Arbeidsgiver.fra(BRREG_ORGNUMMER));
@@ -778,7 +778,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             FØRSTE_UTTAKSDATO,
             ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT);
         forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, SAK_ID);
-        forespørselRepository.ferdigstillForespørsel(SAK_ID);
+        forespørselRepository.ferdigstillForespørsel(forespørselUuid);
 
         var forespørsel = forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid);
         var nyFørsteUttaksdato = FØRSTE_UTTAKSDATO.plusWeeks(1);

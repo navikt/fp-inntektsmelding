@@ -360,13 +360,13 @@ public class MinSideArbeidsgiverTjeneste {
                                  String organisasjonsnummer,
                                  String beskjedTekst,
                                  Optional<String> varselTekst,
-                                 URI oppgaveLenke,
+                                 URI lenke,
                                  String eksternId) {
         var beskjedInput = NyBeskjedInput.builder()
             .setNotifikasjon(NotifikasjonInput.builder()
                 .setMerkelapp(beskjedMerkelapp.getBeskrivelse())
                 .setTekst(beskjedTekst)
-                .setLenke(oppgaveLenke.toString())
+                .setLenke(lenke.toString())
                 .build())
             .setMottaker(lagAltinnMottakerInput())
             .setMetadata(MetadataInput.builder()
