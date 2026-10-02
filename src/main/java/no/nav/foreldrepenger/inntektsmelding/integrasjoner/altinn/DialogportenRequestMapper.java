@@ -22,6 +22,10 @@ public class DialogportenRequestMapper {
         "Første fraværsdag er endret",
         "Første fråværsdag er endra",
         "The first day of absence has changed");
+    private static final FlerspråkligTekst AVVIST_TITTEL = new FlerspråkligTekst(
+        "Inntektsmeldingen ble avvist",
+        "Inntektsmeldinga vart avvist",
+        "The income statement was rejected");
     private static final FlerspråkligTekst SEND_INN_INNTEKTSMELDING = new FlerspråkligTekst(
         "Send inn inntektsmelding",
         "Send inn inntektsmelding",
@@ -184,6 +188,21 @@ public class DialogportenRequestMapper {
             List.of(transmission));
     }
 
+    public static DialogportenPatchRequest opprettAvvistMelding(Arbeidsgiver arbeidsgiver,
+                                                                FlerspråkligTekst avvistTekst) {
+        var transmissionContent = new DialogportenRequest.Content(lagContentValue(AVVIST_TITTEL), lagContentValue(avvistTekst), null);
+        var transmission = new DialogportenRequest.Transmission(DialogportenRequest.TransmissionType.Rejection,
+            DialogportenRequest.TransmissionExtendedType.INNTEKTSMELDING_AVVIST,
+            new DialogportenRequest.Sender(SERVICE_OWNER, null),
+            transmissionContent,
+            List.of());
+
+        // patch
+        return new DialogportenPatchRequest(DialogportenPatchRequest.OP_ADD,
+            DialogportenPatchRequest.PATH_TRANSMISSIONS,
+            List.of(transmission));
+    }
+
     public static DialogportenPatchRequest opprettEndretFørsteUttaksdatoPatchRequest(FlerspråkligTekst beskjedTekst) {
         var transmissionContent = new DialogportenRequest.Content(lagContentValue(OPPDATERT_UTTAKSDATO_TITTEL),
             lagContentValue(beskjedTekst), null);
@@ -207,26 +226,6 @@ public class DialogportenRequestMapper {
                 new DialogportenRequest.Sender(SERVICE_OWNER, null),
                 transmissionContent,
                 List.of())));
-    }
-
-    public static DialogportenPatchRequest inntektsmeldingAvvistTransmission(Arbeidsgiver arbeidsgiver,
-                                                                               FlerspråkligTekst avvistTekst) {
-        var contentTransmission = lagContentValue(avvistTekst);
-
-        var transmissionContent = new DialogportenRequest.Content(contentTransmission, null, null);
-
-        var actorId = String.format("urn:altinn:organization:identifier-no:%s", arbeidsgiver.orgnr());
-
-        var transmission = new DialogportenRequest.Transmission(DialogportenRequest.TransmissionType.Rejection,
-            DialogportenRequest.TransmissionExtendedType.INNTEKTSMELDING_AVVIST,
-            new DialogportenRequest.Sender("PartyRepresentative", actorId),
-            transmissionContent,
-            List.of());
-
-        // patch
-        return new DialogportenPatchRequest(DialogportenPatchRequest.OP_ADD,
-            DialogportenPatchRequest.PATH_TRANSMISSIONS,
-            List.of(transmission));
     }
 
     public static List<DialogportenPatchRequest> opprettUtgåttPatchRequest(FlerspråkligTekst sakstittel) {

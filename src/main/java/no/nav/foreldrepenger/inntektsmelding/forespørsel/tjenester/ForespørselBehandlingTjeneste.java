@@ -200,11 +200,12 @@ public class ForespørselBehandlingTjeneste {
     }
 
     public void sendMeldingOmAvvistInntektsmelding(ForespørselDto forespørselDto,
-                                                   FlerspråkligTekst feiltekst) {
+                                                   FlerspråkligTekst dialogportenTekst,
+                                                   FlerspråkligTekst altinnTekst) {
         // Send transmission til dialogporten
-        dialogportenTjeneste.sendMeldingOmAvvistInntektsmelding(forespørselDto, feiltekst);
-        // Send melding til fager
-        minSideArbeidsgiverTjeneste.sendNyBeskjedOmAvvistInntektsmelding(forespørselDto, feiltekst.nb());
+        dialogportenTjeneste.sendMeldingOmAvvistInntektsmelding(forespørselDto, dialogportenTekst);
+        // Send melding til fager/altinn
+        minSideArbeidsgiverTjeneste.sendNyBeskjedOmAvvistInntektsmelding(forespørselDto, altinnTekst.nb());
     }
 
     // Vi skal aldri ha mer enn en forespørsel til under_behandling eller ferdig for samme sak med samme orgnummer og aktørid

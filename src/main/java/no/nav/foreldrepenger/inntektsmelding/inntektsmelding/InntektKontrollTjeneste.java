@@ -138,8 +138,9 @@ public class InntektKontrollTjeneste {
 
         if (inntektErUgyldig) {
             inntektsmeldingTjeneste.oppdatertStatusTilInntektsmelding(inntektsmelding.getInntektsmeldingUuid(), InntektsmeldingStatus.AVVIST);
-            var feilmelding = ForespørselTekster.lagAvvistInntektTekstFlerspråklig(inntekter.gjennomsnitt(), inntektsmelding.getMånedInntekt());
-            forespørselBehandlingTjeneste.sendMeldingOmAvvistInntektsmelding(forespørsel, feilmelding);
+            var dialogportenTekst = ForespørselTekster.lagAvvistInntektTekstDialogportenFlerspråklig();
+            var altinnTekst = ForespørselTekster.lagAvvistInntektTekstAltinnFlerspråklig();
+            forespørselBehandlingTjeneste.sendMeldingOmAvvistInntektsmelding(forespørsel, dialogportenTekst, altinnTekst);
         } else {
             inntektsmeldingTjeneste.oppdatertStatusTilInntektsmelding(inntektsmelding.getInntektsmeldingUuid(), InntektsmeldingStatus.GODKJENT);
             fellesMottakTjeneste.opprettTaskForSendTilJoark(inntektsmeldingId, forespørsel);
