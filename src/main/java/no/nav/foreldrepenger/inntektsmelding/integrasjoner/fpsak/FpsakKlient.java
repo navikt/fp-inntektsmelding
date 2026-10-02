@@ -28,6 +28,7 @@ public class FpsakKlient {
     private static final Logger LOG = LoggerFactory.getLogger(FpsakKlient.class);
 
     private static final String FPSAK_SAKSOVERSIKT = "/api/fordel/inntektsmeldingSaksoversikt";
+    private static final String FPSAK_FORESPØRSEL_STATUS = "/api/fordel/inntektsmelding/forespoersel-status";
 
     private final RestClient restClient;
     private final RestConfig restConfig;
@@ -54,6 +55,24 @@ public class FpsakKlient {
         }
     }
 
+    /**
+     * Sjekker mot fp-sak om det fortsatt er behov for inntektsmelding for en gitt (fagsakSaksnummer, orgnummer).
+     * Brukes av forvaltningsjobber for å rydde opp forespørsler uten behov.
+     */
+    public boolean sjekkForespørselStatus(String fagsakSaksnummer, String orgnummer) {
+        var uri = UriBuilder.fromUri(restConfig.endpoint()).path(FPSAK_FORESPØRSEL_STATUS).build();
+        LOG.info("Sjekker forespørselstatus mot fp-sak for saksnummer={}, orgnummer={}", fagsakSaksnummer, orgnummer);
+        var requestDto = new ForespørselStatusRequest(fagsakSaksnummer, orgnummer);
+        var request = RestRequest.newPOSTJson(requestDto, uri, restConfig);
+        try {
+            return restClient.send(request, Boolean.class);
+        } catch (Exception e) {
+            throw new IntegrasjonException("FPINNTEKTSMELDING-694579",
+                "Integrasjonsfeil mot fpsak. Klarte ikke sjekke forespørselstatus for saksnummer=" + fagsakSaksnummer
+                    + ", orgnummer=" + orgnummer + ".", e);
+        }
+    }
+
     public record InntektsmeldingSakRequest(@Valid @NotNull AktørId bruker, @Valid @NotNull Ytelse ytelse){
         protected record AktørId(@NotNull @Digits(integer = 19, fraction = 0) String aktørId){}
         protected enum Ytelse{FORELDREPENGER, SVANGERSKAPSPENGER}
@@ -67,5 +86,8 @@ public class FpsakKlient {
         VENTER_PÅ_SØKNAD,
         PAPIRSØKNAD_IKKE_REGISTRERT,
         INGEN_BEHANDLING
+    }
+
+    public record ForespørselStatusRequest(@NotNull String fagsakSaksnummer, @NotNull String orgnummer) {
     }
 }
