@@ -104,9 +104,9 @@ public class RyddForespørselTask implements ProsessTaskHandler {
         var duplikaterForLukking = åpneForespørsler.stream().filter(f -> !f.uuid().equals(behold.uuid())).toList();
 
         if (!duplikaterForLukking.isEmpty()) {
-            LOG.info("{}: saksnummer={}, orgnummer={}: Beholder id={}, lukker eldre duplikat(er) med id-ene {}",
-                LOGG_PREFIKS, saksnummer, orgnummer, behold.loepenr(),
-                duplikaterForLukking.stream().map(ForespørselDto::loepenr).toList());
+            LOG.info("{}: saksnummer={}, orgnummer={}: Beholder uuid={}, lukker eldre duplikat(er) med uuid-ene {}",
+                LOGG_PREFIKS, saksnummer, orgnummer, behold.uuid(),
+                duplikaterForLukking.stream().map(ForespørselDto::uuid).toList());
         }
 
         return duplikaterForLukking;
@@ -115,21 +115,22 @@ public class RyddForespørselTask implements ProsessTaskHandler {
     private void lukkHvisFortsattUnderBehandling(ForespørselDto forespørsel, boolean dryRun, String saksnummer,
                                                  String orgnummer) {
         if (dryRun) {
-            LOG.info("{}: saksnummer={}, orgnummer={}: Skulle lukket forespørsel id={} uuid={} "
-                    + "(dry-run, ingen endring gjort)",
-                LOGG_PREFIKS, saksnummer, orgnummer, forespørsel.loepenr(), forespørsel.uuid());
+            LOG.info("{}: saksnummer={}, orgnummer={}: Skulle lukket forespørsel uuid={} (dry-run, ingen endring gjort)",
+                LOGG_PREFIKS, saksnummer, orgnummer, forespørsel.uuid());
             return;
         }
-        var forespørselEntitet = entityManager.find(ForespørselEntitet.class, forespørsel.loepenr(),
-            LockModeType.PESSIMISTIC_WRITE);
+        var forespørselEntitet = entityManager.createQuery(
+            "from ForespørselEntitet where uuid = :uuid", ForespørselEntitet.class)
+            .setParameter("uuid", forespørsel.uuid())
+            .setLockMode(LockModeType.PESSIMISTIC_WRITE)
+            .getSingleResult();
         if (forespørselEntitet.getStatus() == ForespørselStatus.UNDER_BEHANDLING) {
             forespørselBehandlingTjeneste.settForespørselTilUtgåttForvaltning(forespørsel.uuid());
-            LOG.info("{}: saksnummer={}, orgnummer={}: Lukket forespørsel id={} uuid={} (satt til utgått, forvaltning)",
-                LOGG_PREFIKS, saksnummer, orgnummer, forespørsel.loepenr(), forespørsel.uuid());
+            LOG.info("{}: saksnummer={}, orgnummer={}: Lukket forespørsel uuid={} (satt til utgått, forvaltning)",
+                LOGG_PREFIKS, saksnummer, orgnummer, forespørsel.uuid());
         } else {
-            LOG.info("{}: saksnummer={}, orgnummer={}: Forespørsel id={} uuid={} er ikke lenger UNDER_BEHANDLING. "
-                    + "Hopper over lukking (idempotens).",
-                LOGG_PREFIKS, saksnummer, orgnummer, forespørsel.loepenr(), forespørsel.uuid());
+            LOG.info("{}: saksnummer={}, orgnummer={}: Forespørsel uuid={} er ikke lenger UNDER_BEHANDLING. Hopper over lukking (idempotens).",
+                LOGG_PREFIKS, saksnummer, orgnummer, forespørsel.uuid());
         }
     }
 }

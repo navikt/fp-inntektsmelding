@@ -1,18 +1,23 @@
 package no.nav.foreldrepenger.inntektsmelding.forvaltning;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
+import jakarta.persistence.TypedQuery;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,17 +48,30 @@ class RyddForespørselTaskTest {
     @Mock
     private EntityManager entityManager;
     @Mock
+    private TypedQuery<ForespørselEntitet> query;
+    @Mock
     private ForespørselTjeneste forespørselTjeneste;
     @Mock
     private ForespørselBehandlingTjeneste forespørselBehandlingTjeneste;
     @Mock
     private FpsakKlient fpsakKlient;
 
+    private final Map<UUID, ForespørselEntitet> låsteEntiteter = new HashMap<>();
+    private UUID sistSpurteUuid;
+
     private RyddForespørselTask task;
 
     @BeforeEach
     void setUp() {
         task = new RyddForespørselTask(entityManager, forespørselTjeneste, forespørselBehandlingTjeneste, fpsakKlient);
+
+        lenient().when(entityManager.createQuery(anyString(), eq(ForespørselEntitet.class))).thenReturn(query);
+        lenient().when(query.setLockMode(LockModeType.PESSIMISTIC_WRITE)).thenReturn(query);
+        lenient().when(query.setParameter(eq("uuid"), any(UUID.class))).thenAnswer(invocation -> {
+            sistSpurteUuid = invocation.getArgument(1);
+            return query;
+        });
+        lenient().when(query.getSingleResult()).thenAnswer(invocation -> låsteEntiteter.get(sistSpurteUuid));
     }
 
     @Test
@@ -76,8 +94,8 @@ class RyddForespørselTaskTest {
 
         when(fpsakKlient.sjekkForespørselStatus("SAK1", ORG_NUMMER)).thenReturn(false);
 
-        mockLåstEntitet(1L, ForespørselStatus.UNDER_BEHANDLING);
-        mockLåstEntitet(2L, ForespørselStatus.UNDER_BEHANDLING);
+        mockLåstEntitet(uuid1, ForespørselStatus.UNDER_BEHANDLING);
+        mockLåstEntitet(uuid2, ForespørselStatus.UNDER_BEHANDLING);
 
         task.doTask(lagProsessTaskData("SAK1", ORG_NUMMER, false));
 
@@ -95,7 +113,7 @@ class RyddForespørselTaskTest {
 
         when(fpsakKlient.sjekkForespørselStatus("SAK2", ORG_NUMMER)).thenReturn(true);
 
-        mockLåstEntitet(1L, ForespørselStatus.UNDER_BEHANDLING);
+        mockLåstEntitet(uuidGammel, ForespørselStatus.UNDER_BEHANDLING);
 
         task.doTask(lagProsessTaskData("SAK2", ORG_NUMMER, false));
 
@@ -114,7 +132,7 @@ class RyddForespørselTaskTest {
         task.doTask(lagProsessTaskData("SAK2B", ORG_NUMMER, false));
 
         verify(forespørselBehandlingTjeneste, never()).settForespørselTilUtgåttForvaltning(any());
-        verify(entityManager, never()).find(eq(ForespørselEntitet.class), any(), eq(LockModeType.PESSIMISTIC_WRITE));
+        verify(entityManager, never()).createQuery(anyString(), eq(ForespørselEntitet.class));
     }
 
     @Test
@@ -133,7 +151,7 @@ class RyddForespørselTaskTest {
 
         verify(fpsakKlient).sjekkForespørselStatus("SAK4", ORG_NUMMER);
         verify(forespørselBehandlingTjeneste, never()).settForespørselTilUtgåttForvaltning(any());
-        verify(entityManager, never()).find(eq(ForespørselEntitet.class), any(), eq(LockModeType.PESSIMISTIC_WRITE));
+        verify(entityManager, never()).createQuery(anyString(), eq(ForespørselEntitet.class));
     }
 
     @Test
@@ -146,8 +164,8 @@ class RyddForespørselTaskTest {
 
         when(fpsakKlient.sjekkForespørselStatus("SAK5", ORG_NUMMER)).thenReturn(false);
 
-        mockLåstEntitet(1L, ForespørselStatus.FERDIG);
-        mockLåstEntitet(2L, ForespørselStatus.UNDER_BEHANDLING);
+        mockLåstEntitet(uuidAlleredeLukket, ForespørselStatus.FERDIG);
+        mockLåstEntitet(uuidÅpen, ForespørselStatus.UNDER_BEHANDLING);
 
         task.doTask(lagProsessTaskData("SAK5", ORG_NUMMER, false));
 
@@ -163,18 +181,19 @@ class RyddForespørselTaskTest {
 
         when(fpsakKlient.sjekkForespørselStatus("SAK9", ORG_NUMMER)).thenReturn(false);
 
-        mockLåstEntitet(1L, ForespørselStatus.FERDIG);
+        mockLåstEntitet(uuid, ForespørselStatus.FERDIG);
 
         task.doTask(lagProsessTaskData("SAK9", ORG_NUMMER, false));
 
-        verify(entityManager).find(ForespørselEntitet.class, 1L, LockModeType.PESSIMISTIC_WRITE);
+        verify(query).setParameter("uuid", uuid);
+        verify(query).setLockMode(LockModeType.PESSIMISTIC_WRITE);
         verify(forespørselBehandlingTjeneste, never()).settForespørselTilUtgåttForvaltning(any());
     }
 
-    private void mockLåstEntitet(long id, ForespørselStatus status) {
+    private void mockLåstEntitet(UUID uuid, ForespørselStatus status) {
         var entitet = mock(ForespørselEntitet.class);
-        when(entitet.getStatus()).thenReturn(status);
-        when(entityManager.find(ForespørselEntitet.class, id, LockModeType.PESSIMISTIC_WRITE)).thenReturn(entitet);
+        lenient().when(entitet.getStatus()).thenReturn(status);
+        låsteEntiteter.put(uuid, entitet);
     }
 
     private ProsessTaskData lagProsessTaskData(String saksnummer, String orgnummer, boolean dryRun) {
