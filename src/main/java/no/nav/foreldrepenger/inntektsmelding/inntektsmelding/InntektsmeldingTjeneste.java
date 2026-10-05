@@ -1,8 +1,11 @@
 package no.nav.foreldrepenger.inntektsmelding.inntektsmelding;
 
 import java.time.LocalDate;
+import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import jakarta.enterprise.context.Dependent;
@@ -22,6 +25,9 @@ public class InntektsmeldingTjeneste {
     private ForespørselBehandlingTjeneste forespørselBehandlingTjeneste;
     private InntektsmeldingRepository inntektsmeldingRepository;
     private ForespørselRepository forespørselRepository;
+    private static final Set<InntektsmeldingStatus> STATUS_AVVIST_OG_UTDADERT = EnumSet.of(
+        InntektsmeldingStatus.AVVIST,
+        InntektsmeldingStatus.UTDATERT);
 
     InntektsmeldingTjeneste() {
         // CDI proxy
@@ -45,18 +51,29 @@ public class InntektsmeldingTjeneste {
     }
 
     public InntektsmeldingDto hentSisteInntektsmeldingForForespørsel(UUID forespørselUuid) {
-        var inntekstmeldinger = hentInntektsmeldinger(forespørselUuid);
-        return inntekstmeldinger.isEmpty() ? null : inntekstmeldinger.getFirst();
+        var inntekstmeldinger = hentAktiveInntektsmeldinger(forespørselUuid);
+        return inntekstmeldinger.isEmpty() ? null : inntekstmeldinger.stream().max(Comparator.comparing(InntektsmeldingDto::getInnsendtTidspunkt)).orElseThrow();
     }
 
-    public List<InntektsmeldingDto> hentInntektsmeldinger(UUID forespørselUuid) {
+    public List<InntektsmeldingDto> hentAktiveInntektsmeldinger(UUID forespørselUuid) {
+        var forespørsel = forespørselRepository.hentForespørsel(forespørselUuid).orElseThrow();
+        return inntektsmeldingRepository.hentInntektsmeldingerForForespørsel(forespørsel)
+            .stream()
+            .filter(inntektsmelding -> !STATUS_AVVIST_OG_UTDADERT.contains(inntektsmelding.getStatus()))
+            .map(InntektsmeldingDtoMapper::mapFraEntitet)
+            .toList();
+    }
+
+    public List<InntektsmeldingDto> hentAlleInntektsmeldinger(UUID forespørselUuid) {
         var forespørsel = forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid);
 
         return inntektsmeldingRepository.hentInntektsmeldingerSortertNyesteFørst(new AktørIdEntitet(forespørsel.aktørId().getAktørId()),
                 forespørsel.arbeidsgiver().orgnr(),
                 forespørsel.førsteUttaksdato(),
                 forespørsel.ytelseType())
-            .stream().map(InntektsmeldingDtoMapper::mapFraEntitet).toList();
+            .stream()
+            .map(InntektsmeldingDtoMapper::mapFraEntitet)
+            .toList();
     }
 
     public Long lagreOverstyrtInntektsmelding(InntektsmeldingDto inntektsmeldingDto) {

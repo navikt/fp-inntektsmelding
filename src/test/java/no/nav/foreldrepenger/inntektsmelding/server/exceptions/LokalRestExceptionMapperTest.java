@@ -120,6 +120,21 @@ class LokalRestExceptionMapperTest {
     }
 
     @Test
+    void skalMappeInntektAvvikerFraAInntektExceptionTil400() {
+        var callId = MDCOperations.generateCallId();
+        MDCOperations.putCallId(callId);
+        try (var response = exceptionMapper.toResponse(inntektAvvikerFraAInntektFeil())) {
+            assertThat(response.getStatus()).isEqualTo(400);
+            assertThat(response.getEntity()).isInstanceOf(FeilDto.class);
+            var feilDto = (FeilDto) response.getEntity();
+
+            assertThat(feilDto.feilkode()).isEqualTo("INNTEKT_AVVIKER_FRA_AINNTEKT");
+            assertThat(feilDto.callId()).isEqualTo(callId);
+            assertThat(feilDto.feilmelding()).contains("Inntekt i inntektsmelding er ulik inntekt fra A-inntekt");
+        }
+    }
+
+    @Test
     void skalMappeVLException() {
         var callId = MDCOperations.generateCallId();
         MDCOperations.putCallId(callId);
@@ -206,6 +221,10 @@ class LokalRestExceptionMapperTest {
     }
     private static FunksjonellException funksjonellFeilFinnesIAaReg() {
         return new InntektsmeldingException(InntektsmeldingException.LokalFeilKode.FINNES_I_AAREG);
+    }
+
+    private static FunksjonellException inntektAvvikerFraAInntektFeil() {
+        return new InntektAvvikerFraAInntektException(java.math.BigDecimal.valueOf(46000), java.math.BigDecimal.valueOf(45000));
     }
 
 }

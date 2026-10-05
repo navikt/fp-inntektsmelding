@@ -226,7 +226,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         assertThat(resultater).isEmpty();
         assertThat(forespørselRepository.hentForespørsel(førsteUuid).orElseThrow().getStatus()).isEqualTo(ForespørselStatus.UTGÅTT);
         assertThat(forespørselRepository.hentForespørsel(andreUuid).orElseThrow().getStatus()).isEqualTo(ForespørselStatus.UTGÅTT);
-        verify(prosessTaskTjeneste, Mockito.times(2)).lagre(any(ProsessTaskGruppe.class));
+        verify(prosessTaskTjeneste, times(2)).lagre(any(ProsessTaskGruppe.class));
     }
 
     @Test
@@ -602,7 +602,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         // Setting av sak til utgått hos arbeidsgiverportalen og dialog til utgått hos Dialogporten skal skje
         // asynkront via prosesstask, én taskGruppe (med to sekvensielle tasks) per forespørsel
         var taskGruppeCaptor = ArgumentCaptor.forClass(ProsessTaskGruppe.class);
-        verify(prosessTaskTjeneste, Mockito.times(2)).lagre(taskGruppeCaptor.capture());
+        verify(prosessTaskTjeneste, times(2)).lagre(taskGruppeCaptor.capture());
         var taskGrupper = taskGruppeCaptor.getAllValues();
 
         var forespørselUuiderMedTaskGruppe = taskGrupper.stream()

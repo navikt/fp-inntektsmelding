@@ -12,6 +12,8 @@ import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.Predicate;
 
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,6 +53,14 @@ public class InntektsmeldingRepository {
             .setParameter("arbeidsgiverIdent", arbeidsgiverIdent)
             .setParameter("ytelsetype", ytelsetype)
             .setParameter("startDato", startDato);
+        return query.getResultList();
+    }
+
+    public List<InntektsmeldingEntitet> hentInntektsmeldingerForForespørsel(ForespørselEntitet forespørsel) {
+        var query = entityManager.createQuery(
+                "FROM InntektsmeldingEntitet where forespørsel = :forespørsel order by opprettetTidspunkt desc",
+                InntektsmeldingEntitet.class)
+            .setParameter("forespørsel", forespørsel);
         return query.getResultList();
     }
 

@@ -19,13 +19,6 @@ public record PersonInfo(String fornavn, String mellomnavn, String etternavn, Pe
         return fornavn + (mellomnavn == null ? "" : " " + mellomnavn) +" "+ etternavn;
     }
 
-    public String mapFornavn() {
-        if (fornavn == null) {
-            return "";
-        }
-        return fornavn;
-    }
-
     public enum Kjønn {
         MANN,
         KVINNE,

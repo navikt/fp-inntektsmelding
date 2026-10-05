@@ -3,6 +3,7 @@ package no.nav.foreldrepenger.inntektsmelding.typer.dto;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ArbeidsgiverinitiertÅrsak;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.EndringsårsakType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.NaturalytelseType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 
@@ -47,6 +48,15 @@ public class KodeverkMapper {
         return switch (ytelsetype) {
             case FORELDREPENGER -> YtelseTypeDto.FORELDREPENGER;
             case SVANGERSKAPSPENGER -> YtelseTypeDto.SVANGERSKAPSPENGER;
+        };
+    }
+
+    public static InntektsmeldingStatusDto mapInntektsmeldingStatus(InntektsmeldingStatus status) {
+        return switch (status) {
+            case AVVIST -> InntektsmeldingStatusDto.AVVIST;
+            case VENTER_VURDERING -> InntektsmeldingStatusDto.VENTER_VURDERING;
+            case GODKJENT -> InntektsmeldingStatusDto.GODKJENT;
+            case UTDATERT -> InntektsmeldingStatusDto.UTDATERT;
         };
     }
 

@@ -109,7 +109,7 @@ class InntektsmeldingApiRestTest {
         var dto = lagInntektsmeldingDto(null);
         var response = lagHentResponse(UUID.randomUUID());
 
-        when(inntektsmeldingTjeneste.hentInntektsmeldinger(forespørselUuid)).thenReturn(List.of(dto));
+        when(inntektsmeldingTjeneste.hentAlleInntektsmeldinger(forespørselUuid)).thenReturn(List.of(dto));
         when(personTjeneste.finnPersonIdentForAktørId(AKTØR_ID_OBJ)).thenReturn(PERSON_IDENT);
 
         try (var mocked = mockStatic(InntektsmeldingKontraktMapper.class)) {
@@ -121,7 +121,7 @@ class InntektsmeldingApiRestTest {
             @SuppressWarnings("unchecked")
             var liste = (List<HentInntektsmeldingResponse>) resultat.getEntity();
             assertThat(liste).hasSize(1).containsExactly(response);
-            verify(inntektsmeldingTjeneste).hentInntektsmeldinger(forespørselUuid);
+            verify(inntektsmeldingTjeneste).hentAlleInntektsmeldinger(forespørselUuid);
         }
     }
 
@@ -305,12 +305,12 @@ class InntektsmeldingApiRestTest {
             YtelseTypeDto.FORELDREPENGER, forespørselUuid,
             LocalDate.of(2025, 1, 1), LocalDate.of(2025, 12, 31), null, null);
 
-        when(inntektsmeldingTjeneste.hentInntektsmeldinger(forespørselUuid)).thenReturn(Collections.emptyList());
+        when(inntektsmeldingTjeneste.hentAlleInntektsmeldinger(forespørselUuid)).thenReturn(Collections.emptyList());
 
         var resultat = inntektsmeldingApiRest.hentInntektsmeldinger(filter);
 
         assertThat(resultat.getStatus()).isEqualTo(HttpStatus.OK_200);
-        verify(inntektsmeldingTjeneste).hentInntektsmeldinger(forespørselUuid);
+        verify(inntektsmeldingTjeneste).hentAlleInntektsmeldinger(forespørselUuid);
         verifyNoInteractions(personTjeneste);
     }
 

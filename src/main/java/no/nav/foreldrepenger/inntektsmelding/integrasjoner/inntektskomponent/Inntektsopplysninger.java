@@ -36,11 +36,4 @@ public record Inntektsopplysninger(BigDecimal gjennomsnitt, String orgnummer, Li
         }
         return "*".repeat(length - 4) + id.substring(length - 4);
     }
-
-    public static boolean erLik(Inntektsopplysninger a, Inntektsopplysninger b) {
-        return Objects.equals(a.gjennomsnitt(), b.gjennomsnitt()) &&
-            Objects.equals(a.orgnummer(), b.orgnummer()) &&
-            a.måneder().size() == b.måneder().size()  &&  a.måneder().containsAll(b.måneder());
-    }
-
 }
