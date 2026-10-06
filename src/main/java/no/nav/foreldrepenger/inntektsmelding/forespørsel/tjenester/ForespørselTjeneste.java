@@ -74,10 +74,6 @@ public class ForespørselTjeneste {
         forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUUID, arbeidsgiverNotifikasjonSakId);
     }
 
-    public void ferdigstillForespørsel(String arbeidsgiverNotifikasjonSakId) {
-        forespørselRepository.ferdigstillForespørsel(arbeidsgiverNotifikasjonSakId);
-    }
-
     public void ferdigstillForespørsel(UUID forespørselUuid) {
         forespørselRepository.ferdigstillForespørsel(forespørselUuid);
     }
@@ -99,10 +95,6 @@ public class ForespørselTjeneste {
 
     public List<ForespørselDto> finnÅpneForespørslerForFagsak(Saksnummer fagsakSaksnummer) {
         return forespørselRepository.finnÅpenForespørsel(fagsakSaksnummer.saksnummer()).stream().map(ForespørselDtoMapper::mapFraEntitet).toList();
-    }
-
-    public Optional<ForespørselDto> finnÅpenForespørslelForFagsak(Saksnummer fagsakSaksnummer, Arbeidsgiver arbeidsgiver) {
-        return forespørselRepository.finnÅpenForespørsel(fagsakSaksnummer.saksnummer(), arbeidsgiver.orgnr()).map(ForespørselDtoMapper::mapFraEntitet);
     }
 
     public Optional<ForespørselDto> finnArbeidsgiversÅpneForespørslerPåSak(Saksnummer fagsakSaksnummer, Arbeidsgiver arbeidsgiver) {
