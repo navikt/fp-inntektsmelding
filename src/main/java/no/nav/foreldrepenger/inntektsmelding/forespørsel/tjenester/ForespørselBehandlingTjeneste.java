@@ -193,6 +193,7 @@ public class ForespørselBehandlingTjeneste {
                                                                     Ytelsetype ytelsetype,
                                                                     Set<String> orgnrSomSkalHaForespørsel) {
         forespørselTjeneste.finnForespørslerForFagsak(fagsakSaksnummer).stream()
+            .filter(forespørsel -> !ForespørselStatus.UTGÅTT.equals(forespørsel.status()))
             .filter(forespørsel -> ForespørselType.BESTILT_AV_FAGSYSTEM.equals(forespørsel.forespørselType()))
             .filter(forespørsel -> aktørId.equals(forespørsel.aktørId()) && ytelsetype.equals(forespørsel.ytelseType()))
             .filter(forespørsel -> !orgnrSomSkalHaForespørsel.contains(forespørsel.arbeidsgiver().orgnr()))
