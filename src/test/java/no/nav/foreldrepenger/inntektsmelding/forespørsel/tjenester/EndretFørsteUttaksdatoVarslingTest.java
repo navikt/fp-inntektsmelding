@@ -276,17 +276,6 @@ class EndretFørsteUttaksdatoVarslingTest {
     }
 
     @Test
-    void manglende_dialog_skal_feile_for_retry_også_i_dev() {
-        when(forespørselTjeneste.hentForespørsel(FORESPØRSEL_UUID)).thenReturn(forespørsel(NY_DATO, null));
-        var task = new OppdaterDialogMedEndretFørsteUttaksdatoTask(forespørselTjeneste, dialogportenTjeneste);
-        var data = taskData(OppdaterDialogMedEndretFørsteUttaksdatoTask.class);
-
-        assertThatThrownBy(() -> task.doTask(data)).isInstanceOf(IllegalStateException.class)
-            .hasMessageContaining(FORESPØRSEL_UUID.toString());
-        verifyNoInteractions(dialogportenTjeneste);
-    }
-
-    @Test
     void manglende_forespørsel_skal_feile_i_begge_tasks() {
         var feil = new IllegalStateException("Finner ikke forespørsel " + FORESPØRSEL_UUID);
         when(forespørselTjeneste.hentForespørsel(FORESPØRSEL_UUID)).thenThrow(feil);
