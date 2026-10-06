@@ -1,6 +1,7 @@
 package no.nav.foreldrepenger.inntektsmelding.inntektsmelding;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
@@ -17,8 +18,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselRepository;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.InntektsmeldingEntitet;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.InntektsmeldingRepository;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
@@ -41,6 +46,8 @@ class InntektsmeldingTjenesteTest {
     private InntektsmeldingTjeneste inntektsmeldingTjeneste;
 
     @Mock
+    private ForespørselBehandlingTjeneste forespørselBehandlingTjeneste;
+    @Mock
     private InntektsmeldingRepository inntektsmeldingRepository;
     @Mock
     private ForespørselRepository forespørselRepository;
@@ -51,7 +58,7 @@ class InntektsmeldingTjenesteTest {
 
     @BeforeEach
     void setup() {
-        inntektsmeldingTjeneste = new InntektsmeldingTjeneste(inntektsmeldingRepository, forespørselRepository);
+        inntektsmeldingTjeneste = new InntektsmeldingTjeneste(forespørselBehandlingTjeneste, inntektsmeldingRepository, forespørselRepository);
         forespørselUuid = UUID.randomUUID();
     }
 
@@ -101,16 +108,29 @@ class InntektsmeldingTjenesteTest {
     void hentAlleInntektsmeldinger_skal_ikke_filtrere_bort_avvist_eller_utdatert() {
         var avvistIm = lagInntektsmelding(InntektsmeldingStatus.AVVIST);
         var utdatertIm = lagInntektsmelding(InntektsmeldingStatus.UTDATERT);
-        mockInntektsmeldingForForespørsel(avvistIm, utdatertIm);
+        var forespørselDto = lagForespørselDto(forespørselUuid);
+        when(forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid)).thenReturn(forespørselDto);
+        when(inntektsmeldingRepository.hentInntektsmeldingerSortertNyesteFørst(any(), any(), any(), any())).thenReturn(List.of(avvistIm, utdatertIm));
 
         var alle = inntektsmeldingTjeneste.hentAlleInntektsmeldinger(forespørselUuid);
 
         assertThat(alle).hasSize(2);
     }
 
-    private void mockInntektsmeldingForForespørsel(InntektsmeldingEntitet... inntektsmeldinger) {
+    private void mockInntektsmeldingForForespørsel(InntektsmeldingEntitet inntektsmelding) {
         when(forespørselRepository.hentForespørsel(forespørselUuid)).thenReturn(Optional.of(forespørselEntitet));
-        when(inntektsmeldingRepository.hentInntektsmeldingerForForespørsel(forespørselEntitet)).thenReturn(List.of(inntektsmeldinger));
+        when(inntektsmeldingRepository.hentInntektsmeldingerForForespørsel(forespørselEntitet)).thenReturn(List.of(inntektsmelding));
+    }
+
+    private static ForespørselDto lagForespørselDto(UUID uuid) {
+        return ForespørselDto.builder()
+            .uuid(uuid)
+            .arbeidsgiver(Arbeidsgiver.fra(ORGNR))
+            .aktørId(AktørId.fra(AKTØR_ID))
+            .ytelseType(Ytelsetype.FORELDREPENGER)
+            .forespørselType(ForespørselType.BESTILT_AV_FAGSYSTEM)
+            .førsteUttaksdato(STARTDATO)
+            .build();
     }
 
     private static InntektsmeldingEntitet lagInntektsmelding(InntektsmeldingStatus status) {
