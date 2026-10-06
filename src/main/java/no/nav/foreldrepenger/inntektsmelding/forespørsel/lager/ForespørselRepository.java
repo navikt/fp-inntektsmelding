@@ -80,6 +80,20 @@ public class ForespørselRepository {
         }
     }
 
+    public void ferdigstillForespørsel(String arbeidsgiverNotifikasjonSakId) {
+        var query = entityManager.createQuery("FROM ForespørselEntitet where sakId = :sak_id", ForespørselEntitet.class)
+            .setParameter("sak_id", arbeidsgiverNotifikasjonSakId);
+        var resultList = query.getResultList();
+
+        resultList.forEach(f -> {
+            f.setStatus(ForespørselStatus.FERDIG);
+            entityManager.persist(f);
+        });
+        entityManager.flush();
+    }
+
+    // Brukes ved innsending av agi
+    // vi ønsker å ferdigstille forespørselen i databasen før vi vet om den har fått sakId
     public void ferdigstillForespørsel(UUID forespørselUuid) {
         hentForespørsel(forespørselUuid).ifPresent(f -> {
             f.setStatus(ForespørselStatus.FERDIG);
@@ -144,11 +158,17 @@ public class ForespørselRepository {
         return query.getResultList();
     }
 
-    public Optional<ForespørselEntitet> finnArbeidsgiversÅpneForespørselPåSak(String fagsakSaksnummer,
-                                                                              String organisasjonsnummer) {
-        var resultList = finnÅpneForespørslerPåSaksnummer(fagsakSaksnummer).stream()
-            .filter(f -> f.getOrganisasjonsnummer().equals(organisasjonsnummer))
-            .toList();
+    public Optional<ForespørselEntitet> finnÅpenForespørsel(String fagsakSaksnummer,
+                                                            String organisasjonsnummer) {
+        var query = entityManager.createQuery("FROM ForespørselEntitet where status = :fpStatus "
+                    + "and fagsystemSaksnummer = :fagsakNr "
+                    + "and organisasjonsnummer = :arbeidsgiverIdent ",
+                ForespørselEntitet.class)
+            .setParameter("fpStatus", ForespørselStatus.UNDER_BEHANDLING)
+            .setParameter(FAGSAK_NR, fagsakSaksnummer)
+            .setParameter(ARBEIDSGIVER_IDENT, organisasjonsnummer);
+
+        var resultList = query.getResultList();
         if (resultList.isEmpty()) {
             return Optional.empty();
         } else if (resultList.size() > 1) {
@@ -158,16 +178,25 @@ public class ForespørselRepository {
         }
     }
 
-    private List<ForespørselEntitet> finnÅpneForespørslerPåSaksnummer(String fagsakSaksnummer) {
+    public Optional<ForespørselEntitet> finnArbeidsgiversÅpneForespørselPåSak(String fagsakSaksnummer,
+                                                                          String organisasjonsnummer) {
         var query = entityManager.createQuery("FROM ForespørselEntitet where status in(:fpStatuser) "
-                    + "and fagsystemSaksnummer = :fagsakNr ",
+                    + "and fagsystemSaksnummer = :fagsakNr "
+                    + "and organisasjonsnummer = :arbeidsgiverIdent ",
                 ForespørselEntitet.class)
             .setParameter("fpStatuser", Set.of(ForespørselStatus.UNDER_BEHANDLING, ForespørselStatus.FERDIG))
-            .setParameter(FAGSAK_NR, fagsakSaksnummer);
+            .setParameter(FAGSAK_NR, fagsakSaksnummer)
+            .setParameter(ARBEIDSGIVER_IDENT, organisasjonsnummer);
 
-        return query.getResultList();
+        var resultList = query.getResultList();
+        if (resultList.isEmpty()) {
+            return Optional.empty();
+        } else if (resultList.size() > 1) {
+            throw new IllegalStateException(String.format("Forventet å finne kun en åpen forespørsel for gitt sak %s og orgnr %s", fagsakSaksnummer, organisasjonsnummer));
+        } else {
+            return Optional.of(resultList.getFirst());
+        }
     }
-
 
     public List<ForespørselEntitet> finnForespørslerForAktørId(AktørIdEntitet aktørId, Ytelsetype ytelsetype) {
         var query = entityManager.createQuery("FROM ForespørselEntitet where aktørId=:aktørId "

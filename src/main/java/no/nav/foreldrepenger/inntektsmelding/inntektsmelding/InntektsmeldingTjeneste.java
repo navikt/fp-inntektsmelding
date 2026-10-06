@@ -12,6 +12,7 @@ import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselRepository;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.InntektsmeldingRepository;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingApiStatus;
@@ -21,6 +22,7 @@ import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
 @Dependent
 public class InntektsmeldingTjeneste {
 
+    private ForespørselBehandlingTjeneste forespørselBehandlingTjeneste;
     private InntektsmeldingRepository inntektsmeldingRepository;
     private ForespørselRepository forespørselRepository;
     private static final Set<InntektsmeldingStatus> STATUS_AVVIST_OG_UTDADERT = EnumSet.of(
@@ -32,8 +34,10 @@ public class InntektsmeldingTjeneste {
     }
 
     @Inject
-    public InntektsmeldingTjeneste(InntektsmeldingRepository inntektsmeldingRepository,
+    public InntektsmeldingTjeneste(ForespørselBehandlingTjeneste forespørselBehandlingTjeneste,
+                                   InntektsmeldingRepository inntektsmeldingRepository,
                                    ForespørselRepository forespørselRepository) {
+        this.forespørselBehandlingTjeneste = forespørselBehandlingTjeneste;
         this.inntektsmeldingRepository = inntektsmeldingRepository;
         this.forespørselRepository = forespørselRepository;
     }
@@ -61,8 +65,12 @@ public class InntektsmeldingTjeneste {
     }
 
     public List<InntektsmeldingDto> hentAlleInntektsmeldinger(UUID forespørselUuid) {
-        var forespørsel = forespørselRepository.hentForespørsel(forespørselUuid).orElseThrow();
-        return inntektsmeldingRepository.hentInntektsmeldingerForForespørsel(forespørsel)
+        var forespørsel = forespørselBehandlingTjeneste.hentForespørsel(forespørselUuid);
+
+        return inntektsmeldingRepository.hentInntektsmeldingerSortertNyesteFørst(new AktørIdEntitet(forespørsel.aktørId().getAktørId()),
+                forespørsel.arbeidsgiver().orgnr(),
+                forespørsel.førsteUttaksdato(),
+                forespørsel.ytelseType())
             .stream()
             .map(InntektsmeldingDtoMapper::mapFraEntitet)
             .toList();

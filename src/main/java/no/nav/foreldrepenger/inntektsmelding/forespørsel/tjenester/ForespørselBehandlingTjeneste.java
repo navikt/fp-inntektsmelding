@@ -231,7 +231,7 @@ public class ForespørselBehandlingTjeneste {
 
         var erFørstegangsinnsending = ForespørselStatus.UNDER_BEHANDLING.equals(forespørsel.status());
 
-        forespørselTjeneste.ferdigstillForespørsel(forespørsel.uuid());
+        forespørselTjeneste.ferdigstillForespørsel(forespørsel.arbeidsgiverNotifikasjonSakId());
 
         var ferdigstillSakTask = ProsessTaskData.forProsessTask(FerdigstillSakTask.class);
         ferdigstillSakTask.setProperty(FerdigstillSakTask.KEY_ER_FØRSTEGANGSINNSENDING, Boolean.toString(erFørstegangsinnsending));
@@ -375,9 +375,7 @@ public class ForespørselBehandlingTjeneste {
 
     public NyBeskjedResultat opprettNyBeskjedMedEksternVarsling(Saksnummer fagsakSaksnummer,
                                                                 Arbeidsgiver arbeidsgiver) {
-        // Skal kun kunne sende melding for ubesvarte forespørsler
-        var forespørsel = forespørselTjeneste.finnArbeidsgiversÅpneForespørslerPåSak(fagsakSaksnummer, arbeidsgiver)
-            .filter(f -> f.status().equals(ForespørselStatus.UNDER_BEHANDLING))
+        var forespørsel = forespørselTjeneste.finnÅpenForespørslelForFagsak(fagsakSaksnummer, arbeidsgiver)
             .orElse(null);
 
         if (forespørsel == null) {
