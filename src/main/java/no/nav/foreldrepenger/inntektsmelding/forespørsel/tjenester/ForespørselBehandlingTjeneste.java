@@ -141,8 +141,7 @@ public class ForespørselBehandlingTjeneste {
 
         validerYtelseOgAktør(ytelsetype, aktørId, eksisterendeForespørsel);
 
-        if (Objects.equals(eksisterendeForespørsel.skjæringstidspunkt(), skjæringstidspunkt)
-            && Objects.equals(eksisterendeForespørsel.førsteUttaksdato(), førsteUttaksdato)) {
+        if (Objects.equals(eksisterendeForespørsel.førsteUttaksdato(), førsteUttaksdato)) {
             return ForespørselResultat.IKKE_OPPRETTET_FINNES_ALLEREDE;
         }
 
