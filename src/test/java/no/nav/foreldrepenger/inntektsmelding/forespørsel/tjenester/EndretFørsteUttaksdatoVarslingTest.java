@@ -106,8 +106,7 @@ class EndretFørsteUttaksdatoVarslingTest {
 
         oppdaterDatoer(TIDLIGERE_DATO, SKJÆRINGSTIDSPUNKT.plusDays(1));
 
-        verify(forespørselTjeneste).oppdaterFørsteUttaksdatoOgSkjæringstidspunkt(eksisterende, TIDLIGERE_DATO,
-            SKJÆRINGSTIDSPUNKT.plusDays(1));
+        verify(forespørselTjeneste, never()).oppdaterFørsteUttaksdatoOgSkjæringstidspunkt(any(), any(), any());
         verifyNoInteractions(prosessTaskTjeneste, minSideArbeidsgiverTjeneste, dialogportenTjeneste);
     }
 
