@@ -104,13 +104,13 @@ public class GrunnlagDtoTjeneste {
                                                                              Arbeidsgiver arbeidsgiver) {
         var personInfo = finnPersoninfo(fødselsnummer, ytelsetype);
 
-        var harForespørselPåOrgnrSisteTreMnd = finnForespørslerSisteTreÅr(ytelsetype, førsteFraværsdag, personInfo.aktørId()).stream()
+        var harForespørselPåOrgnrSisteTolvMnd = finnForespørslerSisteTreÅr(ytelsetype, førsteFraværsdag, personInfo.aktørId()).stream()
             .filter(f -> f.arbeidsgiver().orgnr().equals(arbeidsgiver.orgnr()))
-            .filter(f -> innenforIntervall(førsteFraværsdag, f.førsteUttaksdato()))
+            .filter(f -> innenforIntervallMnd(førsteFraværsdag, f.førsteUttaksdato()))
             .toList();
 
-        if (!harForespørselPåOrgnrSisteTreMnd.isEmpty()) {
-            var forespørsel = harForespørselPåOrgnrSisteTreMnd.stream()
+        if (!harForespørselPåOrgnrSisteTolvMnd.isEmpty()) {
+            var forespørsel = harForespørselPåOrgnrSisteTolvMnd.stream()
                 .max(Comparator.comparing(ForespørselDto::førsteUttaksdato))
                 .orElseThrow(() -> new IllegalStateException("Finner ikke siste forespørsel"));
             if (forespørsel.forespørselType().equals(ForespørselType.BESTILT_AV_FAGSYSTEM)) {
@@ -205,11 +205,11 @@ public class GrunnlagDtoTjeneste {
             .minusYears(3));
     }
 
-    private boolean innenforIntervall(LocalDate førsteFraværsdag, LocalDate førsteUttaksdato) {
+    private boolean innenforIntervallMnd(LocalDate førsteFraværsdag, LocalDate førsteUttaksdato) {
         if (førsteUttaksdato == null) {
             return false;
         }
-        return førsteFraværsdag.isAfter(førsteUttaksdato.minusMonths(3)) && førsteFraværsdag.isBefore(førsteUttaksdato.plusMonths(3));
+        return førsteFraværsdag.isAfter(førsteUttaksdato.minusMonths(12)) && førsteFraværsdag.isBefore(førsteUttaksdato.plusMonths(12));
     }
 
     private InntektsmeldingDialogDto.InnsenderDto lagInnmelderDto(Ytelsetype ytelsetype) {
