@@ -49,4 +49,13 @@ class FpsakKlientTest {
         assertThat(resultat.førsteUttaksdato()).isEqualTo(førsteUttaksdato);
         assertThat(resultat.skjæringstidspunkt()).isEqualTo(skjæringstidspunkt);
     }
+
+    @Test
+    void test_sjekk_forespørsel_status() {
+        when(restClient.send(any(), any())).thenReturn(false);
+
+        var resultat = fpsakKlient.sjekkForespørselStatus("SAK123", "999999999");
+
+        assertThat(resultat).isFalse();
+    }
 }
