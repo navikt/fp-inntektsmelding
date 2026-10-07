@@ -59,13 +59,13 @@ public class FpsakKlient {
      * Sjekker mot fp-sak om det fortsatt er behov for inntektsmelding for en gitt (fagsakSaksnummer, orgnummer).
      * Brukes av forvaltningsjobber for å rydde opp forespørsler uten behov.
      */
-    public boolean sjekkForespørselStatus(String fagsakSaksnummer, String orgnummer) {
+    public ForespørselVurderingResultat sjekkForespørselStatus(String fagsakSaksnummer, String orgnummer) {
         var uri = UriBuilder.fromUri(restConfig.endpoint()).path(FPSAK_FORESPØRSEL_STATUS).build();
         LOG.info("Sjekker forespørselstatus mot fp-sak for saksnummer={}, orgnummer={}", fagsakSaksnummer, orgnummer);
         var requestDto = new ForespørselStatusRequest(fagsakSaksnummer, orgnummer);
         var request = RestRequest.newPOSTJson(requestDto, uri, restConfig);
         try {
-            return restClient.send(request, Boolean.class);
+            return restClient.send(request, ForespørselVurderingResultat.class);
         } catch (Exception e) {
             throw new IntegrasjonException("FPINNTEKTSMELDING-694579",
                 "Integrasjonsfeil mot fpsak. Klarte ikke sjekke forespørselstatus for saksnummer=" + fagsakSaksnummer

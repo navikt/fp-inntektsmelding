@@ -34,6 +34,7 @@ public class RyddForespørslerTask implements ProsessTaskHandler {
 
     static final String DRY_RUN = "dryRun";
     static final String FRA_ID = "fraId";
+    static final String TIL_ID = "tilId";
 
     /**
      * Antall rader hentet fra databasen per task.
@@ -61,10 +62,11 @@ public class RyddForespørslerTask implements ProsessTaskHandler {
     public void doTask(ProsessTaskData prosessTaskData) {
         var dryRun = !"false".equalsIgnoreCase(prosessTaskData.getPropertyValue(DRY_RUN));
         var fraId = Optional.ofNullable(prosessTaskData.getPropertyValue(FRA_ID)).map(Long::valueOf).orElse(0L);
-        LOG.info("{}: Starter. Henter inntil {} forespørsler med id > {} (dryRun={}).",
-            LOGG_PREFIKS, MAKS_RADER_PER_TASK, fraId, dryRun);
+        var tilId = Optional.ofNullable(prosessTaskData.getPropertyValue(TIL_ID)).map(Long::valueOf);
+        LOG.info("{}: Starter. Henter inntil {} forespørsler med id > {}{} (dryRun={}).",
+            LOGG_PREFIKS, MAKS_RADER_PER_TASK, fraId, tilId.map(id -> " og id <= " + id).orElse(""), dryRun);
 
-        var åpneForespørsler = hentÅpneForespørslerFraId(fraId);
+        var åpneForespørsler = hentÅpneForespørslerFraId(fraId, tilId);
         if (åpneForespørsler.isEmpty()) {
             LOG.info("{}: Ingen flere forespørsler med status UNDER_BEHANDLING funnet med id > {}. Jobben er ferdig.", LOGG_PREFIKS, fraId);
             return;
@@ -78,7 +80,7 @@ public class RyddForespørslerTask implements ProsessTaskHandler {
         if (åpneForespørsler.size() == MAKS_RADER_PER_TASK) {
             // Fikk en full side, må anta at det finnes mer. Legges inn i samme gruppe, som sekvensiell etter
             // parallell-blokken over, slik at neste side ikke starter før alle sub-tasks i denne er ferdige.
-            taskGruppe.addNesteSekvensiell(opprettNesteMasterTask(åpneForespørsler.getLast().getId(), dryRun));
+            taskGruppe.addNesteSekvensiell(opprettNesteMasterTask(åpneForespørsler.getLast().getId(), tilId, dryRun));
         } else {
             LOG.info("{}: Siste side. Planlegger {} sub-task(er) og ingen flere master-tasks.", LOGG_PREFIKS, taskGruppe.getTasks().size());
         }
@@ -86,10 +88,13 @@ public class RyddForespørslerTask implements ProsessTaskHandler {
         prosessTaskTjeneste.lagre(taskGruppe);
     }
 
-    private List<ForespørselEntitet> hentÅpneForespørslerFraId(long fraId) {
-        var query = entityManager.createQuery("from ForespørselEntitet where id > :fraId and status = :status order by id",
-            ForespørselEntitet.class);
+    private List<ForespørselEntitet> hentÅpneForespørslerFraId(long fraId, Optional<Long> tilId) {
+        var queryString = "from ForespørselEntitet where id > :fraId"
+            + (tilId.isPresent() ? " and id <= :tilId" : "")
+            + " and status = :status order by id";
+        var query = entityManager.createQuery(queryString, ForespørselEntitet.class);
         query.setParameter(FRA_ID, fraId);
+        tilId.ifPresent(id -> query.setParameter(TIL_ID, id));
         query.setParameter("status", ForespørselStatus.UNDER_BEHANDLING);
         query.setMaxResults(MAKS_RADER_PER_TASK);
         return query.getResultList();
@@ -103,9 +108,10 @@ public class RyddForespørslerTask implements ProsessTaskHandler {
         return subTask;
     }
 
-    private static ProsessTaskData opprettNesteMasterTask(long nyFraId, boolean dryRun) {
+    private static ProsessTaskData opprettNesteMasterTask(long nyFraId, Optional<Long> tilId, boolean dryRun) {
         var nesteTask = ProsessTaskData.forProsessTask(RyddForespørslerTask.class);
         nesteTask.setProperty(FRA_ID, String.valueOf(nyFraId));
+        tilId.ifPresent(id -> nesteTask.setProperty(TIL_ID, String.valueOf(id)));
         nesteTask.setProperty(DRY_RUN, String.valueOf(dryRun));
         return nesteTask;
     }
