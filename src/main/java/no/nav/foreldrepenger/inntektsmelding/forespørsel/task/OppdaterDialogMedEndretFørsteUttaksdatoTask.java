@@ -51,7 +51,8 @@ public class OppdaterDialogMedEndretFørsteUttaksdatoTask implements ProsessTask
             return;
         }
         if (forespørsel.dialogportenUuid() == null) {
-            throw new IllegalStateException("Mangler dialogportenUuid for forespørsel " + forespørselUuid);
+            LOG.info("Forespørsel {} er ikke sendt til dialogporten, oppdaterer ikke dialog", forespørselUuid);
+            return;
         }
         if (forespørsel.status().equals(ForespørselStatus.UTGÅTT)) {
             LOG.info("Forespørsel {} er utgått, oppdaterer ikke dialog", forespørselUuid);

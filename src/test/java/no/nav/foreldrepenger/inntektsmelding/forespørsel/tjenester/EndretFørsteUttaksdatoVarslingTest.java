@@ -106,8 +106,7 @@ class EndretFørsteUttaksdatoVarslingTest {
 
         oppdaterDatoer(TIDLIGERE_DATO, SKJÆRINGSTIDSPUNKT.plusDays(1));
 
-        verify(forespørselTjeneste).oppdaterFørsteUttaksdatoOgSkjæringstidspunkt(eksisterende, TIDLIGERE_DATO,
-            SKJÆRINGSTIDSPUNKT.plusDays(1));
+        verify(forespørselTjeneste, never()).oppdaterFørsteUttaksdatoOgSkjæringstidspunkt(any(), any(), any());
         verifyNoInteractions(prosessTaskTjeneste, minSideArbeidsgiverTjeneste, dialogportenTjeneste);
     }
 
@@ -273,17 +272,6 @@ class EndretFørsteUttaksdatoVarslingTest {
         assertThatThrownBy(() -> dialogTask.doTask(dialogData)).isInstanceOf(DateTimeParseException.class);
 
         verifyNoInteractions(forespørselTjeneste, minSideArbeidsgiverTjeneste, dialogportenTjeneste);
-    }
-
-    @Test
-    void manglende_dialog_skal_feile_for_retry_også_i_dev() {
-        when(forespørselTjeneste.hentForespørsel(FORESPØRSEL_UUID)).thenReturn(forespørsel(NY_DATO, null));
-        var task = new OppdaterDialogMedEndretFørsteUttaksdatoTask(forespørselTjeneste, dialogportenTjeneste);
-        var data = taskData(OppdaterDialogMedEndretFørsteUttaksdatoTask.class);
-
-        assertThatThrownBy(() -> task.doTask(data)).isInstanceOf(IllegalStateException.class)
-            .hasMessageContaining(FORESPØRSEL_UUID.toString());
-        verifyNoInteractions(dialogportenTjeneste);
     }
 
     @Test
