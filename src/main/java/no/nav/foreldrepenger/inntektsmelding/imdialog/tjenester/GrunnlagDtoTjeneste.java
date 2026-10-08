@@ -104,15 +104,12 @@ public class GrunnlagDtoTjeneste {
                                                                              Arbeidsgiver arbeidsgiver) {
         var personInfo = finnPersoninfo(fødselsnummer, ytelsetype);
 
-        var harForespørselPåOrgnrSisteTolvMnd = finnForespørslerSisteTreÅr(ytelsetype, førsteFraværsdag, personInfo.aktørId()).stream()
+        var eksisterendeForespørselForArbeidsgiver = finnForespørslerSisteTreÅr(ytelsetype, førsteFraværsdag, personInfo.aktørId()).stream()
             .filter(f -> f.arbeidsgiver().orgnr().equals(arbeidsgiver.orgnr()))
-            .filter(f -> innenforIntervallMnd(førsteFraværsdag, f.førsteUttaksdato()))
-            .toList();
+            .max(Comparator.comparing(ForespørselDto::førsteUttaksdato));
 
-        if (!harForespørselPåOrgnrSisteTolvMnd.isEmpty()) {
-            var forespørsel = harForespørselPåOrgnrSisteTolvMnd.stream()
-                .max(Comparator.comparing(ForespørselDto::førsteUttaksdato))
-                .orElseThrow(() -> new IllegalStateException("Finner ikke siste forespørsel"));
+        if (eksisterendeForespørselForArbeidsgiver.isPresent()) {
+            var forespørsel = eksisterendeForespørselForArbeidsgiver.get();
             if (forespørsel.forespørselType().equals(ForespørselType.BESTILT_AV_FAGSYSTEM)) {
                 MetrikkerTjeneste.loggRedirectFraAGITilVanligForespørsel(forespørsel);
             }
@@ -203,13 +200,6 @@ public class GrunnlagDtoTjeneste {
         }
         return (førsteUttaksdato.isEqual(førsteFraværsdag) || førsteUttaksdato.isBefore(førsteFraværsdag)) && førsteUttaksdato.isAfter(LocalDate.now()
             .minusYears(3));
-    }
-
-    private boolean innenforIntervallMnd(LocalDate førsteFraværsdag, LocalDate førsteUttaksdato) {
-        if (førsteUttaksdato == null) {
-            return false;
-        }
-        return førsteFraværsdag.isAfter(førsteUttaksdato.minusMonths(12)) && førsteFraværsdag.isBefore(førsteUttaksdato.plusMonths(12));
     }
 
     private InntektsmeldingDialogDto.InnsenderDto lagInnmelderDto(Ytelsetype ytelsetype) {
