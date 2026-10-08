@@ -103,6 +103,67 @@ public class ForespørselBehandlingTjeneste {
         return ForespørselResultat.FORESPØRSEL_OPPRETTET;
     }
 
+    /**
+     * Dette er en unntaksløype som kan brukes for å opprette forespørsler som vi ikke nødvendigvil vil ha svar fra og som
+     * vi ikke lnsker å sende varsel om. Grunnen til dette er at fpsak kan ha fått inntektsmelding før
+     * forespørsel rakk å bli opprettet (siden dette var mulig inntil juni 2026)
+     * @return
+     */
+    public ForespørselResultat håndterForespørselSomUmibddelbartSkalLukkes(LocalDate skjæringstidspunkt,
+                                                             Ytelsetype ytelsetype,
+                                                             AktørId aktørId,
+                                                             Arbeidsgiver arbeidsgiver,
+                                                             Saksnummer fagsakSaksnummer,
+                                                             LocalDate førsteUttaksdato) {
+        var eksaktForespørsel = forespørselTjeneste.finnIkkeUtgåttForespørsel(skjæringstidspunkt,
+            ytelsetype,
+            aktørId,
+            arbeidsgiver,
+            fagsakSaksnummer,
+            førsteUttaksdato);
+
+        if (eksaktForespørsel.isPresent()) {
+            LOG.info("Finnes allerede forespørsel for saksnummer: {} med orgnummer: {} med skjæringstidspunkt: {} og første uttaksdato: {}",
+                fagsakSaksnummer,
+                arbeidsgiver,
+                skjæringstidspunkt,
+                førsteUttaksdato);
+            return ForespørselResultat.IKKE_OPPRETTET_FINNES_ALLEREDE;
+        }
+
+        settTidligereForespørslerForSaksnummerTilUtgått(fagsakSaksnummer, arbeidsgiver, aktørId);
+
+        var msg = String.format("Oppretter og lukker forespørsel for saksnummer %s og orgnr: %s",
+            fagsakSaksnummer.saksnummer(),
+            arbeidsgiver);
+        LOG.info(msg);
+
+        // Oppretter og ferdigstiller forespørsel i lokal database
+        var forespørselUuid = forespørselTjeneste.opprettForespørsel(skjæringstidspunkt,
+            ytelsetype,
+            aktørId,
+            arbeidsgiver,
+            fagsakSaksnummer,
+            førsteUttaksdato);
+        forespørselTjeneste.ferdigstillForespørsel(forespørselUuid);
+
+        var opprettSakTask = ProsessTaskData.forProsessTask(OpprettSakTask.class);
+        var opprettDialogTask = ProsessTaskData.forProsessTask(OpprettDialogTask.class);
+        var ferdigstillSakTask = ProsessTaskData.forProsessTask(FerdigstillSakTask.class);
+        ferdigstillSakTask.setProperty(FerdigstillSakTask.KEY_ER_FØRSTEGANGSINNSENDING, Boolean.toString(true));
+        var ferdigstillDialogTask = ProsessTaskData.forProsessTask(FerdigstillDialogTask.class);
+
+        var taskGruppe = new ProsessTaskGruppe();
+        taskGruppe.setProperty(FellesTaskProperties.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
+        taskGruppe.setProperty(FellesTaskProperties.KEY_LUKKE_AARSAK, LukkeÅrsak.EKSTERN_INNSENDING.name());
+        taskGruppe.addNesteSekvensiell(opprettSakTask);
+        taskGruppe.addNesteSekvensiell(opprettDialogTask);
+        taskGruppe.addNesteSekvensiell(ferdigstillSakTask);
+        taskGruppe.addNesteSekvensiell(ferdigstillDialogTask);
+        prosessTaskTjeneste.lagre(taskGruppe);
+        return ForespørselResultat.FORESPØRSEL_OPPRETTET;
+    }
+
     public List<ForespørselResultat> håndterKomplettListeMedForespørsler(LocalDate skjæringstidspunkt,
                                                                          Ytelsetype ytelsetype,
                                                                          AktørId aktørId,

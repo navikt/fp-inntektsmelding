@@ -22,6 +22,7 @@ import no.nav.foreldrepenger.inntektsmelding.forespørsel.rest.OpprettEnForespø
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.rest.OpprettFlereForespørslerRequest;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.rest.OpprettForespørselRequest;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.rest.OpprettForespørselRespons;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.rest.OrganisasjonsnummerMedStatusDto;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.foreldrepenger.inntektsmelding.server.tilgangsstyring.Tilgang;
@@ -61,7 +62,7 @@ class ForespørselRestTest {
         var fagsakSaksnummer = new SaksnummerDto("SAK");
         var response = forespørselRest.opprettEnForespørsel(
             new OpprettEnForespørselRequest(aktørId, orgnummer, LocalDate.now(), YtelseTypeDto.FORELDREPENGER, fagsakSaksnummer,
-                LocalDate.now().plusDays(5)));
+                LocalDate.now().plusDays(5), new OrganisasjonsnummerMedStatusDto(orgnummer, false)));
 
         var forventetResultat = new OpprettForespørselRespons.OrganisasjonsnummerMedStatus(orgnummer, ForespørselResultat.FORESPØRSEL_OPPRETTET);
 
