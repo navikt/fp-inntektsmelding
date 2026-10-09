@@ -52,10 +52,10 @@ class FpsakKlientTest {
 
     @Test
     void test_sjekk_forespørsel_status() {
-        when(restClient.send(any(), any())).thenReturn(false);
+        when(restClient.send(any(), any())).thenReturn(ForespørselVurderingResultat.SETT_TIL_FERDIG);
 
         var resultat = fpsakKlient.sjekkForespørselStatus("SAK123", "999999999");
 
-        assertThat(resultat).isFalse();
+        assertThat(resultat).isEqualTo(ForespørselVurderingResultat.SETT_TIL_FERDIG);
     }
 }

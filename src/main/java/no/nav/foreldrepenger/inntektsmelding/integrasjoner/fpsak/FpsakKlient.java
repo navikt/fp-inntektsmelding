@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.vedtak.exception.IntegrasjonException;
 import no.nav.vedtak.felles.integrasjon.rest.FpApplication;
@@ -61,7 +62,8 @@ public class FpsakKlient {
      */
     public ForespørselVurderingResultat sjekkForespørselStatus(String fagsakSaksnummer, String orgnummer) {
         var uri = UriBuilder.fromUri(restConfig.endpoint()).path(FPSAK_FORESPØRSEL_STATUS).build();
-        LOG.info("Sjekker forespørselstatus mot fp-sak for saksnummer={}, orgnummer={}", fagsakSaksnummer, orgnummer);
+        var arbeidsgiver = Arbeidsgiver.fra(orgnummer);
+        LOG.info("Sjekker forespørselstatus mot fp-sak for saksnummer={}, orgnummer={}", fagsakSaksnummer, arbeidsgiver);
         var requestDto = new ForespørselStatusRequest(fagsakSaksnummer, orgnummer);
         var request = RestRequest.newPOSTJson(requestDto, uri, restConfig);
         try {
@@ -69,7 +71,7 @@ public class FpsakKlient {
         } catch (Exception e) {
             throw new IntegrasjonException("FPINNTEKTSMELDING-694579",
                 "Integrasjonsfeil mot fpsak. Klarte ikke sjekke forespørselstatus for saksnummer=" + fagsakSaksnummer
-                    + ", orgnummer=" + orgnummer + ".", e);
+                    + ", orgnummer=" + arbeidsgiver + ".", e);
         }
     }
 
