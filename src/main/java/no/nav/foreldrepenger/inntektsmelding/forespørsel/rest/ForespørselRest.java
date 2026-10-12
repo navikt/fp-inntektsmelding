@@ -113,10 +113,13 @@ public class ForespørselRest {
             request.fagsakSaksnummer(),
             request.skjæringstidspunkt(),
             request.førsteUttaksdato());
+        var organisasjonsnummer = request.organisasjonsnummerMedStatus() == null ? request.orgnummer() : request.organisasjonsnummerMedStatus().orgnummer();
+        var erInntektsmeldingMottatt = request.organisasjonsnummerMedStatus() == null ? false : request.organisasjonsnummerMedStatus().erInntektsmeldingMottatt();
         var resultat = håndterInnkommendeForespørsel(request.skjæringstidspunkt(),
             request.ytelsetype(),
             request.aktørId(),
-            request.orgnummer(),
+            organisasjonsnummer,
+            erInntektsmeldingMottatt,
             request.fagsakSaksnummer(),
             request.førsteUttaksdato());
         return Response.ok(new OpprettForespørselRespons.OrganisasjonsnummerMedStatus(request.orgnummer(), resultat)).build();
@@ -157,16 +160,29 @@ public class ForespørselRest {
                                                               YtelseTypeDto ytelsetype,
                                                               AktørIdDto aktørId,
                                                               OrganisasjonsnummerDto organisasjonsnummer,
+                                                              boolean erInntektsmeldingMottatt,
                                                               SaksnummerDto fagsakSaksnummer,
                                                               LocalDate førsteUttaksdato) {
-        var resultat = forespørselBehandlingTjeneste.håndterInnkommendeForespørsel(skjæringstidspunkt,
-            KodeverkMapper.mapYtelsetype(ytelsetype),
-            AktørId.fra(aktørId.id()),
-            Arbeidsgiver.fra(organisasjonsnummer.orgnr()),
-            Saksnummer.fra(fagsakSaksnummer.saksnr()),
-            førsteUttaksdato);
-        loggOpprettetMetrikk(ytelsetype, resultat);
-        return resultat;
+        // Hvis IM er mottatt skal vi bare opprette en forespørsel i dialogporten / min side -arbeidsgiver slik at de skal finne igjen saken i fremtiden for å kunne endre inntektsmelding
+        if (erInntektsmeldingMottatt) {
+            var resultat = forespørselBehandlingTjeneste.håndterForespørselSomUmibddelbartSkalLukkes(skjæringstidspunkt,
+                KodeverkMapper.mapYtelsetype(ytelsetype),
+                AktørId.fra(aktørId.id()),
+                Arbeidsgiver.fra(organisasjonsnummer.orgnr()),
+                Saksnummer.fra(fagsakSaksnummer.saksnr()),
+                førsteUttaksdato);
+            loggOpprettetMetrikk(ytelsetype, resultat);
+            return resultat;
+        } else {
+            var resultat = forespørselBehandlingTjeneste.håndterInnkommendeForespørsel(skjæringstidspunkt,
+                KodeverkMapper.mapYtelsetype(ytelsetype),
+                AktørId.fra(aktørId.id()),
+                Arbeidsgiver.fra(organisasjonsnummer.orgnr()),
+                Saksnummer.fra(fagsakSaksnummer.saksnr()),
+                førsteUttaksdato);
+            loggOpprettetMetrikk(ytelsetype, resultat);
+            return resultat;
+        }
     }
 
     @POST

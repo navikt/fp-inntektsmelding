@@ -164,6 +164,39 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
     }
 
     @Test
+    void skal_opprette_og_ferdigstille_forespørsel_uten_oppgave_i_samme_taskgruppe() {
+        var resultat = forespørselBehandlingTjeneste.håndterForespørselSomUmibddelbartSkalLukkes(SKJÆRINGSTIDSPUNKT,
+            YTELSETYPE,
+            AktørId.fra(AKTØR_ID),
+            Arbeidsgiver.fra(BRREG_ORGNUMMER),
+            Saksnummer.fra(SAKSNUMMER),
+            FØRSTE_UTTAKSDATO);
+
+        clearHibernateCache();
+        var lagret = forespørselRepository.hentForespørslerPåSak(SAKSNUMMER);
+        assertThat(resultat).isEqualTo(ForespørselResultat.FORESPØRSEL_OPPRETTET);
+        assertThat(lagret).hasSize(1);
+        assertThat(lagret.getFirst().getStatus()).isEqualTo(ForespørselStatus.FERDIG);
+        assertThat(lagret.getFirst().getOppgaveId()).isEmpty();
+
+        var taskGruppeCaptor = ArgumentCaptor.forClass(ProsessTaskGruppe.class);
+        verify(prosessTaskTjeneste).lagre(taskGruppeCaptor.capture());
+        var tasks = taskGruppeCaptor.getValue().getTasks().stream().map(ProsessTaskGruppe.Entry::task).toList();
+
+        assertThat(tasks).hasSize(4);
+        assertThat(tasks.stream().map(ProsessTaskData::taskType).toList()).containsExactly(
+            TaskType.forProsessTask(OpprettSakTask.class),
+            TaskType.forProsessTask(OpprettDialogTask.class),
+            TaskType.forProsessTask(FerdigstillSakTask.class),
+            TaskType.forProsessTask(FerdigstillDialogTask.class));
+        tasks.forEach(task -> {
+            assertThat(task.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(lagret.getFirst().getUuid().toString());
+            assertThat(task.getPropertyValue(FellesTaskProperties.KEY_LUKKE_AARSAK)).isEqualTo(LukkeÅrsak.EKSTERN_INNSENDING.name());
+        });
+        assertThat(tasks.get(2).getPropertyValue(FerdigstillSakTask.KEY_ER_FØRSTEGANGSINNSENDING)).isEqualTo("true");
+    }
+
+    @Test
     void eksisterende_forespørsel_på_samme_stp_skal_gi_nei() {
         lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, BRREG_ORGNUMMER, SAKSNUMMER, SKJÆRINGSTIDSPUNKT,
             ForespørselType.BESTILT_AV_FAGSYSTEM);
