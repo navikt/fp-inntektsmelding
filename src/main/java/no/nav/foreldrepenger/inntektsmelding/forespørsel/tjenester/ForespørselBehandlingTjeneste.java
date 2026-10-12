@@ -168,24 +168,25 @@ public class ForespørselBehandlingTjeneste {
         return ForespørselResultat.FORESPØRSEL_OPPRETTET;
     }
 
-    public List<ForespørselResultat> håndterKomplettListeMedForespørsler(LocalDate skjæringstidspunkt,
-                                                                         Ytelsetype ytelsetype,
-                                                                         AktørId aktørId,
-                                                                         List<Arbeidsgiver> arbeidsgivere,
-                                                                         Saksnummer fagsakSaksnummer,
-                                                                         LocalDate førsteUttaksdato) {
+    public List<ArbeidsgiverMedResultat> håndterKomplettListeMedForespørsler(LocalDate skjæringstidspunkt,
+                                                                              Ytelsetype ytelsetype,
+                                                                              AktørId aktørId,
+                                                                              List<Arbeidsgiver> arbeidsgivere,
+                                                                              Saksnummer fagsakSaksnummer,
+                                                                              LocalDate førsteUttaksdato) {
         var alleOrgnrSomSkalHaForespørsel = arbeidsgivere.stream()
             .map(Arbeidsgiver::orgnr)
             .collect(Collectors.toUnmodifiableSet());
         settForespørslerSomIkkeLengerEtterspørresTilUtgått(fagsakSaksnummer, aktørId, ytelsetype, alleOrgnrSomSkalHaForespørsel);
 
         return arbeidsgivere.stream()
-            .map(arbeidsgiver -> håndterInnkommendeForespørselMedOppdatering(skjæringstidspunkt,
-                ytelsetype,
-                aktørId,
-                arbeidsgiver,
-                fagsakSaksnummer,
-                førsteUttaksdato))
+            .map(arbeidsgiver -> new ArbeidsgiverMedResultat(arbeidsgiver,
+                håndterInnkommendeForespørselMedOppdatering(skjæringstidspunkt,
+                    ytelsetype,
+                    aktørId,
+                    arbeidsgiver,
+                    fagsakSaksnummer,
+                    førsteUttaksdato)))
             .toList();
     }
 
