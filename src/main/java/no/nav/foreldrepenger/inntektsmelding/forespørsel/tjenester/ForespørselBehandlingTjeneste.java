@@ -123,6 +123,10 @@ public class ForespørselBehandlingTjeneste {
             førsteUttaksdato);
 
         if (eksaktForespørsel.isPresent()) {
+            var forespørselDto = eksaktForespørsel.orElseThrow();
+            if (forespørselDto.status().equals(ForespørselStatus.UNDER_BEHANDLING)) {
+                LOG.warn("Forespørsel på saksnummer {} er åpen, selv om fpsak sier at inntektsmelding er mottatt. Forespørsel uuid: {}", fagsakSaksnummer, forespørselDto.uuid());
+            }
             LOG.info("Finnes allerede forespørsel for saksnummer: {} med orgnummer: {} med skjæringstidspunkt: {} og første uttaksdato: {}",
                 fagsakSaksnummer,
                 arbeidsgiver,
