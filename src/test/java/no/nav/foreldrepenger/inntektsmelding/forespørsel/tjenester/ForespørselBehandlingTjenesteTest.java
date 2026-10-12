@@ -234,10 +234,31 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
         clearHibernateCache();
 
-        assertThat(resultater).containsExactly(ForespørselResultat.IKKE_OPPRETTET_FINNES_ALLEREDE);
+        assertThat(resultater).containsExactly(new ArbeidsgiverMedResultat(Arbeidsgiver.fra(BRREG_ORGNUMMER),
+            ForespørselResultat.IKKE_OPPRETTET_FINNES_ALLEREDE));
         assertThat(forespørselRepository.hentForespørsel(beholdUuid).orElseThrow().getStatus()).isEqualTo(ForespørselStatus.UNDER_BEHANDLING);
         assertThat(forespørselRepository.hentForespørsel(utgåttUuid).orElseThrow().getStatus()).isEqualTo(ForespørselStatus.UTGÅTT);
         verify(prosessTaskTjeneste).lagre(any(ProsessTaskGruppe.class));
+    }
+
+    @Test
+    void komplett_liste_returnerer_arbeidsgiver_med_resultat_i_inndatarekkefølge_inkludert_duplikater() {
+        lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, BRREG_ORGNUMMER, SAKSNUMMER,
+            FØRSTE_UTTAKSDATO, ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var eksisterendeArbeidsgiver = Arbeidsgiver.fra(BRREG_ORGNUMMER);
+        var nyArbeidsgiver = Arbeidsgiver.fra(ANNET_ORGNUMMER);
+
+        var resultater = forespørselBehandlingTjeneste.håndterKomplettListeMedForespørsler(SKJÆRINGSTIDSPUNKT,
+            YTELSETYPE,
+            AktørId.fra(AKTØR_ID),
+            List.of(eksisterendeArbeidsgiver, nyArbeidsgiver, eksisterendeArbeidsgiver),
+            Saksnummer.fra(SAKSNUMMER),
+            FØRSTE_UTTAKSDATO);
+
+        assertThat(resultater).containsExactly(
+            new ArbeidsgiverMedResultat(eksisterendeArbeidsgiver, ForespørselResultat.IKKE_OPPRETTET_FINNES_ALLEREDE),
+            new ArbeidsgiverMedResultat(nyArbeidsgiver, ForespørselResultat.FORESPØRSEL_OPPRETTET),
+            new ArbeidsgiverMedResultat(eksisterendeArbeidsgiver, ForespørselResultat.IKKE_OPPRETTET_FINNES_ALLEREDE));
     }
 
     @Test

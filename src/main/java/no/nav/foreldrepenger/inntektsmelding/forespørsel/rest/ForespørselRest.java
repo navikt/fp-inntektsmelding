@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.IntStream;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -143,10 +142,12 @@ public class ForespørselRest {
             Saksnummer.fra(request.fagsakSaksnummer().saksnr()),
             request.førsteUttaksdato());
 
-        var organisasjonsnumreMedStatus = IntStream.range(0, request.organisasjonsnummer().size())
-            .mapToObj(i -> new OpprettForespørselRespons.OrganisasjonsnummerMedStatus(request.organisasjonsnummer().get(i), resultater.get(i)))
+        var organisasjonsnumreMedStatus = resultater.stream()
+            .map(par -> new OpprettForespørselRespons.OrganisasjonsnummerMedStatus(
+                new OrganisasjonsnummerDto(par.arbeidsgiver().orgnr()),
+                par.resultat()))
             .toList();
-        resultater.forEach(resultat -> loggOpprettetMetrikk(request.ytelsetype(), resultat));
+        resultater.forEach(par -> loggOpprettetMetrikk(request.ytelsetype(), par.resultat()));
         return Response.ok(new OpprettForespørselRespons(organisasjonsnumreMedStatus)).build();
     }
 
