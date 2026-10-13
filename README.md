@@ -64,10 +64,10 @@ flowchart TD
     FPSAK["fp-sak<br/>Behov for inntektsmelding i foreldrepengesaken"]
     FORESPORSEL["fp-inntektsmelding<br/>Opprett eller oppdater forespørsel"]
     PORTAL["Min side arbeidsgiver (FAGER)<br/>Sak og oppgave"]
-    DIALOG["Dialogporten<br/>Dialog om inntektsmeldingen"]
+    DIALOG["Altinn - Dialogporten<br/>Dialog om inntektsmeldingen"]
     ARBEIDSGIVER["Arbeidsgiver"]
     FRONTEND["fp-inntektsmelding-frontend"]
-    API["Innsending fra lønns- og personalsystem<br/>via inntektsmelding-API-et"]
+    API["fp-inntektsmelding-api"]
     MOTTAK["fp-inntektsmelding<br/>Valider og lagre inntektsmelding"]
     FERDIG["Forespørsel settes til FERDIG<br/>eller beholdes FERDIG ved ny innsending"]
     PDF["fp-dokgen<br/>Generer PDF"]
@@ -75,11 +75,12 @@ flowchart TD
     LUKK["Fullfør sak og dialog<br/>eller oppdater dem ved ny innsending"]
 
     FPSAK -->|"Bestill én eller send komplett arbeidsgiverliste"| FORESPORSEL
-    FORESPORSEL -.->|"ProsessTask: opprett sak, deretter oppgave"| PORTAL
-    PORTAL -.->|"Neste task: opprett dialog"| DIALOG
+    FORESPORSEL -.->|"ProsessTask: forespørsel.opprett.sak"| PORTAL
+    FORESPORSEL -.->|"ProsessTask: forespørsel.opprettDialog"| DIALOG
     PORTAL -->|"Oppgave med lenke til innsending"| ARBEIDSGIVER
-    ARBEIDSGIVER --> FRONTEND
-    ARBEIDSGIVER --> API
+    DIALOG -->|"Oppgave med lenke til innsending"| ARBEIDSGIVER
+    ARBEIDSGIVER -->|"Ved manuell innsending i skjema"|FRONTEND
+    ARBEIDSGIVER -->|"Ved maskinell innsending via bedriftens LPS system"|API
     FRONTEND --> MOTTAK
     API --> MOTTAK
     MOTTAK --> FERDIG
