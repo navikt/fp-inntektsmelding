@@ -450,6 +450,182 @@ class GrunnlagDtoTjenesteTest {
     }
 
     @Test
+    void skal_velge_forespørselen_som_matcher_første_fraværsdag_når_flere_forespørsler_finnes_for_samme_orgnr() {
+        // Arrange: tre forespørsler på samme orgnr med økende førsteUttaksdato. Den siste (T3) ligger etter
+        // førsteFraværsdag og skal dermed filtreres bort av finnForespørslerSisteTreÅr. Av de to gjenværende (T1, T2)
+        // skal den med størst uttaksdato som fortsatt er <= førsteFraværsdag velges, altså T2.
+        var fødselsnummer = new PersonIdent("11111111111");
+        var ytelsetype = Ytelsetype.FORELDREPENGER;
+        var orgnr = "999999999";
+        var aktørId = AktørId.fra("9999999999999");
+        var t1 = LocalDate.now().minusMonths(6);
+        var t2 = LocalDate.now().minusMonths(1);
+        var t3 = LocalDate.now().plusMonths(1);
+        var førsteFraværsdag = LocalDate.now();
+
+        var forespørsel1 = new ForespørselEntitet(orgnr, t1, new AktørIdEntitet(aktørId.getAktørId()), ytelsetype, "123", t1, ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var forespørsel2 = new ForespørselEntitet(orgnr, t2, new AktørIdEntitet(aktørId.getAktørId()), ytelsetype, "123", t2, ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var forespørsel3 = new ForespørselEntitet(orgnr, t3, new AktørIdEntitet(aktørId.getAktørId()), ytelsetype, "123", t3, ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var personInfo = new PersonInfo("Navn", null, "Navnesen", fødselsnummer, new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(aktørId.getAktørId()), LocalDate.now(), null, null);
+
+        when(personTjeneste.hentPersonFraIdent(fødselsnummer, ytelsetype)).thenReturn(personInfo);
+        when(personTjeneste.hentPersonInfoFraAktørId(new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(aktørId.getAktørId()), ytelsetype)).thenReturn(personInfo);
+        when(personTjeneste.hentPersonFraIdent(PersonIdent.fra(INNMELDER_UID), ytelsetype)).thenReturn(
+            new PersonInfo("Ine", null, "Sender", new PersonIdent(INNMELDER_UID), null, LocalDate.now(), "+4711111111", PersonInfo.Kjønn.MANN));
+        when(forespørselBehandlingTjeneste.finnForespørslerForAktørId(aktørId, ytelsetype)).thenReturn(
+            List.of(ForespørselDtoMapper.mapFraEntitet(forespørsel1), ForespørselDtoMapper.mapFraEntitet(forespørsel2), ForespørselDtoMapper.mapFraEntitet(forespørsel3)));
+        when(forespørselBehandlingTjeneste.hentForespørsel(forespørsel2.getUuid())).thenReturn(ForespørselDtoMapper.mapFraEntitet(forespørsel2));
+        when(organisasjonTjeneste.finnOrganisasjon(Arbeidsgiver.fra(orgnr))).thenReturn(new Organisasjon("Bedriften", orgnr));
+        when(fellesGrunnlagTjeneste.harJobbetHeleBeregningsperioden(any(), any(), any())).thenReturn(true);
+        when(inntektTjeneste.hentInntekt(aktørId, t2, LocalDate.now(), Arbeidsgiver.fra(orgnr), true)).thenReturn(
+            new Inntektsopplysninger(BigDecimal.valueOf(52000), orgnr, List.of()));
+
+        // Act
+        var imDialogDto = grunnlagDtoTjeneste.lagArbeidsgiverinitiertNyansattDialogDto(fødselsnummer, ytelsetype, førsteFraværsdag, Arbeidsgiver.fra(orgnr));
+
+        // Assert: forespørsel 2 (T2) skal velges, ikke T1 eller T3
+        assertThat(imDialogDto.forespørselUuid()).isEqualTo(forespørsel2.getUuid());
+        assertThat(imDialogDto.førsteUttaksdato()).isEqualTo(t2);
+    }
+
+    @Test
+    void skal_velge_forespørselen_med_uttaksdato_lik_førsteFraværsdag_når_flere_forespørsler_finnes_for_samme_orgnr() {
+        // Arrange: en forespørsel har uttaksdato nøyaktig lik oppgitt førsteFraværsdag - den skal velges selv om det
+        // finnes en eldre forespørsel på samme orgnr.
+        var fødselsnummer = new PersonIdent("11111111111");
+        var ytelsetype = Ytelsetype.FORELDREPENGER;
+        var orgnr = "999999999";
+        var aktørId = AktørId.fra("9999999999999");
+        var t1 = LocalDate.now().minusMonths(6);
+        var førsteFraværsdag = LocalDate.now();
+
+        var forespørsel1 = new ForespørselEntitet(orgnr, t1, new AktørIdEntitet(aktørId.getAktørId()), ytelsetype, "123", t1, ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var forespørsel2 = new ForespørselEntitet(orgnr, førsteFraværsdag, new AktørIdEntitet(aktørId.getAktørId()), ytelsetype, "123", førsteFraværsdag, ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var personInfo = new PersonInfo("Navn", null, "Navnesen", fødselsnummer, new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(aktørId.getAktørId()), LocalDate.now(), null, null);
+
+        when(personTjeneste.hentPersonFraIdent(fødselsnummer, ytelsetype)).thenReturn(personInfo);
+        when(personTjeneste.hentPersonInfoFraAktørId(new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(aktørId.getAktørId()), ytelsetype)).thenReturn(personInfo);
+        when(personTjeneste.hentPersonFraIdent(PersonIdent.fra(INNMELDER_UID), ytelsetype)).thenReturn(
+            new PersonInfo("Ine", null, "Sender", new PersonIdent(INNMELDER_UID), null, LocalDate.now(), "+4711111111", PersonInfo.Kjønn.MANN));
+        when(forespørselBehandlingTjeneste.finnForespørslerForAktørId(aktørId, ytelsetype)).thenReturn(
+            List.of(ForespørselDtoMapper.mapFraEntitet(forespørsel1), ForespørselDtoMapper.mapFraEntitet(forespørsel2)));
+        when(forespørselBehandlingTjeneste.hentForespørsel(forespørsel2.getUuid())).thenReturn(ForespørselDtoMapper.mapFraEntitet(forespørsel2));
+        when(organisasjonTjeneste.finnOrganisasjon(Arbeidsgiver.fra(orgnr))).thenReturn(new Organisasjon("Bedriften", orgnr));
+        when(fellesGrunnlagTjeneste.harJobbetHeleBeregningsperioden(any(), any(), any())).thenReturn(true);
+        when(inntektTjeneste.hentInntekt(aktørId, førsteFraværsdag, LocalDate.now(), Arbeidsgiver.fra(orgnr), true)).thenReturn(
+            new Inntektsopplysninger(BigDecimal.valueOf(52000), orgnr, List.of()));
+
+        // Act
+        var imDialogDto = grunnlagDtoTjeneste.lagArbeidsgiverinitiertNyansattDialogDto(fødselsnummer, ytelsetype, førsteFraværsdag, Arbeidsgiver.fra(orgnr));
+
+        // Assert
+        assertThat(imDialogDto.forespørselUuid()).isEqualTo(forespørsel2.getUuid());
+        assertThat(imDialogDto.førsteUttaksdato()).isEqualTo(førsteFraværsdag);
+    }
+
+    @Test
+    void skal_velge_forespørselen_når_uttaksdato_er_før_oppgitt_fraværsdato_når_finnes_forespørsel_for_samme_orgnr() {
+        // Arrange: én forespørsel har uttaksdato før oppgitt førsteFraværsdag og skal derfor velges.
+        var fødselsnummer = new PersonIdent("11111111111");
+        var ytelsetype = Ytelsetype.FORELDREPENGER;
+        var orgnr = "999999999";
+        var aktørId = AktørId.fra("9999999999999");
+        var førsteUttaksdato = LocalDate.now().minusYears(1);
+        var førsteFraværsdag = LocalDate.now();
+
+        var forespørsel1 = new ForespørselEntitet(orgnr, førsteUttaksdato, new AktørIdEntitet(aktørId.getAktørId()), ytelsetype, "123", førsteUttaksdato, ForespørselType.BESTILT_AV_FAGSYSTEM);
+
+        var personInfo = new PersonInfo("Navn", null, "Navnesen", fødselsnummer, new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(aktørId.getAktørId()), LocalDate.now(), null, null);
+
+        when(personTjeneste.hentPersonFraIdent(fødselsnummer, ytelsetype)).thenReturn(personInfo);
+        when(personTjeneste.hentPersonInfoFraAktørId(new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(aktørId.getAktørId()), ytelsetype)).thenReturn(personInfo);
+        when(personTjeneste.hentPersonFraIdent(PersonIdent.fra(INNMELDER_UID), ytelsetype)).thenReturn(
+            new PersonInfo("Ine", null, "Sender", new PersonIdent(INNMELDER_UID), null, LocalDate.now(), "+4711111111", PersonInfo.Kjønn.MANN));
+        when(forespørselBehandlingTjeneste.finnForespørslerForAktørId(aktørId, ytelsetype)).thenReturn(
+            List.of(ForespørselDtoMapper.mapFraEntitet(forespørsel1)));
+        when(forespørselBehandlingTjeneste.hentForespørsel(forespørsel1.getUuid())).thenReturn(ForespørselDtoMapper.mapFraEntitet(forespørsel1));
+        when(organisasjonTjeneste.finnOrganisasjon(Arbeidsgiver.fra(orgnr))).thenReturn(new Organisasjon("Bedriften", orgnr));
+        when(fellesGrunnlagTjeneste.harJobbetHeleBeregningsperioden(any(), any(), any())).thenReturn(true);
+        when(inntektTjeneste.hentInntekt(aktørId, førsteUttaksdato, LocalDate.now(), Arbeidsgiver.fra(orgnr), true)).thenReturn(
+            new Inntektsopplysninger(BigDecimal.valueOf(52000), orgnr, List.of()));
+
+        // Act
+        var imDialogDto = grunnlagDtoTjeneste.lagArbeidsgiverinitiertNyansattDialogDto(fødselsnummer, ytelsetype, førsteFraværsdag, Arbeidsgiver.fra(orgnr));
+
+        // Assert
+        assertThat(imDialogDto.forespørselUuid()).isEqualTo(forespørsel1.getUuid());
+        assertThat(imDialogDto.førsteUttaksdato()).isEqualTo(førsteUttaksdato);
+    }
+
+    @Test
+    void skal_lage_ny_dialog_når_alle_eksisterende_forespørsler_for_orgnr_har_uttaksdato_etter_førsteFraværsdag() {
+        // Arrange: begge eksisterende forespørsler har uttaksdato etter oppgitt førsteFraværsdag, og skal dermed
+        // filtreres bort - ingen "bøtte" matcher, så vi skal opprette en ny dialog i stedet for å rute til en av dem.
+        var fødselsnummer = new PersonIdent("11111111111");
+        var ytelsetype = Ytelsetype.FORELDREPENGER;
+        var organisasjonsnummer = "999999999";
+        var aktørId = AktørId.fra("9999999999999");
+        var førsteFraværsdag = LocalDate.now();
+        var t1 = førsteFraværsdag.plusMonths(1);
+        var t2 = førsteFraværsdag.plusMonths(2);
+
+        var forespørsel1 = new ForespørselEntitet(organisasjonsnummer, t1, new AktørIdEntitet(aktørId.getAktørId()), ytelsetype, "123", t1, ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var forespørsel2 = new ForespørselEntitet(organisasjonsnummer, t2, new AktørIdEntitet(aktørId.getAktørId()), ytelsetype, "123", t2, ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var personInfo = new PersonInfo("Navn", null, "Navnesen", fødselsnummer, new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(aktørId.getAktørId()), LocalDate.now(), null, PersonInfo.Kjønn.MANN);
+
+        when(personTjeneste.hentPersonFraIdent(fødselsnummer, ytelsetype)).thenReturn(personInfo);
+        when(personTjeneste.hentPersonFraIdent(PersonIdent.fra(INNMELDER_UID), ytelsetype)).thenReturn(
+            new PersonInfo("Ine", null, "Sender", new PersonIdent(INNMELDER_UID), null, LocalDate.now(), "+4711111111", null));
+        when(forespørselBehandlingTjeneste.finnForespørslerForAktørId(aktørId, ytelsetype)).thenReturn(
+            List.of(ForespørselDtoMapper.mapFraEntitet(forespørsel1), ForespørselDtoMapper.mapFraEntitet(forespørsel2)));
+        when(organisasjonTjeneste.finnOrganisasjon(Arbeidsgiver.fra(organisasjonsnummer))).thenReturn(new Organisasjon("Bedriften", organisasjonsnummer));
+        when(arbeidsforholdTjeneste.hentArbeidsforhold(fødselsnummer, førsteFraværsdag)).thenReturn(List.of());
+
+        // Act
+        var imDialogDto = grunnlagDtoTjeneste.lagArbeidsgiverinitiertNyansattDialogDto(fødselsnummer, ytelsetype, førsteFraværsdag, Arbeidsgiver.fra(organisasjonsnummer));
+
+        // Assert: ingen eksisterende forespørsel rutes til - ny dialog opprettes
+        assertThat(imDialogDto.forespørselUuid()).isNull();
+        assertThat(imDialogDto.førsteUttaksdato()).isEqualTo(førsteFraværsdag);
+    }
+
+    @Test
+    void skal_lage_ny_dialog_når_ikke_finner_match_selv_om_siste_forespørsel_er_for_samme_ag() {
+        // Arrange: forespørsel 1 (ag1, 2025) og forespørsel 2 (ag2, 2026) - ett år mellom. Det kommer inn en
+        // nyansatt agi for ag2 (altså siste arbeidsgiver) med førsteFraværsdag FØR forespørsel 2 sin
+        // førsteUttaksdato. Siden forespørsel 1 tilhører en annen arbeidsgiver er det ikke match
+        // Forventet resultat: ingen eksisterende forespørsel matcher for ag2, og det opprettes en ny dialog.
+        var fødselsnummer = new PersonIdent("11111111111");
+        var ytelsetype = Ytelsetype.FORELDREPENGER;
+        var orgnrAg1 = "111111111";
+        var orgnrAg2 = "222222222";
+        var aktørId = AktørId.fra("9999999999999");
+        var uttaksdatoAg1 = LocalDate.now().minusYears(1);
+        var uttaksdatoAg2 = LocalDate.now();
+        var førsteFraværsdag = uttaksdatoAg2.minusMonths(1);
+
+        var forespørsel1 = new ForespørselEntitet(orgnrAg1, uttaksdatoAg1, new AktørIdEntitet(aktørId.getAktørId()), ytelsetype, "123", uttaksdatoAg1, ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var forespørsel2 = new ForespørselEntitet(orgnrAg2, uttaksdatoAg2, new AktørIdEntitet(aktørId.getAktørId()), ytelsetype, "124", uttaksdatoAg2, ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var personInfo = new PersonInfo("Navn", null, "Navnesen", fødselsnummer, new no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId(aktørId.getAktørId()), LocalDate.now(), null, PersonInfo.Kjønn.MANN);
+
+        when(personTjeneste.hentPersonFraIdent(fødselsnummer, ytelsetype)).thenReturn(personInfo);
+        when(personTjeneste.hentPersonFraIdent(PersonIdent.fra(INNMELDER_UID), ytelsetype)).thenReturn(
+            new PersonInfo("Ine", null, "Sender", new PersonIdent(INNMELDER_UID), null, LocalDate.now(), "+4711111111", null));
+        when(forespørselBehandlingTjeneste.finnForespørslerForAktørId(aktørId, ytelsetype)).thenReturn(
+            List.of(ForespørselDtoMapper.mapFraEntitet(forespørsel1), ForespørselDtoMapper.mapFraEntitet(forespørsel2)));
+        when(organisasjonTjeneste.finnOrganisasjon(Arbeidsgiver.fra(orgnrAg2))).thenReturn(new Organisasjon("Bedriften AG2", orgnrAg2));
+        when(arbeidsforholdTjeneste.hentArbeidsforhold(fødselsnummer, førsteFraværsdag)).thenReturn(List.of());
+
+        // Act
+        var imDialogDto = grunnlagDtoTjeneste.lagArbeidsgiverinitiertNyansattDialogDto(fødselsnummer, ytelsetype, førsteFraværsdag, Arbeidsgiver.fra(orgnrAg2));
+
+        // Assert: ingen eksisterende forespørsel rutes til for ag2 - ny dialog opprettes
+        assertThat(imDialogDto.forespørselUuid()).isNull();
+        assertThat(imDialogDto.arbeidsgiver().organisasjonNummer()).isEqualTo(orgnrAg2);
+        assertThat(imDialogDto.førsteUttaksdato()).isEqualTo(førsteFraværsdag);
+    }
+
+    @Test
     void skal_lage_arbeidsgiverinitiert_uregistrert_dialog_ny() {
         // Arrange
         var personIdent = new PersonIdent("11111111111");

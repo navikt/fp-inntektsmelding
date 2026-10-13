@@ -281,7 +281,7 @@ class InntektKontrollTjenesteTest {
         inntektKontrollTjeneste.kontrollerInntektsmeldingEtterNedetid(inntektsmeldingId);
 
         verify(inntektsmeldingTjeneste).oppdatertStatusTilInntektsmelding(imUuid, InntektsmeldingStatus.AVVIST);
-        verify(forespørselBehandlingTjeneste).sendMeldingOmAvvistInntektsmelding(eq(forespørselDto), any());
+        verify(forespørselBehandlingTjeneste).sendMeldingOmAvvistInntektsmelding(eq(forespørselDto), any(), any());
         verify(fellesMottakTjeneste, never()).opprettTaskForSendTilJoark(any(), any());
         verify(fellesMottakTjeneste, never()).ferdigstillOgOppdaterEksterneSystemer(any(), any());
     }

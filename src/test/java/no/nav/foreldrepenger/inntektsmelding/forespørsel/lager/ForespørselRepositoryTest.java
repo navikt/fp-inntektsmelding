@@ -3,7 +3,9 @@ package no.nav.foreldrepenger.inntektsmelding.forespørsel.lager;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
+import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -373,6 +375,44 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
 
         assertThat(forespørsler).hasSize(2);
         assertThat(forespørsler.stream().noneMatch(fs -> fs.getId() <= lavesteDatabaseId)).isTrue();
+    }
+
+    @Test
+    void skal_sortere_på_løpenummer_uavhengig_av_opprettet_tidspunkt() {
+        var orgnr = "999999999";
+        var førsteUuid = lagreForespørsel(LocalDate.now(),
+            Ytelsetype.FORELDREPENGER,
+            "9999999999999",
+            orgnr,
+            "123",
+            LocalDate.now(),
+            ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var andreUuid = lagreForespørsel(LocalDate.now(),
+            Ytelsetype.FORELDREPENGER,
+            "8888888888888",
+            orgnr,
+            "321",
+            LocalDate.now(),
+            ForespørselType.BESTILT_AV_FAGSYSTEM);
+
+        var førsteId = forespørselRepository.hentForespørsel(førsteUuid).orElseThrow().getId();
+        var andreId = forespørselRepository.hentForespørsel(andreUuid).orElseThrow().getId();
+        assertThat(førsteId).isLessThan(andreId);
+
+        oppdaterOpprettetTidspunkt(førsteUuid, LocalDateTime.now());
+        oppdaterOpprettetTidspunkt(andreUuid, LocalDateTime.now().minusHours(1));
+        getEntityManager().clear();
+
+        var forespørsler = forespørselRepository.hentForespørslerFraFilter(orgnr, null, null, null, null, null, null);
+
+        assertThat(forespørsler).extracting(ForespørselEntitet::getId).containsExactly(førsteId, andreId);
+    }
+
+    private void oppdaterOpprettetTidspunkt(UUID uuid, LocalDateTime opprettetTidspunkt) {
+        getEntityManager().createNativeQuery("UPDATE FORESPOERSEL SET OPPRETTET_TID = :opprettetTidspunkt WHERE UUID = :uuid")
+            .setParameter("opprettetTidspunkt", Timestamp.valueOf(opprettetTidspunkt))
+            .setParameter("uuid", uuid)
+            .executeUpdate();
     }
 
 }

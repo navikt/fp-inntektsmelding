@@ -276,7 +276,7 @@ public class ForespørselRepository {
         }
         cq.where(predicates.toArray(new Predicate[0]));
 
-        cq.orderBy(cb.asc(root.get(OPPRETTET_TIDSPUNKT)));
+        cq.orderBy(cb.asc(root.get("id")));
         var query = entityManager.createQuery(cq);
         query.setMaxResults(1001);
         var result = query.getResultList();

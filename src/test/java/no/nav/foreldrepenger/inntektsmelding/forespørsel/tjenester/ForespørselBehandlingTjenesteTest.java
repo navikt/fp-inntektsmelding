@@ -164,6 +164,39 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
     }
 
     @Test
+    void skal_opprette_og_ferdigstille_forespørsel_uten_oppgave_i_samme_taskgruppe() {
+        var resultat = forespørselBehandlingTjeneste.håndterForespørselSomUmibddelbartSkalLukkes(SKJÆRINGSTIDSPUNKT,
+            YTELSETYPE,
+            AktørId.fra(AKTØR_ID),
+            Arbeidsgiver.fra(BRREG_ORGNUMMER),
+            Saksnummer.fra(SAKSNUMMER),
+            FØRSTE_UTTAKSDATO);
+
+        clearHibernateCache();
+        var lagret = forespørselRepository.hentForespørslerPåSak(SAKSNUMMER);
+        assertThat(resultat).isEqualTo(ForespørselResultat.FORESPØRSEL_OPPRETTET);
+        assertThat(lagret).hasSize(1);
+        assertThat(lagret.getFirst().getStatus()).isEqualTo(ForespørselStatus.FERDIG);
+        assertThat(lagret.getFirst().getOppgaveId()).isEmpty();
+
+        var taskGruppeCaptor = ArgumentCaptor.forClass(ProsessTaskGruppe.class);
+        verify(prosessTaskTjeneste).lagre(taskGruppeCaptor.capture());
+        var tasks = taskGruppeCaptor.getValue().getTasks().stream().map(ProsessTaskGruppe.Entry::task).toList();
+
+        assertThat(tasks).hasSize(4);
+        assertThat(tasks.stream().map(ProsessTaskData::taskType).toList()).containsExactly(
+            TaskType.forProsessTask(OpprettSakTask.class),
+            TaskType.forProsessTask(OpprettDialogTask.class),
+            TaskType.forProsessTask(FerdigstillSakTask.class),
+            TaskType.forProsessTask(FerdigstillDialogTask.class));
+        tasks.forEach(task -> {
+            assertThat(task.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(lagret.getFirst().getUuid().toString());
+            assertThat(task.getPropertyValue(FellesTaskProperties.KEY_LUKKE_AARSAK)).isEqualTo(LukkeÅrsak.EKSTERN_INNSENDING.name());
+        });
+        assertThat(tasks.get(2).getPropertyValue(FerdigstillSakTask.KEY_ER_FØRSTEGANGSINNSENDING)).isEqualTo("true");
+    }
+
+    @Test
     void eksisterende_forespørsel_på_samme_stp_skal_gi_nei() {
         lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, BRREG_ORGNUMMER, SAKSNUMMER, SKJÆRINGSTIDSPUNKT,
             ForespørselType.BESTILT_AV_FAGSYSTEM);
@@ -201,10 +234,31 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
         clearHibernateCache();
 
-        assertThat(resultater).containsExactly(ForespørselResultat.IKKE_OPPRETTET_FINNES_ALLEREDE);
+        assertThat(resultater).containsExactly(new ArbeidsgiverMedResultat(Arbeidsgiver.fra(BRREG_ORGNUMMER),
+            ForespørselResultat.IKKE_OPPRETTET_FINNES_ALLEREDE));
         assertThat(forespørselRepository.hentForespørsel(beholdUuid).orElseThrow().getStatus()).isEqualTo(ForespørselStatus.UNDER_BEHANDLING);
         assertThat(forespørselRepository.hentForespørsel(utgåttUuid).orElseThrow().getStatus()).isEqualTo(ForespørselStatus.UTGÅTT);
         verify(prosessTaskTjeneste).lagre(any(ProsessTaskGruppe.class));
+    }
+
+    @Test
+    void komplett_liste_returnerer_arbeidsgiver_med_resultat_i_inndatarekkefølge_inkludert_duplikater() {
+        lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, BRREG_ORGNUMMER, SAKSNUMMER,
+            FØRSTE_UTTAKSDATO, ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var eksisterendeArbeidsgiver = Arbeidsgiver.fra(BRREG_ORGNUMMER);
+        var nyArbeidsgiver = Arbeidsgiver.fra(ANNET_ORGNUMMER);
+
+        var resultater = forespørselBehandlingTjeneste.håndterKomplettListeMedForespørsler(SKJÆRINGSTIDSPUNKT,
+            YTELSETYPE,
+            AktørId.fra(AKTØR_ID),
+            List.of(eksisterendeArbeidsgiver, nyArbeidsgiver, eksisterendeArbeidsgiver),
+            Saksnummer.fra(SAKSNUMMER),
+            FØRSTE_UTTAKSDATO);
+
+        assertThat(resultater).containsExactly(
+            new ArbeidsgiverMedResultat(eksisterendeArbeidsgiver, ForespørselResultat.IKKE_OPPRETTET_FINNES_ALLEREDE),
+            new ArbeidsgiverMedResultat(nyArbeidsgiver, ForespørselResultat.FORESPØRSEL_OPPRETTET),
+            new ArbeidsgiverMedResultat(eksisterendeArbeidsgiver, ForespørselResultat.IKKE_OPPRETTET_FINNES_ALLEREDE));
     }
 
     @Test
