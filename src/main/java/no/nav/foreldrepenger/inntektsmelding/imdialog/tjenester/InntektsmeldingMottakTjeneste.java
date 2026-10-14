@@ -23,7 +23,6 @@ import no.nav.foreldrepenger.inntektsmelding.server.exceptions.InntektAvvikerFra
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ArbeidsgiverinitiertÅrsak;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingStatus;
-import no.nav.foreldrepenger.konfig.Environment;
 import no.nav.vedtak.konfig.Tid;
 
 @ApplicationScoped
