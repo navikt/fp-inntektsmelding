@@ -113,7 +113,8 @@ public class MinSideArbeidsgiverTjeneste {
 
     public void sendBeskjedOmEndretFørsteUttaksdato(ForespørselDto forespørsel,
                                                     LocalDate tidligereFørsteUttaksdato,
-                                                    LocalDate nyFørsteUttaksdato) {
+                                                    LocalDate nyFørsteUttaksdato,
+                                                    long prosessTaskId) {
         var sakId = forespørsel.arbeidsgiverNotifikasjonSakId();
         if (sakId == null) {
             throw new IllegalStateException("Mangler arbeidsgiverNotifikasjonSakId for forespørsel " + forespørsel.uuid());
@@ -122,7 +123,7 @@ public class MinSideArbeidsgiverTjeneste {
         var merkelapp = ForespørselTekster.finnMerkelapp(forespørsel.ytelseType());
         var beskjedTekst = ForespørselTekster.lagBeskjedOmEndretFørsteUttaksdato(tidligereFørsteUttaksdato, nyFørsteUttaksdato);
         var skjemaUri = URI.create(inntektsmeldingSkjemaLenke + "/" + forespørsel.uuid());
-        var eksternId = "endret-uttaksdato-" + forespørsel.uuid() + nyFørsteUttaksdato;
+        var eksternId = "endret-uttaksdato-" + forespørsel.uuid() + "-" + prosessTaskId;
 
         sendNyBeskjed(forespørsel.uuid().toString(),
             merkelapp,
