@@ -9,6 +9,9 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.hibernate.annotations.Generated;
+import org.hibernate.generator.EventType;
+
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -39,6 +42,10 @@ public class InntektsmeldingEntitet {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "GLOBAL_PK_SEQ_GENERATOR")
     private Long id;
+
+    @Generated(event = EventType.INSERT)
+    @Column(name = "loepe_nummer", insertable = false, updatable = false)
+    private Long loepeNummer;
 
     @Embedded
     @AttributeOverride(name = "aktørId", column = @Column(name = "bruker_aktoer_id", nullable = false, updatable = false))
@@ -105,6 +112,10 @@ public class InntektsmeldingEntitet {
 
     public Long getId() {
         return id;
+    }
+
+    public Long getLoepeNummer() {
+        return loepeNummer;
     }
 
     public AktørIdEntitet getAktørId() {

@@ -119,7 +119,7 @@ public class InntektsmeldingRepository {
         }
         cq.where(predicates.toArray(new Predicate[0]));
 
-        cq.orderBy(cb.desc(root.get("opprettetTidspunkt")));
+        cq.orderBy(cb.asc(root.get("id")));
         var query = entityManager.createQuery(cq);
         query.setMaxResults(1001);
         var result = query.getResultList();
