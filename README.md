@@ -52,12 +52,88 @@ Oppdatert `schema.graphql` kan hentes [herfra](https://github.com/navikt/arbeids
 
 ## Verdikjede og tilstander for forespørsler
 
-`fp-sak` behandler foreldrepengesaken og bestiller inntektsmeldinger fra arbeidsgivere.
-`fp-inntektsmelding` håndterer forespørslene, gjør dem tilgjengelige for arbeidsgiver og tar imot inntektsmeldingene.
-Tjenesten lagrer inntektsmeldingen og journalfører den i Joark som grunnlag for videre saksbehandling.
-Den fatter ikke vedtak om foreldrepenger.
+- `Fpsak` — Saksbehandlersystem, utleder hvilke forespørsler som skal sendes utifra registerdata og mottatte søknader om foreldrepenger / svangerskapspenger. Lagrer ned xml av mottatte inntektsmeldinger og sender disse til abakus for lagring i grunnlag
+- `Fpabakus` — Applikasjon som gjøær registerinnhenting på vegne av fpsak. Lagrer også ned mottatte inntektsmeldinger i behandlingens grunnlag
+- `Fpinntektsmelding` — Applikasjon som sender ut forespørsler og tar i mot inntektsmeldinger når de først sendes inn fra arbeidsgiver. Lagrer mottatte inntektsmeldinger i egen database, og dytter de ut på joark kø for journalføring
+- `Fp-inntektsmelding-frontend` — Frontendapplikasjon som inneholder skjema for å manuelt fylle ut inntektsmeldinger. Populeres med data fra fp-inntektsmelding
+- `Fp-inntektsmelding-api` — Applikasjon som snakker med arbeidsgivernes lønns-og-personalsystemer. Kun maskinell interaksjon, aldri med personer. Har ingen egen database, lagrer og henter fra fp-inntektsmelding
+- `Fp-mottak` — Applikasjon som leser fra joark kø og pusher relevante dokumenter (f.eks inntektsmeldinger) til fpsak
 
-### Plass i verdikjeden
+### Begrepsforklaring
+- `Inntektsmelding` — skjema / mnelding som inneholder informasjon om inntekt og refusjon for en søker. Oppgis av arbeidsgiver
+- `Fager` — Team som eier / drifter fellestjenester for arbeidsgivere. Utvikler blant annet min-side-arbeidsgiver
+- `min-side-arbeidsgiver` — Side på nav.no der arbeidsgivere kan logge inn å se saker / avtaler de har med nav. Når vi oppretter forespørsler om inntektsmelding havner disse her. 
+- `Dialogporten` — Produkt som eies av Digdir. Er en del av Altinn plattformen. Tilgjengeliggjøring og sammenstilling av dialoger, tjenester, data mellom en bedrift og offentlige instanser, blant annet Nav.
+- `Inntektskomponenten` — Register med informasjon om en persons inntekter
+- `Aareg` — Register med informasjon om en persons arbeidsforhold
+
+### Registernes plass i inntektsmeldingsflyten
+
+Registeropplysningene har to roller: De gir `fp-sak` grunnlag for å finne hvilke arbeidsgivere vi trenger
+inntektsmelding fra, og de hjelper arbeidsgiveren med å fylle ut meldingen.
+`fp-abakus` lagrer behandlingens inntekts-, arbeids- og ytelsesgrunnlag (IAY-grunnlaget).
+`fp-inntektsmelding` gjør egne registeroppslag for dialogen, ikke via behandlingens grunnlag i Abakus.
+
+```mermaid
+flowchart TD
+    subgraph REGISTRE["Registerkilder"]
+        AAREG["Aa-reg<br/>Arbeidsforhold og ansettelsesperioder"]
+        INNTEKT["Inntektskomponenten<br/>Historisk rapportert inntekt"]
+        PDL["PDL<br/>Personopplysninger"]
+        EREG["EREG<br/>Virksomhetsopplysninger"]
+    end
+
+    subgraph BEHANDLING["Registergrunnlag og behov for inntektsmelding"]
+        BESTILL["fp-sak<br/>Bestill registerinnhenting for behandlingen"]
+        ABAKUS_REG["fp-abakus<br/>Hent og lagre registeropplysninger<br/>i behandlingens IAY-grunnlag"]
+        BEHOV["fp-sak<br/>Utled påkrevde arbeidsgivere fra arbeidsforhold,<br/>søknad og skjæringstidspunkt"]
+        FORESPORSEL["fp-inntektsmelding<br/>Opprett eller oppdater forespørsler"]
+    end
+
+    subgraph UTFYLLING["Egne registeroppslag under utfylling"]
+        DIALOGGRUNNLAG["fp-inntektsmelding<br/>Hent opplysninger og forhåndsutfyll skjema"]
+        SKJEMA["Arbeidsgiver i frontend<br/>Kontroller og suppler opplysningene"]
+    end
+
+    subgraph MOTTAK["Arbeidsgiverens melding tilbake til behandlingen"]
+        LPS["Arbeidsgiverens LPS<br/>Sender via fp-inntektsmelding-api"]
+        IM["fp-inntektsmelding<br/>Lagre innsendt inntektsmelding"]
+        DOKUMENT["Joark og fp-mottak<br/>Journalføring og dokumentmottak i fp-sak"]
+        ABAKUS_IM["fp-abakus<br/>Lagre mottatt IM i IAY-grunnlaget"]
+        VURDERING["fp-sak<br/>Bruk registeropplysninger og inntektsmelding<br/>i videre saksbehandling"]
+    end
+
+    BESTILL --> ABAKUS_REG
+    AAREG -->|"Arbeidsforhold"| ABAKUS_REG
+    INNTEKT -->|"Inntektsopplysninger"| ABAKUS_REG
+    ABAKUS_REG -->|"Behandlingens registergrunnlag"| BEHOV
+    BEHOV -->|"Bestill forespørsler"| FORESPORSEL
+    FORESPORSEL -->|"Lenke via arbeidsgiverportalene"| SKJEMA
+
+    AAREG -->|"Arbeidsforhold"| DIALOGGRUNNLAG
+    INNTEKT -->|"Lønn til forhåndsutfylling"| DIALOGGRUNNLAG
+    PDL -->|"Personopplysninger"| DIALOGGRUNNLAG
+    EREG -->|"Blant annet virksomhetsnavn"| DIALOGGRUNNLAG
+    DIALOGGRUNNLAG --> SKJEMA
+
+    SKJEMA -->|"Send inn"| IM
+    LPS --> IM
+    IM -.->|"Asynkron dokumentflyt"| DOKUMENT
+    DOKUMENT -->|"fp-sak lagrer IM-opplysningene i Abakus"| ABAKUS_IM
+    ABAKUS_REG -->|"Registeropplysninger"| VURDERING
+    ABAKUS_IM -->|"Arbeidsgiverens opplysninger"| VURDERING
+```
+
+Diagrammet fremhever registrene som brukes i denne flyten, ikke alle datakildene i IAY-grunnlaget.
+Arbeidsgiver kan også starte innsendingen uten en bestilt forespørsel, som vist i diagrammet for arbeidsgiverinitiert innsending.
+For nyansatt-flyten forhåndsutfyller tjenesten ikke inntektene.
+
+**Registeropplysninger er ikke det samme som en mottatt inntektsmelding.**
+Historisk rapportert lønn støtter utfyllingen, men erstatter ikke arbeidsgiverens innsendte inntekts- og refusjonsopplysninger.
+Disse lagres i Abakus som egne opplysninger sammen med registergrunnlaget.
+At forespørselen er `FERDIG` i `fp-inntektsmelding`, betyr ikke at dokumentflyten er fullført eller at IM-en er tilgjengelig i behandlingens grunnlag.
+
+### Plass i verdikjeden ved vanlig innsending
 
 ```mermaid
 flowchart TD
@@ -73,7 +149,9 @@ flowchart TD
     PDF["fp-dokgen<br/>Generer PDF"]
     JOARK["Joark<br/>Journalfør XML og PDF<br/>på fp-sak-saken når saksnummer finnes"]
     LUKK["Fullfør sak og dialog<br/>eller oppdater dem ved ny innsending"]
+    SØKER["Søker"]
 
+    SØKER -->|"Innsendt søknad"|FPSAK
     FPSAK -->|"Bestill én eller send komplett arbeidsgiverliste"| FORESPORSEL
     FORESPORSEL -.->|"ProsessTask: forespørsel.opprett.sak"| PORTAL
     FORESPORSEL -.->|"ProsessTask: forespørsel.opprettDialog"| DIALOG
@@ -88,6 +166,43 @@ flowchart TD
     PDF --> JOARK
     FERDIG -.->|"ProsessTask: sak, deretter dialog"| LUKK
     FPSAK -->|"Lukk forespørsel etter ekstern innsending"| FERDIG
+```
+### Plass i verdikjeden ved arbeidsgiverinitiert innsending
+
+Arbeidsgiver starter innsendingen uten en bestilling fra `fp-sak`.
+Diagrammet viser innsending via frontend for `NYANSATT` og `UREGISTRERT`.
+
+```mermaid
+flowchart TD
+    ARBEIDSGIVER["Arbeidsgiver<br/>Starter innsending uten bestilt forespørsel"]
+    FRONTEND["fp-inntektsmelding-frontend"]
+    MOTTAK["fp-inntektsmelding<br/>Motta arbeidsgiverinitiert inntektsmelding"]
+    FINNES{"Er dette første innsending eller </br> en endring av tidligere innsendt inntektsmelding?"}
+    GJENBRUK["Gjenbruk forespørsel<br/>Valider aktør, arbeidsgiver og startdato<br/>Nyansatt kan endre startdato"]
+    FPSAK["fp-sak<br/>Hent åpne saker for søker og ytelse"]
+    OPPRETT["fp-inntektsmelding<br/>Opprett arbeidsgiverinitiert forespørsel<br/>og sett den til FERDIG"]
+    LAGRE["fp-inntektsmelding<br/>Lagre inntektsmelding"]
+    PORTAL["Min side arbeidsgiver (Fager)<br/>Opprett sak uten oppgave"]
+    DIALOG["Altinn - Dialogporten<br/>Opprett dialog"]
+    FULLFOR["Fullfør sak, deretter dialog<br/>med lenke til inntektsmeldingen"]
+    OPPDATER["Oppdater eksisterende sak og dialog<br/>ved ny innsending"]
+    PDF["fp-dokgen<br/>Generer PDF"]
+    JOARK["Joark<br/>Journalfør XML og PDF<br/>på fp-sak-saken når saksnummer finnes"]
+
+    ARBEIDSGIVER --> FRONTEND
+    FRONTEND -->|"Send inntektsmelding"| MOTTAK
+    MOTTAK --> FINNES
+    FINNES -->|"Endring"| GJENBRUK
+    FINNES -->|"Første innsending"| FPSAK
+    FPSAK -->|"Saksnummer ved én åpen sak<br/>Skjæringstidspunkt for UREGISTRERT"| OPPRETT
+    GJENBRUK --> LAGRE
+    OPPRETT --> LAGRE
+    LAGRE -.->|"Ny forespørsel: forespørsel.opprett.sak"| PORTAL
+    PORTAL -.->|"Neste task: forespørsel.opprettDialog"| DIALOG
+    DIALOG -.->|"Neste tasks: ferdigstill sak og dialog"| FULLFOR
+    LAGRE -.->|"Eksisterende forespørsel: oppdater sak, deretter dialog"| OPPDATER
+    LAGRE -.->|"ProsessTask: mottaInntektsmelding.oversendJoark"| PDF
+    PDF --> JOARK
 ```
 
 Heltrukne piler viser den funksjonelle flyten. Stiplede piler viser arbeid som utføres asynkront med ProsessTask.
@@ -125,15 +240,15 @@ Det finnes ingen ordinær overgang som gjenåpner en `UTGÅTT` forespørsel. Ved
 
 ### Hva utløser endringene?
 
-| Hendelse | Virkning på forespørselen |
-|----------|--------------------------|
-| `fp-sak` bestiller én forespørsel (`/foresporsel/opprett-en`) | En identisk, ikke-utgått forespørsel gjenbrukes. Ellers settes tidligere ikke-utgåtte forespørsler for samme sak, aktør og arbeidsgiver til `UTGÅTT`, og en ny opprettes. Også en tidligere `FERDIG` forespørsel kan dermed bli `UTGÅTT`. |
-| `fp-sak` sender komplett liste (`/foresporsel/opprett-komplett`) | Forespørsler bestilt av fagsystemet for aktuell sak, aktør og ytelse settes til `UTGÅTT` dersom arbeidsgiveren mangler i listen. En tom liste fjerner alle slike behov. Arbeidsgiverinitierte forespørsler omfattes ikke av denne oppryddingen. |
-| Første uttaksdato endres for en eksisterende forespørsel i komplett liste | Datoene oppdateres på samme forespørsel, tidligere verdier lagres i historikk, og eksterne oppdateringer legges i kø. Statusen beholdes, også når den er `FERDIG`. Hvis bare skjæringstidspunktet endres, mens første uttaksdato er lik, returnerer denne flyten uten å oppdatere datoene. |
-| Arbeidsgiver sender inn via frontend eller inntektsmelding-API-et | En åpen forespørsel settes til `FERDIG`. Ved ny innsending på en `FERDIG` forespørsel beholdes statusen, og eksterne oppdateringer legges i kø. |
-| `fp-sak` kaller `/foresporsel/lukk` | Åpne forespørsler som matcher sak og eventuelt arbeidsgiver og skjæringstidspunkt, settes til `FERDIG`. Dette er et lukkesignal, ikke mottak eller journalføring av selve inntektsmeldingen. |
-| `fp-sak` kaller `/foresporsel/sett-til-utgatt` | Åpne forespørsler som matcher filtrene, settes til `UTGÅTT`. Forvaltning og opprydding kan også sette forespørsler til `UTGÅTT`. |
-| Saksbehandler sender ny beskjed (`/foresporsel/ny-beskjed`) | Krever en åpen forespørsel og endrer ikke statusen. |
+| Hendelse | Virkning på forespørselen                                                                                                                                                                                                                                                                                                                                                         |
+|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `fp-sak` bestiller én forespørsel (`/foresporsel/opprett-en`) | En identisk, ikke-utgått forespørsel gjenbrukes. Kan oppdatere eksisterende forespørsel om eksisterende forespørsel er `UNDER_BEHANDLING` eller `FERDIG` og første uttaksdato er endret.                                                                                                                                                                                          |
+| `fp-sak` sender komplett liste (`/foresporsel/opprett-komplett`) | Oppretter forespørsel for alle organisasjonernummer i requesen. Nylig opprettede forespørsler får status `UNDER_BEHANDLING`. Hvis det finnes forespørsler på saken fra før som gjelder for organisasjonsnummer som ikke ligger i listen settes disse til `UTGÅTT`. En tom liste fjerner alle slike behov. Arbeidsgiverinitierte forespørsler omfattes ikke av denne oppryddingen. |
+| Første uttaksdato endres for en eksisterende forespørsel i komplett liste | Datoene oppdateres på samme forespørsel, tidligere verdier lagres i historikk, og eksterne oppdateringer legges i kø. Statusen beholdes, også når den er `FERDIG`. Hvis bare skjæringstidspunktet endres, mens første uttaksdato er lik, returnerer denne flyten uten å oppdatere datoene.                                                                                        |
+| Arbeidsgiver sender inn via frontend eller inntektsmelding-API-et | En åpen forespørsel settes til `FERDIG`. Ved ny innsending på en `FERDIG` forespørsel beholdes statusen, og eksterne oppdateringer legges i kø.                                                                                                                                                                                                                                   |
+| `fp-sak` kaller `/foresporsel/lukk` | Åpne forespørsler som matcher sak og eventuelt arbeidsgiver og skjæringstidspunkt, settes til `FERDIG`. Dette er et lukkesignal, ikke mottak eller journalføring av selve inntektsmeldingen.                                                                                                                                                                                      |
+| `fp-sak` kaller `/foresporsel/sett-til-utgatt` | Åpne forespørsler som matcher filtrene, settes til `UTGÅTT`. Forvaltning og opprydding kan også sette forespørsler til `UTGÅTT`.                                                                                                                                                                                                                                                  |
+| Saksbehandler sender ny beskjed (`/foresporsel/ny-beskjed`) | Krever en åpen forespørsel og endrer ikke statusen. Sender en ny melding på min-side-arbeidsgiver og dialogporten. Gir ekstern varsling.                                                                                                                                                                                                                                          |
 
 Flytene er implementert i [ForespørselBehandlingTjeneste](src/main/java/no/nav/foreldrepenger/inntektsmelding/forespørsel/tjenester/ForespørselBehandlingTjeneste.java)
 og [FellesMottakTjeneste](src/main/java/no/nav/foreldrepenger/inntektsmelding/inntektsmelding/FellesMottakTjeneste.java).
