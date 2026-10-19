@@ -415,6 +415,21 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
         assertThat(resultat).hasSize(1);
     }
     @Test
+    void skal_sette_unikt_loepe_nummer_ved_lagring() {
+        var orgnr = "999999999";
+        lagreInntektsmelding("9999999999999", orgnr, Ytelsetype.FORELDREPENGER);
+        lagreInntektsmelding("8888888888888", orgnr, Ytelsetype.FORELDREPENGER);
+        lagreInntektsmelding("7777777777777", orgnr, Ytelsetype.SVANGERSKAPSPENGER);
+
+        var resultat = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null, null, null, null, null);
+
+        assertThat(resultat).hasSize(3)
+            .allSatisfy(im -> assertThat(im.getLoepeNummer()).isNotNull())
+            .extracting(InntektsmeldingEntitet::getLoepeNummer)
+            .doesNotHaveDuplicates();
+    }
+
+    @Test
     void skal_filtrere_på_loepenr_større_enn_fraLoepenr() {
         var orgnr = "999999999";
         lagreInntektsmelding("9999999999999", orgnr, Ytelsetype.FORELDREPENGER);
@@ -435,17 +450,18 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
     }
 
     @Test
-    void skal_sortere_nyeste_først() {
+    void skal_sortere_stigende_på_id_uavhengig_av_opprettet_tidspunkt() {
         var orgnr = "999999999";
-        var im1 = lagInntektsmeldingEntitet("9999999999999", orgnr, Ytelsetype.FORELDREPENGER, LocalDateTime.now().minusDays(2));
-        var im2 = lagInntektsmeldingEntitet("9999999999999", orgnr, Ytelsetype.FORELDREPENGER, LocalDateTime.now());
+        var im1 = lagInntektsmeldingEntitet("9999999999999", orgnr, Ytelsetype.FORELDREPENGER, LocalDateTime.now());
+        var im2 = lagInntektsmeldingEntitet("9999999999999", orgnr, Ytelsetype.FORELDREPENGER, LocalDateTime.now().minusDays(2));
         inntektsmeldingRepository.lagreInntektsmelding(im1);
         inntektsmeldingRepository.lagreInntektsmelding(im2);
 
         var resultat = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null, null, null, null, null);
 
         assertThat(resultat).hasSize(2);
-        assertThat(resultat.getFirst().getOpprettetTidspunkt()).isAfter(resultat.getLast().getOpprettetTidspunkt());
+        assertThat(resultat.getFirst().getId()).isLessThan(resultat.getLast().getId());
+        assertThat(resultat.getFirst().getUuid()).isEqualTo(im1.getUuid());
     }
 
     @Test

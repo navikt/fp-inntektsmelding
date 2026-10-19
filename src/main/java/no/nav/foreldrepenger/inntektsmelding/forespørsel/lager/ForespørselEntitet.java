@@ -8,6 +8,9 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.hibernate.annotations.Generated;
+import org.hibernate.generator.EventType;
+
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
@@ -39,6 +42,10 @@ public class ForespørselEntitet {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "GLOBAL_PK_SEQ_GENERATOR")
     private Long id;
+
+    @Generated(event = EventType.INSERT)
+    @Column(name = "loepe_nummer", insertable = false, updatable = false)
+    private Long loepeNummer;
 
     @Column(name = "uuid", nullable = false, updatable = false)
     private UUID uuid;
@@ -126,6 +133,10 @@ public class ForespørselEntitet {
 
     public Long getId() {
         return id;
+    }
+
+    public Long getLoepeNummer() {
+        return loepeNummer;
     }
 
     public UUID getUuid() {
