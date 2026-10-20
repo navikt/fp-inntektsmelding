@@ -2,6 +2,7 @@ package no.nav.foreldrepenger.inntektsmelding.forespørsel.rest;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -11,12 +12,14 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ArbeidsgiverMedStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.OrganisasjonsnummerDto;
 
 import org.slf4j.Logger;
@@ -135,10 +138,11 @@ public class ForespørselRest {
             request.skjæringstidspunkt(),
             request.førsteUttaksdato());
         var ytelsetype = KodeverkMapper.mapYtelsetype(request.ytelsetype());
+        var orgnrMedStatus = hentListeMedOrgnrOgStatus(request);
         var resultater = forespørselBehandlingTjeneste.håndterKomplettListeMedForespørsler(request.skjæringstidspunkt(),
             ytelsetype,
             AktørId.fra(request.aktørId().id()),
-            request.organisasjonsnummer().stream().map(OrganisasjonsnummerDto::orgnr).map(Arbeidsgiver::fra).toList(),
+            orgnrMedStatus,
             Saksnummer.fra(request.fagsakSaksnummer().saksnr()),
             request.førsteUttaksdato());
 
@@ -149,6 +153,25 @@ public class ForespørselRest {
             .toList();
         resultater.forEach(par -> loggOpprettetMetrikk(request.ytelsetype(), par.resultat()));
         return Response.ok(new OpprettForespørselRespons(organisasjonsnumreMedStatus)).build();
+    }
+
+    private List<ArbeidsgiverMedStatus> hentListeMedOrgnrOgStatus(OpprettFlereForespørslerRequest request) {
+
+        if (request.organisasjonsnummerMedStatus() != null) {
+            if (request.organisasjonsnummer() != null) {
+                var orgnumreUtenStatus = request.organisasjonsnummer().stream().map(OrganisasjonsnummerDto::orgnr).toList();
+                var orgnumreMedStatus = request.organisasjonsnummerMedStatus().stream().map(p -> p.orgnummer().orgnr()).toList();
+                var unikeOrgnumreUtenStatus = new HashSet<>(orgnumreUtenStatus);
+                var unikeOrgnumreMedStatus = new HashSet<>(orgnumreMedStatus);
+                if (unikeOrgnumreUtenStatus.size() != orgnumreUtenStatus.size()
+                    || unikeOrgnumreMedStatus.size() != orgnumreMedStatus.size()
+                    || !unikeOrgnumreUtenStatus.equals(unikeOrgnumreMedStatus)) {
+                    throw new BadRequestException("Listene må inneholde samme organisasjonsnumre uten duplikater.");
+                }
+            }
+            return request.organisasjonsnummerMedStatus().stream().map(p -> new ArbeidsgiverMedStatus(Arbeidsgiver.fra(p.orgnummer().orgnr()), p.erInntektsmeldingMottatt())).toList();
+        }
+        return request.organisasjonsnummer().stream().map(r -> new ArbeidsgiverMedStatus(Arbeidsgiver.fra(r.orgnr()), false)).toList();
     }
 
     private void loggOpprettetMetrikk(YtelseTypeDto ytelsetype, ForespørselResultat resultat) {

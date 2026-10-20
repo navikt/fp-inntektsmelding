@@ -105,7 +105,7 @@ public class ForespørselTjeneste {
         return forespørselRepository.finnÅpenForespørsel(fagsakSaksnummer.saksnummer(), arbeidsgiver.orgnr()).map(ForespørselDtoMapper::mapFraEntitet);
     }
 
-    public Optional<ForespørselDto> finnArbeidsgiversÅpneForespørslerPåSak(Saksnummer fagsakSaksnummer, Arbeidsgiver arbeidsgiver) {
+    public Optional<ForespørselDto> finnArbeidsgiversÅpneForespørselPåSak(Saksnummer fagsakSaksnummer, Arbeidsgiver arbeidsgiver) {
         return forespørselRepository.finnArbeidsgiversÅpneForespørselPåSak(fagsakSaksnummer.saksnummer(), arbeidsgiver.orgnr()).map(ForespørselDtoMapper::mapFraEntitet);
     }
 
