@@ -3,6 +3,7 @@ package no.nav.foreldrepenger.inntektsmelding.server.app.internal.rest;
 import static jakarta.ws.rs.core.Response.Status.SERVICE_UNAVAILABLE;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Any;
@@ -63,7 +64,20 @@ public class HealtCheckRest {
     @GET
     @Path("/preStop")
     public Response preStop() {
-        starter.stopServices();
+        var started = System.nanoTime();
+
+        try {
+            starter.stopServices();
+        } finally {
+            var elapsedMillis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started);
+            try {
+                // vi bruker minst 5s på /preStop pga tilfeller hvor consumer får 503 ved nedskalering
+                Thread.sleep(Math.max(0, 5000 - elapsedMillis));
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+
         return Response.ok().build();
     }
 }
