@@ -67,73 +67,7 @@ Oppdatert `schema.graphql` kan hentes [herfra](https://github.com/navikt/arbeids
 - `Inntektskomponenten` — Register med informasjon om en persons inntekter
 - `Aareg` — Register med informasjon om en persons arbeidsforhold
 
-### Registernes plass i inntektsmeldingsflyten
-
-Registeropplysningene har to roller: De gir `fp-sak` grunnlag for å finne hvilke arbeidsgivere vi trenger
-inntektsmelding fra, og de hjelper arbeidsgiveren med å fylle ut meldingen.
-`fp-abakus` lagrer behandlingens inntekts-, arbeids- og ytelsesgrunnlag (IAY-grunnlaget).
-`fp-inntektsmelding` gjør egne registeroppslag for dialogen, ikke via behandlingens grunnlag i Abakus.
-
-```mermaid
-flowchart TD
-    subgraph REGISTRE["Registerkilder"]
-        AAREG["Aa-reg<br/>Arbeidsforhold og ansettelsesperioder"]
-        INNTEKT["Inntektskomponenten<br/>Historisk rapportert inntekt"]
-        PDL["PDL<br/>Personopplysninger"]
-        EREG["EREG<br/>Virksomhetsopplysninger"]
-    end
-
-    subgraph BEHANDLING["Registergrunnlag og behov for inntektsmelding"]
-        BESTILL["fp-sak<br/>Bestill registerinnhenting for behandlingen"]
-        ABAKUS_REG["fp-abakus<br/>Hent og lagre registeropplysninger<br/>i behandlingens IAY-grunnlag"]
-        BEHOV["fp-sak<br/>Utled påkrevde arbeidsgivere fra arbeidsforhold,<br/>søknad og skjæringstidspunkt"]
-        FORESPORSEL["fp-inntektsmelding<br/>Opprett eller oppdater forespørsler"]
-    end
-
-    subgraph UTFYLLING["Egne registeroppslag under utfylling"]
-        DIALOGGRUNNLAG["fp-inntektsmelding<br/>Hent opplysninger og forhåndsutfyll skjema"]
-        SKJEMA["Arbeidsgiver i frontend<br/>Kontroller og suppler opplysningene"]
-    end
-
-    subgraph MOTTAK["Arbeidsgiverens melding tilbake til behandlingen"]
-        LPS["Arbeidsgiverens LPS<br/>Sender via fp-inntektsmelding-api"]
-        IM["fp-inntektsmelding<br/>Lagre innsendt inntektsmelding"]
-        DOKUMENT["Joark og fp-mottak<br/>Journalføring og dokumentmottak i fp-sak"]
-        ABAKUS_IM["fp-abakus<br/>Lagre mottatt IM i IAY-grunnlaget"]
-        VURDERING["fp-sak<br/>Bruk registeropplysninger og inntektsmelding<br/>i videre saksbehandling"]
-    end
-
-    BESTILL --> ABAKUS_REG
-    AAREG -->|"Arbeidsforhold"| ABAKUS_REG
-    INNTEKT -->|"Inntektsopplysninger"| ABAKUS_REG
-    ABAKUS_REG -->|"Behandlingens registergrunnlag"| BEHOV
-    BEHOV -->|"Bestill forespørsler"| FORESPORSEL
-    FORESPORSEL -->|"Lenke via arbeidsgiverportalene"| SKJEMA
-
-    AAREG -->|"Arbeidsforhold"| DIALOGGRUNNLAG
-    INNTEKT -->|"Lønn til forhåndsutfylling"| DIALOGGRUNNLAG
-    PDL -->|"Personopplysninger"| DIALOGGRUNNLAG
-    EREG -->|"Blant annet virksomhetsnavn"| DIALOGGRUNNLAG
-    DIALOGGRUNNLAG --> SKJEMA
-
-    SKJEMA -->|"Send inn"| IM
-    LPS --> IM
-    IM -.->|"Asynkron dokumentflyt"| DOKUMENT
-    DOKUMENT -->|"fp-sak lagrer IM-opplysningene i Abakus"| ABAKUS_IM
-    ABAKUS_REG -->|"Registeropplysninger"| VURDERING
-    ABAKUS_IM -->|"Arbeidsgiverens opplysninger"| VURDERING
-```
-
-Diagrammet fremhever registrene som brukes i denne flyten, ikke alle datakildene i IAY-grunnlaget.
-Arbeidsgiver kan også starte innsendingen uten en bestilt forespørsel, som vist i diagrammet for arbeidsgiverinitiert innsending.
-For nyansatt-flyten forhåndsutfyller tjenesten ikke inntektene.
-
-**Registeropplysninger er ikke det samme som en mottatt inntektsmelding.**
-Historisk rapportert lønn støtter utfyllingen, men erstatter ikke arbeidsgiverens innsendte inntekts- og refusjonsopplysninger.
-Disse lagres i Abakus som egne opplysninger sammen med registergrunnlaget.
-At forespørselen er `FERDIG` i `fp-inntektsmelding`, betyr ikke at dokumentflyten er fullført eller at IM-en er tilgjengelig i behandlingens grunnlag.
-
-### Plass i verdikjeden ved vanlig innsending
+### Verdikjeden ved vanlig innsending
 
 ```mermaid
 flowchart TD
@@ -167,7 +101,7 @@ flowchart TD
     FERDIG -.->|"ProsessTask: sak, deretter dialog"| LUKK
     FPSAK -->|"Lukk forespørsel etter ekstern innsending"| FERDIG
 ```
-### Plass i verdikjeden ved arbeidsgiverinitiert innsending
+### Verdikjeden ved arbeidsgiverinitiert innsending
 
 Arbeidsgiver starter innsendingen uten en bestilling fra `fp-sak`.
 Diagrammet viser innsending via frontend for `NYANSATT` og `UREGISTRERT`.
