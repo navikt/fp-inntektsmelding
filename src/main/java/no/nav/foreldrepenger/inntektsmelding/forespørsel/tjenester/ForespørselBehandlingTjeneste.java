@@ -115,8 +115,8 @@ public class ForespørselBehandlingTjeneste {
                                                              Arbeidsgiver arbeidsgiver,
                                                              Saksnummer fagsakSaksnummer,
                                                              LocalDate førsteUttaksdato) {
-        var eksiterendeForespørsel = forespørselTjeneste.finnArbeidsgiversÅpneForespørselPåSak(fagsakSaksnummer, arbeidsgiver);
-        if (eksiterendeForespørsel.isEmpty()) {
+        var eksisterendeForespørsel = forespørselTjeneste.finnArbeidsgiversÅpneForespørselPåSak(fagsakSaksnummer, arbeidsgiver);
+        if (eksisterendeForespørsel.isEmpty()) {
             // Oppretter og ferdigstiller forespørsel i lokal database
             var forespørselUuid = forespørselTjeneste.opprettForespørsel(skjæringstidspunkt,
                 ytelsetype,
@@ -143,7 +143,7 @@ public class ForespørselBehandlingTjeneste {
             prosessTaskTjeneste.lagre(taskGruppe);
             return ForespørselResultat.LUKKET_FORESPØRSEL_OPPRETTET;
         }
-        var forespørselDto = eksiterendeForespørsel.get();
+        var forespørselDto = eksisterendeForespørsel.get();
         if (forespørselDto.status().equals(ForespørselStatus.UNDER_BEHANDLING)) {
             LOG.warn("Forespørsel på saksnummer {} er åpen, selv om fpsak sier at inntektsmelding er mottatt. Forespørsel uuid: {}", fagsakSaksnummer, forespørselDto.uuid());
         }
