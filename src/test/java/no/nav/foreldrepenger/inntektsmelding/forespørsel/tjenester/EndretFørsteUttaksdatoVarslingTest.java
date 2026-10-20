@@ -8,6 +8,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -186,17 +187,25 @@ class EndretFørsteUttaksdatoVarslingTest {
     }
 
     @Test
-    void sak_task_skal_bruke_siste_historiske_dato_og_dato_fra_tasken() {
+    void sak_task_skal_sende_task_id_og_beholde_den_ved_retry() {
         var gjeldende = forespørsel(NY_DATO, DIALOG_UUID);
         when(forespørselTjeneste.hentForespørsel(FORESPØRSEL_UUID)).thenReturn(gjeldende);
         var task = new OppdaterSakMedEndretFørsteUttaksdatoTask(forespørselTjeneste, minSideArbeidsgiverTjeneste);
-        var data = taskData();
+        var data = spy(taskData());
+        when(data.getId()).thenReturn(123L);
 
         task.doTask(data);
         task.doTask(data);
 
         verify(minSideArbeidsgiverTjeneste, times(2))
-            .sendBeskjedOmEndretFørsteUttaksdato(gjeldende, TIDLIGERE_DATO, gjeldende.førsteUttaksdato());
+            .sendBeskjedOmEndretFørsteUttaksdato(gjeldende, TIDLIGERE_DATO, gjeldende.førsteUttaksdato(), 123L);
+
+        var nyTask = spy(taskData());
+        when(nyTask.getId()).thenReturn(124L);
+        task.doTask(nyTask);
+
+        verify(minSideArbeidsgiverTjeneste)
+            .sendBeskjedOmEndretFørsteUttaksdato(gjeldende, TIDLIGERE_DATO, gjeldende.førsteUttaksdato(), 124L);
         verifyNoInteractions(dialogportenTjeneste);
     }
 

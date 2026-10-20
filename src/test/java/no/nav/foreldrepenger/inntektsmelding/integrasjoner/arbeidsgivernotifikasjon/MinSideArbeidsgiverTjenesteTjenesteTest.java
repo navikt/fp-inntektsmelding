@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -483,7 +484,7 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
         var gjeldendeDato = LocalDate.of(2024, 7, 1);
         var forespørsel = lagForespørsel(uuid, "oppgave-1", "sak-1", gjeldendeDato);
 
-        tjeneste.sendBeskjedOmEndretFørsteUttaksdato(forespørsel, tidligereDato, nyDato);
+        tjeneste.sendBeskjedOmEndretFørsteUttaksdato(forespørsel, tidligereDato, nyDato, 123L);
 
         var beskjedCaptor = ArgumentCaptor.forClass(NyBeskjedMutationRequest.class);
         verify(klient).opprettBeskjedOgVarsling(beskjedCaptor.capture(), any(NyBeskjedResultatResponseProjection.class));
@@ -493,7 +494,7 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
         assertThat(nyBeskjed.getNotifikasjon().getLenke()).isEqualTo(INNTEKTSMELDING_SKJEMA_LENKE + "/" + uuid);
         assertThat(nyBeskjed.getMetadata().getGrupperingsid()).isEqualTo(uuid.toString());
         assertThat(nyBeskjed.getMetadata().getVirksomhetsnummer()).isEqualTo(ORGNR);
-        assertThat(nyBeskjed.getMetadata().getEksternId()).startsWith("endret-uttaksdato-");
+        assertThat(nyBeskjed.getMetadata().getEksternId()).isEqualTo("endret-uttaksdato-" + uuid + "-123");
         assertThat(nyBeskjed.getEksterneVarsler()).isEmpty();
 
         // Metadata følger gjeldende forespørsel, mens meldingen beskriver den kølagte endringen.
@@ -521,7 +522,7 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
             .oppgaveId(null)
             .build();
 
-        tjeneste.sendBeskjedOmEndretFørsteUttaksdato(forespørsel, LocalDate.of(2024, 6, 1), LocalDate.of(2024, 6, 15));
+        tjeneste.sendBeskjedOmEndretFørsteUttaksdato(forespørsel, LocalDate.of(2024, 6, 1), LocalDate.of(2024, 6, 15), 123L);
 
         verify(klient).opprettBeskjedOgVarsling(any(), any(NyBeskjedResultatResponseProjection.class));
         verify(klient, never()).oppdaterSakTilleggsinformasjon(any(), any());
@@ -534,10 +535,37 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
         var tidligereDato = LocalDate.of(2024, 6, 1);
         var nyDato = LocalDate.of(2024, 6, 15);
 
-        assertThatThrownBy(() -> tjeneste.sendBeskjedOmEndretFørsteUttaksdato(forespørsel, tidligereDato, nyDato))
+        assertThatThrownBy(() -> tjeneste.sendBeskjedOmEndretFørsteUttaksdato(forespørsel, tidligereDato, nyDato, 123L))
             .isInstanceOf(IllegalStateException.class)
             .hasMessage("Mangler arbeidsgiverNotifikasjonSakId for forespørsel " + uuid);
 
         verifyNoInteractions(klient);
+    }
+
+    @Test
+    void datoendringer_tilbake_til_samme_dato_skal_ha_unike_eksternider_mens_retry_beholder_id() {
+        var uuid = UUID.randomUUID();
+        var opprinneligDato = LocalDate.of(2026, 8, 5);
+        var førsteDato = LocalDate.of(2026, 8, 3);
+        var andreDato = LocalDate.of(2026, 7, 13);
+        var forespørsel = lagForespørsel(uuid, "oppgave-1", "sak-1", førsteDato);
+
+        tjeneste.sendBeskjedOmEndretFørsteUttaksdato(forespørsel, opprinneligDato, førsteDato, 101L);
+        tjeneste.sendBeskjedOmEndretFørsteUttaksdato(forespørsel, opprinneligDato, førsteDato, 101L);
+        tjeneste.sendBeskjedOmEndretFørsteUttaksdato(forespørsel, førsteDato, andreDato, 102L);
+        tjeneste.sendBeskjedOmEndretFørsteUttaksdato(forespørsel, andreDato, førsteDato, 103L);
+
+        var beskjedCaptor = ArgumentCaptor.forClass(NyBeskjedMutationRequest.class);
+        verify(klient, times(4)).opprettBeskjedOgVarsling(beskjedCaptor.capture(), any(NyBeskjedResultatResponseProjection.class));
+        var eksternider = beskjedCaptor.getAllValues().stream()
+            .map(request -> (NyBeskjedInput) request.getInput().get("nyBeskjed"))
+            .map(beskjed -> beskjed.getMetadata().getEksternId())
+            .toList();
+
+        assertThat(eksternider).containsExactly(
+            "endret-uttaksdato-" + uuid + "-101",
+            "endret-uttaksdato-" + uuid + "-101",
+            "endret-uttaksdato-" + uuid + "-102",
+            "endret-uttaksdato-" + uuid + "-103");
     }
 }
