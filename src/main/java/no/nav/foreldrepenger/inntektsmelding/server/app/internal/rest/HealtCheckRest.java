@@ -73,7 +73,7 @@ public class HealtCheckRest {
             try {
                 // vi bruker minst 5s på /preStop pga tilfeller hvor consumer får 503 ved nedskalering
                 Thread.sleep(Math.max(0, 5000 - elapsedMillis));
-            } catch (InterruptedException e) {
+            } catch (InterruptedException _) {
                 Thread.currentThread().interrupt();
             }
         }
