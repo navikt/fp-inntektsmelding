@@ -41,7 +41,9 @@ public class ForespørselRepository {
 
     public UUID lagreForespørsel(ForespørselEntitet forespørselEntitet) {
         LOG.info("ForespørselRepository: lagrer forespørsel entitet: {}", forespørselEntitet);
-        forespørselEntitet.setLoepeNummer(hentNesteLoepeNummer());
+        if (forespørselEntitet.getLoepeNummer() == null) {
+            forespørselEntitet.setLoepeNummer(hentNesteLoepeNummer());
+        }
         entityManager.persist(forespørselEntitet);
         entityManager.flush();
         return forespørselEntitet.getUuid();

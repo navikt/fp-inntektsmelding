@@ -39,7 +39,9 @@ public class InntektsmeldingRepository {
     }
 
     public Long lagreInntektsmelding(InntektsmeldingEntitet inntektsmeldingEntitet) {
-        inntektsmeldingEntitet.setLoepeNummer(hentNesteLoepeNummer());
+        if (inntektsmeldingEntitet.getLoepeNummer() == null) {
+            inntektsmeldingEntitet.setLoepeNummer(hentNesteLoepeNummer());
+        }
         entityManager.persist(inntektsmeldingEntitet);
         entityManager.flush();
         return inntektsmeldingEntitet.getId();

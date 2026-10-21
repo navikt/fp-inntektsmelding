@@ -430,6 +430,21 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
     }
 
     @Test
+    void skal_beholde_loepe_nummer_ved_gjentatt_lagring() {
+        var inntektsmelding = lagInntektsmeldingEntitet("999999999", Ytelsetype.FORELDREPENGER, LocalDateTime.now());
+        inntektsmeldingRepository.lagreInntektsmelding(inntektsmelding);
+        var opprinneligLoepeNummer = inntektsmelding.getLoepeNummer();
+        assertThat(opprinneligLoepeNummer).isNotNull();
+
+        inntektsmeldingRepository.lagreInntektsmelding(inntektsmelding);
+
+        assertThat(inntektsmelding.getLoepeNummer()).isEqualTo(opprinneligLoepeNummer);
+        getEntityManager().clear();
+        var hentet = inntektsmeldingRepository.finnInntektsmelding(inntektsmelding.getUuid()).orElseThrow();
+        assertThat(hentet.getLoepeNummer()).isEqualTo(opprinneligLoepeNummer);
+    }
+
+    @Test
     void skal_filtrere_på_loepenr_større_enn_fraLoepenr() {
         var orgnr = "999999999";
         lagreInntektsmelding("9999999999999", orgnr, Ytelsetype.FORELDREPENGER);
