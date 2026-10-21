@@ -452,8 +452,8 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
     @Test
     void skal_sortere_stigende_på_loepe_nummer_uavhengig_av_opprettet_tidspunkt() {
         var orgnr = "999999999";
-        var im1 = lagInntektsmeldingEntitet("9999999999999", orgnr, Ytelsetype.FORELDREPENGER, LocalDateTime.now());
-        var im2 = lagInntektsmeldingEntitet("9999999999999", orgnr, Ytelsetype.FORELDREPENGER, LocalDateTime.now().minusDays(2));
+        var im1 = lagInntektsmeldingEntitet(orgnr, Ytelsetype.FORELDREPENGER, LocalDateTime.now());
+        var im2 = lagInntektsmeldingEntitet(orgnr, Ytelsetype.FORELDREPENGER, LocalDateTime.now().minusDays(2));
         inntektsmeldingRepository.lagreInntektsmelding(im1);
         inntektsmeldingRepository.lagreInntektsmelding(im2);
 
@@ -468,7 +468,7 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
     void skal_filtrere_bort_inntektsmeldinger_overstyrt_av_saksbehandler_med_kildesystem_fpsak() {
         var orgnr = "999999999";
         lagreInntektsmelding("9999999999999", orgnr, Ytelsetype.FORELDREPENGER);
-        lagreOverstyrtInntektsmeldingUtenForespørsel("9999999999999", orgnr, Ytelsetype.FORELDREPENGER);
+        lagreOverstyrtInntektsmeldingUtenForespørsel("9999999999999", orgnr);
 
         var resultat = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null, null, null, null, null);
 
@@ -490,7 +490,8 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
         inntektsmeldingRepository.lagreInntektsmelding(entitet);
     }
 
-    private InntektsmeldingEntitet lagInntektsmeldingEntitet(String aktørId, String orgnr, Ytelsetype ytelsetype, LocalDateTime opprettetTidspunkt) {
+    private InntektsmeldingEntitet lagInntektsmeldingEntitet(String orgnr, Ytelsetype ytelsetype, LocalDateTime opprettetTidspunkt) {
+        var aktørId = "9999999999999";
         return InntektsmeldingEntitet.builder()
             .medAktørId(new AktørIdEntitet(aktørId))
             .medKontaktperson(new KontaktpersonEntitet("Test", "999999999"))
@@ -516,10 +517,10 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
         return forespørselEntitet;
     }
 
-    private void lagreOverstyrtInntektsmeldingUtenForespørsel(String aktørId, String orgnr, Ytelsetype ytelsetype) {
+    private void lagreOverstyrtInntektsmeldingUtenForespørsel(String aktørId, String orgnr) {
         var entitet = InntektsmeldingEntitet.builder()
             .medAktørId(new AktørIdEntitet(aktørId))
-            .medYtelsetype(ytelsetype)
+            .medYtelsetype(Ytelsetype.FORELDREPENGER)
             .medMånedInntekt(BigDecimal.valueOf(4000))
             .medStartDato(LocalDate.now())
             .medArbeidsgiverIdent(orgnr)

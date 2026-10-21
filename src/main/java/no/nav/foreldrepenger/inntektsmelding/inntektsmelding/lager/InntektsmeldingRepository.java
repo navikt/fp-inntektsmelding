@@ -12,11 +12,10 @@ import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.Predicate;
 
-import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingApiStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
@@ -47,7 +46,7 @@ public class InntektsmeldingRepository {
     }
 
     private long hentNesteLoepeNummer() {
-        return (Long) entityManager.createNativeQuery("select nextval('seq_inntektsmelding_loepe_nummer')", Long.class).getSingleResult();
+        return ((Number) entityManager.createNativeQuery("select nextval('seq_inntektsmelding_loepe_nummer')").getSingleResult()).longValue();
     }
 
     public List<InntektsmeldingEntitet> hentInntektsmeldingerSortertNyesteFørst(AktørIdEntitet aktørId, String arbeidsgiverIdent, LocalDate startDato, Ytelsetype ytelsetype) {
