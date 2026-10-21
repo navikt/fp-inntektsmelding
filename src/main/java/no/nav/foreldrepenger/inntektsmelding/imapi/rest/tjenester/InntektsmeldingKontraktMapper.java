@@ -44,7 +44,7 @@ public class InntektsmeldingKontraktMapper {
         var forespørsel = inntektsmelding.getForespørsel()
             .orElseThrow(() -> new IllegalStateException("InntektsmeldingKontraktMapper: Finner ikke forespørsel for inntektsmelding med id:" + inntektsmelding.getId()));
         return new HentInntektsmeldingResponse(
-            inntektsmelding.getId(),
+            inntektsmelding.getLoepeNummer(),
             inntektsmelding.getInntektsmeldingUuid(),
             forespørsel.uuid(),
             new FødselsnummerDto(personIdent.getIdent()),

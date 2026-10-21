@@ -41,9 +41,14 @@ public class ForespørselRepository {
 
     public UUID lagreForespørsel(ForespørselEntitet forespørselEntitet) {
         LOG.info("ForespørselRepository: lagrer forespørsel entitet: {}", forespørselEntitet);
+        forespørselEntitet.setLoepeNummer(hentNesteLoepeNummer());
         entityManager.persist(forespørselEntitet);
         entityManager.flush();
         return forespørselEntitet.getUuid();
+    }
+
+    private long hentNesteLoepeNummer() {
+        return (Long) entityManager.createNativeQuery("select nextval('seq_forespoersel_loepe_nummer')", Long.class).getSingleResult();
     }
 
     public void oppdaterOppgaveId(UUID forespørselUUID, String oppgaveId) {
@@ -272,11 +277,11 @@ public class ForespørselRepository {
             predicates.add(cb.lessThan(root.get(OPPRETTET_TIDSPUNKT), tom.plusDays(1).atStartOfDay()));
         }
         if (fraLoepenr != null) {
-            predicates.add(cb.greaterThan(root.get("id"), fraLoepenr));
+            predicates.add(cb.greaterThan(root.get("loepeNummer"), fraLoepenr));
         }
         cq.where(predicates.toArray(new Predicate[0]));
 
-        cq.orderBy(cb.asc(root.get("id")));
+        cq.orderBy(cb.asc(root.get("loepeNummer")));
         var query = entityManager.createQuery(cq);
         query.setMaxResults(1001);
         var result = query.getResultList();
