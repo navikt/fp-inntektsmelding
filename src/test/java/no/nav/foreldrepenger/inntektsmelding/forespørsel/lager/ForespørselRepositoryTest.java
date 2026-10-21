@@ -73,6 +73,22 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
     }
 
     @Test
+    void skal_beholde_loepe_nummer_ved_gjentatt_lagring() {
+        var uuid = lagreForespørsel(LocalDate.now(), Ytelsetype.FORELDREPENGER, "9999999999999", "999999999", "123", LocalDate.now(),
+            ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var forespørsel = forespørselRepository.hentForespørsel(uuid).orElseThrow();
+        var opprinneligLoepeNummer = forespørsel.getLoepeNummer();
+        assertThat(opprinneligLoepeNummer).isNotNull();
+
+        forespørselRepository.lagreForespørsel(forespørsel);
+
+        assertThat(forespørsel.getLoepeNummer()).isEqualTo(opprinneligLoepeNummer);
+        getEntityManager().clear();
+        var hentet = forespørselRepository.hentForespørsel(uuid).orElseThrow();
+        assertThat(hentet.getLoepeNummer()).isEqualTo(opprinneligLoepeNummer);
+    }
+
+    @Test
     void skal_lagre_forespørsel_bestilt_fra_fagsystem() {
         var uuid = lagreForespørsel(LocalDate.now(),
             Ytelsetype.FORELDREPENGER,
