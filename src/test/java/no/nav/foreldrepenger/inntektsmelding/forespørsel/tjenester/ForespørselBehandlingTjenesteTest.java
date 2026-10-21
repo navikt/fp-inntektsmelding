@@ -960,11 +960,10 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             SAK_ID_2,
             LocalDate.of(2025, 4, 1), ForespørselType.BESTILT_AV_FAGSYSTEM);
 
-        getEntityManager().persist(forespørsel1sak1);
-        getEntityManager().persist(forespørsel1sak2);
-        getEntityManager().persist(forespørsel2sak1);
-        getEntityManager().persist(forespørsel2sak2);
-        getEntityManager().flush();
+        forespørselRepository.lagreForespørsel(forespørsel1sak1);
+        forespørselRepository.lagreForespørsel(forespørsel1sak2);
+        forespørselRepository.lagreForespørsel(forespørsel2sak1);
+        forespørselRepository.lagreForespørsel(forespørsel2sak2);
 
         List<InntektsmeldingForespørselDto> inntektsmeldingForespørselDtos = forespørselBehandlingTjeneste.finnForespørslerForFagsak(Saksnummer.fra(
             SAK_ID));

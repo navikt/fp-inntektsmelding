@@ -436,21 +436,21 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
         lagreInntektsmelding("8888888888888", orgnr, Ytelsetype.FORELDREPENGER);
         lagreInntektsmelding("8888888888888", orgnr, Ytelsetype.SVANGERSKAPSPENGER);
 
-        var lavesteDatabaseId = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null, null, null, null, null).stream()
-            .map(InntektsmeldingEntitet::getId)
+        var lavesteLoepeNummer = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null, null, null, null, null).stream()
+            .map(InntektsmeldingEntitet::getLoepeNummer)
             .min(Long::compareTo)
             .orElseThrow();
 
 
-        var resultat = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, new AktørIdEntitet("8888888888888"), null, null, null, lavesteDatabaseId,
+        var resultat = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, new AktørIdEntitet("8888888888888"), null, null, null, lavesteLoepeNummer,
             null);
 
         assertThat(resultat).hasSize(2);
-        assertThat(resultat.stream().noneMatch(im -> im.getId() <= lavesteDatabaseId)).isTrue();
+        assertThat(resultat.stream().noneMatch(im -> im.getLoepeNummer() <= lavesteLoepeNummer)).isTrue();
     }
 
     @Test
-    void skal_sortere_stigende_på_id_uavhengig_av_opprettet_tidspunkt() {
+    void skal_sortere_stigende_på_loepe_nummer_uavhengig_av_opprettet_tidspunkt() {
         var orgnr = "999999999";
         var im1 = lagInntektsmeldingEntitet("9999999999999", orgnr, Ytelsetype.FORELDREPENGER, LocalDateTime.now());
         var im2 = lagInntektsmeldingEntitet("9999999999999", orgnr, Ytelsetype.FORELDREPENGER, LocalDateTime.now().minusDays(2));
@@ -460,7 +460,7 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
         var resultat = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null, null, null, null, null);
 
         assertThat(resultat).hasSize(2);
-        assertThat(resultat.getFirst().getId()).isLessThan(resultat.getLast().getId());
+        assertThat(resultat.getFirst().getLoepeNummer()).isLessThan(resultat.getLast().getLoepeNummer());
         assertThat(resultat.getFirst().getUuid()).isEqualTo(im1.getUuid());
     }
 

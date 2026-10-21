@@ -379,16 +379,16 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
             "321",
             LocalDate.now(), ForespørselType.BESTILT_AV_FAGSYSTEM);
 
-        var lavesteDatabaseId = forespørselRepository.hentForespørslerFraFilter(orgnr, null, null, null, null, null, null).stream()
-            .map(ForespørselEntitet::getId)
+        var lavesteLoepeNummer = forespørselRepository.hentForespørslerFraFilter(orgnr, null, null, null, null, null, null).stream()
+            .map(ForespørselEntitet::getLoepeNummer)
             .min(Long::compareTo)
             .orElseThrow();
 
         var forespørsler = forespørselRepository.hentForespørslerFraFilter(orgnr, null, null, null,
-            null, LocalDate.now().plusDays(7), lavesteDatabaseId);
+            null, LocalDate.now().plusDays(7), lavesteLoepeNummer);
 
         assertThat(forespørsler).hasSize(2);
-        assertThat(forespørsler.stream().noneMatch(fs -> fs.getId() <= lavesteDatabaseId)).isTrue();
+        assertThat(forespørsler.stream().noneMatch(fs -> fs.getLoepeNummer() <= lavesteLoepeNummer)).isTrue();
     }
 
     @Test
@@ -409,9 +409,9 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
             LocalDate.now(),
             ForespørselType.BESTILT_AV_FAGSYSTEM);
 
-        var førsteId = forespørselRepository.hentForespørsel(førsteUuid).orElseThrow().getId();
-        var andreId = forespørselRepository.hentForespørsel(andreUuid).orElseThrow().getId();
-        assertThat(førsteId).isLessThan(andreId);
+        var førsteLoepeNummer = forespørselRepository.hentForespørsel(førsteUuid).orElseThrow().getLoepeNummer();
+        var andreLoepeNummer = forespørselRepository.hentForespørsel(andreUuid).orElseThrow().getLoepeNummer();
+        assertThat(førsteLoepeNummer).isLessThan(andreLoepeNummer);
 
         oppdaterOpprettetTidspunkt(førsteUuid, LocalDateTime.now());
         oppdaterOpprettetTidspunkt(andreUuid, LocalDateTime.now().minusHours(1));
@@ -419,7 +419,7 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
 
         var forespørsler = forespørselRepository.hentForespørslerFraFilter(orgnr, null, null, null, null, null, null);
 
-        assertThat(forespørsler).extracting(ForespørselEntitet::getId).containsExactly(førsteId, andreId);
+        assertThat(forespørsler).extracting(ForespørselEntitet::getLoepeNummer).containsExactly(førsteLoepeNummer, andreLoepeNummer);
     }
 
     private void oppdaterOpprettetTidspunkt(UUID uuid, LocalDateTime opprettetTidspunkt) {
