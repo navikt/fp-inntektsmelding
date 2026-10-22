@@ -17,10 +17,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import no.nav.foreldrepenger.inntektsmelding.database.JpaExtension;
@@ -901,6 +901,60 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         assertThat(resultat).isEqualTo(NyBeskjedResultat.FORESPØRSEL_FINNES_IKKE);
     }
 
+
+    @Test
+    void komplett_liste_skal_beholde_datoer_på_nyansatt_forespørsel_med_saksnummer() {
+        var arbeidsgiver = Arbeidsgiver.fra(BRREG_ORGNUMMER);
+        var førsteUttaksdatoAGI = FØRSTE_UTTAKSDATO.plusMonths(5);
+        var forespørsel = forespørselBehandlingTjeneste.opprettForespørselForArbeidsgiverInitiertIm(YTELSETYPE,
+            AktørId.fra(AKTØR_ID),
+            arbeidsgiver,
+            førsteUttaksdatoAGI,
+            ArbeidsgiverinitiertÅrsak.NYANSATT,
+            null,
+            Saksnummer.fra(SAKSNUMMER));
+
+        forespørselBehandlingTjeneste.håndterKomplettListeMedForespørsler(SKJÆRINGSTIDSPUNKT,
+            YTELSETYPE,
+            AktørId.fra(AKTØR_ID),
+            List.of(new ArbeidsgiverMedStatus(arbeidsgiver, true)),
+            Saksnummer.fra(SAKSNUMMER),
+            FØRSTE_UTTAKSDATO);
+
+        clearHibernateCache();
+
+        var arbeidsgiverinitiertForespørsel = forespørselRepository.hentForespørsel(forespørsel.uuid()).orElseThrow();
+        assertThat(arbeidsgiverinitiertForespørsel.getFørsteUttaksdato()).isEqualTo(førsteUttaksdatoAGI);
+        assertThat(arbeidsgiverinitiertForespørsel.getForespørselType()).isEqualTo(ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT);
+        assertThat(arbeidsgiverinitiertForespørsel.getSkjæringstidspunkt()).isEmpty();
+    }
+
+    @Test
+    void komplett_liste_skal_endre_datoer_på_uregistrert_forespørsel_med_saksnummer() {
+        var arbeidsgiver = Arbeidsgiver.fra(BRREG_ORGNUMMER);
+        var førsteUttaksdatoAGI = FØRSTE_UTTAKSDATO.plusMonths(1);
+        var forespørsel = forespørselBehandlingTjeneste.opprettForespørselForArbeidsgiverInitiertIm(YTELSETYPE,
+            AktørId.fra(AKTØR_ID),
+            arbeidsgiver,
+            førsteUttaksdatoAGI,
+            ArbeidsgiverinitiertÅrsak.UREGISTRERT,
+            førsteUttaksdatoAGI,
+            Saksnummer.fra(SAKSNUMMER));
+
+        forespørselBehandlingTjeneste.håndterKomplettListeMedForespørsler(SKJÆRINGSTIDSPUNKT,
+            YTELSETYPE,
+            AktørId.fra(AKTØR_ID),
+            List.of(new ArbeidsgiverMedStatus(arbeidsgiver, true)),
+            Saksnummer.fra(SAKSNUMMER),
+            FØRSTE_UTTAKSDATO);
+
+        clearHibernateCache();
+
+        var arbeidsgiverinitiertForespørsel = forespørselRepository.hentForespørsel(forespørsel.uuid()).orElseThrow();
+        assertThat(arbeidsgiverinitiertForespørsel.getFørsteUttaksdato()).isEqualTo(FØRSTE_UTTAKSDATO);
+        assertThat(arbeidsgiverinitiertForespørsel.getForespørselType()).isEqualTo(ForespørselType.ARBEIDSGIVERINITIERT_UREGISTRERT);
+        assertThat(arbeidsgiverinitiertForespørsel.getSkjæringstidspunkt().orElseThrow()).isEqualTo(SKJÆRINGSTIDSPUNKT);
+    }
 
     @Test
     void skal_oppdatere_førsteUttaksdato_for_arbeidsgiverinitert() {
