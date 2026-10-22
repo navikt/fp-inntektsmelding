@@ -31,25 +31,25 @@ import no.nav.vedtak.mapper.json.DefaultJsonMapper;
 @RestClientConfig(tokenConfig = TokenFlow.AZUREAD_CC, endpointProperty = "aareg.rs.url",
     endpointDefault = "https://aareg-services.dev-fss-pub.nais.io",
     scopesProperty = "aareg.scopes", scopesDefault = "api://dev-fss.arbeidsforhold.aareg-services-nais/.default")
-public class AaregRestKlient {
+class AaregRestKlient {
 
     private final RestClient restClient; // Setter på consumer-token fra STS
     private final RestConfig restConfig;
 
-    public AaregRestKlient() {
+    AaregRestKlient() {
         this(RestClient.client());
     }
 
-    public AaregRestKlient(RestClient restClient) {
+    AaregRestKlient(RestClient restClient) {
         this.restClient = restClient;
         this.restConfig = RestConfig.forClient(this.getClass());
     }
 
-    public List<ArbeidsforholdDto> finnArbeidsforholdForArbeidstaker(String personIdent, LocalDate førsteFraværsdag) {
+    List<ArbeidsforholdDto> finnArbeidsforholdForArbeidstaker(String personIdent, LocalDate førsteFraværsdag) {
         return finnArbeidsforholdForArbeidstaker(personIdent, førsteFraværsdag, førsteFraværsdag);
     }
 
-    public List<ArbeidsforholdDto> finnArbeidsforholdForArbeidstaker(String personIdent, LocalDate fom, LocalDate tom) {
+    List<ArbeidsforholdDto> finnArbeidsforholdForArbeidstaker(String personIdent, LocalDate fom, LocalDate tom) {
         try {
             var uri = lagUriForForFinnArbeidsforholdForArbeidstaker(fom, tom);
             var request = RestRequest.newGET(uri, restConfig).header(NavHeaders.HEADER_NAV_PERSONIDENT, personIdent);

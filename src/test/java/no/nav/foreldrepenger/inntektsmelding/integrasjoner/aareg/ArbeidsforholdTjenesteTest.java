@@ -74,7 +74,7 @@ class ArbeidsforholdTjenesteTest {
             null,
             null,
             null,
-            "type"
+            ArbeidsforholdDto.Type.ORDINÆRT_ARBEIDSFORHOLD
         );
 
         var nå = LocalDate.now();
@@ -108,7 +108,7 @@ class ArbeidsforholdTjenesteTest {
             ansettelsesperiode,
             null,
             null,
-            "type"
+            ArbeidsforholdDto.Type.ORDINÆRT_ARBEIDSFORHOLD
         );
         var ansettelsesperiode2 = new AnsettelsesperiodeDto(new PeriodeDto(LocalDate.now().minusYears(2), Tid.TIDENES_ENDE));
         var arbeidsforhold2 = new ArbeidsforholdDto(
@@ -123,7 +123,7 @@ class ArbeidsforholdTjenesteTest {
             ansettelsesperiode2,
             null,
             null,
-            "type"
+            ArbeidsforholdDto.Type.ORDINÆRT_ARBEIDSFORHOLD
         );
         var nå = LocalDate.now();
 

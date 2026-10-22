@@ -49,7 +49,7 @@ class AaregRestKlientTest {
             null,
             null,
             null,
-            "ordinært");
+            ArbeidsforholdDto.Type.ORDINÆRT_ARBEIDSFORHOLD);
 
         var httpResponse = mock(HttpResponse.class);
         when(httpResponse.body()).thenReturn(DefaultJsonMapper.toJson(List.of(arbeidsforhold)));

@@ -29,6 +29,7 @@ import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste
 import no.nav.foreldrepenger.inntektsmelding.server.exceptions.InntektsmeldingException;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.KodeverkMapper;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ArbeidsforholdType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
@@ -183,6 +184,7 @@ public class GrunnlagDtoTjeneste {
                                                                                         LocalDate førsteFraværsdag) {
         return arbeidsforholdTjeneste.hentArbeidsforhold(fødselsnummer, førsteFraværsdag).stream()
             .filter(arbeidsforhold -> arbeidsforhold.organisasjonsnummer().equals(arbeidsgiver.orgnr()))
+            .filter(arbeidsforhold -> ArbeidsforholdType.ORDINÆRT_ARBEIDSFORHOLD.equals(arbeidsforhold.type()))
             .map(arbeidsforhold -> mapAnsettelsePeriode(arbeidsforhold.ansettelsesperiode()))
             .toList();
     }
@@ -285,6 +287,7 @@ public class GrunnlagDtoTjeneste {
         var tom = førsteUttaksdato.plusYears(1);
         return arbeidsforholdTjeneste.hentArbeidsforhold(personIdent, fom, tom).stream()
             .filter(arbeidsforhold -> arbeidsforhold.organisasjonsnummer().equals(organisasjonsnummer))
+            .filter(arbeidsforhold -> arbeidsforhold.type().equals(ArbeidsforholdType.ORDINÆRT_ARBEIDSFORHOLD))
             .anyMatch(arbeidsforhold -> overlapperPeriode(fom, tom,
                 arbeidsforhold.ansettelsesperiode().fom(),
                 arbeidsforhold.ansettelsesperiode().tom()));
