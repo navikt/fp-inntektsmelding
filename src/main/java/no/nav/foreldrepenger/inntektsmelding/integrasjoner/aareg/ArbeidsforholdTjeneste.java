@@ -30,7 +30,14 @@ public class ArbeidsforholdTjeneste {
     }
 
     public List<Arbeidsforhold> hentArbeidsforhold(PersonIdent ident, LocalDate førsteFraværsdag) {
-        var aaregInfo = aaregRestKlient.finnArbeidsforholdForArbeidstaker(ident.getIdent(), førsteFraværsdag);
+        return mapArbeidsforhold(ident, aaregRestKlient.finnArbeidsforholdForArbeidstaker(ident.getIdent(), førsteFraværsdag));
+    }
+
+    public List<Arbeidsforhold> hentArbeidsforhold(PersonIdent ident, LocalDate fom, LocalDate tom) {
+        return mapArbeidsforhold(ident, aaregRestKlient.finnArbeidsforholdForArbeidstaker(ident.getIdent(), fom, tom));
+    }
+
+    private List<Arbeidsforhold> mapArbeidsforhold(PersonIdent ident, List<ArbeidsforholdDto> aaregInfo) {
         if (aaregInfo == null) {
             LOG.info("Fant ingen arbeidsforhold for orgnr {}. Returnerer tom liste", ident);
             return Collections.emptyList();
