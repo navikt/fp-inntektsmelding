@@ -1,6 +1,7 @@
 package no.nav.foreldrepenger.inntektsmelding.forespørsel.lager;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 
 import java.sql.Timestamp;
@@ -86,6 +87,27 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
         getEntityManager().clear();
         var hentet = forespørselRepository.hentForespørsel(uuid).orElseThrow();
         assertThat(hentet.getLoepeNummer()).isEqualTo(opprinneligLoepeNummer);
+    }
+
+    @Test
+    void skal_avvise_endring_av_tildelt_loepe_nummer() {
+        var forespørsel = new ForespørselEntitet();
+        forespørsel.setLoepeNummer(1000L);
+
+        assertThatThrownBy(() -> forespørsel.setLoepeNummer(1001L))
+            .isInstanceOf(IllegalStateException.class);
+
+        assertThat(forespørsel.getLoepeNummer()).isEqualTo(1000L);
+    }
+
+    @Test
+    void skal_tillate_gjentatt_tildeling_av_samme_loepe_nummer() {
+        var forespørsel = new ForespørselEntitet();
+        forespørsel.setLoepeNummer(1000L);
+
+        forespørsel.setLoepeNummer(1000L);
+
+        assertThat(forespørsel.getLoepeNummer()).isEqualTo(1000L);
     }
 
     @Test

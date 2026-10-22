@@ -136,7 +136,11 @@ public class ForespørselEntitet {
     }
 
     void setLoepeNummer(Long loepeNummer) {
-        this.loepeNummer = Objects.requireNonNull(loepeNummer, "loepeNummer");
+        Objects.requireNonNull(loepeNummer, "loepeNummer");
+        if (this.loepeNummer != null && !this.loepeNummer.equals(loepeNummer)) {
+            throw new IllegalStateException("Løpenummer kan ikke endres etter tildeling");
+        }
+        this.loepeNummer = loepeNummer;
     }
 
     public UUID getUuid() {
