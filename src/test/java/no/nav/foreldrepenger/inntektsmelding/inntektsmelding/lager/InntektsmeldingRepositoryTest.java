@@ -1,6 +1,7 @@
 package no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -442,6 +443,27 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
         getEntityManager().clear();
         var hentet = inntektsmeldingRepository.finnInntektsmelding(inntektsmelding.getUuid()).orElseThrow();
         assertThat(hentet.getLoepeNummer()).isEqualTo(opprinneligLoepeNummer);
+    }
+
+    @Test
+    void skal_avvise_endring_av_tildelt_loepe_nummer() {
+        var inntektsmelding = new InntektsmeldingEntitet();
+        inntektsmelding.setLoepeNummer(1000L);
+
+        assertThatThrownBy(() -> inntektsmelding.setLoepeNummer(1001L))
+            .isInstanceOf(IllegalStateException.class);
+
+        assertThat(inntektsmelding.getLoepeNummer()).isEqualTo(1000L);
+    }
+
+    @Test
+    void skal_tillate_gjentatt_tildeling_av_samme_loepe_nummer() {
+        var inntektsmelding = new InntektsmeldingEntitet();
+        inntektsmelding.setLoepeNummer(1000L);
+
+        inntektsmelding.setLoepeNummer(1000L);
+
+        assertThat(inntektsmelding.getLoepeNummer()).isEqualTo(1000L);
     }
 
     @Test
