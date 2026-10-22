@@ -13,8 +13,12 @@ create sequence seq_inntektsmelding_loepe_nummer
 alter table forespoersel
     add column loepe_nummer bigint;
 
+comment on column forespoersel.loepe_nummer is 'Løpenummer eksponert til eksterne konsumenter. Egen sekvens, øker med 1';
+
 alter table inntektsmelding
     add column loepe_nummer bigint;
+
+comment on column inntektsmelding.loepe_nummer is 'Løpenummer eksponert til eksterne konsumenter. Egen sekvens, øker med 1';
 
 -- Eksisterende rader beholder dagens eksterne løpenummer (databaseid), slik at konsumentene ikke får duplikater
 update forespoersel
@@ -39,7 +43,3 @@ create unique index uidx_forespoersel_loepe_nummer
 
 create unique index uidx_inntektsmelding_loepe_nummer
     on inntektsmelding (loepe_nummer);
-
-comment on column forespoersel.loepe_nummer is 'Løpenummer eksponert til eksterne konsumenter. Egen sekvens, øker med 1';
-
-comment on column inntektsmelding.loepe_nummer is 'Løpenummer eksponert til eksterne konsumenter. Egen sekvens, øker med 1';
