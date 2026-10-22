@@ -207,7 +207,9 @@ public class ForespørselBehandlingTjeneste {
                                                                 ForespørselDto eksisterendeForespørsel) {
         validerYtelseOgAktør(ytelsetype, aktørId, eksisterendeForespørsel);
 
-        if (Objects.equals(eksisterendeForespørsel.førsteUttaksdato(), førsteUttaksdato)) {
+        // Vi skal ikke endre på forespørsler som er arbeidsgiverinitiert for nyansatte
+        if (eksisterendeForespørsel.forespørselType() == ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT
+            || Objects.equals(eksisterendeForespørsel.førsteUttaksdato(), førsteUttaksdato)) {
             return ForespørselResultat.IKKE_OPPRETTET_FINNES_ALLEREDE;
         }
 
