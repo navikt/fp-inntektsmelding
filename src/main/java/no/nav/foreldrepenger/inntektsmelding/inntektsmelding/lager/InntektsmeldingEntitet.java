@@ -41,7 +41,7 @@ public class InntektsmeldingEntitet {
     private Long id;
 
     @Column(name = "loepe_nummer", nullable = false, updatable = false)
-    private Long loepeNummer;
+    private Long løpenummer;
 
     @Embedded
     @AttributeOverride(name = "aktørId", column = @Column(name = "bruker_aktoer_id", nullable = false, updatable = false))
@@ -110,16 +110,16 @@ public class InntektsmeldingEntitet {
         return id;
     }
 
-    public Long getLoepeNummer() {
-        return loepeNummer;
+    public Long getLøpenummer() {
+        return løpenummer;
     }
 
-    void setLoepeNummer(Long loepeNummer) {
-        Objects.requireNonNull(loepeNummer, "loepeNummer");
-        if (this.loepeNummer != null && !this.loepeNummer.equals(loepeNummer)) {
+    void setLøpenummer(Long løpenummer) {
+        Objects.requireNonNull(løpenummer, "løpenummer");
+        if (this.løpenummer != null && !this.løpenummer.equals(løpenummer)) {
             throw new IllegalStateException("Løpenummer kan ikke endres etter tildeling");
         }
-        this.loepeNummer = loepeNummer;
+        this.løpenummer = løpenummer;
     }
 
     public AktørIdEntitet getAktørId() {

@@ -425,8 +425,8 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
         var resultat = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null, null, null, null, null);
 
         assertThat(resultat).hasSize(3)
-            .allSatisfy(im -> assertThat(im.getLoepeNummer()).isNotNull())
-            .extracting(InntektsmeldingEntitet::getLoepeNummer)
+            .allSatisfy(im -> assertThat(im.getLøpenummer()).isNotNull())
+            .extracting(InntektsmeldingEntitet::getLøpenummer)
             .doesNotHaveDuplicates();
     }
 
@@ -434,36 +434,36 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
     void skal_beholde_loepe_nummer_ved_gjentatt_lagring() {
         var inntektsmelding = lagInntektsmeldingEntitet("999999999", Ytelsetype.FORELDREPENGER, LocalDateTime.now());
         inntektsmeldingRepository.lagreInntektsmelding(inntektsmelding);
-        var opprinneligLoepeNummer = inntektsmelding.getLoepeNummer();
-        assertThat(opprinneligLoepeNummer).isNotNull();
+        var opprinneligLøpenummer = inntektsmelding.getLøpenummer();
+        assertThat(opprinneligLøpenummer).isNotNull();
 
         inntektsmeldingRepository.lagreInntektsmelding(inntektsmelding);
 
-        assertThat(inntektsmelding.getLoepeNummer()).isEqualTo(opprinneligLoepeNummer);
+        assertThat(inntektsmelding.getLøpenummer()).isEqualTo(opprinneligLøpenummer);
         getEntityManager().clear();
         var hentet = inntektsmeldingRepository.finnInntektsmelding(inntektsmelding.getUuid()).orElseThrow();
-        assertThat(hentet.getLoepeNummer()).isEqualTo(opprinneligLoepeNummer);
+        assertThat(hentet.getLøpenummer()).isEqualTo(opprinneligLøpenummer);
     }
 
     @Test
     void skal_avvise_endring_av_tildelt_loepe_nummer() {
         var inntektsmelding = new InntektsmeldingEntitet();
-        inntektsmelding.setLoepeNummer(1000L);
+        inntektsmelding.setLøpenummer(1000L);
 
-        assertThatThrownBy(() -> inntektsmelding.setLoepeNummer(1001L))
+        assertThatThrownBy(() -> inntektsmelding.setLøpenummer(1001L))
             .isInstanceOf(IllegalStateException.class);
 
-        assertThat(inntektsmelding.getLoepeNummer()).isEqualTo(1000L);
+        assertThat(inntektsmelding.getLøpenummer()).isEqualTo(1000L);
     }
 
     @Test
     void skal_tillate_gjentatt_tildeling_av_samme_loepe_nummer() {
         var inntektsmelding = new InntektsmeldingEntitet();
-        inntektsmelding.setLoepeNummer(1000L);
+        inntektsmelding.setLøpenummer(1000L);
 
-        inntektsmelding.setLoepeNummer(1000L);
+        inntektsmelding.setLøpenummer(1000L);
 
-        assertThat(inntektsmelding.getLoepeNummer()).isEqualTo(1000L);
+        assertThat(inntektsmelding.getLøpenummer()).isEqualTo(1000L);
     }
 
     @Test
@@ -473,17 +473,17 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
         lagreInntektsmelding("8888888888888", orgnr, Ytelsetype.FORELDREPENGER);
         lagreInntektsmelding("8888888888888", orgnr, Ytelsetype.SVANGERSKAPSPENGER);
 
-        var lavesteLoepeNummer = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null, null, null, null, null).stream()
-            .map(InntektsmeldingEntitet::getLoepeNummer)
+        var lavesteLøpenummer = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null, null, null, null, null).stream()
+            .map(InntektsmeldingEntitet::getLøpenummer)
             .min(Long::compareTo)
             .orElseThrow();
 
 
-        var resultat = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, new AktørIdEntitet("8888888888888"), null, null, null, lavesteLoepeNummer,
+        var resultat = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, new AktørIdEntitet("8888888888888"), null, null, null, lavesteLøpenummer,
             null);
 
         assertThat(resultat).hasSize(2);
-        assertThat(resultat.stream().noneMatch(im -> im.getLoepeNummer() <= lavesteLoepeNummer)).isTrue();
+        assertThat(resultat.stream().noneMatch(im -> im.getLøpenummer() <= lavesteLøpenummer)).isTrue();
     }
 
     @Test
@@ -497,7 +497,7 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
         var resultat = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null, null, null, null, null);
 
         assertThat(resultat).hasSize(2);
-        assertThat(resultat.getFirst().getLoepeNummer()).isLessThan(resultat.getLast().getLoepeNummer());
+        assertThat(resultat.getFirst().getLøpenummer()).isLessThan(resultat.getLast().getLøpenummer());
         assertThat(resultat.getFirst().getUuid()).isEqualTo(im1.getUuid());
     }
 
