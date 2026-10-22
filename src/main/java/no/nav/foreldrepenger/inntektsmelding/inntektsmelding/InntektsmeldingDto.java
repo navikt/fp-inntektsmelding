@@ -18,6 +18,7 @@ import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 
 public class InntektsmeldingDto {
     private final Long id;
+    private final Long loepeNummer;
     private final UUID inntektsmeldingUuid;
     private final AktørId aktørId;
     private final Ytelsetype ytelse;
@@ -39,6 +40,7 @@ public class InntektsmeldingDto {
 
     private InntektsmeldingDto(Builder builder) {
         this.id = builder.id;
+        this.loepeNummer = builder.loepeNummer;
         this.inntektsmeldingUuid = builder.inntektsmeldingUuid;
         this.aktørId = builder.aktørId;
         this.ytelse = builder.ytelse;
@@ -66,6 +68,7 @@ public class InntektsmeldingDto {
     public static Builder builder(InntektsmeldingDto eksisterende) {
         return new Builder()
             .medId(eksisterende.id)
+            .medLoepeNummer(eksisterende.loepeNummer)
             .medInntektsmeldingUuid(eksisterende.inntektsmeldingUuid)
             .medAktørId(eksisterende.aktørId)
             .medYtelse(eksisterende.ytelse)
@@ -88,6 +91,10 @@ public class InntektsmeldingDto {
 
     public Long getId() {
         return id;
+    }
+
+    public Long getLoepeNummer() {
+        return loepeNummer;
     }
 
     public UUID getInntektsmeldingUuid() {
@@ -168,6 +175,7 @@ public class InntektsmeldingDto {
 
     public static class Builder {
         private Long id;
+        private Long loepeNummer;
         private UUID inntektsmeldingUuid;
         private AktørId aktørId;
         private Ytelsetype ytelse;
@@ -192,6 +200,11 @@ public class InntektsmeldingDto {
 
         public Builder medId(Long id) {
             this.id = id;
+            return this;
+        }
+
+        public Builder medLoepeNummer(Long loepeNummer) {
+            this.loepeNummer = loepeNummer;
             return this;
         }
 

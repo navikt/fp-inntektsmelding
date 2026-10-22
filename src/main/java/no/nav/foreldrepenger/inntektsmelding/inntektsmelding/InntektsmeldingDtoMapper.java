@@ -28,6 +28,7 @@ public class InntektsmeldingDtoMapper {
     public static InntektsmeldingDto mapFraEntitet(InntektsmeldingEntitet entitet) {
         return InntektsmeldingDto.builder()
             .medId(entitet.getId())
+            .medLoepeNummer(entitet.getLøpenummer())
             .medInntektsmeldingUuid(entitet.getUuid())
             .medAktørId(AktørId.fra(entitet.getAktørId().getAktørId()))
             .medYtelse(entitet.getYtelsetype())
