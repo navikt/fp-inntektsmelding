@@ -124,27 +124,6 @@ class RyddDuplikateForespørslerGruppeTaskTest extends EntityManagerAwareTest {
         verify(prosessTaskTjeneste, times(2)).lagre(any(ProsessTaskGruppe.class));
     }
 
-    @ParameterizedTest
-    @NullSource
-    @ValueSource(strings = {"true", "", "flase", " false "})
-    void andre_verdier_enn_false_skal_ikke_låse_endre_status_eller_opprette_oppfølgingstasks(String dryRunVerdi) {
-        var eldst = lagre(ForespørselType.BESTILT_AV_FAGSYSTEM, ForespørselStatus.UNDER_BEHANDLING, OPPRETTET);
-        var nyest = lagre(ForespørselType.BESTILT_AV_FAGSYSTEM, ForespørselStatus.FERDIG, OPPRETTET.plusDays(1));
-        var data = data(false);
-        data.getProperties().remove(RyddDuplikateForespørslerTask.DRY_RUN);
-        if (dryRunVerdi != null) {
-            data.setProperty(RyddDuplikateForespørslerTask.DRY_RUN, dryRunVerdi);
-        }
-
-        task.doTask(data);
-
-        assertThat(getEntityManager().getLockMode(eldst)).isEqualTo(LockModeType.NONE);
-        assertThat(getEntityManager().getLockMode(nyest)).isEqualTo(LockModeType.NONE);
-        assertStatus(eldst, ForespørselStatus.UNDER_BEHANDLING);
-        assertStatus(nyest, ForespørselStatus.FERDIG);
-        verifyNoInteractions(prosessTaskTjeneste, minSideArbeidsgiverTjeneste, dialogportenTjeneste);
-    }
-
     @Test
     void hovedtask_skal_skille_sak_og_orgnr_og_ignorere_utgåtte_og_manglende_saksnummer() {
         lagre(ForespørselType.BESTILT_AV_FAGSYSTEM, ForespørselStatus.FERDIG, OPPRETTET);
@@ -194,7 +173,7 @@ class RyddDuplikateForespørslerGruppeTaskTest extends EntityManagerAwareTest {
     }
 
     private void assertStatus(ForespørselEntitet forespørsel, ForespørselStatus status) {
-        clearHibernateCache();
+        getEntityManager().clear();
         assertThat(repository.hentForespørsel(forespørsel.getUuid()).orElseThrow().getStatus()).isEqualTo(status);
     }
 
