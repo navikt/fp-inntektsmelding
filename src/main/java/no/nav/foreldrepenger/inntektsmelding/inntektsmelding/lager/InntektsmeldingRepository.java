@@ -39,15 +39,15 @@ public class InntektsmeldingRepository {
     }
 
     public Long lagreInntektsmelding(InntektsmeldingEntitet inntektsmeldingEntitet) {
-        if (inntektsmeldingEntitet.getLoepeNummer() == null) {
-            inntektsmeldingEntitet.setLoepeNummer(hentNesteLoepeNummer());
+        if (inntektsmeldingEntitet.getLøpenummer() == null) {
+            inntektsmeldingEntitet.setLøpenummer(hentNesteLøpenummer());
         }
         entityManager.persist(inntektsmeldingEntitet);
         entityManager.flush();
         return inntektsmeldingEntitet.getId();
     }
 
-    private long hentNesteLoepeNummer() {
+    private long hentNesteLøpenummer() {
         return ((Number) entityManager.createNativeQuery("select nextval('seq_inntektsmelding_loepe_nummer')").getSingleResult()).longValue();
     }
 
@@ -114,7 +114,7 @@ public class InntektsmeldingRepository {
             predicates.add(cb.lessThan(root.get("opprettetTidspunkt"), tom.plusDays(1).atStartOfDay()));
         }
         if (fraLoepenr != null) {
-            predicates.add(cb.greaterThan(root.get("loepeNummer"), fraLoepenr));
+            predicates.add(cb.greaterThan(root.get("løpenummer"), fraLoepenr));
         }
         if (status != null) {
             /*Håndterer at vi har andre statuser internt enn ut mot konsumenter. Mottatt status kan enten være utdatert eller venter vurdering i vår database*/
@@ -125,7 +125,7 @@ public class InntektsmeldingRepository {
         }
         cq.where(predicates.toArray(new Predicate[0]));
 
-        cq.orderBy(cb.asc(root.get("loepeNummer")));
+        cq.orderBy(cb.asc(root.get("løpenummer")));
         var query = entityManager.createQuery(cq);
         query.setMaxResults(1001);
         var result = query.getResultList();
