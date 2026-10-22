@@ -1,10 +1,10 @@
 package no.nav.foreldrepenger.inntektsmelding.forvaltning;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -20,6 +20,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
@@ -60,7 +61,7 @@ class RyddDuplikateForespørslerTaskTest {
         mockQuery();
         when(query.getResultList()).thenReturn(List.of(forespørsel(2, "SAK-A", "999999999")));
 
-        task.doTask(data(null, null, dryRunVerdi));
+        task.doTask(data("0", "100", dryRunVerdi));
 
         var captor = ArgumentCaptor.forClass(ProsessTaskGruppe.class);
         verify(prosessTaskTjeneste).lagre(captor.capture());
@@ -114,12 +115,20 @@ class RyddDuplikateForespørslerTaskTest {
         mockQuery();
         when(query.getResultList()).thenReturn(List.of(forespørsel(2, "SAK-A", "999999999")));
 
-        task.doTask(data("1", null, "false"));
+        task.doTask(data("1", "10", "false"));
 
         var captor = ArgumentCaptor.forClass(ProsessTaskGruppe.class);
         verify(prosessTaskTjeneste).lagre(captor.capture());
         assertThat(captor.getValue().getTasks()).hasSize(1);
-        verify(query, never()).setParameter(eq(RyddDuplikateForespørslerTask.TIL_ID), any());
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {"null,100", "1,null"}, nullValues = "null")
+    void kaster_feil_når_fraId_eller_tilId_mangler(String fraId, String tilId) {
+        var data = data(fraId, tilId, "false");
+
+        assertThatThrownBy(() -> task.doTask(data)).isInstanceOf(IllegalArgumentException.class);
+        verifyNoInteractions(prosessTaskTjeneste);
     }
 
     @Test

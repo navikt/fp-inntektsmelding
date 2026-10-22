@@ -63,11 +63,12 @@ public class RyddDuplikateForespørslerGruppeTask implements ProsessTaskHandler 
             forespørselSomBeholdes.getOpprettetTidspunkt(), dryRun);
         var skalUtgå = aktive.stream().filter(f -> !f.getId().equals(forespørselSomBeholdes.getId())).toList();
         skalUtgå.forEach(f -> {
+            var opprinneligStatus = f.getStatus();
             if (!dryRun) {
                 forespørselBehandlingTjeneste.settForespørselTilUtgåttForvaltning(f.getUuid());
             }
             LOG.info("RYDD_DUPLIKATE_FORESPØRSLER: UTGÅR id={}, type={}, opprinneligStatus={}, dryRun={}",
-                f.getId(), f.getForespørselType(), f.getStatus(), dryRun);
+                f.getId(), f.getForespørselType(), opprinneligStatus, dryRun);
         });
         LOG.info("RYDD_DUPLIKATE_FORESPØRSLER: Vurdert {} aktive forespørsler, {} skal utgå. dryRun={}",
             aktive.size(), skalUtgå.size(), dryRun);
