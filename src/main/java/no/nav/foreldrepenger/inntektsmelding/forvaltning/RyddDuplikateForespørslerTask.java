@@ -1,119 +1,107 @@
 package no.nav.foreldrepenger.inntektsmelding.forvaltning;
 
-import java.util.HashSet;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTask;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
-import no.nav.vedtak.felles.prosesstask.api.ProsessTaskGruppe;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskHandler;
-import no.nav.vedtak.felles.prosesstask.api.ProsessTaskTjeneste;
 
-/**
- * Midlertidig engangsjobb (master-task) som finner aktive forespørsler med duplikater for samme
- * (saksnummer, orgnummer), og oppretter én {@link RyddDuplikateForespørslerGruppeTask} per kombinasjon.
- * <p>
- * Paginerer {@value #MAKS_RADER_PER_TASK} rader om gangen. Sub-tasks for én side kjøres parallelt, og neste
- * master-task kjøres sekvensielt etter dem.
- */
 @ApplicationScoped
 @ProsessTask(value = "rydd.duplikate.forespørsler", maxFailedRuns = 1)
 public class RyddDuplikateForespørslerTask implements ProsessTaskHandler {
 
-    static final String DRY_RUN = "dryRun";
-    static final String FRA_ID = "fraId";
-    static final String TIL_ID = "tilId";
+    static final String SAKSNUMMER = "saksnummer";
+    static final String ORGNUMMER = "orgnummer";
+    static final Set<ForespørselStatus> ÅPNE_STATUSER = Set.of(ForespørselStatus.UNDER_BEHANDLING, ForespørselStatus.FERDIG);
 
-    private static final int MAKS_RADER_PER_TASK = 50;
     private static final String LOGG_PREFIKS = "RYDD_DUPLIKATE_FORESPØRSLER";
     private static final Logger LOG = LoggerFactory.getLogger(RyddDuplikateForespørslerTask.class);
 
     private EntityManager entityManager;
-    private ProsessTaskTjeneste prosessTaskTjeneste;
+    private ForespørselBehandlingTjeneste forespørselBehandlingTjeneste;
 
     RyddDuplikateForespørslerTask() {
-        // for CDI proxy
+        // CDI
     }
 
     @Inject
-    public RyddDuplikateForespørslerTask(EntityManager entityManager, ProsessTaskTjeneste prosessTaskTjeneste) {
+    public RyddDuplikateForespørslerTask(EntityManager entityManager,
+                                            ForespørselBehandlingTjeneste forespørselBehandlingTjeneste) {
         this.entityManager = entityManager;
-        this.prosessTaskTjeneste = prosessTaskTjeneste;
+        this.forespørselBehandlingTjeneste = forespørselBehandlingTjeneste;
     }
 
     @Override
-    public void doTask(ProsessTaskData prosessTaskData) {
-        var dryRun = !"false".equalsIgnoreCase(prosessTaskData.getPropertyValue(DRY_RUN));
-        var fraId = påkrevdId(prosessTaskData, FRA_ID);
-        var tilId = påkrevdId(prosessTaskData, TIL_ID);
+    public void doTask(ProsessTaskData data) {
+        var saksnummer = data.getPropertyValue(SAKSNUMMER);
+        var orgnummer = data.getPropertyValue(ORGNUMMER);
+        var dryRun = !"false".equalsIgnoreCase(data.getPropertyValue(RyddDuplikateÅpneForespørslerTask.DRY_RUN));
+        var åpneForespørsler = hentForespørsler(saksnummer, orgnummer, dryRun);
 
-        var kandidater = hentKandidater(fraId, tilId);
-        if (kandidater.isEmpty()) {
-            LOG.info("{}: Ingen flere kandidater med id > {}. Jobben er ferdig.", LOGG_PREFIKS, fraId);
+        if (åpneForespørsler.size() < 2) {
+            LOG.info("{}: saksnummer={}: Ingen åpne duplikater. dryRun={}", LOGG_PREFIKS, saksnummer, dryRun);
             return;
         }
-
-        var taskGruppe = new ProsessTaskGruppe();
-        var besøkteGrupper = new HashSet<List<String>>();
-        taskGruppe.addNesteParallell(kandidater.stream()
-            .filter(f -> besøkteGrupper.add(List.of(f.getFagsystemSaksnummer().orElseThrow(), f.getOrganisasjonsnummer())))
-            .map(f -> opprettSubTask(f.getFagsystemSaksnummer().orElseThrow(), f.getOrganisasjonsnummer(), dryRun))
-            .toList());
-
-        if (kandidater.size() == MAKS_RADER_PER_TASK) {
-            taskGruppe.addNesteSekvensiell(opprettNesteMasterTask(kandidater.getLast().getId(), tilId, dryRun));
-        }
-
-        LOG.info("{}: Planlegger {} task(er) for id-intervall={}..{} (dryRun={}).", LOGG_PREFIKS,
-            taskGruppe.getTasks().size(), kandidater.getFirst().getId(), kandidater.getLast().getId(), dryRun);
-        prosessTaskTjeneste.lagre(taskGruppe);
+        var forespørselSomBeholdes = finnForespørselSomBeholdes(åpneForespørsler);
+        LOG.info("{}: BEHOLD id={}, status={}, opprettetTid={}, dryRun={}", LOGG_PREFIKS,
+            forespørselSomBeholdes.getId(), forespørselSomBeholdes.getStatus(),
+            forespørselSomBeholdes.getOpprettetTidspunkt(), dryRun);
+        var forespørslerSomSkalUtgå = åpneForespørsler.stream()
+            .filter(f -> !f.getId().equals(forespørselSomBeholdes.getId()))
+            .toList();
+        forespørslerSomSkalUtgå.forEach(f -> {
+            var opprinneligStatus = f.getStatus();
+            if (!dryRun) {
+                forespørselBehandlingTjeneste.settForespørselTilUtgåttForvaltning(f.getUuid());
+            }
+            LOG.info("{}: UTGÅR id={}, type={}, opprinneligStatus={}, dryRun={}", LOGG_PREFIKS,
+                f.getId(), f.getForespørselType(), opprinneligStatus, dryRun);
+        });
+        LOG.info("{}: Vurdert {} åpne forespørsler, {} skal utgå. dryRun={}", LOGG_PREFIKS,
+            åpneForespørsler.size(), forespørslerSomSkalUtgå.size(), dryRun);
     }
 
-    private static long påkrevdId(ProsessTaskData prosessTaskData, String navn) {
-        var verdi = prosessTaskData.getPropertyValue(navn);
-        if (verdi == null) {
-            throw new IllegalArgumentException("Mangler påkrevd property '" + navn + "'");
-        }
-        return Long.parseLong(verdi);
+    private static ForespørselEntitet finnForespørselSomBeholdes(List<ForespørselEntitet> åpneForespørsler) {
+        var fagsystemForespørsler = åpneForespørsler.stream()
+            .filter(f -> f.getForespørselType() == ForespørselType.BESTILT_AV_FAGSYSTEM)
+            .toList();
+        var kandidater = fagsystemForespørsler.isEmpty() ? åpneForespørsler : fagsystemForespørsler;
+        return finnNyeste(kandidater);
     }
 
-    private List<ForespørselEntitet> hentKandidater(long fraId, long tilId) {
-        var queryString = "select f from ForespørselEntitet f where f.id > :fraId and f.id <= :tilId"
-            + " and f.status in :statuser and f.fagsystemSaksnummer is not null"
-            + " and exists (select peer.id from ForespørselEntitet peer"
-            + " where peer.fagsystemSaksnummer = f.fagsystemSaksnummer"
-            + " and peer.organisasjonsnummer = f.organisasjonsnummer"
-            + " and peer.id <> f.id and peer.status in :statuser)"
-            + " order by f.id";
-        var query = entityManager.createQuery(queryString, ForespørselEntitet.class);
-        query.setParameter(FRA_ID, fraId);
-        query.setParameter(TIL_ID, tilId);
-        query.setParameter("statuser", RyddDuplikateForespørslerGruppeTask.AKTIVE_STATUSER);
-        query.setMaxResults(MAKS_RADER_PER_TASK);
+    private static ForespørselEntitet finnNyeste(List<ForespørselEntitet> forespørsler) {
+        return forespørsler.stream()
+            .max(Comparator.comparing(ForespørselEntitet::getOpprettetTidspunkt).thenComparing(ForespørselEntitet::getId))
+            .orElseThrow();
+    }
+
+    private List<ForespørselEntitet> hentForespørsler(String saksnummer, String orgnummer, boolean dryRun) {
+        var query = entityManager.createQuery(
+                "from ForespørselEntitet where fagsystemSaksnummer = :saksnummer"
+                    + " and organisasjonsnummer = :orgnummer"
+                    + " and status in :statuser order by id",
+                ForespørselEntitet.class)
+            .setParameter(SAKSNUMMER, saksnummer)
+            .setParameter(ORGNUMMER, orgnummer)
+            .setParameter("statuser", ÅPNE_STATUSER);
+        if (!dryRun) {
+            query.setLockMode(LockModeType.PESSIMISTIC_WRITE);
+        }
         return query.getResultList();
     }
 
-    private static ProsessTaskData opprettSubTask(String saksnummer, String orgnummer, boolean dryRun) {
-        var subTask = ProsessTaskData.forProsessTask(RyddDuplikateForespørslerGruppeTask.class);
-        subTask.setProperty(RyddDuplikateForespørslerGruppeTask.SAKSNUMMER, saksnummer);
-        subTask.setProperty(RyddDuplikateForespørslerGruppeTask.ORGNUMMER, orgnummer);
-        subTask.setProperty(DRY_RUN, String.valueOf(dryRun));
-        return subTask;
-    }
-
-    private static ProsessTaskData opprettNesteMasterTask(long nyFraId, long tilId, boolean dryRun) {
-        var nesteTask = ProsessTaskData.forProsessTask(RyddDuplikateForespørslerTask.class);
-        nesteTask.setProperty(FRA_ID, String.valueOf(nyFraId));
-        nesteTask.setProperty(TIL_ID, String.valueOf(tilId));
-        nesteTask.setProperty(DRY_RUN, String.valueOf(dryRun));
-        return nesteTask;
-    }
 }

@@ -1,176 +1,189 @@
 package no.nav.foreldrepenger.inntektsmelding.forvaltning;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
 
+import java.sql.Timestamp;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+import java.time.LocalDateTime;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.TypedQuery;
+import jakarta.persistence.LockModeType;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import no.nav.foreldrepenger.inntektsmelding.database.JpaExtension;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselRepository;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.SettDialogTilUtgåttTask;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.task.SettSakTilUtgåttTask;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.altinn.DialogportenTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon.MinSideArbeidsgiverTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskGruppe;
 import no.nav.vedtak.felles.prosesstask.api.ProsessTaskTjeneste;
+import no.nav.vedtak.felles.prosesstask.api.TaskType;
+import no.nav.vedtak.felles.testutilities.db.EntityManagerAwareTest;
 
-@ExtendWith(MockitoExtension.class)
-class RyddDuplikateForespørslerTaskTest {
+@ExtendWith({JpaExtension.class, MockitoExtension.class})
+class RyddDuplikateForespørslerTaskTest extends EntityManagerAwareTest {
 
-    private static final String GRUPPE_TASK_TYPE = "rydd.duplikate.forespørsler.gruppe";
+    private static final String SAKSNUMMER = "RYDD-SAK";
+    private static final String ORGNUMMER = "999999999";
+    private static final LocalDateTime OPPRETTET = LocalDateTime.of(2026, 1, 1, 12, 0);
 
-    @Mock
-    private EntityManager entityManager;
     @Mock
     private ProsessTaskTjeneste prosessTaskTjeneste;
     @Mock
-    private TypedQuery<ForespørselEntitet> query;
+    private MinSideArbeidsgiverTjeneste minSideArbeidsgiverTjeneste;
+    @Mock
+    private DialogportenTjeneste dialogportenTjeneste;
 
+    private ForespørselRepository repository;
     private RyddDuplikateForespørslerTask task;
 
     @BeforeEach
     void setUp() {
-        task = new RyddDuplikateForespørslerTask(entityManager, prosessTaskTjeneste);
+        repository = new ForespørselRepository(getEntityManager());
+        var behandling = new ForespørselBehandlingTjeneste(new ForespørselTjeneste(repository),
+            minSideArbeidsgiverTjeneste, dialogportenTjeneste, prosessTaskTjeneste);
+        task = new RyddDuplikateForespørslerTask(getEntityManager(), behandling);
     }
 
     @ParameterizedTest
-    @NullSource
-    @ValueSource(strings = {"true", "TRUE", "", "flase", " false "})
-    void andre_verdier_enn_false_skal_gi_dry_run_på_sub_task(String dryRunVerdi) {
-        mockQuery();
-        when(query.getResultList()).thenReturn(List.of(forespørsel(2, "SAK-A", "999999999")));
+    @EnumSource(value = ForespørselStatus.class, names = {"UNDER_BEHANDLING", "FERDIG"})
+    void skal_utgå_nyansatt_og_beholde_fagsystem_selv_om_nyansatt_er_nyest(ForespørselStatus status) {
+        var fagsystem = lagre(ForespørselType.BESTILT_AV_FAGSYSTEM, ForespørselStatus.FERDIG, OPPRETTET);
+        var nyansatt = lagre(ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT, status, OPPRETTET.plusDays(1));
 
-        task.doTask(data("0", "100", dryRunVerdi));
+        task.doTask(data(false));
 
+        assertStatus(nyansatt, ForespørselStatus.UTGÅTT);
+        assertStatus(fagsystem, ForespørselStatus.FERDIG);
         var captor = ArgumentCaptor.forClass(ProsessTaskGruppe.class);
         verify(prosessTaskTjeneste).lagre(captor.capture());
-        assertThat(captor.getValue().getTasks()).hasSize(1);
-        assertThat(captor.getValue().getTasks().getFirst().task().getPropertyValue(RyddDuplikateForespørslerTask.DRY_RUN))
-            .isEqualTo("true");
-        verify(query).setParameter(RyddDuplikateForespørslerTask.FRA_ID, 0L);
+        assertThat(captor.getValue().getTasks()).extracting(e -> e.task().taskType()).containsExactly(
+            TaskType.forProsessTask(SettSakTilUtgåttTask.class),
+            TaskType.forProsessTask(SettDialogTilUtgåttTask.class));
+        verifyNoInteractions(minSideArbeidsgiverTjeneste, dialogportenTjeneste);
     }
 
     @Test
-    void dedupliserer_grupper_og_planlegger_neste_side_sekvensielt_når_siden_er_full() {
-        mockQuery();
-        var rader = new ArrayList<ForespørselEntitet>();
-        for (var id = 15; id < 65; id++) {
-            rader.add(id == 17 ? forespørsel(id, "SAMME-SAK", "888888888")
-                : forespørsel(id, id < 17 ? "SAMME-SAK" : "SAK-" + id, "999999999"));
-        }
-        when(query.getResultList()).thenReturn(rader);
+    void skal_beholde_nyeste_fagsystemforespørsel() {
+        var eldst = lagre(ForespørselType.BESTILT_AV_FAGSYSTEM, ForespørselStatus.UNDER_BEHANDLING, OPPRETTET);
+        var nyest = lagre(ForespørselType.BESTILT_AV_FAGSYSTEM, ForespørselStatus.FERDIG, OPPRETTET.plusDays(1));
 
-        task.doTask(data("10", "100", "false"));
+        task.doTask(data(false));
 
-        var gruppeCaptor = ArgumentCaptor.forClass(ProsessTaskGruppe.class);
-        verify(prosessTaskTjeneste).lagre(gruppeCaptor.capture());
-        var entries = gruppeCaptor.getValue().getTasks();
-        var barn = entries.stream().filter(e -> e.task().taskType().value().equals(GRUPPE_TASK_TYPE)).toList();
-        var fortsettelse = entries.stream().filter(e -> e.task().taskType().value().equals("rydd.duplikate.forespørsler")).toList();
-        assertThat(barn).hasSize(49);
-        assertThat(barn.stream()
-            .map(e -> e.task().getPropertyValue(RyddDuplikateForespørslerGruppeTask.SAKSNUMMER) + "|"
-                + e.task().getPropertyValue(RyddDuplikateForespørslerGruppeTask.ORGNUMMER))
-            .filter(key -> key.startsWith("SAMME-SAK|"))
-            .toList()).containsExactlyInAnyOrder("SAMME-SAK|999999999", "SAMME-SAK|888888888");
-        assertThat(barn).allMatch(e -> "false".equals(e.task().getPropertyValue(RyddDuplikateForespørslerTask.DRY_RUN)));
-        assertThat(fortsettelse).hasSize(1);
-        assertThat(Integer.parseInt(fortsettelse.getFirst().sekvens()))
-            .isGreaterThan(Integer.parseInt(barn.getFirst().sekvens()));
-
-        var neste = fortsettelse.getFirst().task();
-        assertThat(neste.getPropertyValue(RyddDuplikateForespørslerTask.FRA_ID)).isEqualTo("64");
-        assertThat(neste.getPropertyValue(RyddDuplikateForespørslerTask.TIL_ID)).isEqualTo("100");
-        assertThat(neste.getPropertyValue(RyddDuplikateForespørslerTask.DRY_RUN)).isEqualTo("false");
-
-        verify(query).setParameter(RyddDuplikateForespørslerTask.FRA_ID, 10L);
-        verify(query).setParameter(RyddDuplikateForespørslerTask.TIL_ID, 100L);
-        verify(query).setParameter("statuser", RyddDuplikateForespørslerGruppeTask.AKTIVE_STATUSER);
-        verify(query).setMaxResults(50);
+        assertStatus(eldst, ForespørselStatus.UTGÅTT);
+        assertStatus(nyest, ForespørselStatus.FERDIG);
     }
 
     @Test
-    void siste_side_planlegger_ikke_ny_master_task() {
-        mockQuery();
-        when(query.getResultList()).thenReturn(List.of(forespørsel(2, "SAK-A", "999999999")));
+    void skal_beholde_høyeste_id_ved_likt_opprettelsestidspunkt() {
+        var først = lagre(ForespørselType.BESTILT_AV_FAGSYSTEM, ForespørselStatus.UNDER_BEHANDLING, OPPRETTET);
+        var sist = lagre(ForespørselType.BESTILT_AV_FAGSYSTEM, ForespørselStatus.UNDER_BEHANDLING, OPPRETTET);
 
-        task.doTask(data("1", "10", "false"));
+        task.doTask(data(false));
 
-        var captor = ArgumentCaptor.forClass(ProsessTaskGruppe.class);
-        verify(prosessTaskTjeneste).lagre(captor.capture());
-        assertThat(captor.getValue().getTasks()).hasSize(1);
+        assertStatus(først, ForespørselStatus.UTGÅTT);
+        assertStatus(sist, ForespørselStatus.UNDER_BEHANDLING);
     }
 
-    @ParameterizedTest
-    @CsvSource(value = {"null,100", "1,null"}, nullValues = "null")
-    void kaster_feil_når_fraId_eller_tilId_mangler(String fraId, String tilId) {
-        var data = data(fraId, tilId, "false");
+    @Test
+    void skal_rydde_flere_enn_to_og_ikke_gjenta_lukking_ved_ny_kjøring() {
+        var eldst = lagre(ForespørselType.BESTILT_AV_FAGSYSTEM, ForespørselStatus.FERDIG, OPPRETTET);
+        var nyest = lagre(ForespørselType.BESTILT_AV_FAGSYSTEM, ForespørselStatus.UNDER_BEHANDLING, OPPRETTET.plusDays(1));
+        var nyansatt = lagre(ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT, ForespørselStatus.FERDIG, OPPRETTET.plusDays(2));
+        var utgått = lagre(ForespørselType.BESTILT_AV_FAGSYSTEM, ForespørselStatus.UTGÅTT, OPPRETTET.plusDays(3));
 
-        assertThatThrownBy(() -> task.doTask(data)).isInstanceOf(IllegalArgumentException.class);
+        task.doTask(data(false));
+        task.doTask(data(false));
+
+        assertStatus(eldst, ForespørselStatus.UTGÅTT);
+        assertStatus(nyansatt, ForespørselStatus.UTGÅTT);
+        assertStatus(nyest, ForespørselStatus.UNDER_BEHANDLING);
+        assertStatus(utgått, ForespørselStatus.UTGÅTT);
+        verify(prosessTaskTjeneste, times(2)).lagre(any(ProsessTaskGruppe.class));
+    }
+
+    @Test
+    void mastertask_skal_skille_sak_og_orgnr_og_ignorere_utgåtte_og_manglende_saksnummer() {
+        lagre(ForespørselType.BESTILT_AV_FAGSYSTEM, ForespørselStatus.FERDIG, OPPRETTET);
+        lagre(ForespørselType.BESTILT_AV_FAGSYSTEM, ForespørselStatus.UTGÅTT, OPPRETTET);
+        lagre(ForespørselType.BESTILT_AV_FAGSYSTEM, ForespørselStatus.FERDIG, OPPRETTET, "ANNEN-SAK", ORGNUMMER);
+        lagre(ForespørselType.BESTILT_AV_FAGSYSTEM, ForespørselStatus.FERDIG, OPPRETTET, SAKSNUMMER, "888888888");
+        lagre(ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT, ForespørselStatus.FERDIG, OPPRETTET, null, ORGNUMMER);
+        lagre(ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT, ForespørselStatus.FERDIG, OPPRETTET, null, ORGNUMMER);
+        var hovedtask = new RyddDuplikateÅpneForespørslerTask(getEntityManager(), prosessTaskTjeneste);
+        var data = ProsessTaskData.forProsessTask(RyddDuplikateÅpneForespørslerTask.class);
+        data.setProperty(RyddDuplikateÅpneForespørslerTask.DRY_RUN, Boolean.toString(false));
+        data.setProperty(RyddDuplikateÅpneForespørslerTask.FRA_OG_MED_ID, Integer.toString(0));
+        data.setProperty(RyddDuplikateÅpneForespørslerTask.TIL_OG_MED_ID, Integer.toString(6));
+
+        hovedtask.doTask(data);
+
         verifyNoInteractions(prosessTaskTjeneste);
     }
 
     @Test
-    void tomt_resultat_lagrer_ikke_task_gruppe() {
-        mockQuery();
-        when(query.getResultList()).thenReturn(List.of());
+    void skal_beholde_nyeste_når_alle_er_arbeidsgiverinitiert() {
+        var første = lagre(ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT, ForespørselStatus.FERDIG, OPPRETTET);
+        var andre = lagre(ForespørselType.ARBEIDSGIVERINITIERT_UREGISTRERT, ForespørselStatus.UNDER_BEHANDLING, OPPRETTET.plusDays(1));
 
-        task.doTask(data("1", "10", "false"));
+        task.doTask(data(false));
 
-        verifyNoInteractions(prosessTaskTjeneste);
+        assertStatus(første, ForespørselStatus.UTGÅTT);
+        assertStatus(andre, ForespørselStatus.UNDER_BEHANDLING);
     }
 
-    private ProsessTaskData data(String fraId, String tilId, String dryRun) {
-        var data = ProsessTaskData.forProsessTask(RyddDuplikateForespørslerTask.class);
-        if (fraId != null) {
-            data.setProperty(RyddDuplikateForespørslerTask.FRA_ID, fraId);
-        }
-        if (tilId != null) {
-            data.setProperty(RyddDuplikateForespørslerTask.TIL_ID, tilId);
-        }
-        if (dryRun != null) {
-            data.setProperty(RyddDuplikateForespørslerTask.DRY_RUN, dryRun);
-        }
-        return data;
+    private ForespørselEntitet lagre(ForespørselType type, ForespørselStatus status, LocalDateTime opprettet) {
+        return lagre(type, status, opprettet, SAKSNUMMER, ORGNUMMER);
     }
 
-    private void mockQuery() {
-        when(entityManager.createQuery(anyString(), eq(ForespørselEntitet.class))).thenReturn(query);
-        when(query.setParameter(anyString(), any())).thenReturn(query);
-        when(query.setMaxResults(50)).thenReturn(query);
-    }
-
-    private ForespørselEntitet forespørsel(long id, String saksnummer, String orgnummer) {
-        var forespørsel = new ForespørselEntitet(orgnummer, LocalDate.of(2026, 4, 1), AktørIdEntitet.dummy(),
-            Ytelsetype.FORELDREPENGER, saksnummer, LocalDate.of(2026, 4, 7), ForespørselType.BESTILT_AV_FAGSYSTEM);
-        try {
-            var idField = ForespørselEntitet.class.getDeclaredField("id");
-            idField.setAccessible(true);
-            idField.set(forespørsel, id);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
+    private ForespørselEntitet lagre(ForespørselType type, ForespørselStatus status, LocalDateTime opprettet,
+                                   String saksnummer, String orgnummer) {
+        var dato = LocalDate.of(2026, 1, 1);
+        var forespørsel = new ForespørselEntitet(orgnummer, dato, AktørIdEntitet.dummy(), Ytelsetype.FORELDREPENGER,
+            saksnummer, dato, type);
+        forespørsel.setStatus(status);
+        getEntityManager().persist(forespørsel);
+        getEntityManager().flush();
+        getEntityManager().createNativeQuery("update forespoersel set opprettet_tid = :tid where id = :id")
+            .setParameter("tid", Timestamp.valueOf(opprettet))
+            .setParameter("id", forespørsel.getId())
+            .executeUpdate();
+        getEntityManager().refresh(forespørsel);
         return forespørsel;
+    }
+
+    private void assertStatus(ForespørselEntitet forespørsel, ForespørselStatus status) {
+        getEntityManager().clear();
+        assertThat(repository.hentForespørsel(forespørsel.getUuid()).orElseThrow().getStatus()).isEqualTo(status);
+    }
+
+    private static ProsessTaskData data(boolean dryRun) {
+        var data = ProsessTaskData.forProsessTask(RyddDuplikateForespørslerTask.class);
+        data.setProperty(RyddDuplikateÅpneForespørslerTask.DRY_RUN, Boolean.toString(dryRun));
+        data.setProperty(RyddDuplikateForespørslerTask.SAKSNUMMER, SAKSNUMMER);
+        data.setProperty(RyddDuplikateForespørslerTask.ORGNUMMER, ORGNUMMER);
+        return data;
     }
 }
