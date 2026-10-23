@@ -39,10 +39,10 @@ public class ArbeidsforholdTjeneste {
 
     private List<Arbeidsforhold> mapArbeidsforhold(PersonIdent ident, List<ArbeidsforholdDto> aaregInfo) {
         if (aaregInfo == null) {
-            LOG.info("Fant ingen arbeidsforhold for orgnr {}. Returnerer tom liste", ident);
+            LOG.info("Fant ingen arbeidsforhold for person {}. Returnerer tom liste", ident);
             return Collections.emptyList();
         }
-        LOG.info("Fant {} arbeidsforhold for orgnr {}.", aaregInfo.size(), ident);
+        LOG.info("Fant {} arbeidsforhold for person {}.", aaregInfo.size(), ident);
 
         return aaregInfo.stream()
             .filter(arb -> OpplysningspliktigArbeidsgiverDto.Type.ORGANISASJON.equals(arb.arbeidsgiver().type()))
