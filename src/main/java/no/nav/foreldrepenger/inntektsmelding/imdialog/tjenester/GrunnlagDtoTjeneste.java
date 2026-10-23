@@ -285,9 +285,9 @@ public class GrunnlagDtoTjeneste {
                                                  LocalDate førsteUttaksdato) {
         var fom = førsteUttaksdato.minusYears(1);
         var tom = førsteUttaksdato.plusYears(1);
+        // Her sorterer vi ikke på type, vi vil bare vite om arbeidsgiver finnees registrert hos personen i aareg
         return arbeidsforholdTjeneste.hentArbeidsforhold(personIdent, fom, tom).stream()
             .filter(arbeidsforhold -> arbeidsforhold.organisasjonsnummer().equals(organisasjonsnummer))
-            .filter(arbeidsforhold -> arbeidsforhold.type().equals(ArbeidsforholdType.ORDINÆRT_ARBEIDSFORHOLD))
             .anyMatch(arbeidsforhold -> overlapperPeriode(fom, tom,
                 arbeidsforhold.ansettelsesperiode().fom(),
                 arbeidsforhold.ansettelsesperiode().tom()));
