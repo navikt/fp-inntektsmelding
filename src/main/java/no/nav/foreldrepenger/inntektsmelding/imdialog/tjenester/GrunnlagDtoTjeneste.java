@@ -153,7 +153,6 @@ public class GrunnlagDtoTjeneste {
             }
             return lagDialogDto(forespørsel.uuid());
         }
-        //Er denne sjekken i det hele tatt er nødvendig?
         var finnesOrgnummerIAaReg = finnesOrgnummerIAaregPåPerson(fødselsnummer, arbeidsgiver.orgnr(), førsteUttaksdato);
         if (finnesOrgnummerIAaReg) {
             throw new InntektsmeldingException(InntektsmeldingException.LokalFeilKode.FINNES_I_AAREG);
@@ -285,7 +284,6 @@ public class GrunnlagDtoTjeneste {
                                                  LocalDate førsteUttaksdato) {
         var fom = førsteUttaksdato.minusYears(1);
         var tom = førsteUttaksdato.plusYears(1);
-        // Her sorterer vi ikke på type, vi vil bare vite om arbeidsgiver finnees registrert hos personen i aareg
         return arbeidsforholdTjeneste.hentArbeidsforhold(personIdent, fom, tom).stream()
             .filter(arbeidsforhold -> arbeidsforhold.organisasjonsnummer().equals(organisasjonsnummer))
             .anyMatch(arbeidsforhold -> overlapperPeriode(fom, tom,

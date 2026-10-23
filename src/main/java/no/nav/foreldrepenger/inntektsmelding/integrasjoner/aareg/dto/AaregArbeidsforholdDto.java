@@ -10,16 +10,16 @@ import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonAutoDetect(getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE, fieldVisibility = JsonAutoDetect.Visibility.ANY)
-public record ArbeidsforholdDto(
+public record AaregArbeidsforholdDto(
     String arbeidsforholdId,
     Long navArbeidsforholdId,
     OpplysningspliktigArbeidsgiverDto arbeidsgiver,
     AnsettelsesperiodeDto ansettelsesperiode,
     List<ArbeidsavtaleDto> arbeidsavtaler,
     List<PermisjonPermitteringDto> permisjonPermitteringer,
-    Type type
+    AaregArbeidsforholdType type
 ) {
-    public enum Type {
+    public enum AaregArbeidsforholdType {
         ORDINÆRT_ARBEIDSFORHOLD("ordinaertArbeidsforhold"),
         MARITIMT_ARBEIDSFORHOLD("maritimtArbeidsforhold"),
         FORENKLET_OPPGJØRSORDNING("forenkletOppgjoersordning"),
@@ -29,13 +29,13 @@ public record ArbeidsforholdDto(
         @JsonValue
         private final String aaregKode;
 
-        Type(String aaregKode) {
+        AaregArbeidsforholdType(String aaregKode) {
             this.aaregKode = aaregKode;
         }
 
         // Ukjente koder gir null
         @JsonCreator
-        public static Type fraAaregKode(String aaregKode) {
+        public static AaregArbeidsforholdType fraAaregKode(String aaregKode) {
             return Arrays.stream(values())
                 .filter(t -> t.aaregKode.equals(aaregKode))
                 .findFirst()

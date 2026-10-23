@@ -10,7 +10,7 @@ import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import no.nav.foreldrepenger.inntektsmelding.integrasjoner.aareg.dto.ArbeidsforholdDto;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.aareg.dto.AaregArbeidsforholdDto;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.aareg.dto.OpplysningspliktigArbeidsgiverDto;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ArbeidsforholdType;
@@ -38,7 +38,7 @@ public class ArbeidsforholdTjeneste {
         return mapArbeidsforhold(ident, aaregRestKlient.finnArbeidsforholdForArbeidstaker(ident.getIdent(), fom, tom));
     }
 
-    private List<Arbeidsforhold> mapArbeidsforhold(PersonIdent ident, List<ArbeidsforholdDto> aaregInfo) {
+    private List<Arbeidsforhold> mapArbeidsforhold(PersonIdent ident, List<AaregArbeidsforholdDto> aaregInfo) {
         if (aaregInfo == null) {
             LOG.info("Fant ingen arbeidsforhold for person {}. Returnerer tom liste", ident);
             return Collections.emptyList();
@@ -52,7 +52,7 @@ public class ArbeidsforholdTjeneste {
             .toList();
     }
 
-    private static ArbeidsforholdType mapType(ArbeidsforholdDto arbeidsforholdDto) {
+    private static ArbeidsforholdType mapType(AaregArbeidsforholdDto arbeidsforholdDto) {
         if (arbeidsforholdDto.type() == null) {
             return null;
         }
@@ -65,7 +65,7 @@ public class ArbeidsforholdTjeneste {
         };
     }
 
-    private Arbeidsforhold.Ansettelsesperiode mapAnsettelsesperiode(ArbeidsforholdDto arbeidsforholdDto) {
+    private Arbeidsforhold.Ansettelsesperiode mapAnsettelsesperiode(AaregArbeidsforholdDto arbeidsforholdDto) {
         if (arbeidsforholdDto.ansettelsesperiode() == null) {
             return null;
         }

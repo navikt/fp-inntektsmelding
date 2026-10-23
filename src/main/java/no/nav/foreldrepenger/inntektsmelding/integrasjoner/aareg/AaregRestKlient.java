@@ -11,7 +11,7 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 import jakarta.ws.rs.core.UriBuilderException;
 
-import no.nav.foreldrepenger.inntektsmelding.integrasjoner.aareg.dto.ArbeidsforholdDto;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.aareg.dto.AaregArbeidsforholdDto;
 import no.nav.vedtak.exception.IntegrasjonException;
 import no.nav.vedtak.felles.integrasjon.rest.RestClient;
 import no.nav.vedtak.felles.integrasjon.rest.NavHeaders;
@@ -45,11 +45,11 @@ class AaregRestKlient {
         this.restConfig = RestConfig.forClient(this.getClass());
     }
 
-    List<ArbeidsforholdDto> finnArbeidsforholdForArbeidstaker(String personIdent, LocalDate førsteFraværsdag) {
+    List<AaregArbeidsforholdDto> finnArbeidsforholdForArbeidstaker(String personIdent, LocalDate førsteFraværsdag) {
         return finnArbeidsforholdForArbeidstaker(personIdent, førsteFraværsdag, førsteFraværsdag);
     }
 
-    List<ArbeidsforholdDto> finnArbeidsforholdForArbeidstaker(String personIdent, LocalDate fom, LocalDate tom) {
+    List<AaregArbeidsforholdDto> finnArbeidsforholdForArbeidstaker(String personIdent, LocalDate fom, LocalDate tom) {
         try {
             var uri = lagUriForForFinnArbeidsforholdForArbeidstaker(fom, tom);
             var request = RestRequest.newGET(uri, restConfig).header(NavHeaders.HEADER_NAV_PERSONIDENT, personIdent);
@@ -64,7 +64,7 @@ class AaregRestKlient {
                 throw new IntegrasjonException("FP-12345", "Feil ved henting av arbeidsforhold for person: " + response.body());
             }
 
-            var arbeidsforhold = DefaultJsonMapper.fromJson(response.body(), ArbeidsforholdDto[].class);
+            var arbeidsforhold = DefaultJsonMapper.fromJson(response.body(), AaregArbeidsforholdDto[].class);
             return Arrays.asList(arbeidsforhold);
         } catch (IntegrasjonException e) {
             if (e.getMessage().contains("404")) {
