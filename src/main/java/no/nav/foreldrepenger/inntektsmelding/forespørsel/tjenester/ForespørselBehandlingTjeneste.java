@@ -115,98 +115,101 @@ public class ForespørselBehandlingTjeneste {
                                                              Arbeidsgiver arbeidsgiver,
                                                              Saksnummer fagsakSaksnummer,
                                                              LocalDate førsteUttaksdato) {
-        var eksaktForespørsel = forespørselTjeneste.finnIkkeUtgåttForespørsel(skjæringstidspunkt,
-            ytelsetype,
-            aktørId,
-            arbeidsgiver,
-            fagsakSaksnummer,
-            førsteUttaksdato);
-
-        if (eksaktForespørsel.isPresent()) {
-            var forespørselDto = eksaktForespørsel.orElseThrow();
-            if (forespørselDto.status().equals(ForespørselStatus.UNDER_BEHANDLING)) {
-                LOG.warn("Forespørsel på saksnummer {} er åpen, selv om fpsak sier at inntektsmelding er mottatt. Forespørsel uuid: {}", fagsakSaksnummer, forespørselDto.uuid());
-            }
-            LOG.info("Finnes allerede forespørsel for saksnummer: {} med orgnummer: {} med skjæringstidspunkt: {} og første uttaksdato: {}",
-                fagsakSaksnummer,
-                arbeidsgiver,
-                skjæringstidspunkt,
-                førsteUttaksdato);
-            return ForespørselResultat.IKKE_OPPRETTET_FINNES_ALLEREDE;
-        }
-
-        settTidligereForespørslerForSaksnummerTilUtgått(fagsakSaksnummer, arbeidsgiver, aktørId);
-
-        var msg = String.format("Oppretter og lukker forespørsel for saksnummer %s og orgnr: %s",
-            fagsakSaksnummer.saksnummer(),
-            arbeidsgiver);
-        LOG.info(msg);
-
-        // Oppretter og ferdigstiller forespørsel i lokal database
-        var forespørselUuid = forespørselTjeneste.opprettForespørsel(skjæringstidspunkt,
-            ytelsetype,
-            aktørId,
-            arbeidsgiver,
-            fagsakSaksnummer,
-            førsteUttaksdato);
-        forespørselTjeneste.ferdigstillForespørsel(forespørselUuid);
-
-        var opprettSakTask = ProsessTaskData.forProsessTask(OpprettSakTask.class);
-        var opprettDialogTask = ProsessTaskData.forProsessTask(OpprettDialogTask.class);
-        var ferdigstillSakTask = ProsessTaskData.forProsessTask(FerdigstillSakTask.class);
-        ferdigstillSakTask.setProperty(FerdigstillSakTask.KEY_ER_FØRSTEGANGSINNSENDING, Boolean.toString(true));
-        var ferdigstillDialogTask = ProsessTaskData.forProsessTask(FerdigstillDialogTask.class);
-
-        var taskGruppe = new ProsessTaskGruppe();
-        taskGruppe.setProperty(FellesTaskProperties.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
-        taskGruppe.setProperty(FellesTaskProperties.KEY_LUKKE_AARSAK, LukkeÅrsak.EKSTERN_INNSENDING.name());
-        taskGruppe.addNesteSekvensiell(opprettSakTask);
-        taskGruppe.addNesteSekvensiell(opprettDialogTask);
-        taskGruppe.addNesteSekvensiell(ferdigstillSakTask);
-        taskGruppe.addNesteSekvensiell(ferdigstillDialogTask);
-        prosessTaskTjeneste.lagre(taskGruppe);
-        return ForespørselResultat.FORESPØRSEL_OPPRETTET;
-    }
-
-    public List<ForespørselResultat> håndterKomplettListeMedForespørsler(LocalDate skjæringstidspunkt,
-                                                                         Ytelsetype ytelsetype,
-                                                                         AktørId aktørId,
-                                                                         List<Arbeidsgiver> arbeidsgivere,
-                                                                         Saksnummer fagsakSaksnummer,
-                                                                         LocalDate førsteUttaksdato) {
-        var alleOrgnrSomSkalHaForespørsel = arbeidsgivere.stream()
-            .map(Arbeidsgiver::orgnr)
-            .collect(Collectors.toUnmodifiableSet());
-        settForespørslerSomIkkeLengerEtterspørresTilUtgått(fagsakSaksnummer, aktørId, ytelsetype, alleOrgnrSomSkalHaForespørsel);
-
-        return arbeidsgivere.stream()
-            .map(arbeidsgiver -> håndterInnkommendeForespørselMedOppdatering(skjæringstidspunkt,
+        var eksisterendeForespørsel = forespørselTjeneste.finnArbeidsgiversÅpneForespørselPåSak(fagsakSaksnummer, arbeidsgiver);
+        if (eksisterendeForespørsel.isEmpty()) {
+            // Oppretter og ferdigstiller forespørsel i lokal database
+            var forespørselUuid = forespørselTjeneste.opprettForespørsel(skjæringstidspunkt,
                 ytelsetype,
                 aktørId,
                 arbeidsgiver,
                 fagsakSaksnummer,
-                førsteUttaksdato))
+                førsteUttaksdato);
+            forespørselTjeneste.ferdigstillForespørsel(forespørselUuid);
+
+            // Oppretter og ferdigstiller sak og dialog i eksterne systemer
+            var opprettSakTask = ProsessTaskData.forProsessTask(OpprettSakTask.class);
+            var opprettDialogTask = ProsessTaskData.forProsessTask(OpprettDialogTask.class);
+            var ferdigstillSakTask = ProsessTaskData.forProsessTask(FerdigstillSakTask.class);
+            ferdigstillSakTask.setProperty(FerdigstillSakTask.KEY_ER_FØRSTEGANGSINNSENDING, Boolean.toString(true));
+            var ferdigstillDialogTask = ProsessTaskData.forProsessTask(FerdigstillDialogTask.class);
+
+            var taskGruppe = new ProsessTaskGruppe();
+            taskGruppe.setProperty(FellesTaskProperties.KEY_FORESPOERSEL_UUID, forespørselUuid.toString());
+            taskGruppe.setProperty(FellesTaskProperties.KEY_LUKKE_AARSAK, LukkeÅrsak.EKSTERN_INNSENDING.name());
+            taskGruppe.addNesteSekvensiell(opprettSakTask);
+            taskGruppe.addNesteSekvensiell(opprettDialogTask);
+            taskGruppe.addNesteSekvensiell(ferdigstillSakTask);
+            taskGruppe.addNesteSekvensiell(ferdigstillDialogTask);
+            prosessTaskTjeneste.lagre(taskGruppe);
+            return ForespørselResultat.LUKKET_FORESPØRSEL_OPPRETTET;
+        }
+        var forespørselDto = eksisterendeForespørsel.get();
+        if (forespørselDto.status().equals(ForespørselStatus.UNDER_BEHANDLING)) {
+            LOG.warn("Forespørsel på saksnummer {} er åpen, selv om fpsak sier at inntektsmelding er mottatt. Forespørsel uuid: {}", fagsakSaksnummer, forespørselDto.uuid());
+        }
+
+        return håndterEndringMotEksisterendeForespørsel(skjæringstidspunkt, ytelsetype, aktørId, førsteUttaksdato, forespørselDto);
+    }
+
+    public List<ArbeidsgiverMedResultat> håndterKomplettListeMedForespørsler(LocalDate skjæringstidspunkt,
+                                                                             Ytelsetype ytelsetype,
+                                                                             AktørId aktørId,
+                                                                             List<ArbeidsgiverMedStatus> arbeidsgivereMedStatus,
+                                                                             Saksnummer fagsakSaksnummer,
+                                                                             LocalDate førsteUttaksdato) {
+        var alleOrgnrSomSkalHaForespørsel = arbeidsgivereMedStatus.stream()
+            .map(a -> a.arbeidsgiver().orgnr())
+            .collect(Collectors.toUnmodifiableSet());
+        settForespørslerSomIkkeLengerEtterspørresTilUtgått(fagsakSaksnummer, aktørId, ytelsetype, alleOrgnrSomSkalHaForespørsel);
+
+        return arbeidsgivereMedStatus.stream()
+            .map(agMedStatus -> new ArbeidsgiverMedResultat(agMedStatus.arbeidsgiver(),
+                håndterInnkommendeForespørselMedStatus(skjæringstidspunkt,
+                    ytelsetype,
+                    aktørId,
+                    agMedStatus,
+                    fagsakSaksnummer,
+                    førsteUttaksdato)))
             .toList();
     }
 
-    public ForespørselResultat håndterInnkommendeForespørselMedOppdatering(LocalDate skjæringstidspunkt,
+    public ForespørselResultat håndterInnkommendeForespørselMedStatus(LocalDate skjæringstidspunkt,
+                                                                           Ytelsetype ytelsetype,
+                                                                           AktørId aktørId,
+                                                                           ArbeidsgiverMedStatus arbeidsgiverMedStatus,
+                                                                           Saksnummer fagsakSaksnummer,
+                                                                           LocalDate førsteUttaksdato) {
+        if (arbeidsgiverMedStatus.erInntektsmeldingMottatt()) {
+            return håndterForespørselSomUmibddelbartSkalLukkes(skjæringstidspunkt, ytelsetype, aktørId, arbeidsgiverMedStatus.arbeidsgiver(), fagsakSaksnummer, førsteUttaksdato);
+        } else {
+            return håndterInnkommendeForespørselMedOppdatering(skjæringstidspunkt, ytelsetype, aktørId, arbeidsgiverMedStatus.arbeidsgiver(), fagsakSaksnummer, førsteUttaksdato);
+        }
+    }
+
+    protected ForespørselResultat håndterInnkommendeForespørselMedOppdatering(LocalDate skjæringstidspunkt,
                                                                            Ytelsetype ytelsetype,
                                                                            AktørId aktørId,
                                                                            Arbeidsgiver arbeidsgiver,
                                                                            Saksnummer fagsakSaksnummer,
                                                                            LocalDate førsteUttaksdato) {
-        var eksisterendeForespørselHosArbeidsgiverOpt = forespørselTjeneste.finnArbeidsgiversÅpneForespørslerPåSak(fagsakSaksnummer, arbeidsgiver);
-
+        var eksisterendeForespørselHosArbeidsgiverOpt = forespørselTjeneste.finnArbeidsgiversÅpneForespørselPåSak(fagsakSaksnummer, arbeidsgiver);
         if (eksisterendeForespørselHosArbeidsgiverOpt.isEmpty()) {
             opprettForespørsel(ytelsetype, aktørId, fagsakSaksnummer, arbeidsgiver, skjæringstidspunkt, førsteUttaksdato);
             return ForespørselResultat.FORESPØRSEL_OPPRETTET;
         }
+        return håndterEndringMotEksisterendeForespørsel(skjæringstidspunkt, ytelsetype, aktørId, førsteUttaksdato, eksisterendeForespørselHosArbeidsgiverOpt.get());
+    }
 
-        var eksisterendeForespørsel = eksisterendeForespørselHosArbeidsgiverOpt.get();
-
+    private ForespørselResultat håndterEndringMotEksisterendeForespørsel(LocalDate skjæringstidspunkt,
+                                                                Ytelsetype ytelsetype,
+                                                                AktørId aktørId,
+                                                                LocalDate førsteUttaksdato,
+                                                                ForespørselDto eksisterendeForespørsel) {
         validerYtelseOgAktør(ytelsetype, aktørId, eksisterendeForespørsel);
 
-        if (Objects.equals(eksisterendeForespørsel.førsteUttaksdato(), førsteUttaksdato)) {
+        // Vi skal ikke endre på forespørsler som er arbeidsgiverinitiert for nyansatte
+        if (eksisterendeForespørsel.forespørselType() == ForespørselType.ARBEIDSGIVERINITIERT_NYANSATT
+            || Objects.equals(eksisterendeForespørsel.førsteUttaksdato(), førsteUttaksdato)) {
             return ForespørselResultat.IKKE_OPPRETTET_FINNES_ALLEREDE;
         }
 
@@ -214,7 +217,6 @@ public class ForespørselBehandlingTjeneste {
         // Må enten endre eksisterende forespørsel, eller utgå den gamle og opprette ny
         håndterEndretForespørsel(eksisterendeForespørsel, førsteUttaksdato, skjæringstidspunkt);
         return ForespørselResultat.FORESPØRSEL_ENDRET;
-
     }
 
     private void håndterEndretForespørsel(ForespørselDto eksisterendeForespørsel, LocalDate nyFørsteUttaksdato, LocalDate nyttSkjæringstidspunkt) {

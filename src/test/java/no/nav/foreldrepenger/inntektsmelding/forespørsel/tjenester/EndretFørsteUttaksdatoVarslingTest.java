@@ -8,6 +8,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -76,7 +77,7 @@ class EndretFørsteUttaksdatoVarslingTest {
     @Test
     void skal_lagre_to_tasks_etter_datooppdatering_uten_synkrone_eksterne_kall() {
         var eksisterende = forespørsel(TIDLIGERE_DATO, DIALOG_UUID);
-        when(forespørselTjeneste.finnArbeidsgiversÅpneForespørslerPåSak(SAKSNUMMER, ARBEIDSGIVER))
+        when(forespørselTjeneste.finnArbeidsgiversÅpneForespørselPåSak(SAKSNUMMER, ARBEIDSGIVER))
             .thenReturn(Optional.of(eksisterende));
 
         oppdaterDatoer(NY_DATO, SKJÆRINGSTIDSPUNKT);
@@ -101,7 +102,7 @@ class EndretFørsteUttaksdatoVarslingTest {
     @Test
     void skal_ikke_varsle_når_bare_skjæringstidspunkt_endres() {
         var eksisterende = forespørsel(TIDLIGERE_DATO, DIALOG_UUID);
-        when(forespørselTjeneste.finnArbeidsgiversÅpneForespørslerPåSak(SAKSNUMMER, ARBEIDSGIVER))
+        when(forespørselTjeneste.finnArbeidsgiversÅpneForespørselPåSak(SAKSNUMMER, ARBEIDSGIVER))
             .thenReturn(Optional.of(eksisterende));
 
         oppdaterDatoer(TIDLIGERE_DATO, SKJÆRINGSTIDSPUNKT.plusDays(1));
@@ -112,7 +113,7 @@ class EndretFørsteUttaksdatoVarslingTest {
 
     @Test
     void skal_ikke_varsle_når_datoene_er_uendret() {
-        when(forespørselTjeneste.finnArbeidsgiversÅpneForespørslerPåSak(SAKSNUMMER, ARBEIDSGIVER))
+        when(forespørselTjeneste.finnArbeidsgiversÅpneForespørselPåSak(SAKSNUMMER, ARBEIDSGIVER))
             .thenReturn(Optional.of(forespørsel(TIDLIGERE_DATO, DIALOG_UUID)));
 
         oppdaterDatoer(TIDLIGERE_DATO, SKJÆRINGSTIDSPUNKT);
@@ -124,7 +125,7 @@ class EndretFørsteUttaksdatoVarslingTest {
     @Test
     void skal_ikke_opprette_tasks_hvis_lokal_datooppdatering_feiler() {
         var eksisterende = forespørsel(TIDLIGERE_DATO, DIALOG_UUID);
-        when(forespørselTjeneste.finnArbeidsgiversÅpneForespørslerPåSak(SAKSNUMMER, ARBEIDSGIVER))
+        when(forespørselTjeneste.finnArbeidsgiversÅpneForespørselPåSak(SAKSNUMMER, ARBEIDSGIVER))
             .thenReturn(Optional.of(eksisterende));
         var feil = new IllegalStateException("Lagring feilet");
         doThrow(feil).when(forespørselTjeneste).oppdaterFørsteUttaksdatoOgSkjæringstidspunkt(eksisterende, NY_DATO, SKJÆRINGSTIDSPUNKT);
@@ -138,7 +139,7 @@ class EndretFørsteUttaksdatoVarslingTest {
     void skal_varsle_om_første_uttaksdato_når_begge_datoene_endres() {
         var eksisterende = forespørsel(TIDLIGERE_DATO, DIALOG_UUID);
         var nyttSkjæringstidspunkt = SKJÆRINGSTIDSPUNKT.plusDays(1);
-        when(forespørselTjeneste.finnArbeidsgiversÅpneForespørslerPåSak(SAKSNUMMER, ARBEIDSGIVER))
+        when(forespørselTjeneste.finnArbeidsgiversÅpneForespørselPåSak(SAKSNUMMER, ARBEIDSGIVER))
             .thenReturn(Optional.of(eksisterende));
 
         oppdaterDatoer(NY_DATO, nyttSkjæringstidspunkt);
@@ -152,7 +153,7 @@ class EndretFørsteUttaksdatoVarslingTest {
 
     @Test
     void skal_varsle_når_tidligere_uttaksdato_mangler() {
-        when(forespørselTjeneste.finnArbeidsgiversÅpneForespørslerPåSak(SAKSNUMMER, ARBEIDSGIVER))
+        when(forespørselTjeneste.finnArbeidsgiversÅpneForespørselPåSak(SAKSNUMMER, ARBEIDSGIVER))
             .thenReturn(Optional.of(forespørsel(null, DIALOG_UUID)));
 
         oppdaterDatoer(NY_DATO, SKJÆRINGSTIDSPUNKT);
@@ -169,7 +170,7 @@ class EndretFørsteUttaksdatoVarslingTest {
 
     @Test
     void skal_opprette_tasks_for_hver_datoendring() {
-        when(forespørselTjeneste.finnArbeidsgiversÅpneForespørslerPåSak(SAKSNUMMER, ARBEIDSGIVER))
+        when(forespørselTjeneste.finnArbeidsgiversÅpneForespørselPåSak(SAKSNUMMER, ARBEIDSGIVER))
             .thenReturn(Optional.of(forespørsel(TIDLIGERE_DATO, DIALOG_UUID)))
             .thenReturn(Optional.of(forespørsel(NY_DATO, DIALOG_UUID)));
 
@@ -186,17 +187,25 @@ class EndretFørsteUttaksdatoVarslingTest {
     }
 
     @Test
-    void sak_task_skal_bruke_siste_historiske_dato_og_dato_fra_tasken() {
+    void sak_task_skal_sende_task_id_og_beholde_den_ved_retry() {
         var gjeldende = forespørsel(NY_DATO, DIALOG_UUID);
         when(forespørselTjeneste.hentForespørsel(FORESPØRSEL_UUID)).thenReturn(gjeldende);
         var task = new OppdaterSakMedEndretFørsteUttaksdatoTask(forespørselTjeneste, minSideArbeidsgiverTjeneste);
-        var data = taskData();
+        var data = spy(taskData());
+        when(data.getId()).thenReturn(123L);
 
         task.doTask(data);
         task.doTask(data);
 
         verify(minSideArbeidsgiverTjeneste, times(2))
-            .sendBeskjedOmEndretFørsteUttaksdato(gjeldende, TIDLIGERE_DATO, gjeldende.førsteUttaksdato());
+            .sendBeskjedOmEndretFørsteUttaksdato(gjeldende, TIDLIGERE_DATO, gjeldende.førsteUttaksdato(), 123L);
+
+        var nyTask = spy(taskData());
+        when(nyTask.getId()).thenReturn(124L);
+        task.doTask(nyTask);
+
+        verify(minSideArbeidsgiverTjeneste)
+            .sendBeskjedOmEndretFørsteUttaksdato(gjeldende, TIDLIGERE_DATO, gjeldende.førsteUttaksdato(), 124L);
         verifyNoInteractions(dialogportenTjeneste);
     }
 

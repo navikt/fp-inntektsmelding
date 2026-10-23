@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import jakarta.persistence.EntityManager;
@@ -102,18 +103,64 @@ class RyddForespørslerTaskTest {
         assertThat(Integer.parseInt(nesteMasterTask.sekvens())).isGreaterThan(subTaskSekvens);
     }
 
+    @Test
+    void skal_begrense_søket_til_tilId_når_satt() {
+        var forespørselA = lagForespørsel(1L, UUID.randomUUID(), "SAK-A", LocalDateTime.now());
+        mockSide(0L, Optional.of(5L), List.of(forespørselA));
+
+        task.doTask(lagProsessTaskData(0L, Optional.of(5L), false));
+
+        var captor = ArgumentCaptor.forClass(ProsessTaskGruppe.class);
+        verify(prosessTaskTjeneste).lagre(captor.capture());
+        assertThat(captor.getValue().getTasks()).hasSize(1);
+    }
+
+    @Test
+    void skal_videreføre_tilId_til_neste_master_task_ved_full_side() {
+        var rader = new ArrayList<ForespørselEntitet>();
+        for (var i = 1; i <= 50; i++) {
+            rader.add(lagForespørsel(i, UUID.randomUUID(), "SAK-FULL-" + i, LocalDateTime.now()));
+        }
+        mockSide(0L, Optional.of(100L), rader);
+
+        task.doTask(lagProsessTaskData(0L, Optional.of(100L), false));
+
+        var captor = ArgumentCaptor.forClass(ProsessTaskGruppe.class);
+        verify(prosessTaskTjeneste).lagre(captor.capture());
+        var masterTaskEntries = captor.getValue().getTasks().stream()
+            .filter(e -> e.task().taskType().value().equals("rydd.forespørsler"))
+            .toList();
+
+        assertThat(masterTaskEntries).hasSize(1);
+        var nesteMasterTask = masterTaskEntries.getFirst();
+        assertThat(nesteMasterTask.task().getPropertyValue("fraId")).isEqualTo("50");
+        assertThat(nesteMasterTask.task().getPropertyValue("tilId")).isEqualTo("100");
+    }
+
     private void mockSide(long fraId, List<ForespørselEntitet> resultat) {
-        when(entityManager.createQuery("from ForespørselEntitet where id > :fraId and status = :status order by id",
-            ForespørselEntitet.class)).thenReturn(query);
+        mockSide(fraId, Optional.empty(), resultat);
+    }
+
+    private void mockSide(long fraId, Optional<Long> tilId, List<ForespørselEntitet> resultat) {
+        var queryString = "from ForespørselEntitet where id > :fraId"
+            + (tilId.isPresent() ? " and id <= :tilId" : "")
+            + " and status = :status order by id";
+        when(entityManager.createQuery(queryString, ForespørselEntitet.class)).thenReturn(query);
         when(query.setParameter("fraId", fraId)).thenReturn(query);
+        tilId.ifPresent(id -> when(query.setParameter("tilId", id)).thenReturn(query));
         when(query.setParameter("status", ForespørselStatus.UNDER_BEHANDLING)).thenReturn(query);
         when(query.setMaxResults(50)).thenReturn(query);
         when(query.getResultList()).thenReturn(resultat);
     }
 
     private ProsessTaskData lagProsessTaskData(long fraId, boolean dryRun) {
+        return lagProsessTaskData(fraId, Optional.empty(), dryRun);
+    }
+
+    private ProsessTaskData lagProsessTaskData(long fraId, Optional<Long> tilId, boolean dryRun) {
         var prosessTaskData = ProsessTaskData.forProsessTask(RyddForespørslerTask.class);
         prosessTaskData.setProperty("fraId", String.valueOf(fraId));
+        tilId.ifPresent(id -> prosessTaskData.setProperty("tilId", String.valueOf(id)));
         prosessTaskData.setProperty("dryRun", String.valueOf(dryRun));
         return prosessTaskData;
     }

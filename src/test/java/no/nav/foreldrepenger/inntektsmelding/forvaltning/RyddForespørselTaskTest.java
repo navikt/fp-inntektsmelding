@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import jakarta.persistence.EntityManager;
@@ -29,7 +30,11 @@ import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEnti
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselBehandlingTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.LukkeÅrsak;
+import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
+import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.fpsak.FpsakKlient;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.fpsak.ForespørselVurderingResultat;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Saksnummer;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
@@ -37,8 +42,8 @@ import no.nav.vedtak.felles.prosesstask.api.ProsessTaskData;
 
 /**
  * Tester forretningslogikken til sub-tasken: fp-sak-vurdering per (saksnummer, orgnummer)-kombinasjon, hvilke
- * duplikater som lukkes, og den pessimistiske lås-sjekken rett før lukking. Paginering og opprettelse av
- * sub-tasks testes i {@link RyddForespørslerTaskTest}.
+ * duplikater som lukkes, og den pessimistiske lås-sjekken rett før lukking/ferdigstilling. Paginering og
+ * opprettelse av sub-tasks testes i {@link RyddForespørslerTaskTest}.
  */
 @ExtendWith(MockitoExtension.class)
 class RyddForespørselTaskTest {
@@ -54,6 +59,8 @@ class RyddForespørselTaskTest {
     @Mock
     private ForespørselBehandlingTjeneste forespørselBehandlingTjeneste;
     @Mock
+    private InntektsmeldingTjeneste inntektsmeldingTjeneste;
+    @Mock
     private FpsakKlient fpsakKlient;
 
     private final Map<UUID, ForespørselEntitet> låsteEntiteter = new HashMap<>();
@@ -63,7 +70,8 @@ class RyddForespørselTaskTest {
 
     @BeforeEach
     void setUp() {
-        task = new RyddForespørselTask(entityManager, forespørselTjeneste, forespørselBehandlingTjeneste, fpsakKlient);
+        task = new RyddForespørselTask(entityManager, forespørselTjeneste, forespørselBehandlingTjeneste,
+            inntektsmeldingTjeneste, fpsakKlient);
 
         lenient().when(entityManager.createQuery(anyString(), eq(ForespørselEntitet.class))).thenReturn(query);
         lenient().when(query.setLockMode(LockModeType.PESSIMISTIC_WRITE)).thenReturn(query);
@@ -85,14 +93,15 @@ class RyddForespørselTaskTest {
     }
 
     @Test
-    void skal_lukke_alle_forespørsler_for_kombinasjonen_ved_trengs_ikke_og_ikke_dry_run() {
+    void skal_lukke_alle_forespørsler_for_kombinasjonen_ved_utgått_og_ikke_dry_run() {
         var uuid1 = UUID.randomUUID();
         var uuid2 = UUID.randomUUID();
         var dto1 = lagDto(1L, uuid1, "SAK1", LocalDateTime.now().minusDays(1));
         var dto2 = lagDto(2L, uuid2, "SAK1", LocalDateTime.now());
         when(forespørselTjeneste.finnÅpneForespørslerForFagsak(new Saksnummer("SAK1"))).thenReturn(List.of(dto1, dto2));
 
-        when(fpsakKlient.sjekkForespørselStatus("SAK1", ORG_NUMMER)).thenReturn(false);
+        when(fpsakKlient.sjekkForespørselStatus("SAK1", ORG_NUMMER))
+            .thenReturn(ForespørselVurderingResultat.SETT_TIL_UTGÅTT);
 
         mockLåstEntitet(uuid1, ForespørselStatus.UNDER_BEHANDLING);
         mockLåstEntitet(uuid2, ForespørselStatus.UNDER_BEHANDLING);
@@ -101,17 +110,20 @@ class RyddForespørselTaskTest {
 
         verify(forespørselBehandlingTjeneste).settForespørselTilUtgåttForvaltning(uuid1);
         verify(forespørselBehandlingTjeneste).settForespørselTilUtgåttForvaltning(uuid2);
+        verify(forespørselBehandlingTjeneste, never()).ferdigstillForespørsel(any(), any(), any());
     }
 
     @Test
-    void skal_beholde_nyeste_forespørsel_og_lukke_eldre_duplikater_ved_trengs() {
+    void skal_beholde_nyeste_forespørsel_og_lukke_eldre_duplikater_ved_trenger_fortsatt() {
         var uuidGammel = UUID.randomUUID();
         var uuidNyest = UUID.randomUUID();
         var dtoGammel = lagDto(1L, uuidGammel, "SAK2", LocalDateTime.now().minusDays(5));
         var dtoNyest = lagDto(2L, uuidNyest, "SAK2", LocalDateTime.now());
-        when(forespørselTjeneste.finnÅpneForespørslerForFagsak(new Saksnummer("SAK2"))).thenReturn(List.of(dtoGammel, dtoNyest));
+        when(forespørselTjeneste.finnÅpneForespørslerForFagsak(new Saksnummer("SAK2")))
+            .thenReturn(List.of(dtoGammel, dtoNyest));
 
-        when(fpsakKlient.sjekkForespørselStatus("SAK2", ORG_NUMMER)).thenReturn(true);
+        when(fpsakKlient.sjekkForespørselStatus("SAK2", ORG_NUMMER))
+            .thenReturn(ForespørselVurderingResultat.TRENGER_FORTSATT_INNTEKTSMELDING);
 
         mockLåstEntitet(uuidGammel, ForespørselStatus.UNDER_BEHANDLING);
 
@@ -122,12 +134,13 @@ class RyddForespørselTaskTest {
     }
 
     @Test
-    void skal_ikke_lukke_noe_ved_trengs_og_kun_en_åpen_forespørsel() {
+    void skal_ikke_lukke_noe_ved_trenger_fortsatt_og_kun_en_åpen_forespørsel() {
         var uuid = UUID.randomUUID();
         var dto = lagDto(1L, uuid, "SAK2B", LocalDateTime.now());
         when(forespørselTjeneste.finnÅpneForespørslerForFagsak(new Saksnummer("SAK2B"))).thenReturn(List.of(dto));
 
-        when(fpsakKlient.sjekkForespørselStatus("SAK2B", ORG_NUMMER)).thenReturn(true);
+        when(fpsakKlient.sjekkForespørselStatus("SAK2B", ORG_NUMMER))
+            .thenReturn(ForespørselVurderingResultat.TRENGER_FORTSATT_INNTEKTSMELDING);
 
         task.doTask(lagProsessTaskData("SAK2B", ORG_NUMMER, false));
 
@@ -136,12 +149,53 @@ class RyddForespørselTaskTest {
     }
 
     @Test
-    void skal_ikke_lukke_noe_i_dry_run_men_fortsatt_spørre_fpsak() {
+    void skal_sette_alle_forespørsler_for_kombinasjonen_til_ferdig_med_siste_inntektsmelding() {
+        var uuid = UUID.randomUUID();
+        var dto = lagDto(1L, uuid, "SAK3", LocalDateTime.now());
+        when(forespørselTjeneste.finnÅpneForespørslerForFagsak(new Saksnummer("SAK3"))).thenReturn(List.of(dto));
+
+        when(fpsakKlient.sjekkForespørselStatus("SAK3", ORG_NUMMER))
+            .thenReturn(ForespørselVurderingResultat.SETT_TIL_FERDIG);
+
+        mockLåstEntitet(uuid, ForespørselStatus.UNDER_BEHANDLING);
+        var imUuid = UUID.randomUUID();
+        var inntektsmelding = mock(InntektsmeldingDto.class);
+        lenient().when(inntektsmelding.getInntektsmeldingUuid()).thenReturn(imUuid);
+        when(inntektsmeldingTjeneste.hentSisteInntektsmeldingForForespørsel(uuid)).thenReturn(inntektsmelding);
+
+        task.doTask(lagProsessTaskData("SAK3", ORG_NUMMER, false));
+
+        verify(forespørselBehandlingTjeneste)
+            .ferdigstillForespørsel(uuid, LukkeÅrsak.ORDINÆR_INNSENDING, Optional.of(imUuid));
+        verify(forespørselBehandlingTjeneste, never()).settForespørselTilUtgåttForvaltning(any());
+    }
+
+    @Test
+    void skal_sette_til_ferdig_uten_inntektsmelding_uuid_når_ingen_er_funnet() {
+        var uuid = UUID.randomUUID();
+        var dto = lagDto(1L, uuid, "SAK3B", LocalDateTime.now());
+        when(forespørselTjeneste.finnÅpneForespørslerForFagsak(new Saksnummer("SAK3B"))).thenReturn(List.of(dto));
+
+        when(fpsakKlient.sjekkForespørselStatus("SAK3B", ORG_NUMMER))
+            .thenReturn(ForespørselVurderingResultat.SETT_TIL_FERDIG);
+
+        mockLåstEntitet(uuid, ForespørselStatus.UNDER_BEHANDLING);
+        when(inntektsmeldingTjeneste.hentSisteInntektsmeldingForForespørsel(uuid)).thenReturn(null);
+
+        task.doTask(lagProsessTaskData("SAK3B", ORG_NUMMER, false));
+
+        verify(forespørselBehandlingTjeneste)
+            .ferdigstillForespørsel(uuid, LukkeÅrsak.ORDINÆR_INNSENDING, Optional.empty());
+    }
+
+    @Test
+    void skal_ikke_gjøre_noe_i_dry_run_men_fortsatt_spørre_fpsak() {
         var dto1 = lagDto(1L, UUID.randomUUID(), "SAK4", LocalDateTime.now().minusDays(1));
         var dto2 = lagDto(2L, UUID.randomUUID(), "SAK4", LocalDateTime.now());
         when(forespørselTjeneste.finnÅpneForespørslerForFagsak(new Saksnummer("SAK4"))).thenReturn(List.of(dto1, dto2));
 
-        when(fpsakKlient.sjekkForespørselStatus("SAK4", ORG_NUMMER)).thenReturn(false);
+        when(fpsakKlient.sjekkForespørselStatus("SAK4", ORG_NUMMER))
+            .thenReturn(ForespørselVurderingResultat.SETT_TIL_UTGÅTT);
 
         var prosessTaskData = ProsessTaskData.forProsessTask(RyddForespørselTask.class);
         prosessTaskData.setProperty("saksnummer", "SAK4");
@@ -155,6 +209,21 @@ class RyddForespørselTaskTest {
     }
 
     @Test
+    void skal_ikke_gjøre_noe_i_dry_run_ved_ferdig() {
+        var dto = lagDto(1L, UUID.randomUUID(), "SAK4B", LocalDateTime.now());
+        when(forespørselTjeneste.finnÅpneForespørslerForFagsak(new Saksnummer("SAK4B"))).thenReturn(List.of(dto));
+
+        when(fpsakKlient.sjekkForespørselStatus("SAK4B", ORG_NUMMER))
+            .thenReturn(ForespørselVurderingResultat.SETT_TIL_FERDIG);
+
+        task.doTask(lagProsessTaskData("SAK4B", ORG_NUMMER, true));
+
+        verify(forespørselBehandlingTjeneste, never()).ferdigstillForespørsel(any(), any(), any());
+        verify(inntektsmeldingTjeneste, never()).hentSisteInntektsmeldingForForespørsel(any());
+        verify(entityManager, never()).createQuery(anyString(), eq(ForespørselEntitet.class));
+    }
+
+    @Test
     void skal_ikke_lukke_forespørsel_som_ikke_lenger_er_under_behandling_idempotens() {
         var uuidAlleredeLukket = UUID.randomUUID();
         var uuidÅpen = UUID.randomUUID();
@@ -162,7 +231,8 @@ class RyddForespørselTaskTest {
         var dto2 = lagDto(2L, uuidÅpen, "SAK5", LocalDateTime.now());
         when(forespørselTjeneste.finnÅpneForespørslerForFagsak(new Saksnummer("SAK5"))).thenReturn(List.of(dto1, dto2));
 
-        when(fpsakKlient.sjekkForespørselStatus("SAK5", ORG_NUMMER)).thenReturn(false);
+        when(fpsakKlient.sjekkForespørselStatus("SAK5", ORG_NUMMER))
+            .thenReturn(ForespørselVurderingResultat.SETT_TIL_UTGÅTT);
 
         mockLåstEntitet(uuidAlleredeLukket, ForespørselStatus.FERDIG);
         mockLåstEntitet(uuidÅpen, ForespørselStatus.UNDER_BEHANDLING);
@@ -174,12 +244,30 @@ class RyddForespørselTaskTest {
     }
 
     @Test
+    void skal_ikke_ferdigstille_forespørsel_som_ikke_lenger_er_under_behandling_idempotens() {
+        var uuid = UUID.randomUUID();
+        var dto = lagDto(1L, uuid, "SAK6", LocalDateTime.now());
+        when(forespørselTjeneste.finnÅpneForespørslerForFagsak(new Saksnummer("SAK6"))).thenReturn(List.of(dto));
+
+        when(fpsakKlient.sjekkForespørselStatus("SAK6", ORG_NUMMER))
+            .thenReturn(ForespørselVurderingResultat.SETT_TIL_FERDIG);
+
+        mockLåstEntitet(uuid, ForespørselStatus.FERDIG);
+
+        task.doTask(lagProsessTaskData("SAK6", ORG_NUMMER, false));
+
+        verify(forespørselBehandlingTjeneste, never()).ferdigstillForespørsel(any(), any(), any());
+        verify(inntektsmeldingTjeneste, never()).hentSisteInntektsmeldingForForespørsel(any());
+    }
+
+    @Test
     void skal_ikke_lukke_forespørsel_hvis_pessimistisk_lås_viser_annen_status_enn_snapshotet() {
         var uuid = UUID.randomUUID();
         var dto = lagDto(1L, uuid, "SAK9", LocalDateTime.now());
         when(forespørselTjeneste.finnÅpneForespørslerForFagsak(new Saksnummer("SAK9"))).thenReturn(List.of(dto));
 
-        when(fpsakKlient.sjekkForespørselStatus("SAK9", ORG_NUMMER)).thenReturn(false);
+        when(fpsakKlient.sjekkForespørselStatus("SAK9", ORG_NUMMER))
+            .thenReturn(ForespørselVurderingResultat.SETT_TIL_UTGÅTT);
 
         mockLåstEntitet(uuid, ForespørselStatus.FERDIG);
 

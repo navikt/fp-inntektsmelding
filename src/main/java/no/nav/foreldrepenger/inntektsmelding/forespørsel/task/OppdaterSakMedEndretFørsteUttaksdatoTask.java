@@ -55,7 +55,8 @@ public class OppdaterSakMedEndretFørsteUttaksdatoTask implements ProsessTaskHan
             return;
         }
         var sisteEndring = forespørsel.historiskeEndringer().stream().max(Comparator.comparing(ForespørselEndringHistorikkDto::opprettetTid)).orElseThrow();
-        minSideArbeidsgiverTjeneste.sendBeskjedOmEndretFørsteUttaksdato(forespørsel, sisteEndring.førsteUttaksdato(), førsteUttaksdato);
+        minSideArbeidsgiverTjeneste.sendBeskjedOmEndretFørsteUttaksdato(forespørsel, sisteEndring.førsteUttaksdato(), førsteUttaksdato,
+            prosessTaskData.getId());
         LOG.info("Oppdaterte arbeidsgiverportalen med endret første uttaksdato for forespørsel {}", forespørselUuid);
     }
 }
