@@ -649,7 +649,7 @@ class GrunnlagDtoTjenesteTest {
         var inntekt3 = new Inntektsopplysninger.InntektMåned(BigDecimal.valueOf(35000), YearMonth.of(2025, 3), MånedslønnStatus.BRUKT_I_GJENNOMSNITT);
         var sumInntekt = inntekt1.beløp().add(inntekt2.beløp().add(inntekt3.beløp()));
         var gjennomsnittInntekt = sumInntekt.divide(BigDecimal.valueOf(3),2, RoundingMode.HALF_UP);
-        when(arbeidsforholdTjeneste.hentArbeidsforhold(personIdent, førsteUttaksdato))
+        when(arbeidsforholdTjeneste.hentArbeidsforhold(personIdent, førsteUttaksdato.minusYears(1), førsteUttaksdato.plusYears(1)))
             .thenReturn(List.of());
         when(fellesGrunnlagTjeneste.harJobbetHeleBeregningsperioden(any(), any(), any())).thenReturn(false);
         when(inntektTjeneste.hentInntekt(aktørId, skjæringstidspunkt, LocalDate.now(),
@@ -740,12 +740,34 @@ class GrunnlagDtoTjenesteTest {
 
         when(personTjeneste.hentPersonFraIdent(fødselsnummer, ytelsetype)).thenReturn(personInfo);
         when(forespørselBehandlingTjeneste.finnForespørslerForAktørId(aktørId, ytelsetype)).thenReturn(List.of());
-        when(arbeidsforholdTjeneste.hentArbeidsforhold(fødselsnummer, førsteUttaksdato)).thenReturn(List.of(new Arbeidsforhold(organisasjonsnummer, new Arbeidsforhold.Ansettelsesperiode(førsteUttaksdato.minusYears(1), Tid.TIDENES_ENDE))));
+        when(arbeidsforholdTjeneste.hentArbeidsforhold(fødselsnummer, førsteUttaksdato.minusYears(1), førsteUttaksdato.plusYears(1))).thenReturn(List.of(new Arbeidsforhold(organisasjonsnummer, new Arbeidsforhold.Ansettelsesperiode(førsteUttaksdato.minusYears(1), Tid.TIDENES_ENDE))));
 
         var arbeidsgiver = Arbeidsgiver.fra(organisasjonsnummer);
         var ex = assertThrows(InntektsmeldingException.class, () -> grunnlagDtoTjeneste.lagArbeidsgiverinitiertUregistrertDialogDto(fødselsnummer, ytelsetype, førsteUttaksdato, arbeidsgiver, førsteUttaksdato));
 
         // Assert
+        AssertionsForClassTypes.assertThat(ex.getFeilkode()).isEqualTo(InntektsmeldingException.LokalFeilKode.FINNES_I_AAREG.name());
+    }
+
+    @Test
+    void skal_kaste_exception_når_arbeidsforhold_i_aareg_starter_etter_første_uttaksdato_innenfor_ett_år() {
+        var fødselsnummer = new PersonIdent("11111111111");
+        var ytelsetype = Ytelsetype.FORELDREPENGER;
+        var førsteUttaksdato = LocalDate.now().minusMonths(1);
+        var organisasjonsnummer = "999999999";
+        var aktørId = AktørId.fra("9999999999999");
+
+        var personInfo = new PersonInfo("Navn", null, "Navnesen", fødselsnummer, aktørId, LocalDate.now(), null, null);
+
+        when(personTjeneste.hentPersonFraIdent(fødselsnummer, ytelsetype)).thenReturn(personInfo);
+        when(forespørselBehandlingTjeneste.finnForespørslerForAktørId(aktørId, ytelsetype)).thenReturn(List.of());
+        when(arbeidsforholdTjeneste.hentArbeidsforhold(fødselsnummer, førsteUttaksdato.minusYears(1), førsteUttaksdato.plusYears(1)))
+            .thenReturn(List.of(new Arbeidsforhold(organisasjonsnummer,
+                new Arbeidsforhold.Ansettelsesperiode(førsteUttaksdato.plusMonths(1), Tid.TIDENES_ENDE))));
+
+        var arbeidsgiver = Arbeidsgiver.fra(organisasjonsnummer);
+        var ex = assertThrows(InntektsmeldingException.class, () -> grunnlagDtoTjeneste.lagArbeidsgiverinitiertUregistrertDialogDto(fødselsnummer, ytelsetype, førsteUttaksdato, arbeidsgiver, førsteUttaksdato));
+
         AssertionsForClassTypes.assertThat(ex.getFeilkode()).isEqualTo(InntektsmeldingException.LokalFeilKode.FINNES_I_AAREG.name());
     }
 }

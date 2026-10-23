@@ -281,16 +281,16 @@ public class GrunnlagDtoTjeneste {
     public boolean finnesOrgnummerIAaregPåPerson(PersonIdent personIdent,
                                                  String organisasjonsnummer,
                                                  LocalDate førsteUttaksdato) {
-        return arbeidsforholdTjeneste.hentArbeidsforhold(personIdent, førsteUttaksdato).stream()
+        var fom = førsteUttaksdato.minusYears(1);
+        var tom = førsteUttaksdato.plusYears(1);
+        return arbeidsforholdTjeneste.hentArbeidsforhold(personIdent, fom, tom).stream()
             .filter(arbeidsforhold -> arbeidsforhold.organisasjonsnummer().equals(organisasjonsnummer))
-            .anyMatch(arbeidsforhold -> inkludererDato(førsteUttaksdato,
+            .anyMatch(arbeidsforhold -> overlapperPeriode(fom, tom,
                 arbeidsforhold.ansettelsesperiode().fom(),
                 arbeidsforhold.ansettelsesperiode().tom()));
     }
 
-    private boolean inkludererDato(LocalDate førsteUttaksdato, LocalDate fom, LocalDate tom) {
-        var fomLikEllerEtter = førsteUttaksdato.isEqual(fom) || førsteUttaksdato.isAfter(fom);
-        var tomLikEllerFør = førsteUttaksdato.isEqual(tom) || førsteUttaksdato.isBefore(tom);
-        return fomLikEllerEtter && tomLikEllerFør;
+    private boolean overlapperPeriode(LocalDate fom, LocalDate tom, LocalDate ansattFom, LocalDate ansattTom) {
+        return !ansattFom.isAfter(tom) && !ansattTom.isBefore(fom);
     }
 }
