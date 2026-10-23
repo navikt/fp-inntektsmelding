@@ -7,6 +7,8 @@ import java.util.List;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ArbeidsforholdType;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +33,10 @@ public class ArbeidstakerTjeneste {
     }
 
     public List<Arbeidsforhold> finnSøkersArbeidsforholdSomArbeidsgiverHarTilgangTil(PersonIdent ident, LocalDate førsteFraværsdag) {
-        var alleArbeidsforholdTilSøker = arbeidsforholdTjeneste.hentArbeidsforhold(ident, førsteFraværsdag);
+        var alleArbeidsforholdTilSøker = arbeidsforholdTjeneste.hentArbeidsforhold(ident, førsteFraværsdag)
+            .stream()
+            .filter(af -> ArbeidsforholdType.ORDINÆRT_ARBEIDSFORHOLD.equals(af.type()))
+            .toList();
         LOG.info("Fant {} arbeidsforhold i Aa-registeret for {}", alleArbeidsforholdTilSøker.size(), ident);
 
         if (alleArbeidsforholdTilSøker.isEmpty()) {

@@ -1,0 +1,9 @@
+package no.nav.foreldrepenger.inntektsmelding.typer.kodeverk;
+
+public enum ArbeidsforholdType {
+    ORDINÆRT_ARBEIDSFORHOLD,
+    MARITIMT_ARBEIDSFORHOLD,
+    FORENKLET_OPPGJØRSORDNING,
+    FRILANSER_OPPDRAGSTAKER_MED_MER,
+    PENSJON_OG_ANDRE_TYPER_YTELSER_UTEN_ANSETTELSESFORHOLD
+}

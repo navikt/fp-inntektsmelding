@@ -29,6 +29,7 @@ import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste
 import no.nav.foreldrepenger.inntektsmelding.server.exceptions.InntektsmeldingException;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.KodeverkMapper;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ArbeidsforholdType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
@@ -152,7 +153,6 @@ public class GrunnlagDtoTjeneste {
             }
             return lagDialogDto(forespørsel.uuid());
         }
-        //Er denne sjekken i det hele tatt er nødvendig?
         var finnesOrgnummerIAaReg = finnesOrgnummerIAaregPåPerson(fødselsnummer, arbeidsgiver.orgnr(), førsteUttaksdato);
         if (finnesOrgnummerIAaReg) {
             throw new InntektsmeldingException(InntektsmeldingException.LokalFeilKode.FINNES_I_AAREG);
@@ -183,6 +183,7 @@ public class GrunnlagDtoTjeneste {
                                                                                         LocalDate førsteFraværsdag) {
         return arbeidsforholdTjeneste.hentArbeidsforhold(fødselsnummer, førsteFraværsdag).stream()
             .filter(arbeidsforhold -> arbeidsforhold.organisasjonsnummer().equals(arbeidsgiver.orgnr()))
+            .filter(arbeidsforhold -> ArbeidsforholdType.ORDINÆRT_ARBEIDSFORHOLD.equals(arbeidsforhold.type()))
             .map(arbeidsforhold -> mapAnsettelsePeriode(arbeidsforhold.ansettelsesperiode()))
             .toList();
     }

@@ -19,7 +19,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import no.nav.foreldrepenger.inntektsmelding.integrasjoner.aareg.dto.ArbeidsforholdDto;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.aareg.dto.AaregArbeidsforholdDto;
 import no.nav.vedtak.exception.IntegrasjonException;
 import no.nav.vedtak.felles.integrasjon.rest.RestClient;
 import no.nav.vedtak.felles.integrasjon.rest.RestRequest;
@@ -42,14 +42,14 @@ class AaregRestKlientTest {
     void skal_hente_nåværende_arbeidsforhold_for_person() {
         var ident = "12345678901";
 
-        var arbeidsforhold = new ArbeidsforholdDto(
+        var arbeidsforhold = new AaregArbeidsforholdDto(
             "123",
             1234L,
             null,
             null,
             null,
             null,
-            "ordinært");
+            AaregArbeidsforholdDto.AaregArbeidsforholdType.ORDINÆRT_ARBEIDSFORHOLD);
 
         var httpResponse = mock(HttpResponse.class);
         when(httpResponse.body()).thenReturn(DefaultJsonMapper.toJson(List.of(arbeidsforhold)));

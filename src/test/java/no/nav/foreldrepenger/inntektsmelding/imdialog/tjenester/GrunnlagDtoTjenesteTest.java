@@ -42,6 +42,7 @@ import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonInfo;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.server.exceptions.InntektsmeldingException;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ArbeidsforholdType;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.MånedslønnStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.dto.YtelseTypeDto;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
@@ -229,7 +230,7 @@ class GrunnlagDtoTjenesteTest {
         var personInfo = new PersonInfo("Navn", "Mellomnavn", "Navnesen", fnr, aktørId, LocalDate.now(), null, null);
         var orgnr = "999999999";
         when(arbeidstakerTjeneste.finnSøkersArbeidsforholdSomArbeidsgiverHarTilgangTil(fnr, førsteFraværsdag)).thenReturn(List.of(new Arbeidsforhold(orgnr,
-            new Arbeidsforhold.Ansettelsesperiode(LocalDate.now().minusMonths(2), Tid.TIDENES_ENDE))));
+            new Arbeidsforhold.Ansettelsesperiode(LocalDate.now().minusMonths(2), Tid.TIDENES_ENDE), ArbeidsforholdType.ORDINÆRT_ARBEIDSFORHOLD)));
         when(organisasjonTjeneste.finnOrganisasjon(Arbeidsgiver.fra(orgnr))).thenReturn(new Organisasjon("Bedriften", orgnr));
         // Act
         var response = grunnlagDtoTjeneste.finnArbeidsforholdForFnr(personInfo, førsteFraværsdag).orElse(null);
@@ -343,8 +344,8 @@ class GrunnlagDtoTjenesteTest {
         when(organisasjonTjeneste.finnOrganisasjon(Arbeidsgiver.fra(organisasjonsnummer))).thenReturn(
             new Organisasjon("Bedriften", organisasjonsnummer));
         when(arbeidsforholdTjeneste.hentArbeidsforhold(fødselsnummer, førsteDatoMedRefusjon)).thenReturn(List.of(
-            new Arbeidsforhold(organisasjonsnummer, new Arbeidsforhold.Ansettelsesperiode(ansattfraDato1, Tid.TIDENES_ENDE)),
-            new Arbeidsforhold(organisasjonsnummer, new Arbeidsforhold.Ansettelsesperiode(ansattFraDato2, Tid.TIDENES_ENDE))));
+            new Arbeidsforhold(organisasjonsnummer, new Arbeidsforhold.Ansettelsesperiode(ansattfraDato1, Tid.TIDENES_ENDE), ArbeidsforholdType.ORDINÆRT_ARBEIDSFORHOLD),
+            new Arbeidsforhold(organisasjonsnummer, new Arbeidsforhold.Ansettelsesperiode(ansattFraDato2, Tid.TIDENES_ENDE), ArbeidsforholdType.ORDINÆRT_ARBEIDSFORHOLD)));
 
         var imDialogDto = grunnlagDtoTjeneste.lagArbeidsgiverinitiertNyansattDialogDto(fødselsnummer,
             ytelsetype,
@@ -427,7 +428,7 @@ class GrunnlagDtoTjenesteTest {
         when(organisasjonTjeneste.finnOrganisasjon(Arbeidsgiver.fra(organisasjonsnummer))).thenReturn(new Organisasjon("Bedriften",
             organisasjonsnummer));
         when(arbeidsforholdTjeneste.hentArbeidsforhold(any(), any())).thenReturn(List.of(
-            new Arbeidsforhold(organisasjonsnummer, new Arbeidsforhold.Ansettelsesperiode(ansattfraDato1, Tid.TIDENES_ENDE))));
+            new Arbeidsforhold(organisasjonsnummer, new Arbeidsforhold.Ansettelsesperiode(ansattfraDato1, Tid.TIDENES_ENDE), ArbeidsforholdType.ORDINÆRT_ARBEIDSFORHOLD)));
         when(fellesGrunnlagTjeneste.harJobbetHeleBeregningsperioden(any(), any(), any())).thenReturn(true);
         when(inntektTjeneste.hentInntekt(aktørId,
             eksFpFørsteUttaksdato,
@@ -740,7 +741,7 @@ class GrunnlagDtoTjenesteTest {
 
         when(personTjeneste.hentPersonFraIdent(fødselsnummer, ytelsetype)).thenReturn(personInfo);
         when(forespørselBehandlingTjeneste.finnForespørslerForAktørId(aktørId, ytelsetype)).thenReturn(List.of());
-        when(arbeidsforholdTjeneste.hentArbeidsforhold(fødselsnummer, førsteUttaksdato.minusYears(1), førsteUttaksdato.plusYears(1))).thenReturn(List.of(new Arbeidsforhold(organisasjonsnummer, new Arbeidsforhold.Ansettelsesperiode(førsteUttaksdato.minusYears(1), Tid.TIDENES_ENDE))));
+        when(arbeidsforholdTjeneste.hentArbeidsforhold(fødselsnummer, førsteUttaksdato.minusYears(1), førsteUttaksdato.plusYears(1))).thenReturn(List.of(new Arbeidsforhold(organisasjonsnummer, new Arbeidsforhold.Ansettelsesperiode(førsteUttaksdato.minusYears(1), Tid.TIDENES_ENDE), ArbeidsforholdType.ORDINÆRT_ARBEIDSFORHOLD)));
 
         var arbeidsgiver = Arbeidsgiver.fra(organisasjonsnummer);
         var ex = assertThrows(InntektsmeldingException.class, () -> grunnlagDtoTjeneste.lagArbeidsgiverinitiertUregistrertDialogDto(fødselsnummer, ytelsetype, førsteUttaksdato, arbeidsgiver, førsteUttaksdato));
@@ -763,7 +764,7 @@ class GrunnlagDtoTjenesteTest {
         when(forespørselBehandlingTjeneste.finnForespørslerForAktørId(aktørId, ytelsetype)).thenReturn(List.of());
         when(arbeidsforholdTjeneste.hentArbeidsforhold(fødselsnummer, førsteUttaksdato.minusYears(1), førsteUttaksdato.plusYears(1)))
             .thenReturn(List.of(new Arbeidsforhold(organisasjonsnummer,
-                new Arbeidsforhold.Ansettelsesperiode(førsteUttaksdato.plusMonths(1), Tid.TIDENES_ENDE))));
+                new Arbeidsforhold.Ansettelsesperiode(førsteUttaksdato.plusMonths(1), Tid.TIDENES_ENDE), ArbeidsforholdType.ORDINÆRT_ARBEIDSFORHOLD)));
 
         var arbeidsgiver = Arbeidsgiver.fra(organisasjonsnummer);
         var ex = assertThrows(InntektsmeldingException.class, () -> grunnlagDtoTjeneste.lagArbeidsgiverinitiertUregistrertDialogDto(fødselsnummer, ytelsetype, førsteUttaksdato, arbeidsgiver, førsteUttaksdato));

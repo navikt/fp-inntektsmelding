@@ -19,7 +19,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import no.nav.foreldrepenger.inntektsmelding.integrasjoner.aareg.dto.ArbeidsforholdDto;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.aareg.dto.AaregArbeidsforholdDto;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.aareg.dto.OpplysningspliktigArbeidsgiverDto;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
 
@@ -62,7 +62,7 @@ class ArbeidsforholdTjenesteTest {
 
     @Test
     void skalMappeArbeidsforholdKorrekt() {
-        var arbeidsforhold = new ArbeidsforholdDto(
+        var arbeidsforhold = new AaregArbeidsforholdDto(
             "abc123",
             123L,
             new OpplysningspliktigArbeidsgiverDto(
@@ -74,7 +74,7 @@ class ArbeidsforholdTjenesteTest {
             null,
             null,
             null,
-            "type"
+            AaregArbeidsforholdDto.AaregArbeidsforholdType.ORDINÆRT_ARBEIDSFORHOLD
         );
 
         var nå = LocalDate.now();
@@ -96,7 +96,7 @@ class ArbeidsforholdTjenesteTest {
     @Test
     void skalMappeFlereArbeidsforholdKorrekt() {
         var ansettelsesperiode = new AnsettelsesperiodeDto(new PeriodeDto(LocalDate.now().minusYears(1), LocalDate.now().plusMonths(6)));
-        var arbeidsforhold1 = new ArbeidsforholdDto(
+        var arbeidsforhold1 = new AaregArbeidsforholdDto(
             "arbeidsforhold id 1",
             123L,
             new OpplysningspliktigArbeidsgiverDto(
@@ -108,10 +108,10 @@ class ArbeidsforholdTjenesteTest {
             ansettelsesperiode,
             null,
             null,
-            "type"
+            AaregArbeidsforholdDto.AaregArbeidsforholdType.ORDINÆRT_ARBEIDSFORHOLD
         );
         var ansettelsesperiode2 = new AnsettelsesperiodeDto(new PeriodeDto(LocalDate.now().minusYears(2), Tid.TIDENES_ENDE));
-        var arbeidsforhold2 = new ArbeidsforholdDto(
+        var arbeidsforhold2 = new AaregArbeidsforholdDto(
             "arbeidsforhold id 2",
             123L,
             new OpplysningspliktigArbeidsgiverDto(
@@ -123,7 +123,7 @@ class ArbeidsforholdTjenesteTest {
             ansettelsesperiode2,
             null,
             null,
-            "type"
+            AaregArbeidsforholdDto.AaregArbeidsforholdType.ORDINÆRT_ARBEIDSFORHOLD
         );
         var nå = LocalDate.now();
 

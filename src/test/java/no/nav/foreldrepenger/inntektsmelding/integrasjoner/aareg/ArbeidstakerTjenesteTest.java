@@ -17,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.foreldrepenger.inntektsmelding.pip.AltinnTilgangTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ArbeidsforholdType;
 import no.nav.vedtak.konfig.Tid;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,7 +43,7 @@ class ArbeidstakerTjenesteTest {
         var førsteFraværsdag = LocalDate.now();
         var ansettelsesperiode = new Arbeidsforhold.Ansettelsesperiode(LocalDate.now(), LocalDate.now().plusMonths(2));
         when(arbeidsforholdTjenesteMock.hentArbeidsforhold(any(), any())).thenReturn(
-            List.of(new Arbeidsforhold("000000000", ansettelsesperiode))
+            List.of(new Arbeidsforhold("000000000", ansettelsesperiode, ArbeidsforholdType.ORDINÆRT_ARBEIDSFORHOLD))
         );
         when(altinnTilgangTjenesteMock.harTilgangTilBedriften(any())).thenReturn(true);
 
@@ -61,7 +62,7 @@ class ArbeidstakerTjenesteTest {
         var førsteFraværsdag = LocalDate.now();
         var ansettelsesPeriode = new Arbeidsforhold.Ansettelsesperiode(LocalDate.now().minusYears(1), Tid.TIDENES_ENDE);
         when(arbeidsforholdTjenesteMock.hentArbeidsforhold(any(), any())).thenReturn(
-            List.of(new Arbeidsforhold("00000000", ansettelsesPeriode)));
+            List.of(new Arbeidsforhold("00000000", ansettelsesPeriode, ArbeidsforholdType.ORDINÆRT_ARBEIDSFORHOLD)));
         when(altinnTilgangTjenesteMock.harTilgangTilBedriften(any())).thenReturn(true);
 
         var resultat = arbeidstakerTjeneste.finnSøkersArbeidsforholdSomArbeidsgiverHarTilgangTil(TILFELDIG_PERSON_IDENT, førsteFraværsdag);
@@ -80,8 +81,8 @@ class ArbeidstakerTjenesteTest {
         var ansettelsesPeriode2 = new Arbeidsforhold.Ansettelsesperiode(LocalDate.now().minusYears(1), LocalDate.now().plusMonths(5));
         when(arbeidsforholdTjenesteMock.hentArbeidsforhold(any(), any())).thenReturn(
             List.of(
-                new Arbeidsforhold("00000000", ansettelsesPeriode),
-                new Arbeidsforhold("00000001", ansettelsesPeriode2)
+                new Arbeidsforhold("00000000", ansettelsesPeriode, ArbeidsforholdType.ORDINÆRT_ARBEIDSFORHOLD),
+                new Arbeidsforhold("00000001", ansettelsesPeriode2, ArbeidsforholdType.ORDINÆRT_ARBEIDSFORHOLD)
             )
         );
         when(altinnTilgangTjenesteMock.harTilgangTilBedriften("00000000")).thenReturn(false);
