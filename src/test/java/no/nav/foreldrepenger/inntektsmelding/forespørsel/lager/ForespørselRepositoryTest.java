@@ -1,6 +1,7 @@
 package no.nav.foreldrepenger.inntektsmelding.forespørsel.lager;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 import static org.assertj.core.api.Assertions.tuple;
 
 import java.sql.Timestamp;
@@ -35,6 +36,53 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
                                   LocalDate førsteUttaksdato, ForespørselType type) {
         return forespørselRepository.lagreForespørsel(
             new ForespørselEntitet(orgnr, skjæringstidspunkt, new AktørIdEntitet(aktørId), ytelsetype, saksnummer, førsteUttaksdato, type));
+    }
+
+    @Test
+    void skal_tildele_stigende_løpenummer_bare_ved_første_lagring() {
+        var førsteUuid = lagreForespørsel(LocalDate.now(), Ytelsetype.FORELDREPENGER, "9999999999999",
+            "999999999", "123", LocalDate.now(), ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var første = forespørselRepository.hentForespørsel(førsteUuid).orElseThrow();
+        var løpenummer = første.getLøpenummer();
+        assertThat(løpenummer).isNotNull();
+
+        forespørselRepository.lagreForespørsel(første);
+        assertThat(første.getLøpenummer()).isEqualTo(løpenummer);
+
+        var andreUuid = lagreForespørsel(LocalDate.now(), Ytelsetype.FORELDREPENGER, "9999999999999",
+            "999999999", "124", LocalDate.now(), ForespørselType.BESTILT_AV_FAGSYSTEM);
+        getEntityManager().clear();
+
+        assertThat(forespørselRepository.hentForespørsel(førsteUuid).orElseThrow().getLøpenummer()).isEqualTo(løpenummer);
+        assertThat(forespørselRepository.hentForespørsel(andreUuid).orElseThrow().getLøpenummer()).isEqualTo(løpenummer + 1);
+    }
+
+    @Test
+    void skal_beholde_null_løpenummer_ved_lagring_av_historisk_forespørsel() {
+        var historisk = new ForespørselEntitet("999999999", LocalDate.now(), new AktørIdEntitet("9999999999999"),
+            Ytelsetype.FORELDREPENGER, "123", LocalDate.now(), ForespørselType.BESTILT_AV_FAGSYSTEM);
+        getEntityManager().persist(historisk);
+        getEntityManager().flush();
+        getEntityManager().clear();
+
+        var hentet = forespørselRepository.hentForespørsel(historisk.getUuid()).orElseThrow();
+        assertThat(hentet.getLøpenummer()).isNull();
+        forespørselRepository.lagreForespørsel(hentet);
+        assertThat(hentet.getLøpenummer()).isNull();
+        getEntityManager().clear();
+
+        assertThat(forespørselRepository.hentForespørsel(historisk.getUuid()).orElseThrow().getLøpenummer()).isNull();
+    }
+
+    @Test
+    void skal_avvise_endring_av_tildelt_løpenummer() {
+        var forespørsel = new ForespørselEntitet("999999999", LocalDate.now(), new AktørIdEntitet("9999999999999"),
+            Ytelsetype.FORELDREPENGER, "123", LocalDate.now(), ForespørselType.BESTILT_AV_FAGSYSTEM);
+        forespørsel.setLøpenummer(150000L);
+        forespørsel.setLøpenummer(150000L);
+
+        assertThatIllegalStateException().isThrownBy(() -> forespørsel.setLøpenummer(150001L));
+        assertThat(forespørsel.getLøpenummer()).isEqualTo(150000L);
     }
 
     @Test

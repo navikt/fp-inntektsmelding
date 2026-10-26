@@ -40,9 +40,16 @@ public class InntektsmeldingRepository {
     }
 
     public Long lagreInntektsmelding(InntektsmeldingEntitet inntektsmeldingEntitet) {
+        if (inntektsmeldingEntitet.getId() == null && inntektsmeldingEntitet.getLøpenummer() == null) {
+            inntektsmeldingEntitet.setLøpenummer(hentNesteLøpenummer());
+        }
         entityManager.persist(inntektsmeldingEntitet);
         entityManager.flush();
         return inntektsmeldingEntitet.getId();
+    }
+
+    private long hentNesteLøpenummer() {
+        return (Long) entityManager.createNativeQuery("select nextval('seq_inntektsmelding_loepe_nummer')", Long.class).getSingleResult();
     }
 
     public List<InntektsmeldingEntitet> hentInntektsmeldingerSortertNyesteFørst(AktørIdEntitet aktørId, String arbeidsgiverIdent, LocalDate startDato, Ytelsetype ytelsetype) {
@@ -119,7 +126,7 @@ public class InntektsmeldingRepository {
         }
         cq.where(predicates.toArray(new Predicate[0]));
 
-        cq.orderBy(cb.desc(root.get("opprettetTidspunkt")));
+        cq.orderBy(cb.asc(root.get("id")));
         var query = entityManager.createQuery(cq);
         query.setMaxResults(1001);
         var result = query.getResultList();

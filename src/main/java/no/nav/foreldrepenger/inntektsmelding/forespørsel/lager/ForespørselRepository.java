@@ -41,9 +41,16 @@ public class ForespørselRepository {
 
     public UUID lagreForespørsel(ForespørselEntitet forespørselEntitet) {
         LOG.info("ForespørselRepository: lagrer forespørsel entitet: {}", forespørselEntitet);
+        if (forespørselEntitet.getId() == null && forespørselEntitet.getLøpenummer() == null) {
+            forespørselEntitet.setLøpenummer(hentNesteLøpenummer());
+        }
         entityManager.persist(forespørselEntitet);
         entityManager.flush();
         return forespørselEntitet.getUuid();
+    }
+
+    private long hentNesteLøpenummer() {
+        return (Long) entityManager.createNativeQuery("select nextval('seq_forespoersel_loepe_nummer')", Long.class).getSingleResult();
     }
 
     public void oppdaterOppgaveId(UUID forespørselUUID, String oppgaveId) {
