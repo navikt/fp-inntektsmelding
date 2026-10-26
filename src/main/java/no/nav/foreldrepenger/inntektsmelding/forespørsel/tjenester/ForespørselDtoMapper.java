@@ -1,5 +1,7 @@
 package no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester;
 
+import java.util.Optional;
+
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
@@ -22,7 +24,7 @@ public class ForespørselDtoMapper {
                 e.getOpprettetTidspunkt()))
             .toList();
         return ForespørselDto.builder()
-            .loepenr(entitet.getId())
+            .loepenr(Optional.ofNullable(entitet.getLøpenummer()).orElse(entitet.getId()))
             .uuid(entitet.getUuid())
             .arbeidsgiver(Arbeidsgiver.fra(entitet.getOrganisasjonsnummer()))
             .aktørId(AktørId.fra(entitet.getAktørId().getAktørId()))

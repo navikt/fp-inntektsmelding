@@ -8,6 +8,7 @@ import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 import no.nav.foreldrepenger.inntektsmelding.database.JpaExtension;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDto;
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.tjenester.ForespørselDtoMapper;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
@@ -413,47 +416,89 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
             "321",
             LocalDate.now(), ForespørselType.BESTILT_AV_FAGSYSTEM);
 
-        var lavesteDatabaseId = forespørselRepository.hentForespørslerFraFilter(orgnr, null, null, null, null, null, null).stream()
-            .map(ForespørselEntitet::getId)
+        var lavesteLøpenummer = forespørselRepository.hentForespørslerFraFilter(orgnr, null, null, null, null, null, null).stream()
+            .map(ForespørselEntitet::getLøpenummer)
             .min(Long::compareTo)
             .orElseThrow();
 
         var forespørsler = forespørselRepository.hentForespørslerFraFilter(orgnr, null, null, null,
-            null, LocalDate.now().plusDays(7), lavesteDatabaseId);
+            null, LocalDate.now().plusDays(7), lavesteLøpenummer);
 
         assertThat(forespørsler).hasSize(2);
-        assertThat(forespørsler.stream().noneMatch(fs -> fs.getId() <= lavesteDatabaseId)).isTrue();
+        assertThat(forespørsler).allSatisfy(fs -> assertThat(fs.getLøpenummer()).isGreaterThan(lavesteLøpenummer));
     }
 
     @Test
-    void skal_sortere_på_løpenummer_uavhengig_av_opprettet_tidspunkt() {
+    void skal_bruke_samme_løpenummer_i_svar_filter_og_sortering_før_og_etter_etterfylling() {
         var orgnr = "999999999";
-        var førsteUuid = lagreForespørsel(LocalDate.now(),
-            Ytelsetype.FORELDREPENGER,
-            "9999999999999",
-            orgnr,
-            "123",
-            LocalDate.now(),
-            ForespørselType.BESTILT_AV_FAGSYSTEM);
-        var andreUuid = lagreForespørsel(LocalDate.now(),
-            Ytelsetype.FORELDREPENGER,
-            "8888888888888",
-            orgnr,
-            "321",
-            LocalDate.now(),
-            ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var historisk = new ForespørselEntitet(orgnr, LocalDate.now(), new AktørIdEntitet("9999999999999"),
+            Ytelsetype.FORELDREPENGER, "123", LocalDate.now(), ForespørselType.BESTILT_AV_FAGSYSTEM);
+        getEntityManager().persist(historisk);
+        getEntityManager().flush();
+        var lavesteNyeLøpenummer = historisk.getId() + 150000;
 
-        var førsteId = forespørselRepository.hentForespørsel(førsteUuid).orElseThrow().getId();
-        var andreId = forespørselRepository.hentForespørsel(andreUuid).orElseThrow().getId();
-        assertThat(førsteId).isLessThan(andreId);
+        var første = new ForespørselEntitet(orgnr, LocalDate.now(), new AktørIdEntitet("9999999999999"),
+            Ytelsetype.FORELDREPENGER, "124", LocalDate.now(), ForespørselType.BESTILT_AV_FAGSYSTEM);
+        første.setLøpenummer(lavesteNyeLøpenummer + 1);
+        forespørselRepository.lagreForespørsel(første);
+        var andre = new ForespørselEntitet(orgnr, LocalDate.now(), new AktørIdEntitet("9999999999999"),
+            Ytelsetype.FORELDREPENGER, "125", LocalDate.now(), ForespørselType.BESTILT_AV_FAGSYSTEM);
+        andre.setLøpenummer(lavesteNyeLøpenummer);
+        forespørselRepository.lagreForespørsel(andre);
+        assertThat(første.getId()).isLessThan(andre.getId());
 
-        oppdaterOpprettetTidspunkt(førsteUuid, LocalDateTime.now());
-        oppdaterOpprettetTidspunkt(andreUuid, LocalDateTime.now().minusHours(1));
+        oppdaterOpprettetTidspunkt(første.getUuid(), LocalDateTime.now().minusHours(1));
+        oppdaterOpprettetTidspunkt(andre.getUuid(), LocalDateTime.now().minusHours(2));
         getEntityManager().clear();
 
-        var forespørsler = forespørselRepository.hentForespørslerFraFilter(orgnr, null, null, null, null, null, null);
+        var førEtterfylling = forespørselRepository.hentForespørslerFraFilter(orgnr, null, null, null, null, null, null).stream()
+            .map(ForespørselDtoMapper::mapFraEntitet)
+            .toList();
+        assertThat(førEtterfylling).extracting(ForespørselDto::loepenr)
+            .containsExactly(historisk.getId(), lavesteNyeLøpenummer, lavesteNyeLøpenummer + 1);
+        assertThat(førEtterfylling).extracting(ForespørselDto::uuid)
+            .containsExactly(historisk.getUuid(), andre.getUuid(), første.getUuid());
+        assertThat(forespørselRepository.hentForespørslerFraFilter(orgnr, null, null, null, null, null, historisk.getId() - 1))
+            .extracting(ForespørselEntitet::getId).containsExactly(historisk.getId(), andre.getId(), første.getId());
+        assertThat(forespørselRepository.hentForespørslerFraFilter(orgnr, null, null, null, null, null, lavesteNyeLøpenummer))
+            .extracting(ForespørselEntitet::getId).containsExactly(første.getId());
 
-        assertThat(forespørsler).extracting(ForespørselEntitet::getId).containsExactly(førsteId, andreId);
+        var oppdatert = getEntityManager().createQuery("""
+            update ForespørselEntitet f set f.løpenummer = f.id where f.id = :id and f.løpenummer is null
+            """).setParameter("id", historisk.getId()).executeUpdate();
+        assertThat(oppdatert).isEqualTo(1);
+        getEntityManager().clear();
+
+        var etterEtterfylling = forespørselRepository.hentForespørslerFraFilter(orgnr, null, null, null, null, null, null).stream()
+            .map(ForespørselDtoMapper::mapFraEntitet)
+            .toList();
+        assertThat(etterEtterfylling).containsExactlyElementsOf(førEtterfylling);
+        assertThat(forespørselRepository.hentForespørslerFraFilter(orgnr, null, null, null, null, null, historisk.getId()))
+            .extracting(ForespørselEntitet::getId).containsExactly(andre.getId(), første.getId());
+    }
+
+    @Test
+    void skal_paginere_blandede_løpenummer_uten_tap_eller_duplikater() {
+        var orgnr = "999999999";
+        getEntityManager().createNativeQuery("""
+            insert into forespoersel (id, uuid, orgnr, bruker_aktoer_id, ytelse_type, loepe_nummer)
+            select 10000 + n, gen_random_uuid(), :orgnr, '9999999999999', 'FORELDREPENGER',
+                case when n % 4 = 0 then 10000 + n when n % 2 = 0 then null else 151002 - n end
+            from generate_series(1, 1002) as n
+            """).setParameter("orgnr", orgnr).executeUpdate();
+        getEntityManager().clear();
+
+        var førsteSide = forespørselRepository.hentForespørslerFraFilter(orgnr, null, null, null, null, null, null).stream()
+            .map(ForespørselDtoMapper::mapFraEntitet)
+            .toList();
+        assertThat(førsteSide).hasSize(1000);
+        var andreSide = forespørselRepository.hentForespørslerFraFilter(orgnr, null, null, null, null, null, førsteSide.getLast().loepenr()).stream()
+            .map(ForespørselDtoMapper::mapFraEntitet)
+            .toList();
+        assertThat(andreSide).extracting(ForespørselDto::loepenr).containsExactly(150999L, 151001L);
+        assertThat(Stream.concat(førsteSide.stream(), andreSide.stream()).map(ForespørselDto::loepenr).toList())
+            .hasSize(1002).doesNotHaveDuplicates().isSorted();
+        assertThat(forespørselRepository.hentForespørslerFraFilter(orgnr, null, null, null, null, null, andreSide.getLast().loepenr())).isEmpty();
     }
 
     private void oppdaterOpprettetTidspunkt(UUID uuid, LocalDateTime opprettetTidspunkt) {

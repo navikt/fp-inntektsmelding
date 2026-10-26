@@ -35,6 +35,31 @@ class InntektsmeldingKontraktMapperTest {
     private static final LocalDate STARTDATO = LocalDate.of(2026, 1, 10);
 
     @Test
+    void skal_bruke_database_id_som_løpenummer_for_historisk_inntektsmelding() {
+        var inntektsmelding = InntektsmeldingDto.builder(lagInntektsmeldingDto(UUID.randomUUID(), UUID.randomUUID()))
+            .medId(1000L)
+            .build();
+
+        var resultat = InntektsmeldingKontraktMapper.mapTilKontrakt(inntektsmelding, new PersonIdent(FNR));
+
+        assertThat(resultat.loepenr()).isEqualTo(1000L);
+    }
+
+    @Test
+    void skal_beholde_eksternt_løpenummer_og_intern_id_ved_kopiering() {
+        var inntektsmelding = InntektsmeldingDto.builder(lagInntektsmeldingDto(UUID.randomUUID(), UUID.randomUUID()))
+            .medId(1000L)
+            .medLoepeNummer(151000L)
+            .build();
+        var kopi = InntektsmeldingDto.builder(inntektsmelding).medStatus(InntektsmeldingStatus.UTDATERT).build();
+
+        var resultat = InntektsmeldingKontraktMapper.mapTilKontrakt(kopi, new PersonIdent(FNR));
+
+        assertThat(resultat.loepenr()).isEqualTo(151000L);
+        assertThat(kopi.getId()).isEqualTo(1000L);
+    }
+
+    @Test
     void skal_mappe_grunnleggende_felter() {
         var imUuid = UUID.randomUUID();
         var forespørselUuid = UUID.randomUUID();

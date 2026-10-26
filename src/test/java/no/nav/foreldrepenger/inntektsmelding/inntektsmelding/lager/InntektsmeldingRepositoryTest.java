@@ -2,11 +2,13 @@ package no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
+import static org.assertj.core.api.Assertions.tuple;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,6 +17,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import no.nav.foreldrepenger.inntektsmelding.database.JpaExtension;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselRepository;
+import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDto;
+import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.InntektsmeldingDtoMapper;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.EndringsårsakType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
@@ -467,36 +471,84 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
         lagreInntektsmelding("8888888888888", orgnr, Ytelsetype.FORELDREPENGER);
         lagreInntektsmelding("8888888888888", orgnr, Ytelsetype.SVANGERSKAPSPENGER);
 
-        var lavesteDatabaseId = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null, null, null, null, null).stream()
-            .map(InntektsmeldingEntitet::getId)
+        var lavesteLøpenummer = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null, null, null, null, null).stream()
+            .map(InntektsmeldingEntitet::getLøpenummer)
             .min(Long::compareTo)
             .orElseThrow();
 
 
-        var resultat = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, new AktørIdEntitet("8888888888888"), null, null, null, lavesteDatabaseId,
+        var resultat = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, new AktørIdEntitet("8888888888888"), null, null, null, lavesteLøpenummer,
             null);
 
         assertThat(resultat).hasSize(2);
-        assertThat(resultat.stream().noneMatch(im -> im.getId() <= lavesteDatabaseId)).isTrue();
+        assertThat(resultat).allSatisfy(im -> assertThat(im.getLøpenummer()).isGreaterThan(lavesteLøpenummer));
     }
 
     @Test
-    void skal_sortere_på_stigende_id_uavhengig_av_opprettet_tid() {
+    void skal_bruke_samme_løpenummer_i_svar_filter_og_sortering_før_og_etter_etterfylling() {
         var orgnr = "999999999";
         var opprettetTidspunkt = LocalDateTime.now();
-        var im1 = lagInntektsmeldingEntitet("9999999999999", orgnr, Ytelsetype.FORELDREPENGER, opprettetTidspunkt.minusDays(2));
-        var im2 = lagInntektsmeldingEntitet("9999999999999", orgnr, Ytelsetype.FORELDREPENGER, opprettetTidspunkt);
-        var im3 = lagInntektsmeldingEntitet("9999999999999", orgnr, Ytelsetype.FORELDREPENGER, opprettetTidspunkt.minusDays(1));
-        inntektsmeldingRepository.lagreInntektsmelding(im1);
-        inntektsmeldingRepository.lagreInntektsmelding(im2);
-        inntektsmeldingRepository.lagreInntektsmelding(im3);
+        var historisk = lagInntektsmeldingEntitet("9999999999999", orgnr, Ytelsetype.FORELDREPENGER, opprettetTidspunkt);
+        getEntityManager().persist(historisk);
+        getEntityManager().flush();
+        var lavesteNyeLøpenummer = historisk.getId() + 150000;
+
+        var første = lagInntektsmeldingEntitet("9999999999999", orgnr, Ytelsetype.FORELDREPENGER, opprettetTidspunkt.minusDays(1));
+        første.setLøpenummer(lavesteNyeLøpenummer + 1);
+        inntektsmeldingRepository.lagreInntektsmelding(første);
+        var andre = lagInntektsmeldingEntitet("9999999999999", orgnr, Ytelsetype.FORELDREPENGER, opprettetTidspunkt.minusDays(2));
+        andre.setLøpenummer(lavesteNyeLøpenummer);
+        inntektsmeldingRepository.lagreInntektsmelding(andre);
+        assertThat(første.getId()).isLessThan(andre.getId());
         getEntityManager().clear();
 
-        var resultat = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null, null, null, null, null);
-        var resultatEtterMarkør = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null, null, null, im1.getId(), null);
+        var førEtterfylling = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null, null, null, null, null).stream()
+            .map(InntektsmeldingDtoMapper::mapFraEntitet)
+            .toList();
+        assertThat(førEtterfylling).extracting(InntektsmeldingDto::getId, InntektsmeldingDto::getLoepeNummer)
+            .containsExactly(tuple(historisk.getId(), historisk.getId()), tuple(andre.getId(), lavesteNyeLøpenummer),
+                tuple(første.getId(), lavesteNyeLøpenummer + 1));
+        assertThat(inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null, null, null, historisk.getId() - 1, null))
+            .extracting(InntektsmeldingEntitet::getId).containsExactly(historisk.getId(), andre.getId(), første.getId());
+        assertThat(inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null, null, null, lavesteNyeLøpenummer, null))
+            .extracting(InntektsmeldingEntitet::getId).containsExactly(første.getId());
 
-        assertThat(resultat).extracting(InntektsmeldingEntitet::getId).containsExactly(im1.getId(), im2.getId(), im3.getId());
-        assertThat(resultatEtterMarkør).extracting(InntektsmeldingEntitet::getId).containsExactly(im2.getId(), im3.getId());
+        var oppdatert = getEntityManager().createQuery("""
+            update InntektsmeldingEntitet im set im.løpenummer = im.id where im.id = :id and im.løpenummer is null
+            """).setParameter("id", historisk.getId()).executeUpdate();
+        assertThat(oppdatert).isEqualTo(1);
+        getEntityManager().clear();
+
+        var etterEtterfylling = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null, null, null, null, null).stream()
+            .map(InntektsmeldingDtoMapper::mapFraEntitet)
+            .toList();
+        assertThat(etterEtterfylling).extracting(InntektsmeldingDto::getId, InntektsmeldingDto::getLoepeNummer)
+            .containsExactlyElementsOf(førEtterfylling.stream().map(im -> tuple(im.getId(), im.getLoepeNummer())).toList());
+        assertThat(inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null, null, null, historisk.getId(), null))
+            .extracting(InntektsmeldingEntitet::getId).containsExactly(andre.getId(), første.getId());
+    }
+
+    @Test
+    void skal_paginere_blandede_løpenummer_uten_tap_eller_duplikater() {
+        var orgnr = "999999999";
+        getEntityManager().createNativeQuery("""
+            insert into inntektsmelding
+                (id, uuid, arbeidsgiver_ident, bruker_aktoer_id, ytelse_type, start_dato_permisjon, maaned_inntekt, kildesystem, status, loepe_nummer)
+            select 10000 + n, gen_random_uuid(), :orgnr, '9999999999999', 'FORELDREPENGER', current_date, 4000, 'ARBEIDSGIVERPORTAL', 'GODKJENT',
+                case when n % 4 = 0 then 10000 + n when n % 2 = 0 then null else 151002 - n end
+            from generate_series(1, 1002) as n
+            """).setParameter("orgnr", orgnr).executeUpdate();
+        getEntityManager().clear();
+
+        var førsteSide = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null, null, null, null, null);
+        assertThat(førsteSide).hasSize(1000);
+        var andreSide = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null, null, null, førsteSide.getLast().getLøpenummer(), null);
+        assertThat(andreSide).extracting(InntektsmeldingEntitet::getLøpenummer).containsExactly(150999L, 151001L);
+        assertThat(Stream.concat(førsteSide.stream(), andreSide.stream())
+            .map(im -> im.getLøpenummer() != null ? im.getLøpenummer() : im.getId()).toList())
+            .hasSize(1002).doesNotHaveDuplicates().isSorted();
+        assertThat(inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null, null, null, andreSide.getLast().getLøpenummer(), null))
+            .isEmpty();
     }
 
     @Test
