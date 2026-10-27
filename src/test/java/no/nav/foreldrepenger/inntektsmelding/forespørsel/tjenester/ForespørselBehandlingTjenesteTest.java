@@ -19,6 +19,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -90,8 +92,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
     }
 
     // Simulerer at prosesstasken for å opprette sak/oppgave hos arbeidsgiverportalen har kjørt, slik den ville gjort
-    // kort tid etter i produksjon. Nødvendig i disse testene fordi ferdigstilling fortsatt slår opp forespørselen
-    // på arbeidsgiverNotifikasjonSakId og oppgaveId
+    // kort tid etter i produksjon.
     private void kjørOpprettSakTask(UUID forespørselUuid) {
         var task = new OpprettSakTask(forespørselTjeneste, minSideArbeidsgiverTjeneste);
         var taskData = ProsessTaskData.forProsessTask(OpprettSakTask.class);
@@ -205,7 +206,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
 
     @ParameterizedTest
     @EnumSource(value = ForespørselStatus.class, names = {"UNDER_BEHANDLING", "FERDIG"})
-    void komplett_liste_med_mottatt_im_skal_beholde_eksisterende_forespørsel_uten_datoendring(ForespørselStatus status) {
+    void komplett_liste_med_mottatt_im_skal_ferdigstille_eksisterende_forespørsel_uten_datoendring(ForespørselStatus status) {
         var forespørselUuid = lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, BRREG_ORGNUMMER, SAKSNUMMER,
             FØRSTE_UTTAKSDATO, ForespørselType.BESTILT_AV_FAGSYSTEM);
         forespørselRepository.hentForespørsel(forespørselUuid).orElseThrow().setStatus(status);
@@ -227,14 +228,34 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         var lagret = forespørselRepository.hentForespørslerPåSak(SAKSNUMMER);
         assertThat(lagret).hasSize(1);
         assertThat(lagret.getFirst().getUuid()).isEqualTo(forespørselUuid);
-        assertThat(lagret.getFirst().getStatus()).isEqualTo(status);
+        assertThat(lagret.getFirst().getStatus()).isEqualTo(ForespørselStatus.FERDIG);
         assertThat(lagret.getFirst().getFørsteUttaksdato()).isEqualTo(FØRSTE_UTTAKSDATO);
-        verifyNoInteractions(prosessTaskTjeneste, minSideArbeidsgiverTjeneste, dialogportenTjeneste);
+
+        forespørselBehandlingTjeneste.håndterForespørselSomUmibddelbartSkalLukkes(SKJÆRINGSTIDSPUNKT,
+            YTELSETYPE, AktørId.fra(AKTØR_ID), arbeidsgiver, Saksnummer.fra(SAKSNUMMER), FØRSTE_UTTAKSDATO);
+
+        if (status == ForespørselStatus.UNDER_BEHANDLING) {
+            var taskGruppeCaptor = ArgumentCaptor.forClass(ProsessTaskGruppe.class);
+            verify(prosessTaskTjeneste).lagre(taskGruppeCaptor.capture());
+            var tasks = taskGruppeCaptor.getValue().getTasks().stream().map(ProsessTaskGruppe.Entry::task).toList();
+            assertThat(tasks).extracting(ProsessTaskData::taskType).containsExactly(
+                TaskType.forProsessTask(FerdigstillSakTask.class),
+                TaskType.forProsessTask(FerdigstillDialogTask.class));
+            tasks.forEach(task -> {
+                assertThat(task.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid.toString());
+                assertThat(task.getPropertyValue(FellesTaskProperties.KEY_LUKKE_AARSAK)).isEqualTo(LukkeÅrsak.EKSTERN_INNSENDING.name());
+                assertThat(task.getPropertyValue(FellesTaskProperties.KEY_INNTEKTSMELDING_UUID)).isNull();
+            });
+            assertThat(tasks.getFirst().getPropertyValue(FerdigstillSakTask.KEY_ER_FØRSTEGANGSINNSENDING)).isEqualTo("true");
+        } else {
+            verifyNoInteractions(prosessTaskTjeneste);
+        }
+        verifyNoInteractions(minSideArbeidsgiverTjeneste, dialogportenTjeneste);
     }
 
     @ParameterizedTest
     @EnumSource(value = ForespørselStatus.class, names = {"UNDER_BEHANDLING", "FERDIG"})
-    void komplett_liste_med_mottatt_im_skal_oppdatere_datoer_og_varsle_uten_å_endre_status(ForespørselStatus status) {
+    void komplett_liste_med_mottatt_im_skal_oppdatere_datoer_og_ferdigstille_forespørsel(ForespørselStatus status) {
         var forespørselUuid = lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, BRREG_ORGNUMMER, SAKSNUMMER,
             FØRSTE_UTTAKSDATO, ForespørselType.BESTILT_AV_FAGSYSTEM);
         forespørselRepository.hentForespørsel(forespørselUuid).orElseThrow().setStatus(status);
@@ -257,13 +278,13 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         var lagret = forespørselRepository.hentForespørslerPåSak(SAKSNUMMER);
         assertThat(lagret).hasSize(1);
         assertThat(lagret.getFirst().getUuid()).isEqualTo(forespørselUuid);
-        assertThat(lagret.getFirst().getStatus()).isEqualTo(status);
+        assertThat(lagret.getFirst().getStatus()).isEqualTo(ForespørselStatus.FERDIG);
         assertThat(lagret.getFirst().getFørsteUttaksdato()).isEqualTo(nyFørsteUttaksdato);
         assertThat(lagret.getFirst().getSkjæringstidspunkt()).contains(nyttSkjæringstidspunkt);
 
         var taskGruppeCaptor = ArgumentCaptor.forClass(ProsessTaskGruppe.class);
-        verify(prosessTaskTjeneste).lagre(taskGruppeCaptor.capture());
-        var tasks = taskGruppeCaptor.getValue().getTasks().stream().map(ProsessTaskGruppe.Entry::task).toList();
+        verify(prosessTaskTjeneste, times(status == ForespørselStatus.UNDER_BEHANDLING ? 2 : 1)).lagre(taskGruppeCaptor.capture());
+        var tasks = taskGruppeCaptor.getAllValues().getFirst().getTasks().stream().map(ProsessTaskGruppe.Entry::task).toList();
         assertThat(tasks.stream().map(ProsessTaskData::taskType).toList()).containsExactly(
             TaskType.forProsessTask(OppdaterSakMedEndretFørsteUttaksdatoTask.class),
             TaskType.forProsessTask(OppdaterDialogMedEndretFørsteUttaksdatoTask.class));
@@ -271,6 +292,12 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
             assertThat(task.getPropertyValue(FellesTaskProperties.KEY_FORESPOERSEL_UUID)).isEqualTo(forespørselUuid.toString());
             assertThat(task.getPropertyValue(FellesTaskProperties.KEY_FOERSTE_UTTAKSDATO)).isEqualTo(nyFørsteUttaksdato.toString());
         });
+        if (status == ForespørselStatus.UNDER_BEHANDLING) {
+            var ferdigstillTasks = taskGruppeCaptor.getAllValues().getLast().getTasks();
+            assertThat(ferdigstillTasks).extracting(e -> e.task().taskType()).containsExactly(
+                TaskType.forProsessTask(FerdigstillSakTask.class),
+                TaskType.forProsessTask(FerdigstillDialogTask.class));
+        }
         verifyNoInteractions(minSideArbeidsgiverTjeneste, dialogportenTjeneste);
     }
 
@@ -638,11 +665,13 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         verifyNoInteractions(prosessTaskTjeneste);
     }
 
-    @Test
-    void skal_ferdigstille_forespørsel() {
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = SAK_ID)
+    void skal_ferdigstille_forespørsel(String sakId) {
         var forespørselUuid = lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, BRREG_ORGNUMMER, SAKSNUMMER,
             SKJÆRINGSTIDSPUNKT, ForespørselType.BESTILT_AV_FAGSYSTEM);
-        forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, SAK_ID);
+        forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUuid, sakId);
 
         forespørselBehandlingTjeneste.ferdigstillForespørsel(forespørselUuid,
             LukkeÅrsak.EKSTERN_INNSENDING, Optional.empty());
