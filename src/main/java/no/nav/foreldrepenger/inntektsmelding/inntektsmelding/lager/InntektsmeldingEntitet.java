@@ -40,6 +40,9 @@ public class InntektsmeldingEntitet {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "GLOBAL_PK_SEQ_GENERATOR")
     private Long id;
 
+    @Column(name = "loepe_nummer", nullable = false, updatable = false)
+    private Long løpenummer;
+
     @Embedded
     @AttributeOverride(name = "aktørId", column = @Column(name = "bruker_aktoer_id", nullable = false, updatable = false))
     private AktørIdEntitet aktørId;
@@ -105,6 +108,18 @@ public class InntektsmeldingEntitet {
 
     public Long getId() {
         return id;
+    }
+
+    public Long getLøpenummer() {
+        return løpenummer;
+    }
+
+    void setLøpenummer(Long løpenummer) {
+        Objects.requireNonNull(løpenummer, "løpenummer");
+        if (this.løpenummer != null && !this.løpenummer.equals(løpenummer)) {
+            throw new IllegalStateException("Løpenummer kan ikke endres etter tildeling");
+        }
+        this.løpenummer = løpenummer;
     }
 
     public AktørIdEntitet getAktørId() {

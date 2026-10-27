@@ -160,8 +160,7 @@ class RyddDuplikateForespørslerTaskTest extends EntityManagerAwareTest {
         var forespørsel = new ForespørselEntitet(orgnummer, dato, AktørIdEntitet.dummy(), Ytelsetype.FORELDREPENGER,
             saksnummer, dato, type);
         forespørsel.setStatus(status);
-        getEntityManager().persist(forespørsel);
-        getEntityManager().flush();
+        repository.lagreForespørsel(forespørsel);
         getEntityManager().createNativeQuery("update forespoersel set opprettet_tid = :tid where id = :id")
             .setParameter("tid", Timestamp.valueOf(opprettet))
             .setParameter("id", forespørsel.getId())

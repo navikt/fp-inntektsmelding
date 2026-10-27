@@ -22,7 +22,7 @@ public class ForespørselDtoMapper {
                 e.getOpprettetTidspunkt()))
             .toList();
         return ForespørselDto.builder()
-            .loepenr(entitet.getId())
+            .loepenr(entitet.getLøpenummer())
             .uuid(entitet.getUuid())
             .arbeidsgiver(Arbeidsgiver.fra(entitet.getOrganisasjonsnummer()))
             .aktørId(AktørId.fra(entitet.getAktørId().getAktørId()))
