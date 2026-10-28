@@ -1,6 +1,7 @@
 package no.nav.foreldrepenger.inntektsmelding.forespørsel.lager;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 
 import java.sql.Timestamp;
@@ -56,6 +57,57 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
         assertThat(hentet.getYtelseType()).isEqualTo(Ytelsetype.FORELDREPENGER);
         assertThat(hentet.getFagsystemSaksnummer()).contains("123");
         assertThat(hentet.getFørsteUttaksdato()).isEqualTo(LocalDate.now());
+    }
+
+    @Test
+    void skal_tildele_stigende_loepe_nummer_ved_lagring() {
+        var uuid1 = lagreForespørsel(LocalDate.now(), Ytelsetype.FORELDREPENGER, "9999999999999", "999999999", "123", LocalDate.now(),
+            ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var uuid2 = lagreForespørsel(LocalDate.now(), Ytelsetype.FORELDREPENGER, "8888888888888", "999999999", "124", LocalDate.now(),
+            ForespørselType.BESTILT_AV_FAGSYSTEM);
+
+        var første = forespørselRepository.hentForespørsel(uuid1).orElseThrow().getLøpenummer();
+        var andre = forespørselRepository.hentForespørsel(uuid2).orElseThrow().getLøpenummer();
+
+        assertThat(første).isNotNull();
+        assertThat(andre).isEqualTo(første + 1);
+    }
+
+    @Test
+    void skal_beholde_loepe_nummer_ved_gjentatt_lagring() {
+        var uuid = lagreForespørsel(LocalDate.now(), Ytelsetype.FORELDREPENGER, "9999999999999", "999999999", "123", LocalDate.now(),
+            ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var forespørsel = forespørselRepository.hentForespørsel(uuid).orElseThrow();
+        var opprinneligLøpenummer = forespørsel.getLøpenummer();
+        assertThat(opprinneligLøpenummer).isNotNull();
+
+        forespørselRepository.lagreForespørsel(forespørsel);
+
+        assertThat(forespørsel.getLøpenummer()).isEqualTo(opprinneligLøpenummer);
+        getEntityManager().clear();
+        var hentet = forespørselRepository.hentForespørsel(uuid).orElseThrow();
+        assertThat(hentet.getLøpenummer()).isEqualTo(opprinneligLøpenummer);
+    }
+
+    @Test
+    void skal_avvise_endring_av_tildelt_loepe_nummer() {
+        var forespørsel = new ForespørselEntitet();
+        forespørsel.setLøpenummer(1000L);
+
+        assertThatThrownBy(() -> forespørsel.setLøpenummer(1001L))
+            .isInstanceOf(IllegalStateException.class);
+
+        assertThat(forespørsel.getLøpenummer()).isEqualTo(1000L);
+    }
+
+    @Test
+    void skal_tillate_gjentatt_tildeling_av_samme_loepe_nummer() {
+        var forespørsel = new ForespørselEntitet();
+        forespørsel.setLøpenummer(1000L);
+
+        forespørsel.setLøpenummer(1000L);
+
+        assertThat(forespørsel.getLøpenummer()).isEqualTo(1000L);
     }
 
     @Test
@@ -365,16 +417,16 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
             "321",
             LocalDate.now(), ForespørselType.BESTILT_AV_FAGSYSTEM);
 
-        var lavesteDatabaseId = forespørselRepository.hentForespørslerFraFilter(orgnr, null, null, null, null, null, null).stream()
-            .map(ForespørselEntitet::getId)
+        var lavesteLøpenummer = forespørselRepository.hentForespørslerFraFilter(orgnr, null, null, null, null, null, null).stream()
+            .map(ForespørselEntitet::getLøpenummer)
             .min(Long::compareTo)
             .orElseThrow();
 
         var forespørsler = forespørselRepository.hentForespørslerFraFilter(orgnr, null, null, null,
-            null, LocalDate.now().plusDays(7), lavesteDatabaseId);
+            null, LocalDate.now().plusDays(7), lavesteLøpenummer);
 
         assertThat(forespørsler).hasSize(2);
-        assertThat(forespørsler.stream().noneMatch(fs -> fs.getId() <= lavesteDatabaseId)).isTrue();
+        assertThat(forespørsler.stream().noneMatch(fs -> fs.getLøpenummer() <= lavesteLøpenummer)).isTrue();
     }
 
     @Test
@@ -395,9 +447,9 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
             LocalDate.now(),
             ForespørselType.BESTILT_AV_FAGSYSTEM);
 
-        var førsteId = forespørselRepository.hentForespørsel(førsteUuid).orElseThrow().getId();
-        var andreId = forespørselRepository.hentForespørsel(andreUuid).orElseThrow().getId();
-        assertThat(førsteId).isLessThan(andreId);
+        var førsteLøpenummer = forespørselRepository.hentForespørsel(førsteUuid).orElseThrow().getLøpenummer();
+        var andreLøpenummer = forespørselRepository.hentForespørsel(andreUuid).orElseThrow().getLøpenummer();
+        assertThat(førsteLøpenummer).isLessThan(andreLøpenummer);
 
         oppdaterOpprettetTidspunkt(førsteUuid, LocalDateTime.now());
         oppdaterOpprettetTidspunkt(andreUuid, LocalDateTime.now().minusHours(1));
@@ -405,7 +457,7 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
 
         var forespørsler = forespørselRepository.hentForespørslerFraFilter(orgnr, null, null, null, null, null, null);
 
-        assertThat(forespørsler).extracting(ForespørselEntitet::getId).containsExactly(førsteId, andreId);
+        assertThat(forespørsler).extracting(ForespørselEntitet::getLøpenummer).containsExactly(førsteLøpenummer, andreLøpenummer);
     }
 
     private void oppdaterOpprettetTidspunkt(UUID uuid, LocalDateTime opprettetTidspunkt) {

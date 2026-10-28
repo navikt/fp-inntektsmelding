@@ -55,6 +55,18 @@ class InntektsmeldingKontraktMapperTest {
     }
 
     @Test
+    void skal_eksponere_loepe_nummer_og_ikke_database_id_som_loepenr() {
+        var inntektsmelding = InntektsmeldingDto.builder(lagInntektsmeldingDto(UUID.randomUUID(), UUID.randomUUID()))
+            .medId(1L)
+            .medLoepeNummer(2L)
+            .build();
+
+        var resultat = InntektsmeldingKontraktMapper.mapTilKontrakt(inntektsmelding, new PersonIdent(FNR));
+
+        assertThat(resultat.loepenr()).isEqualTo(2L);
+    }
+
+    @Test
     void skal_mappe_refusjonsfelter() {
         var imUuid = UUID.randomUUID();
         var inntektsmelding = lagInntektsmeldingDto(imUuid, UUID.randomUUID());

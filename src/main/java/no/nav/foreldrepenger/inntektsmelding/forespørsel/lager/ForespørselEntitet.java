@@ -40,6 +40,9 @@ public class ForespørselEntitet {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "GLOBAL_PK_SEQ_GENERATOR")
     private Long id;
 
+    @Column(name = "loepe_nummer", nullable = false, updatable = false)
+    private Long løpenummer;
+
     @Column(name = "uuid", nullable = false, updatable = false)
     private UUID uuid;
 
@@ -126,6 +129,18 @@ public class ForespørselEntitet {
 
     public Long getId() {
         return id;
+    }
+
+    public Long getLøpenummer() {
+        return løpenummer;
+    }
+
+    void setLøpenummer(Long løpenummer) {
+        Objects.requireNonNull(løpenummer, "løpenummer");
+        if (this.løpenummer != null && !this.løpenummer.equals(løpenummer)) {
+            throw new IllegalStateException("Løpenummer kan ikke endres etter tildeling");
+        }
+        this.løpenummer = løpenummer;
     }
 
     public UUID getUuid() {

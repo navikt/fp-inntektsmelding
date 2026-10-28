@@ -12,11 +12,10 @@ import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.Predicate;
 
-import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingApiStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
@@ -40,9 +39,16 @@ public class InntektsmeldingRepository {
     }
 
     public Long lagreInntektsmelding(InntektsmeldingEntitet inntektsmeldingEntitet) {
+        if (inntektsmeldingEntitet.getLøpenummer() == null) {
+            inntektsmeldingEntitet.setLøpenummer(hentNesteLøpenummer());
+        }
         entityManager.persist(inntektsmeldingEntitet);
         entityManager.flush();
         return inntektsmeldingEntitet.getId();
+    }
+
+    private long hentNesteLøpenummer() {
+        return ((Number) entityManager.createNativeQuery("select nextval('seq_inntektsmelding_loepe_nummer')").getSingleResult()).longValue();
     }
 
     public List<InntektsmeldingEntitet> hentInntektsmeldingerSortertNyesteFørst(AktørIdEntitet aktørId, String arbeidsgiverIdent, LocalDate startDato, Ytelsetype ytelsetype) {
@@ -108,7 +114,7 @@ public class InntektsmeldingRepository {
             predicates.add(cb.lessThan(root.get("opprettetTidspunkt"), tom.plusDays(1).atStartOfDay()));
         }
         if (fraLoepenr != null) {
-            predicates.add(cb.greaterThan(root.get("id"), fraLoepenr));
+            predicates.add(cb.greaterThan(root.get("løpenummer"), fraLoepenr));
         }
         if (status != null) {
             /*Håndterer at vi har andre statuser internt enn ut mot konsumenter. Mottatt status kan enten være utdatert eller venter vurdering i vår database*/
@@ -119,7 +125,7 @@ public class InntektsmeldingRepository {
         }
         cq.where(predicates.toArray(new Predicate[0]));
 
-        cq.orderBy(cb.desc(root.get("opprettetTidspunkt")));
+        cq.orderBy(cb.asc(root.get("løpenummer")));
         var query = entityManager.createQuery(cq);
         query.setMaxResults(1001);
         var result = query.getResultList();

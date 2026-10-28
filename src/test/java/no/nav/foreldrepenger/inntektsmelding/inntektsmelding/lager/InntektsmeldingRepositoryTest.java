@@ -1,6 +1,7 @@
 package no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -415,44 +416,96 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
         assertThat(resultat).hasSize(1);
     }
     @Test
+    void skal_sette_unikt_loepe_nummer_ved_lagring() {
+        var orgnr = "999999999";
+        lagreInntektsmelding("9999999999999", orgnr, Ytelsetype.FORELDREPENGER);
+        lagreInntektsmelding("8888888888888", orgnr, Ytelsetype.FORELDREPENGER);
+        lagreInntektsmelding("7777777777777", orgnr, Ytelsetype.SVANGERSKAPSPENGER);
+
+        var resultat = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null, null, null, null, null);
+
+        assertThat(resultat).hasSize(3)
+            .allSatisfy(im -> assertThat(im.getLøpenummer()).isNotNull())
+            .extracting(InntektsmeldingEntitet::getLøpenummer)
+            .doesNotHaveDuplicates();
+    }
+
+    @Test
+    void skal_beholde_loepe_nummer_ved_gjentatt_lagring() {
+        var inntektsmelding = lagInntektsmeldingEntitet("999999999", Ytelsetype.FORELDREPENGER, LocalDateTime.now());
+        inntektsmeldingRepository.lagreInntektsmelding(inntektsmelding);
+        var opprinneligLøpenummer = inntektsmelding.getLøpenummer();
+        assertThat(opprinneligLøpenummer).isNotNull();
+
+        inntektsmeldingRepository.lagreInntektsmelding(inntektsmelding);
+
+        assertThat(inntektsmelding.getLøpenummer()).isEqualTo(opprinneligLøpenummer);
+        getEntityManager().clear();
+        var hentet = inntektsmeldingRepository.finnInntektsmelding(inntektsmelding.getUuid()).orElseThrow();
+        assertThat(hentet.getLøpenummer()).isEqualTo(opprinneligLøpenummer);
+    }
+
+    @Test
+    void skal_avvise_endring_av_tildelt_loepe_nummer() {
+        var inntektsmelding = new InntektsmeldingEntitet();
+        inntektsmelding.setLøpenummer(1000L);
+
+        assertThatThrownBy(() -> inntektsmelding.setLøpenummer(1001L))
+            .isInstanceOf(IllegalStateException.class);
+
+        assertThat(inntektsmelding.getLøpenummer()).isEqualTo(1000L);
+    }
+
+    @Test
+    void skal_tillate_gjentatt_tildeling_av_samme_loepe_nummer() {
+        var inntektsmelding = new InntektsmeldingEntitet();
+        inntektsmelding.setLøpenummer(1000L);
+
+        inntektsmelding.setLøpenummer(1000L);
+
+        assertThat(inntektsmelding.getLøpenummer()).isEqualTo(1000L);
+    }
+
+    @Test
     void skal_filtrere_på_loepenr_større_enn_fraLoepenr() {
         var orgnr = "999999999";
         lagreInntektsmelding("9999999999999", orgnr, Ytelsetype.FORELDREPENGER);
         lagreInntektsmelding("8888888888888", orgnr, Ytelsetype.FORELDREPENGER);
         lagreInntektsmelding("8888888888888", orgnr, Ytelsetype.SVANGERSKAPSPENGER);
 
-        var lavesteDatabaseId = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null, null, null, null, null).stream()
-            .map(InntektsmeldingEntitet::getId)
+        var lavesteLøpenummer = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null, null, null, null, null).stream()
+            .map(InntektsmeldingEntitet::getLøpenummer)
             .min(Long::compareTo)
             .orElseThrow();
 
 
-        var resultat = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, new AktørIdEntitet("8888888888888"), null, null, null, lavesteDatabaseId,
+        var resultat = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, new AktørIdEntitet("8888888888888"), null, null, null, lavesteLøpenummer,
             null);
 
         assertThat(resultat).hasSize(2);
-        assertThat(resultat.stream().noneMatch(im -> im.getId() <= lavesteDatabaseId)).isTrue();
+        assertThat(resultat.stream().noneMatch(im -> im.getLøpenummer() <= lavesteLøpenummer)).isTrue();
     }
 
     @Test
-    void skal_sortere_nyeste_først() {
+    void skal_sortere_stigende_på_loepe_nummer_uavhengig_av_opprettet_tidspunkt() {
         var orgnr = "999999999";
-        var im1 = lagInntektsmeldingEntitet("9999999999999", orgnr, Ytelsetype.FORELDREPENGER, LocalDateTime.now().minusDays(2));
-        var im2 = lagInntektsmeldingEntitet("9999999999999", orgnr, Ytelsetype.FORELDREPENGER, LocalDateTime.now());
+        var im1 = lagInntektsmeldingEntitet(orgnr, Ytelsetype.FORELDREPENGER, LocalDateTime.now());
+        var im2 = lagInntektsmeldingEntitet(orgnr, Ytelsetype.FORELDREPENGER, LocalDateTime.now().minusDays(2));
         inntektsmeldingRepository.lagreInntektsmelding(im1);
         inntektsmeldingRepository.lagreInntektsmelding(im2);
 
         var resultat = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null, null, null, null, null);
 
         assertThat(resultat).hasSize(2);
-        assertThat(resultat.getFirst().getOpprettetTidspunkt()).isAfter(resultat.getLast().getOpprettetTidspunkt());
+        assertThat(resultat.getFirst().getLøpenummer()).isLessThan(resultat.getLast().getLøpenummer());
+        assertThat(resultat.getFirst().getUuid()).isEqualTo(im1.getUuid());
     }
 
     @Test
     void skal_filtrere_bort_inntektsmeldinger_overstyrt_av_saksbehandler_med_kildesystem_fpsak() {
         var orgnr = "999999999";
         lagreInntektsmelding("9999999999999", orgnr, Ytelsetype.FORELDREPENGER);
-        lagreOverstyrtInntektsmeldingUtenForespørsel("9999999999999", orgnr, Ytelsetype.FORELDREPENGER);
+        lagreOverstyrtInntektsmeldingUtenForespørsel("9999999999999", orgnr);
 
         var resultat = inntektsmeldingRepository.hentInntektsmeldingerFraFilter(orgnr, null, null, null, null, null, null);
 
@@ -474,7 +527,8 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
         inntektsmeldingRepository.lagreInntektsmelding(entitet);
     }
 
-    private InntektsmeldingEntitet lagInntektsmeldingEntitet(String aktørId, String orgnr, Ytelsetype ytelsetype, LocalDateTime opprettetTidspunkt) {
+    private InntektsmeldingEntitet lagInntektsmeldingEntitet(String orgnr, Ytelsetype ytelsetype, LocalDateTime opprettetTidspunkt) {
+        var aktørId = "9999999999999";
         return InntektsmeldingEntitet.builder()
             .medAktørId(new AktørIdEntitet(aktørId))
             .medKontaktperson(new KontaktpersonEntitet("Test", "999999999"))
@@ -500,10 +554,10 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
         return forespørselEntitet;
     }
 
-    private void lagreOverstyrtInntektsmeldingUtenForespørsel(String aktørId, String orgnr, Ytelsetype ytelsetype) {
+    private void lagreOverstyrtInntektsmeldingUtenForespørsel(String aktørId, String orgnr) {
         var entitet = InntektsmeldingEntitet.builder()
             .medAktørId(new AktørIdEntitet(aktørId))
-            .medYtelsetype(ytelsetype)
+            .medYtelsetype(Ytelsetype.FORELDREPENGER)
             .medMånedInntekt(BigDecimal.valueOf(4000))
             .medStartDato(LocalDate.now())
             .medArbeidsgiverIdent(orgnr)
