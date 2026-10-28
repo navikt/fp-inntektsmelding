@@ -144,11 +144,13 @@ public class ForespørselBehandlingTjeneste {
             return ForespørselResultat.LUKKET_FORESPØRSEL_OPPRETTET;
         }
         var forespørselDto = eksisterendeForespørsel.get();
+        var resultat = håndterEndringMotEksisterendeForespørsel(skjæringstidspunkt, ytelsetype, aktørId, førsteUttaksdato, forespørselDto);
         if (forespørselDto.status().equals(ForespørselStatus.UNDER_BEHANDLING)) {
-            LOG.warn("Forespørsel på saksnummer {} er åpen, selv om fpsak sier at inntektsmelding er mottatt. Forespørsel uuid: {}", fagsakSaksnummer, forespørselDto.uuid());
+            LOG.info("Forespørsel på saksnummer {} er åpen, selv om fpsak sier at inntektsmelding er mottatt. Ferdigstiller forespørsel uuid: {}", fagsakSaksnummer, forespørselDto.uuid());
+            ferdigstillForespørsel(forespørselDto.uuid(), LukkeÅrsak.EKSTERN_INNSENDING, Optional.empty());
         }
 
-        return håndterEndringMotEksisterendeForespørsel(skjæringstidspunkt, ytelsetype, aktørId, førsteUttaksdato, forespørselDto);
+        return resultat;
     }
 
     public List<ArbeidsgiverMedResultat> håndterKomplettListeMedForespørsler(LocalDate skjæringstidspunkt,
@@ -299,7 +301,7 @@ public class ForespørselBehandlingTjeneste {
 
         var erFørstegangsinnsending = ForespørselStatus.UNDER_BEHANDLING.equals(forespørsel.status());
 
-        forespørselTjeneste.ferdigstillForespørsel(forespørsel.arbeidsgiverNotifikasjonSakId());
+        forespørselTjeneste.ferdigstillForespørsel(foresporselUuid);
 
         var ferdigstillSakTask = ProsessTaskData.forProsessTask(FerdigstillSakTask.class);
         ferdigstillSakTask.setProperty(FerdigstillSakTask.KEY_ER_FØRSTEGANGSINNSENDING, Boolean.toString(erFørstegangsinnsending));
