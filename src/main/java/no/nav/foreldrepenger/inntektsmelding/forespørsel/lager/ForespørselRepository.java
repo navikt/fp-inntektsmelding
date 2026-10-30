@@ -152,7 +152,8 @@ public class ForespørselRepository {
             return Optional.empty();
         } else if (resultList.size() > 1) {
             throw new IllegalStateException(
-                "Forventet å finne kun en forespørsel for gitt sak: %s, orgnr: %s, skjæringstidspunkt: %s og første uttaksdato: %s".formatted(fagsakSaksnummer, arbeidsgiverIdent, stp, førsteUttaksdato));
+                "Forventet å finne kun en forespørsel for gitt sak: %s, orgnr: %s, skjæringstidspunkt: %s og første uttaksdato: %s".formatted(
+                    fagsakSaksnummer, Arbeidsgiver.fra(arbeidsgiverIdent), stp, førsteUttaksdato));
         } else {
             return Optional.of(resultList.getFirst());
         }
@@ -291,7 +292,7 @@ public class ForespørselRepository {
         query.setMaxResults(1001);
         var result = query.getResultList();
         if (result.size() == 1001) {
-            LOG.warn("Hentet 1000 forespørsler for orgnr {}, men det finnes flere forespørsler som ikke er hentet ut", orgnr);
+            LOG.warn("Hentet 1000 forespørsler for orgnr {}, men det finnes flere forespørsler som ikke er hentet ut", Arbeidsgiver.fra(orgnr));
             // Wrapper i ny liste for å omgå Immutable list
             var redusertListe = new ArrayList<>(result);
             redusertListe.removeLast();
