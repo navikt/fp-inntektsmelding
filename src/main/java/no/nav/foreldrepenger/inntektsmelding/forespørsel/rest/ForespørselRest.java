@@ -1,7 +1,6 @@
 package no.nav.foreldrepenger.inntektsmelding.forespørsel.rest;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -60,49 +59,6 @@ public class ForespørselRest {
     public ForespørselRest(ForespørselBehandlingTjeneste forespørselBehandlingTjeneste, Tilgang tilgang) {
         this.forespørselBehandlingTjeneste = forespørselBehandlingTjeneste;
         this.tilgang = tilgang;
-    }
-
-    @Deprecated // Erstattes av /opprett-en og opprett-flere
-    @POST
-    @Path("/opprett")
-    @Tilgangskontrollert
-    public Response opprettForespørsel(@Valid @NotNull OpprettForespørselRequest request) {
-        sjekkErSystemkall();
-
-        if (request.organisasjonsnumre() != null) {
-            if (request.organisasjonsnumre().isEmpty()) {
-                return Response.status(Response.Status.NO_CONTENT).build();
-            }
-            var skjæringstidspunkt = request.skjæringstidspunkt();
-            var førsteUttaksdato = request.førsteUttaksdato();
-            var fagsakSaksnummer = request.fagsakSaksnummer();
-            LOG.info(
-                "Mottok beskjed fra fpsak om å opprette forespørsel på {} med skjæringstidspunkt {} og første uttaksdato {} på: {} ",
-                fagsakSaksnummer,
-                skjæringstidspunkt,
-                førsteUttaksdato,
-                request.organisasjonsnumre());
-            List<OpprettForespørselRespons.OrganisasjonsnummerMedStatus> organisasjonsnumreMedStatus = new ArrayList<>();
-
-            request.organisasjonsnumre().forEach(organisasjonsnummer -> {
-                var bleForespørselOpprettet = forespørselBehandlingTjeneste.håndterInnkommendeForespørsel(skjæringstidspunkt,
-                    KodeverkMapper.mapYtelsetype(request.ytelsetype()),
-                    AktørId.fra(request.aktørId().id()),
-                    Arbeidsgiver.fra(organisasjonsnummer.orgnr()),
-                    Saksnummer.fra(fagsakSaksnummer.saksnr()),
-                    førsteUttaksdato);
-
-                if (ForespørselResultat.FORESPØRSEL_OPPRETTET.equals(bleForespørselOpprettet)) {
-                    MetrikkerTjeneste.loggForespørselOpprettet(KodeverkMapper.mapYtelsetype(request.ytelsetype()));
-                }
-
-                organisasjonsnumreMedStatus.add(new OpprettForespørselRespons.OrganisasjonsnummerMedStatus(organisasjonsnummer,
-                    bleForespørselOpprettet));
-            });
-            return Response.ok(new OpprettForespørselRespons(organisasjonsnumreMedStatus)).build();
-        } else {
-            return Response.status(Response.Status.BAD_REQUEST).build();
-        }
     }
 
     @POST
@@ -207,24 +163,6 @@ public class ForespørselRest {
             loggOpprettetMetrikk(ytelsetype, resultat);
             return resultat;
         }
-    }
-
-    @POST
-    @Path("/lukk")
-    @Tilgangskontrollert
-    public Response lukkForespørsel(@Valid @NotNull LukkForespørselRequest request) {
-        LOG.info("Lukk forespørsel for fagsakSaksnummer {} med orgnummer {} og skjæringstidspunkt {}",
-            request.fagsakSaksnummer(),
-            request.orgnummer(),
-            request.skjæringstidspunkt());
-
-        sjekkErSystemkall();
-
-        forespørselBehandlingTjeneste.lukkForespørsel(
-            Saksnummer.fra(request.fagsakSaksnummer().saksnr()),
-            Optional.ofNullable(request.orgnummer()).map(OrganisasjonsnummerDto::orgnr).map(Arbeidsgiver::new).orElse(null),
-            request.skjæringstidspunkt());
-        return Response.ok().build();
     }
 
     /**

@@ -74,10 +74,6 @@ public class ForespørselTjeneste {
         forespørselRepository.oppdaterArbeidsgiverNotifikasjonSakId(forespørselUUID, arbeidsgiverNotifikasjonSakId);
     }
 
-    public void ferdigstillForespørsel(String arbeidsgiverNotifikasjonSakId) {
-        forespørselRepository.ferdigstillForespørsel(arbeidsgiverNotifikasjonSakId);
-    }
-
     public void ferdigstillForespørsel(UUID forespørselUuid) {
         forespørselRepository.ferdigstillForespørsel(forespørselUuid);
     }
