@@ -16,6 +16,7 @@ import jakarta.persistence.criteria.Predicate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
@@ -151,7 +152,8 @@ public class ForespørselRepository {
             return Optional.empty();
         } else if (resultList.size() > 1) {
             throw new IllegalStateException(
-                "Forventet å finne kun en forespørsel for gitt sak: %s, orgnr: %s, skjæringstidspunkt: %s og første uttaksdato: %s".formatted(fagsakSaksnummer, arbeidsgiverIdent, stp, førsteUttaksdato));
+                "Forventet å finne kun en forespørsel for gitt sak: %s, orgnr: %s, skjæringstidspunkt: %s og første uttaksdato: %s".formatted(
+                    fagsakSaksnummer, Arbeidsgiver.fra(arbeidsgiverIdent), stp, førsteUttaksdato));
         } else {
             return Optional.of(resultList.getFirst());
         }
@@ -179,7 +181,8 @@ public class ForespørselRepository {
         if (resultList.isEmpty()) {
             return Optional.empty();
         } else if (resultList.size() > 1) {
-            throw new IllegalStateException(String.format("Forventet å finne kun en åpen forespørsel for gitt sak %s og orgnr %s", fagsakSaksnummer, organisasjonsnummer));
+            throw new IllegalStateException(String.format("Forventet å finne kun en åpen forespørsel for gitt sak %s og orgnr %s", fagsakSaksnummer,
+                Arbeidsgiver.fra(organisasjonsnummer)));
         } else {
             return Optional.of(resultList.getFirst());
         }
@@ -199,7 +202,8 @@ public class ForespørselRepository {
         if (resultList.isEmpty()) {
             return Optional.empty();
         } else if (resultList.size() > 1) {
-            throw new IllegalStateException(String.format("Forventet å finne kun en åpen forespørsel for gitt sak %s og orgnr %s", fagsakSaksnummer, organisasjonsnummer));
+            throw new IllegalStateException(String.format("Forventet å finne kun en åpen forespørsel for gitt sak %s og orgnr %s", fagsakSaksnummer,
+                Arbeidsgiver.fra(organisasjonsnummer)));
         } else {
             return Optional.of(resultList.getFirst());
         }
@@ -288,7 +292,7 @@ public class ForespørselRepository {
         query.setMaxResults(1001);
         var result = query.getResultList();
         if (result.size() == 1001) {
-            LOG.warn("Hentet 1000 forespørsler for orgnr {}, men det finnes flere forespørsler som ikke er hentet ut", orgnr);
+            LOG.warn("Hentet 1000 forespørsler for orgnr {}, men det finnes flere forespørsler som ikke er hentet ut", Arbeidsgiver.fra(orgnr));
             // Wrapper i ny liste for å omgå Immutable list
             var redusertListe = new ArrayList<>(result);
             redusertListe.removeLast();
