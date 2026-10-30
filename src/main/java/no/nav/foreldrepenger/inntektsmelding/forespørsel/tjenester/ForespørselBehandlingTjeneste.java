@@ -467,17 +467,6 @@ public class ForespørselBehandlingTjeneste {
         return NyBeskjedResultat.NY_BESKJED_SENDT;
     }
 
-    public void lukkForespørsel(Saksnummer fagsakSaksnummer, Arbeidsgiver arbeidsgiver, LocalDate skjæringstidspunkt) {
-        var forespørsler = hentÅpneForespørslerForFagsak(fagsakSaksnummer, arbeidsgiver, skjæringstidspunkt);
-
-        // Alle inntektsmeldinger sendt inn via arbeidsgiverportal blir lukket umiddelbart etter innsending fra #InntektsmeldingTjeneste,
-        // så forespørsler som enda er åpne her blir løst ved innsending fra andre systemer
-        forespørsler.forEach(f -> {
-            var lukketForespørsel = ferdigstillForespørsel(f.uuid(), LukkeÅrsak.EKSTERN_INNSENDING, Optional.empty());
-            MetrikkerTjeneste.loggForespørselLukkEkstern(lukketForespørsel);
-        });
-    }
-
     public void settForespørselTilUtgått(Saksnummer fagsakSaksnummer, Arbeidsgiver arbeidsgiver, LocalDate skjæringstidspunkt) {
         var forespørsler = hentÅpneForespørslerForFagsak(fagsakSaksnummer, arbeidsgiver, skjæringstidspunkt);
 
