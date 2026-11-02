@@ -64,7 +64,7 @@ public class DialogportenForvaltningRestTjeneste {
         sjekkAtKallerHarRollenDrift();
         LOG.info("Oppretter en dialog for forespørselUuid {} og organisasjonsnummer {}",
             opprettNyDialogDto.forespørselUuid(),
-            opprettNyDialogDto.organisasjonsnummer().orgnr());
+            opprettNyDialogDto.organisasjonsnummer());
         return Response.accepted(dialogportenKlient.opprettDialog(opprettNyDialogDto.forespørselUuid(),
             Arbeidsgiver.fra(opprettNyDialogDto.organisasjonsnummer().orgnr()),
             new FlerspråkligTekst("Forespørsel om inntektsmelding", "Førespurnad om inntektsmelding", "Request for income statement"),

@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
+import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingApiStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
@@ -130,7 +131,7 @@ public class InntektsmeldingRepository {
         query.setMaxResults(1001);
         var result = query.getResultList();
         if (result.size() == 1001) {
-            LOG.warn("Hentet 1000 inntektsmeldinger for orgnr {}, men det finnes flere som ikke er hentet ut", orgnr);
+            LOG.warn("Hentet 1000 inntektsmeldinger for orgnr {}, men det finnes flere som ikke er hentet ut", Arbeidsgiver.fra(orgnr));
             var redusertListe = new ArrayList<>(result);
             redusertListe.removeLast();
             return redusertListe;
