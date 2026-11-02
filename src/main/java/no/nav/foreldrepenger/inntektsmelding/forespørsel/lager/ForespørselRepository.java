@@ -209,6 +209,21 @@ public class ForespørselRepository {
         }
     }
 
+    public Optional<ForespørselEntitet> finnNyesteArbeidsgiversÅpneForespørselPåSak(String fagsakSaksnummer,
+                                                                                     String organisasjonsnummer) {
+        var query = entityManager.createQuery("FROM ForespørselEntitet where status in(:fpStatuser) "
+                        + "and fagsystemSaksnummer = :fagsakNr "
+                        + "and organisasjonsnummer = :arbeidsgiverIdent "
+                        + "order by opprettetTidspunkt desc, id desc",
+                ForespørselEntitet.class)
+            .setParameter("fpStatuser", Set.of(ForespørselStatus.UNDER_BEHANDLING, ForespørselStatus.FERDIG))
+            .setParameter(FAGSAK_NR, fagsakSaksnummer)
+            .setParameter(ARBEIDSGIVER_IDENT, organisasjonsnummer);
+        query.setMaxResults(1);
+        var resultList = query.getResultList();
+        return resultList.isEmpty() ? Optional.empty() : Optional.of(resultList.getFirst());
+    }
+
     public List<ForespørselEntitet> finnForespørslerForAktørId(AktørIdEntitet aktørId, Ytelsetype ytelsetype) {
         var query = entityManager.createQuery("FROM ForespørselEntitet where aktørId=:aktørId "
                     + "and status !=:utgått and ytelseType=:ytelseType",
