@@ -500,7 +500,7 @@ public class ForespørselBehandlingTjeneste {
         leggTilSettUtgåttTasks(forespørselUuid);
 
         var msg = String.format("Setter forespørsel til utgått, orgnr: %s, stp: %s, saksnummer: %s, ytelse: %s",
-            forespørselDto.arbeidsgiver().orgnr(),
+            forespørselDto.arbeidsgiver(),
             forespørselDto.skjæringstidspunkt(),
             forespørselDto.fagsystemSaksnummer().saksnummer(),
             forespørselDto.ytelseType());
