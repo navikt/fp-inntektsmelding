@@ -456,7 +456,11 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
         assertThat(nyBeskjed.getNotifikasjon().getLenke()).isEqualTo(INNTEKTSMELDING_SKJEMA_LENKE + "/" + uuid);
         assertThat(nyBeskjed.getMetadata().getGrupperingsid()).isEqualTo(uuid.toString());
         assertThat(nyBeskjed.getMetadata().getVirksomhetsnummer()).isEqualTo(ORGNR);
-        assertThat(nyBeskjed.getEksterneVarsler()).isEmpty();
+        assertThat(nyBeskjed.getMetadata().getEksternId()).isEqualTo("avvist-inntektsmelding-" + uuid);
+        assertThat(nyBeskjed.getEksterneVarsler()).hasSize(1);
+        assertThat(nyBeskjed.getEksterneVarsler().getFirst().getAltinnressurs().getEpostTittel()).isEqualTo("Inntektsmeldingen ble avvist");
+        assertThat(nyBeskjed.getEksterneVarsler().getFirst().getAltinnressurs().getEpostHtmlBody())
+            .isEqualTo(ForespørselTekster.lagAvvistInntektTekstAltinnFlerspråklig().nb());
     }
 
     @Test

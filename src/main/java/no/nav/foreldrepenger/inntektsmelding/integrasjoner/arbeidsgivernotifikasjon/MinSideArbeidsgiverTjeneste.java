@@ -174,12 +174,15 @@ public class MinSideArbeidsgiverTjeneste {
     }
 
     public void sendNyBeskjedOmAvvistInntektsmelding(ForespørselDto forespørselDto, String feiltekst) {
-        sendNyBeskjedOmAvvistInntektsmelding(
-            forespørselDto.uuid().toString(),
-            ForespørselTekster.finnMerkelapp(forespørselDto.ytelseType()),
-            forespørselDto.arbeidsgiver().orgnr(),
-            feiltekst,
-            URI.create(inntektsmeldingSkjemaLenke + "/" + forespørselDto.uuid()));
+        var grupperingsid = forespørselDto.uuid().toString();
+        var merkelapp = ForespørselTekster.finnMerkelapp(forespørselDto.ytelseType());
+        var organisasjonsnummer = forespørselDto.arbeidsgiver().orgnr();
+        var lenke = URI.create(inntektsmeldingSkjemaLenke + "/" + forespørselDto.uuid());
+        var eksternId = "avvist-inntektsmelding-" + forespørselDto.uuid();
+        var varselTekst = ForespørselTekster.lagAvvistInntektTekstAltinnFlerspråklig().nb();
+        var varselTittel = "Inntektsmeldingen ble avvist";
+
+        sendNyBeskjedMedEksternVarsling(grupperingsid, merkelapp, organisasjonsnummer, feiltekst, varselTekst, lenke, eksternId, varselTittel);
     }
 
     public void sendBeskjedOmOppdatertInntektsmelding(ForespørselDto forespørsel, UUID inntektsmeldingUuid) {
@@ -272,7 +275,7 @@ public class MinSideArbeidsgiverTjeneste {
                     .setEksternId(eksternId)
                     .setGrupperingsid(grupperingsid)
                     .build())
-                .setEksterneVarsler(List.of(lagEksternVarselAltinn(varselTekst, 15)))
+                .setEksterneVarsler(List.of(lagEksternVarselAltinn("Nav trenger inntektsmelding", varselTekst, 15)))
                 .setPaaminnelse(PaaminnelseInput.builder()
                     .setTidspunkt(PaaminnelseTidspunktInput.builder().setEtterOpprettelse(Duration.ofDays(PÅMINNELSE_ETTER_DAGER).toString()).build())
                     .setEksterneVarsler(List.of(lagPåminnelseVarselAltinn(påminnelseTekst)))
@@ -331,14 +334,6 @@ public class MinSideArbeidsgiverTjeneste {
             .onSakFinnesIkke(new SakFinnesIkkeResponseProjection().feilmelding());
         return minSideArbeidsgiverKlient.slettSak(request, projection, id);
     }
-    public String sendNyBeskjedOmAvvistInntektsmelding(String grupperingsid,
-                                                       Merkelapp merkelapp,
-                                                       String virksomhetsnummer,
-                                                       String beskjedTekst,
-                                                       URI lenke) {
-        return sendNyBeskjed(grupperingsid, merkelapp, virksomhetsnummer, beskjedTekst, Optional.empty(), lenke, UUID.randomUUID().toString());
-    }
-
     /**
      * Sender beskjed til arbeidsgiver om mottatt/endret inntektsmelding. EksternId er utledet av
      * inntektsmeldingUuid, slik at gjentatte kall (f.eks. ved retry av prosesstask) ikke forårsaker
@@ -353,7 +348,13 @@ public class MinSideArbeidsgiverTjeneste {
 
     public String sendNyBeskjedMedEksternVarsling(String grupperingsid, Merkelapp merkelapp, String virksomhetsnummer,
                                                   String beskjedTekst, String varselTekst, URI lenke, String eksternId) {
-        return sendNyBeskjed(grupperingsid, merkelapp, virksomhetsnummer, beskjedTekst, Optional.of(varselTekst), lenke, eksternId);
+        return sendNyBeskjedMedEksternVarsling(grupperingsid, merkelapp, virksomhetsnummer, beskjedTekst, varselTekst, lenke, eksternId,
+            "Nav trenger inntektsmelding");
+    }
+
+    public String sendNyBeskjedMedEksternVarsling(String grupperingsid, Merkelapp merkelapp, String virksomhetsnummer,
+                                                  String beskjedTekst, String varselTekst, URI lenke, String eksternId, String varselTittel) {
+        return sendNyBeskjed(grupperingsid, merkelapp, virksomhetsnummer, beskjedTekst, Optional.of(varselTekst), lenke, eksternId, varselTittel);
     }
 
     private String sendNyBeskjed(String grupperingsid,
@@ -363,6 +364,18 @@ public class MinSideArbeidsgiverTjeneste {
                                  Optional<String> varselTekst,
                                  URI oppgaveLenke,
                                  String eksternId) {
+        return sendNyBeskjed(grupperingsid, beskjedMerkelapp, organisasjonsnummer, beskjedTekst, varselTekst, oppgaveLenke, eksternId,
+            "Nav trenger inntektsmelding");
+    }
+
+    private String sendNyBeskjed(String grupperingsid,
+                                 Merkelapp beskjedMerkelapp,
+                                 String organisasjonsnummer,
+                                 String beskjedTekst,
+                                 Optional<String> varselTekst,
+                                 URI oppgaveLenke,
+                                 String eksternId,
+                                 String varselTittel) {
         var beskjedInput = NyBeskjedInput.builder()
             .setNotifikasjon(NotifikasjonInput.builder()
                 .setMerkelapp(beskjedMerkelapp.getBeskrivelse())
@@ -375,7 +388,7 @@ public class MinSideArbeidsgiverTjeneste {
                 .setEksternId(eksternId)
                 .setGrupperingsid(grupperingsid)
                 .build())
-            .setEksterneVarsler(varselTekst.map(tekst -> List.of(lagEksternVarselAltinn(tekst, 0))).orElse(List.of()))
+            .setEksterneVarsler(varselTekst.map(tekst -> List.of(lagEksternVarselAltinn(varselTittel, tekst, 0))).orElse(List.of()))
             .build();
         var beskjedRequest = new NyBeskjedMutationRequest();
         beskjedRequest.setNyBeskjed(beskjedInput);
@@ -396,8 +409,7 @@ public class MinSideArbeidsgiverTjeneste {
             .build();
     }
 
-    private static EksterntVarselInput lagEksternVarselAltinn(String varselTekst, Integer minutterForsinkelse) {
-        var tittel = "Nav trenger inntektsmelding";
+    private static EksterntVarselInput lagEksternVarselAltinn(String tittel, String varselTekst, Integer minutterForsinkelse) {
         return EksterntVarselInput.builder()
             .setAltinnressurs(EksterntVarselAltinnressursInput.builder()
                 .setEpostTittel(tittel)
