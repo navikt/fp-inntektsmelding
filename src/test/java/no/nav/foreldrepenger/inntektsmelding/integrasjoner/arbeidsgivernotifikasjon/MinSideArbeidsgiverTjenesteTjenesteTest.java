@@ -155,6 +155,8 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
         assertThat(nyOppgave.getEksterneVarsler().getFirst().getAltinnressurs().getEpostTittel()).isEqualTo("Nav trenger inntektsmelding");
         assertThat(nyOppgave.getEksterneVarsler().getFirst().getAltinnressurs().getEpostHtmlBody())
             .isEqualTo(ForespørselTekster.lagVarselTekst(Ytelsetype.FORELDREPENGER, organisasjon));
+        assertThat(nyOppgave.getEksterneVarsler().getFirst().getAltinnressurs().getSmsTekst())
+            .isEqualTo("Nav trenger inntektsmelding. " + ForespørselTekster.lagVarselTekst(Ytelsetype.FORELDREPENGER, organisasjon));
 
         assertThat(nyOppgave.getPaaminnelse().getEksterneVarsler()).hasSize(1);
         assertThat(nyOppgave.getPaaminnelse().getEksterneVarsler().getFirst().getAltinnressurs().getEpostHtmlBody())
@@ -458,9 +460,12 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
         assertThat(nyBeskjed.getMetadata().getVirksomhetsnummer()).isEqualTo(ORGNR);
         assertThat(nyBeskjed.getMetadata().getEksternId()).isEqualTo("avvist-inntektsmelding-" + uuid);
         assertThat(nyBeskjed.getEksterneVarsler()).hasSize(1);
-        assertThat(nyBeskjed.getEksterneVarsler().getFirst().getAltinnressurs().getEpostTittel()).isEqualTo("Inntektsmeldingen ble avvist");
-        assertThat(nyBeskjed.getEksterneVarsler().getFirst().getAltinnressurs().getEpostHtmlBody())
-            .isEqualTo(ForespørselTekster.lagAvvistInntektTekstAltinnFlerspråklig().nb());
+        var avvisningsvarsel = nyBeskjed.getEksterneVarsler().getFirst().getAltinnressurs();
+        var forventetVarselTekst = "Inntektsmeldingen ble avvist fordi oppgitt inntekt avviker fra inntekten rapportert i a-ordningen de siste tre månedene. "
+            + "Send inn ny inntektsmelding med riktig beløp, eller oppgi årsak til avvik.";
+        assertThat(avvisningsvarsel.getEpostTittel()).isEqualTo("Inntektsmeldingen ble avvist");
+        assertThat(avvisningsvarsel.getEpostHtmlBody()).isEqualTo(forventetVarselTekst);
+        assertThat(avvisningsvarsel.getSmsTekst()).isEqualTo(forventetVarselTekst);
     }
 
     @Test

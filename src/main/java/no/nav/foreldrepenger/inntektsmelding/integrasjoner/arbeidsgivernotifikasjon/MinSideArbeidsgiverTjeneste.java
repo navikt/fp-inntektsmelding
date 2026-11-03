@@ -179,7 +179,7 @@ public class MinSideArbeidsgiverTjeneste {
         var organisasjonsnummer = forespørselDto.arbeidsgiver().orgnr();
         var lenke = URI.create(inntektsmeldingSkjemaLenke + "/" + forespørselDto.uuid());
         var eksternId = "avvist-inntektsmelding-" + forespørselDto.uuid();
-        var varselTekst = ForespørselTekster.lagAvvistInntektTekstAltinnFlerspråklig().nb();
+        var varselTekst = ForespørselTekster.lagAvvistInntektVarselTekst();
         var varselTittel = "Inntektsmeldingen ble avvist";
 
         sendNyBeskjedMedEksternVarsling(grupperingsid, merkelapp, organisasjonsnummer, feiltekst, varselTekst, lenke, eksternId, varselTittel);
@@ -275,7 +275,7 @@ public class MinSideArbeidsgiverTjeneste {
                     .setEksternId(eksternId)
                     .setGrupperingsid(grupperingsid)
                     .build())
-                .setEksterneVarsler(List.of(lagEksternVarselAltinn("Nav trenger inntektsmelding", varselTekst, 15)))
+                .setEksterneVarsler(List.of(lagEksternVarselAltinn(varselTekst, 15)))
                 .setPaaminnelse(PaaminnelseInput.builder()
                     .setTidspunkt(PaaminnelseTidspunktInput.builder().setEtterOpprettelse(Duration.ofDays(PÅMINNELSE_ETTER_DAGER).toString()).build())
                     .setEksterneVarsler(List.of(lagPåminnelseVarselAltinn(påminnelseTekst)))
@@ -409,12 +409,17 @@ public class MinSideArbeidsgiverTjeneste {
             .build();
     }
 
+    private static EksterntVarselInput lagEksternVarselAltinn(String varselTekst, Integer minutterForsinkelse) {
+        return lagEksternVarselAltinn("Nav trenger inntektsmelding", varselTekst, minutterForsinkelse);
+    }
+
     private static EksterntVarselInput lagEksternVarselAltinn(String tittel, String varselTekst, Integer minutterForsinkelse) {
+        var smsTekst = varselTekst.startsWith(tittel) ? varselTekst : "%s. %s".formatted(tittel, varselTekst);
         return EksterntVarselInput.builder()
             .setAltinnressurs(EksterntVarselAltinnressursInput.builder()
                 .setEpostTittel(tittel)
                 .setEpostHtmlBody(varselTekst)
-                .setSmsTekst("%s. %s".formatted(tittel, varselTekst))
+                .setSmsTekst(smsTekst)
                 .setMottaker(lagAltinnRessursMottakerInput())
                 .setSendetidspunkt(SendetidspunktInput.builder()
                     .setTidspunkt(LocalDateTime.now().plusMinutes(minutterForsinkelse).toString())
