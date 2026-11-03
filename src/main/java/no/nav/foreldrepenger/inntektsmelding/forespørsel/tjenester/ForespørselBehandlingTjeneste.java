@@ -410,7 +410,7 @@ public class ForespørselBehandlingTjeneste {
                                                             LocalDate skjæringstidspunkt,
                                                             Saksnummer fagsystemSaksnummer) {
         if (fagsystemSaksnummer != null) {
-            var eksisterendeForespørsel = forespørselTjeneste.finnNyesteArbeidsgiversÅpneForespørselPåSak(fagsystemSaksnummer, arbeidsgiver);
+            var eksisterendeForespørsel = forespørselTjeneste.finnArbeidsgiversÅpneForespørselPåSak(fagsystemSaksnummer, arbeidsgiver);
             if (eksisterendeForespørsel.isPresent()) {
                 LOG.info("Gjenbruker eksisterende forespørsel for arbeidsgiverinitiert innsending, saksnummer: {}, orgnr: {}",
                     fagsystemSaksnummer, arbeidsgiver);
