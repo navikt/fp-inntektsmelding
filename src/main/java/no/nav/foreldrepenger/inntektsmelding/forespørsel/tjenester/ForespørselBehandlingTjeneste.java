@@ -409,14 +409,6 @@ public class ForespørselBehandlingTjeneste {
                                                             ArbeidsgiverinitiertÅrsak arbeidsgiverinitiertÅrsak,
                                                             LocalDate skjæringstidspunkt,
                                                             Saksnummer fagsystemSaksnummer) {
-        if (fagsystemSaksnummer != null) {
-            var eksisterendeForespørsel = forespørselTjeneste.finnArbeidsgiversÅpneForespørselPåSak(fagsystemSaksnummer, arbeidsgiver);
-            if (eksisterendeForespørsel.isPresent()) {
-                LOG.info("Gjenbruker eksisterende forespørsel for arbeidsgiverinitiert innsending, saksnummer: {}, orgnr: {}",
-                    fagsystemSaksnummer, arbeidsgiver);
-                return eksisterendeForespørsel.get();
-            }
-        }
         var msg = String.format("Oppretter forespørsel for arbeidsgiverinitiert, orgnr: %s, ytelse: %s",
             arbeidsgiver,
             ytelsetype);

@@ -66,6 +66,7 @@ public class ArbeidsgiverinitiertDialogRest {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
         var aktørId = personInfo.aktørId();
+        // kan denne sjekken endres til å sjekke 18 mnd isteden for 3 år?
         var eksisterendeForepørslersisteTreÅr = grunnlagDtoTjeneste.finnForespørslerSisteTreÅr(request.ytelseType(),
             request.førsteFraværsdag(),
             aktørId);

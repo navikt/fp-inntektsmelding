@@ -192,15 +192,21 @@ public class ForespørselRepository {
                                                                           String organisasjonsnummer) {
         var query = entityManager.createQuery("FROM ForespørselEntitet where status in(:fpStatuser) "
                     + "and fagsystemSaksnummer = :fagsakNr "
-                    + "and organisasjonsnummer = :arbeidsgiverIdent "
-                    + "order by opprettetTidspunkt desc, id desc",
+                    + "and organisasjonsnummer = :arbeidsgiverIdent ",
                 ForespørselEntitet.class)
             .setParameter("fpStatuser", Set.of(ForespørselStatus.UNDER_BEHANDLING, ForespørselStatus.FERDIG))
             .setParameter(FAGSAK_NR, fagsakSaksnummer)
             .setParameter(ARBEIDSGIVER_IDENT, organisasjonsnummer);
-        query.setMaxResults(1);
+
         var resultList = query.getResultList();
-        return resultList.isEmpty() ? Optional.empty() : Optional.of(resultList.getFirst());
+        if (resultList.isEmpty()) {
+            return Optional.empty();
+        } else if (resultList.size() > 1) {
+            throw new IllegalStateException(String.format("Forventet å finne kun en åpen forespørsel for gitt sak %s og orgnr %s", fagsakSaksnummer,
+                Arbeidsgiver.fra(organisasjonsnummer)));
+        } else {
+            return Optional.of(resultList.getFirst());
+        }
     }
 
     public List<ForespørselEntitet> finnForespørslerForAktørId(AktørIdEntitet aktørId, Ytelsetype ytelsetype) {

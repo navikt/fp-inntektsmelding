@@ -105,7 +105,7 @@ public class GrunnlagDtoTjeneste {
                                                                              Arbeidsgiver arbeidsgiver) {
         var personInfo = finnPersoninfo(fødselsnummer, ytelsetype);
 
-        var eksisterendeForespørselForArbeidsgiver = finnForespørslerSisteTreÅr(ytelsetype, førsteFraværsdag, personInfo.aktørId()).stream()
+        var eksisterendeForespørselForArbeidsgiver = finnForespørslerSiste18Mnd(ytelsetype, førsteFraværsdag, personInfo.aktørId()).stream()
             .filter(f -> f.arbeidsgiver().orgnr().equals(arbeidsgiver.orgnr()))
             .max(Comparator.comparing(ForespørselDto::førsteUttaksdato));
 
@@ -195,6 +195,20 @@ public class GrunnlagDtoTjeneste {
         return null;
     }
 
+    private boolean innenforIntervallMnd(LocalDate førsteUttaksdato, LocalDate førsteFraværsdag) {
+        if (førsteUttaksdato == null) {
+            return false;
+        }
+
+        var tidligsteDato = førsteUttaksdato.minusMonths(18);
+        var senesteDato = førsteUttaksdato.plusMonths(18);
+
+        return (førsteFraværsdag.isAfter(tidligsteDato)
+            || førsteFraværsdag.isEqual(tidligsteDato))
+            && (førsteFraværsdag.isBefore(senesteDato)
+            || førsteFraværsdag.isEqual(senesteDato));
+    }
+
     private boolean innnenforIntervallÅr(LocalDate førsteUttaksdato, LocalDate førsteFraværsdag) {
         if (førsteUttaksdato == null) {
             return false;
@@ -276,6 +290,12 @@ public class GrunnlagDtoTjeneste {
     public List<ForespørselDto> finnForespørslerSisteTreÅr(Ytelsetype ytelsetype, LocalDate førsteFraværsdag, AktørId aktørId) {
         return forespørselBehandlingTjeneste.finnForespørslerForAktørId(aktørId, ytelsetype).stream()
             .filter(eksF -> innnenforIntervallÅr(eksF.førsteUttaksdato(), førsteFraværsdag))
+            .toList();
+    }
+
+    public List<ForespørselDto> finnForespørslerSiste18Mnd(Ytelsetype ytelsetype, LocalDate førsteFraværsdag, AktørId aktørId) {
+        return forespørselBehandlingTjeneste.finnForespørslerForAktørId(aktørId, ytelsetype).stream()
+            .filter(eksF -> innenforIntervallMnd(eksF.førsteUttaksdato(), førsteFraværsdag))
             .toList();
     }
 

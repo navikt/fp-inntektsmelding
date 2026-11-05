@@ -11,13 +11,13 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -611,33 +611,6 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         assertThat(lagret.getFørsteUttaksdato()).isEqualTo(FØRSTE_UTTAKSDATO);
         assertThat(lagret.getSkjæringstidspunkt()).isEqualTo(Optional.of(forventetSkjæringstidspunkt));
         assertThat(lagret.getFagsystemSaksnummer()).contains(SAKSNUMMER);
-    }
-
-    @Test
-    void skal_gjenbruke_arbeidsgivers_aapne_forespoersel_paa_sak_for_arbeidsgiverinitert_innsending() {
-        var eksisterendeUuid = lagreForespørsel(SKJÆRINGSTIDSPUNKT,
-            YTELSETYPE,
-            AKTØR_ID,
-            BRREG_ORGNUMMER,
-            SAKSNUMMER,
-            FØRSTE_UTTAKSDATO,
-            ForespørselType.BESTILT_AV_FAGSYSTEM);
-
-        var forespørselDto = forespørselBehandlingTjeneste.opprettForespørselForArbeidsgiverInitiertIm(YTELSETYPE,
-            AktørId.fra(AKTØR_ID),
-            Arbeidsgiver.fra(BRREG_ORGNUMMER),
-            FØRSTE_UTTAKSDATO.plusDays(10),
-            ArbeidsgiverinitiertÅrsak.NYANSATT,
-            null,
-            Saksnummer.fra(SAKSNUMMER));
-
-        clearHibernateCache();
-        var forespørslerForSakOgOrg = forespørselRepository.hentForespørslerPåSak(SAKSNUMMER).stream()
-            .filter(f -> BRREG_ORGNUMMER.equals(f.getOrganisasjonsnummer()))
-            .filter(f -> Set.of(ForespørselStatus.UNDER_BEHANDLING, ForespørselStatus.FERDIG).contains(f.getStatus()))
-            .toList();
-        assertThat(forespørselDto.uuid()).isEqualTo(eksisterendeUuid);
-        assertThat(forespørslerForSakOgOrg).hasSize(1);
     }
 
     @Test
