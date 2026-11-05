@@ -33,9 +33,6 @@ public class MetrikkerTjeneste {
 
     private static final String APP_NAME = Environment.current().getNaisAppName().replace("-", "_");
 
-    // Hvor mange dager er det mellom opprettelse og løsning av oppgaven når inntektsmelding sendes inn via eksternt system
-    private static final DistributionSummary OPPGAVE_VARIGHET_EKSTERN_TELLER = Metrics.summary(APP_NAME + ".oppgaver.varighet.ekstern");
-
     // Hvor mange dager er det mellom opprettelse og løsning av oppgaven når inntektsmelding sendes inn via vårt eget skjema
     private static final DistributionSummary OPPGAVE_VARIGHET_INTERN_TELLER = Metrics.summary(APP_NAME + ".oppgaver.varighet.intern");
 
@@ -60,8 +57,6 @@ public class MetrikkerTjeneste {
     // Måler årsaker til endring av inntekt i inntektsmeldinger innsendt
     private static final String COUNTER_ENDRINGSÅRSAKER = APP_NAME + ".inntektsmeldinger.endringsaarsak";
 
-    // Måler hvor mange oppgaver som lukkes etter at fagsystem melder om en inntektsmelding ftinntektsmelding ikke kjenner til
-    private static final String COUNTER_LUKK_EKSTERN = APP_NAME + ".oppgaver.lukk.ekstern";
     private static final String TAG_YTELSE = "ytelse";
     private static final String TAG_AARSAK = "aarsak";
 
@@ -72,14 +67,6 @@ public class MetrikkerTjeneste {
             Metrics.counter(COUNTER_FORESPØRRSEL, tags).increment();
         } catch (Exception e) {
             loggFeil(e, "loggForespørselOpprettet");
-        }
-    }
-
-    public static void loggForespørselLukkEkstern(ForespørselDto forespørsel) {
-        try {
-            forsøkLoggForespørselLukkEkstern(forespørsel);
-        } catch (Exception e) {
-            loggFeil(e, "loggForespørselLukkEkstern");
         }
     }
 
@@ -97,13 +84,6 @@ public class MetrikkerTjeneste {
         } catch (Exception e) {
             loggFeil(e, "loggForespørselLukkIntern");
         }
-    }
-
-    private static void forsøkLoggForespørselLukkEkstern(ForespørselDto forespørsel) {
-        var tags = new ArrayList<Tag>();
-        tags.add(new ImmutableTag(TAG_YTELSE, forespørsel.ytelseType().name()));
-        Metrics.counter(COUNTER_LUKK_EKSTERN, tags).increment();
-        OPPGAVE_VARIGHET_EKSTERN_TELLER.record(finnAntallDagerÅpen(forespørsel));
     }
 
     private static long finnAntallDagerÅpen(ForespørselDto forespørsel) {
