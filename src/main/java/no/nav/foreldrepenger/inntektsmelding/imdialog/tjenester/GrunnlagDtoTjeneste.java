@@ -105,7 +105,7 @@ public class GrunnlagDtoTjeneste {
                                                                              Arbeidsgiver arbeidsgiver) {
         var personInfo = finnPersoninfo(fødselsnummer, ytelsetype);
 
-        var eksisterendeForespørselForArbeidsgiver = finnForespørslerSiste18Mnd(ytelsetype, førsteFraværsdag, personInfo.aktørId()).stream()
+        var eksisterendeForespørselForArbeidsgiver = finnForespørslerÅRuteTil(ytelsetype, førsteFraværsdag, personInfo.aktørId()).stream()
             .filter(f -> f.arbeidsgiver().orgnr().equals(arbeidsgiver.orgnr()))
             .max(Comparator.comparing(ForespørselDto::førsteUttaksdato));
 
@@ -195,12 +195,12 @@ public class GrunnlagDtoTjeneste {
         return null;
     }
 
-    private boolean innenforIntervallMnd(LocalDate førsteUttaksdato, LocalDate førsteFraværsdag) {
+    private boolean intervallForÅRutesTilForespørsel(LocalDate førsteUttaksdato, LocalDate førsteFraværsdag) {
         if (førsteUttaksdato == null) {
             return false;
         }
 
-        var tidligsteDato = førsteUttaksdato.minusMonths(18);
+        var tidligsteDato = førsteUttaksdato.minusMonths(6);
         var senesteDato = førsteUttaksdato.plusMonths(18);
 
         return (førsteFraværsdag.isAfter(tidligsteDato)
@@ -293,9 +293,9 @@ public class GrunnlagDtoTjeneste {
             .toList();
     }
 
-    public List<ForespørselDto> finnForespørslerSiste18Mnd(Ytelsetype ytelsetype, LocalDate førsteFraværsdag, AktørId aktørId) {
+    public List<ForespørselDto> finnForespørslerÅRuteTil(Ytelsetype ytelsetype, LocalDate førsteFraværsdag, AktørId aktørId) {
         return forespørselBehandlingTjeneste.finnForespørslerForAktørId(aktørId, ytelsetype).stream()
-            .filter(eksF -> innenforIntervallMnd(eksF.førsteUttaksdato(), førsteFraværsdag))
+            .filter(eksF -> intervallForÅRutesTilForespørsel(eksF.førsteUttaksdato(), førsteFraværsdag))
             .toList();
     }
 
