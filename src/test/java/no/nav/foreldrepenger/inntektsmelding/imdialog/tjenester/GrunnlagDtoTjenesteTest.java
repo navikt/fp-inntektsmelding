@@ -475,18 +475,16 @@ class GrunnlagDtoTjenesteTest {
             new PersonInfo("Ine", null, "Sender", new PersonIdent(INNMELDER_UID), null, LocalDate.now(), "+4711111111", PersonInfo.Kjønn.MANN));
         when(forespørselBehandlingTjeneste.finnForespørslerForAktørId(aktørId, ytelsetype)).thenReturn(
             List.of(ForespørselDtoMapper.mapFraEntitet(forespørsel1), ForespørselDtoMapper.mapFraEntitet(forespørsel2), ForespørselDtoMapper.mapFraEntitet(forespørsel3)));
-        when(forespørselBehandlingTjeneste.hentForespørsel(forespørsel2.getUuid())).thenReturn(ForespørselDtoMapper.mapFraEntitet(forespørsel2));
+        when(forespørselBehandlingTjeneste.hentForespørsel(forespørsel3.getUuid())).thenReturn(ForespørselDtoMapper.mapFraEntitet(forespørsel3));
         when(organisasjonTjeneste.finnOrganisasjon(Arbeidsgiver.fra(orgnr))).thenReturn(new Organisasjon("Bedriften", orgnr));
         when(fellesGrunnlagTjeneste.harJobbetHeleBeregningsperioden(any(), any(), any())).thenReturn(true);
-        when(inntektTjeneste.hentInntekt(aktørId, t2, LocalDate.now(), Arbeidsgiver.fra(orgnr), true)).thenReturn(
+        when(inntektTjeneste.hentInntekt(aktørId, t3, LocalDate.now(), Arbeidsgiver.fra(orgnr), true)).thenReturn(
             new Inntektsopplysninger(BigDecimal.valueOf(52000), orgnr, List.of()));
 
-        // Act
         var imDialogDto = grunnlagDtoTjeneste.lagArbeidsgiverinitiertNyansattDialogDto(fødselsnummer, ytelsetype, førsteFraværsdag, Arbeidsgiver.fra(orgnr));
 
-        // Assert: forespørsel 2 (T2) skal velges, ikke T1 eller T3
-        assertThat(imDialogDto.forespørselUuid()).isEqualTo(forespørsel2.getUuid());
-        assertThat(imDialogDto.førsteUttaksdato()).isEqualTo(t2);
+        assertThat(imDialogDto.forespørselUuid()).isEqualTo(forespørsel3.getUuid());
+        assertThat(imDialogDto.førsteUttaksdato()).isEqualTo(t3);
     }
 
     @Test
@@ -567,8 +565,8 @@ class GrunnlagDtoTjenesteTest {
         var organisasjonsnummer = "999999999";
         var aktørId = AktørId.fra("9999999999999");
         var førsteFraværsdag = LocalDate.now();
-        var t1 = førsteFraværsdag.plusMonths(1);
-        var t2 = førsteFraværsdag.plusMonths(2);
+        var t1 = førsteFraværsdag.plusMonths(19);
+        var t2 = førsteFraværsdag.plusMonths(20);
 
         var forespørsel1 = new ForespørselEntitet(organisasjonsnummer, t1, new AktørIdEntitet(aktørId.getAktørId()), ytelsetype, "123", t1, ForespørselType.BESTILT_AV_FAGSYSTEM);
         var forespørsel2 = new ForespørselEntitet(organisasjonsnummer, t2, new AktørIdEntitet(aktørId.getAktørId()), ytelsetype, "123", t2, ForespørselType.BESTILT_AV_FAGSYSTEM);
@@ -582,10 +580,8 @@ class GrunnlagDtoTjenesteTest {
         when(organisasjonTjeneste.finnOrganisasjon(Arbeidsgiver.fra(organisasjonsnummer))).thenReturn(new Organisasjon("Bedriften", organisasjonsnummer));
         when(arbeidsforholdTjeneste.hentArbeidsforhold(fødselsnummer, førsteFraværsdag)).thenReturn(List.of());
 
-        // Act
         var imDialogDto = grunnlagDtoTjeneste.lagArbeidsgiverinitiertNyansattDialogDto(fødselsnummer, ytelsetype, førsteFraværsdag, Arbeidsgiver.fra(organisasjonsnummer));
 
-        // Assert: ingen eksisterende forespørsel rutes til - ny dialog opprettes
         assertThat(imDialogDto.forespørselUuid()).isNull();
         assertThat(imDialogDto.førsteUttaksdato()).isEqualTo(førsteFraværsdag);
     }
@@ -603,7 +599,7 @@ class GrunnlagDtoTjenesteTest {
         var aktørId = AktørId.fra("9999999999999");
         var uttaksdatoAg1 = LocalDate.now().minusYears(1);
         var uttaksdatoAg2 = LocalDate.now();
-        var førsteFraværsdag = uttaksdatoAg2.minusMonths(1);
+        var førsteFraværsdag = uttaksdatoAg2.minusMonths(19);
 
         var forespørsel1 = new ForespørselEntitet(orgnrAg1, uttaksdatoAg1, new AktørIdEntitet(aktørId.getAktørId()), ytelsetype, "123", uttaksdatoAg1, ForespørselType.BESTILT_AV_FAGSYSTEM);
         var forespørsel2 = new ForespørselEntitet(orgnrAg2, uttaksdatoAg2, new AktørIdEntitet(aktørId.getAktørId()), ytelsetype, "124", uttaksdatoAg2, ForespørselType.BESTILT_AV_FAGSYSTEM);
@@ -617,10 +613,8 @@ class GrunnlagDtoTjenesteTest {
         when(organisasjonTjeneste.finnOrganisasjon(Arbeidsgiver.fra(orgnrAg2))).thenReturn(new Organisasjon("Bedriften AG2", orgnrAg2));
         when(arbeidsforholdTjeneste.hentArbeidsforhold(fødselsnummer, førsteFraværsdag)).thenReturn(List.of());
 
-        // Act
         var imDialogDto = grunnlagDtoTjeneste.lagArbeidsgiverinitiertNyansattDialogDto(fødselsnummer, ytelsetype, førsteFraværsdag, Arbeidsgiver.fra(orgnrAg2));
 
-        // Assert: ingen eksisterende forespørsel rutes til for ag2 - ny dialog opprettes
         assertThat(imDialogDto.forespørselUuid()).isNull();
         assertThat(imDialogDto.arbeidsgiver().organisasjonNummer()).isEqualTo(orgnrAg2);
         assertThat(imDialogDto.førsteUttaksdato()).isEqualTo(førsteFraværsdag);
