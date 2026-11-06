@@ -1,5 +1,6 @@
 package no.nav.foreldrepenger.inntektsmelding.imdialog.tjenester;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Comparator;
@@ -165,6 +166,10 @@ public class GrunnlagDtoTjeneste {
         var inntektDtoer = lagInntekterDto(personInfo,
             skjæringstidspunkt.isEqual(Tid.TIDENES_ENDE) ? førsteUttaksdato : skjæringstidspunkt,
             arbeidsgiver);
+        if (inntektDtoer.månedsinntekter().isEmpty() ||
+            inntektDtoer.månedsinntekter().stream().allMatch(i -> i.beløp() == null || i.beløp().compareTo(BigDecimal.ZERO) == 0))  {
+            throw new IllegalStateException("Det finnes ikke inntekter for denne søkeren hos dette orgaanisasjonsnummeret, ugyldig tilstand for uregistrert løype");
+        }
 
         return new InntektsmeldingDialogDto(personDto,
             organisasjonDto,

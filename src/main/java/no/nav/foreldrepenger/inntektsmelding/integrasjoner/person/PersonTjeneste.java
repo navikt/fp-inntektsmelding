@@ -43,6 +43,7 @@ import no.nav.vedtak.util.LRUCache;
 @ApplicationScoped
 public class PersonTjeneste {
     private static final Logger LOG = LoggerFactory.getLogger(PersonTjeneste.class);
+    private static final Logger SECURE_LOG = LoggerFactory.getLogger("secureLogger");
     private static final int DEFAULT_CACHE_SIZE = 3000;
     private static final long DEFAULT_CACHE_TIMEOUT = TimeUnit.MILLISECONDS.convert(1, TimeUnit.HOURS);
 
@@ -102,8 +103,8 @@ public class PersonTjeneste {
 
         if (PersonMappers.manglerIdentifikator(person)) {
             var logAktørId = aktørId.map(AktørId::toString).orElse("ManglerAktørId");
-            LOG.warn("Person uten aktiv Folkeregisteridentifikator - sjekk om falsk eller utgått identitet. Oppgitt Ident {}. AktørId {}",
-                personIdent.getIdent(), logAktørId);
+            SECURE_LOG.warn("Person uten aktiv Folkeregisteridentifikator - sjekk om falsk eller utgått identitet. Oppgitt Ident {}. AktørId {}",
+                personIdent, logAktørId);
             throw new IllegalStateException("Person uten aktiv Folkeregisteridentifikator" + personIdent);
         }
 

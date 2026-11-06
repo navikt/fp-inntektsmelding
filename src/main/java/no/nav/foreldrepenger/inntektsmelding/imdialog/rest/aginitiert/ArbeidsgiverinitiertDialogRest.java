@@ -25,6 +25,7 @@ import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.AutentisertMedTokenX;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.Tilgangskontrollert;
 import no.nav.foreldrepenger.inntektsmelding.server.exceptions.InntektsmeldingException;
+import no.nav.foreldrepenger.inntektsmelding.server.tilgangsstyring.Tilgang;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 
@@ -43,6 +44,7 @@ public class ArbeidsgiverinitiertDialogRest {
 
     private GrunnlagDtoTjeneste grunnlagDtoTjeneste;
     private FpsakTjeneste fpsakTjeneste;
+    private Tilgang tilgang;
 
     ArbeidsgiverinitiertDialogRest() {
         // CDI
@@ -50,9 +52,11 @@ public class ArbeidsgiverinitiertDialogRest {
 
     @Inject
     public ArbeidsgiverinitiertDialogRest(GrunnlagDtoTjeneste grunnlagDtoTjeneste,
-                                          FpsakTjeneste fpsakTjeneste) {
+                                          FpsakTjeneste fpsakTjeneste,
+                                          Tilgang tilgang) {
         this.grunnlagDtoTjeneste = grunnlagDtoTjeneste;
         this.fpsakTjeneste = fpsakTjeneste;
+        this.tilgang = tilgang;
     }
 
     @POST
@@ -104,6 +108,7 @@ public class ArbeidsgiverinitiertDialogRest {
     @Produces(MediaType.APPLICATION_JSON + ";charset=utf-8")
     @Tilgangskontrollert
     public Response hentOpplysninger(@Valid @NotNull OpplysningerRequestDto request) {
+        tilgang.sjekkAtArbeidsgiverHarTilgangTilBedrift(Arbeidsgiver.fra(request.organisasjonsnummer().orgnr()));
         LOG.info("Henter opplysninger for søker {}", request.fødselsnummer());
         var dto = grunnlagDtoTjeneste.lagArbeidsgiverinitiertNyansattDialogDto(request.fødselsnummer(),
             request.ytelseType(),
@@ -117,6 +122,7 @@ public class ArbeidsgiverinitiertDialogRest {
     @Produces(MediaType.APPLICATION_JSON + ";charset=utf-8")
     @Tilgangskontrollert
     public Response hentOpplysningerUregistrert(@Valid @NotNull OpplysningerUregistrertRequestDto request) {
+        tilgang.sjekkAtArbeidsgiverHarTilgangTilBedrift(Arbeidsgiver.fra(request.organisasjonsnummer().orgnr()));
         LOG.info("Henter opplysninger for søker {}", request.fødselsnummer());
 
         var personInfo = grunnlagDtoTjeneste.finnPersoninfo(request.fødselsnummer(), request.ytelseType());

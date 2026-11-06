@@ -451,7 +451,10 @@ class GrunnlagDtoTjenesteTest {
     }
 
     @Test
-    void skal_velge_nyeste_forespørsel_innenfor_18_måneder_når_flere_finnes_for_samme_orgnr() {
+    void skal_velge_siste_forespørsel_med_uttaksdato_før_eller_lik_første_fraværsdag_når_flere_finnes_for_samme_orgnr() {
+        // Arrange: tre forespørsler på samme orgnr med økende førsteUttaksdato. Den siste (T3) ligger etter
+        // førsteFraværsdag og skal dermed filtreres bort av finnForespørslerSisteTreÅr. Av de to gjenværende (T1, T2)
+        // skal den med størst uttaksdato som fortsatt er <= førsteFraværsdag velges, altså T2.
         var fødselsnummer = new PersonIdent("11111111111");
         var ytelsetype = Ytelsetype.FORELDREPENGER;
         var orgnr = "999999999";
@@ -485,7 +488,7 @@ class GrunnlagDtoTjenesteTest {
     }
 
     @Test
-    void skal_velge_forespørselen_med_uttaksdato_lik_førsteFraværsdag_når_flere_forespørsler_finnes_for_samme_orgnr() {
+    void skal_velge_forespørsel_med_uttaksdato_lik_første_fraværsdag_når_flere_finnes_for_samme_orgnr() {
         // Arrange: en forespørsel har uttaksdato nøyaktig lik oppgitt førsteFraværsdag - den skal velges selv om det
         // finnes en eldre forespørsel på samme orgnr.
         var fødselsnummer = new PersonIdent("11111111111");
@@ -520,7 +523,7 @@ class GrunnlagDtoTjenesteTest {
     }
 
     @Test
-    void skal_velge_forespørselen_når_uttaksdato_er_før_oppgitt_fraværsdato_når_finnes_forespørsel_for_samme_orgnr() {
+    void skal_velge_forespørsel_når_uttaksdato_er_før_oppgitt_fraværsdag_for_samme_orgnr() {
         // Arrange: én forespørsel har uttaksdato før oppgitt førsteFraværsdag og skal derfor velges.
         var fødselsnummer = new PersonIdent("11111111111");
         var ytelsetype = Ytelsetype.FORELDREPENGER;
@@ -554,7 +557,9 @@ class GrunnlagDtoTjenesteTest {
     }
 
     @Test
-    void skal_lage_ny_dialog_når_alle_forespørsler_for_orgnr_ligger_utenfor_18_måneder() {
+    void skal_lage_ny_dialog_når_alle_eksisterende_forespørsler_for_orgnr_har_uttaksdato_etter_første_fraværsdag() {
+        // Arrange: begge eksisterende forespørsler har uttaksdato etter oppgitt førsteFraværsdag, og skal dermed
+        // filtreres bort - ingen "bøtte" matcher, så vi skal opprette en ny dialog i stedet for å rute til en av dem.
         var fødselsnummer = new PersonIdent("11111111111");
         var ytelsetype = Ytelsetype.FORELDREPENGER;
         var organisasjonsnummer = "999999999";
@@ -582,7 +587,11 @@ class GrunnlagDtoTjenesteTest {
     }
 
     @Test
-    void skal_lage_ny_dialog_når_forespørselen_for_samme_arbeidsgiver_ligger_utenfor_18_måneder() {
+    void skal_lage_ny_dialog_når_forespørsel_for_samme_arbeidsgiver_ikke_matcher_første_fraværsdag() {
+        // Arrange: forespørsel 1 (ag1, 2025) og forespørsel 2 (ag2, 2026) - ett år mellom. Det kommer inn en
+        // nyansatt agi for ag2 (altså siste arbeidsgiver) med førsteFraværsdag FØR forespørsel 2 sin
+        // førsteUttaksdato. Siden forespørsel 1 tilhører en annen arbeidsgiver er det ikke match
+        // Forventet resultat: ingen eksisterende forespørsel matcher for ag2, og det opprettes en ny dialog.
         var fødselsnummer = new PersonIdent("11111111111");
         var ytelsetype = Ytelsetype.FORELDREPENGER;
         var orgnrAg1 = "111111111";
