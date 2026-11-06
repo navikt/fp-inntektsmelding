@@ -126,6 +126,10 @@ public class ForespørselTekster {
         "Berekna månadsløn stemmer ikkje med det som er registrert i A-ordninga, og årsak til avviket manglar. Du må sende inn ny inntektsmelding.",
         "The calculated monthly salary does not match what is registered in A-ordningen, and no reason for the deviation has been given. You must submit a new income statement.");
 
+    private static final String AVVIST_INNTEKT_VARSEL =
+        "Inntektsmeldingen ble avvist fordi oppgitt inntekt avviker fra inntekten rapportert i a-ordningen de siste tre månedene. "
+            + "Send inn ny inntektsmelding med riktig beløp, eller oppgi årsak til avvik.";
+
 
     private static final FlerspråkligTekst ENDRET_FØRSTE_UTTAKSDATO_MAL = new FlerspråkligTekst(
         "Første fraværsdag er endret fra %s til %s. Nav sender ikke ny forespørsel for inntektsmelding. Hvis du skal korrigere informasjonen, endrer du dette gjennom inntektsmeldingen som du har sendt til Nav.",
@@ -157,6 +161,10 @@ public class ForespørselTekster {
 
     public static FlerspråkligTekst lagAvvistInntektTekstAltinnFlerspråklig() {
         return AVVIST_INNTEKT_ALTINN;
+    }
+
+    public static String lagAvvistInntektVarselTekst() {
+        return AVVIST_INNTEKT_VARSEL;
     }
 
     public static FlerspråkligTekst lagBeskjedOmEndretFørsteUttaksdatoFlerspråklig(LocalDate tidligereFørsteUttaksdato,
