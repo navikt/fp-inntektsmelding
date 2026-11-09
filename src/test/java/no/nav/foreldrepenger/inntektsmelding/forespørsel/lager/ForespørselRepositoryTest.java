@@ -9,13 +9,17 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import jakarta.persistence.OptimisticLockException;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import no.nav.foreldrepenger.inntektsmelding.database.JpaExtension;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
@@ -57,6 +61,83 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
         assertThat(hentet.getYtelseType()).isEqualTo(Ytelsetype.FORELDREPENGER);
         assertThat(hentet.getFagsystemSaksnummer()).contains("123");
         assertThat(hentet.getFørsteUttaksdato()).isEqualTo(LocalDate.now());
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void skal_avvise_utdatert_oppdatering_og_beholde_sak_id_og_status_ved_nytt_forsøk(boolean sakIdLagresFørst) {
+        var forespørsel = new ForespørselEntitet("999999999", LocalDate.now(), new AktørIdEntitet("9999999999999"),
+            Ytelsetype.FORELDREPENGER, "123", LocalDate.now(), ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var uuid = forespørsel.getUuid();
+        var sakId = "fager-sak-id";
+        var emf = getEntityManager().getEntityManagerFactory();
+
+        try (var førsteEm = emf.createEntityManager(); var utdatertEm = emf.createEntityManager()) {
+            var førsteRepository = new ForespørselRepository(førsteEm);
+            var utdatertRepository = new ForespørselRepository(utdatertEm);
+            try {
+                førsteEm.getTransaction().begin();
+                førsteRepository.lagreForespørsel(forespørsel);
+                førsteEm.getTransaction().commit();
+                førsteEm.clear();
+
+                utdatertEm.getTransaction().begin();
+                var utdatert = utdatertRepository.hentForespørsel(uuid).orElseThrow();
+                assertThat(utdatert.getArbeidsgiverNotifikasjonSakId()).isNull();
+                assertThat(utdatert.getStatus()).isEqualTo(ForespørselStatus.UNDER_BEHANDLING);
+
+                førsteEm.getTransaction().begin();
+                if (sakIdLagresFørst) {
+                    førsteRepository.oppdaterArbeidsgiverNotifikasjonSakId(uuid, sakId);
+                } else {
+                    førsteRepository.ferdigstillForespørsel(uuid);
+                }
+                førsteEm.getTransaction().commit();
+                førsteEm.clear();
+
+                assertThatThrownBy(() -> {
+                    if (sakIdLagresFørst) {
+                        utdatertRepository.ferdigstillForespørsel(uuid);
+                    } else {
+                        utdatertRepository.oppdaterArbeidsgiverNotifikasjonSakId(uuid, sakId);
+                    }
+                }).isInstanceOf(OptimisticLockException.class);
+                utdatertEm.getTransaction().rollback();
+                utdatertEm.clear();
+
+                utdatertEm.getTransaction().begin();
+                var etterKonflikt = utdatertRepository.hentForespørsel(uuid).orElseThrow();
+                assertThat(etterKonflikt.getArbeidsgiverNotifikasjonSakId()).isEqualTo(sakIdLagresFørst ? sakId : null);
+                assertThat(etterKonflikt.getStatus())
+                    .isEqualTo(sakIdLagresFørst ? ForespørselStatus.UNDER_BEHANDLING : ForespørselStatus.FERDIG);
+                if (sakIdLagresFørst) {
+                    utdatertRepository.ferdigstillForespørsel(uuid);
+                } else {
+                    utdatertRepository.oppdaterArbeidsgiverNotifikasjonSakId(uuid, sakId);
+                }
+                utdatertEm.getTransaction().commit();
+
+                førsteEm.getTransaction().begin();
+                var etterNyttForsøk = førsteRepository.hentForespørsel(uuid).orElseThrow();
+                assertThat(etterNyttForsøk.getArbeidsgiverNotifikasjonSakId()).isEqualTo(sakId);
+                assertThat(etterNyttForsøk.getStatus()).isEqualTo(ForespørselStatus.FERDIG);
+                førsteEm.getTransaction().commit();
+            } finally {
+                if (førsteEm.getTransaction().isActive()) {
+                    førsteEm.getTransaction().rollback();
+                }
+                if (utdatertEm.getTransaction().isActive()) {
+                    utdatertEm.getTransaction().rollback();
+                }
+            }
+        } finally {
+            try (var ryddingEm = emf.createEntityManager()) {
+                ryddingEm.getTransaction().begin();
+                var lagret = new ForespørselRepository(ryddingEm).hentForespørsel(uuid);
+                lagret.ifPresent(ryddingEm::remove);
+                ryddingEm.getTransaction().commit();
+            }
+        }
     }
 
     @Test

@@ -24,6 +24,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingStatus;
@@ -39,6 +40,10 @@ public class InntektsmeldingEntitet {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "GLOBAL_PK_SEQ_GENERATOR")
     private Long id;
+
+    @Version
+    @Column(name = "versjon", nullable = false)
+    private long versjon;
 
     @Column(name = "loepe_nummer", nullable = false, updatable = false)
     private Long løpenummer;

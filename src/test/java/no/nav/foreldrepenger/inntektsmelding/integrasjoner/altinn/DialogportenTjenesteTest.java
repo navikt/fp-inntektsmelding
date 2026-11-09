@@ -11,6 +11,9 @@ import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
 
+import jakarta.persistence.OptimisticLockException;
+import jakarta.persistence.PersistenceException;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -51,6 +54,24 @@ class DialogportenTjenesteTest {
     @BeforeEach
     void setUp() {
         tjeneste = new DialogportenTjeneste(dialogportenKlient, personTjeneste);
+    }
+
+    @Test
+    void skal_ikke_svelge_optimistisk_låsekonflikt_med_dev_toleranse() {
+        var konflikt = new OptimisticLockException("Forespørselen er endret");
+
+        assertThatThrownBy(() -> tjeneste.utførMotDialogportenMedDevToleranse(() -> {
+            throw konflikt;
+        })).isSameAs(konflikt);
+    }
+
+    @Test
+    void skal_ikke_svelge_andre_databasefeil_med_dev_toleranse() {
+        var feil = new PersistenceException("Lagring feilet");
+
+        assertThatThrownBy(() -> tjeneste.utførMotDialogportenMedDevToleranse(() -> {
+            throw feil;
+        })).isSameAs(feil);
     }
 
     @Test
