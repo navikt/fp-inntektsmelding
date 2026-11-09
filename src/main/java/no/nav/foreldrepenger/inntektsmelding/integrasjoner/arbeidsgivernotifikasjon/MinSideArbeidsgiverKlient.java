@@ -44,6 +44,8 @@ class MinSideArbeidsgiverKlient {
         if (resultat instanceof NySakVellykket vellykket) {
             LOG.info("Vellykket opprettelse av sak");
             return vellykket.getId();
+        } else if (resultat instanceof DuplikatGrupperingsid duplikat) {
+            return duplikat.getIdTilEksisterende();
         } else {
             loggFeilmelding((Error) resultat, "opprettelse av ny sak");
         }
@@ -68,6 +70,8 @@ class MinSideArbeidsgiverKlient {
         if (resultat instanceof NyOppgaveVellykket vellykket) {
             LOG.info("Vellykket opprettelse av oppgave");
             return vellykket.getId();
+        } else if (resultat instanceof DuplikatEksternIdOgMerkelapp duplikat) {
+            return duplikat.getIdTilEksisterende();
         } else {
             loggFeilmelding((Error) resultat, "opprettelse av ny oppgave");
         }
@@ -130,6 +134,8 @@ class MinSideArbeidsgiverKlient {
         if (resultat instanceof NyBeskjedVellykket vellykket) {
             LOG.info("Vellykket opprettelse av beskjed");
             return vellykket.getId();
+        } else if (resultat instanceof DuplikatEksternIdOgMerkelapp duplikat) {
+            return duplikat.getIdTilEksisterende();
         } else {
             loggFeilmelding((Error) resultat, "opprettelse av ny beskjed");
         }

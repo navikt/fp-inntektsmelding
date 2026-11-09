@@ -50,6 +50,33 @@ class MinSideArbeidsgiverTjenesteKlientTest {
         }
 
         @Test
+        void opprettSak_skal_returnere_eksisterende_id_ved_retry() {
+            var expectedId = "eksisterende-sak";
+            var response = new NySakMutationResponse();
+            response.setData(Map.of("nySak", DuplikatGrupperingsid.builder()
+                .setFeilmelding("Sak finnes allerede")
+                .setIdTilEksisterende(expectedId)
+                .build()));
+            when(restClient.sendReturnUnhandled(any(RestRequest.class))).thenReturn(new MockGraphQLHttpResponse<>(response));
+
+            var sakId = agKlient.opprettSak(new NySakMutationRequest(), mock(NySakResultatResponseProjection.class));
+
+            assertThat(sakId).isEqualTo(expectedId);
+        }
+
+        @Test
+        void opprettSak_skal_feile_hvis_tidligere_sak_er_slettet() {
+            var response = new NySakMutationResponse();
+            response.setData(Map.of("nySak", new DuplikatGrupperingsidEtterDelete("Tidligere sak er slettet")));
+            when(restClient.sendReturnUnhandled(any(RestRequest.class))).thenReturn(new MockGraphQLHttpResponse<>(response));
+
+            var ex = assertThrows(TekniskException.class,
+                () -> agKlient.opprettSak(new NySakMutationRequest(), mock(NySakResultatResponseProjection.class)));
+
+            assertThat(ex.getMessage()).contains("Tidligere sak er slettet");
+        }
+
+        @Test
         void opprettSak_validering_feil() {
             var expectedFeilmelding = "Det har skjedd en ny feil.";
             var response = new NySakMutationResponse();
@@ -93,6 +120,21 @@ class MinSideArbeidsgiverTjenesteKlientTest {
         }
 
         @Test
+        void opprettOppgave_skal_returnere_eksisterende_id_ved_retry() {
+            var expectedId = "eksisterende-oppgave";
+            var response = new NyOppgaveMutationResponse();
+            response.setData(Map.of("nyOppgave", DuplikatEksternIdOgMerkelapp.builder()
+                .setFeilmelding("Oppgave finnes allerede")
+                .setIdTilEksisterende(expectedId)
+                .build()));
+            when(restClient.sendReturnUnhandled(any(RestRequest.class))).thenReturn(new MockGraphQLHttpResponse<>(response));
+
+            var oppgaveId = agKlient.opprettOppgave(new NyOppgaveMutationRequest(), mock(NyOppgaveResultatResponseProjection.class));
+
+            assertThat(oppgaveId).isEqualTo(expectedId);
+        }
+
+        @Test
         void opprettOppgave_validering_feil() {
             var expectedFeilmelding = "Det har skjedd en ny feil.";
             var response = new NyOppgaveMutationResponse();
@@ -117,6 +159,48 @@ class MinSideArbeidsgiverTjenesteKlientTest {
             var ex = assertThrows(TekniskException.class, () -> agKlient.opprettOppgave(request, mock(NyOppgaveResultatResponseProjection.class)));
 
             assertThat(ex.getMessage()).contains(expectedFeilmelding);
+        }
+    }
+
+    @Nested
+    class OpprettBeskjed {
+        @Test
+        void opprettBeskjed_ok() {
+            var expectedId = "ny-beskjed";
+            var response = new NyBeskjedMutationResponse();
+            response.setData(Map.of("nyBeskjed", NyBeskjedVellykket.builder().setId(expectedId).build()));
+            when(restClient.sendReturnUnhandled(any(RestRequest.class))).thenReturn(new MockGraphQLHttpResponse<>(response));
+
+            var beskjedId = agKlient.opprettBeskjedOgVarsling(new NyBeskjedMutationRequest(), mock(NyBeskjedResultatResponseProjection.class));
+
+            assertThat(beskjedId).isEqualTo(expectedId);
+        }
+
+        @Test
+        void opprettBeskjed_skal_returnere_eksisterende_id_ved_retry() {
+            var expectedId = "eksisterende-beskjed";
+            var response = new NyBeskjedMutationResponse();
+            response.setData(Map.of("nyBeskjed", DuplikatEksternIdOgMerkelapp.builder()
+                .setFeilmelding("Beskjed finnes allerede")
+                .setIdTilEksisterende(expectedId)
+                .build()));
+            when(restClient.sendReturnUnhandled(any(RestRequest.class))).thenReturn(new MockGraphQLHttpResponse<>(response));
+
+            var beskjedId = agKlient.opprettBeskjedOgVarsling(new NyBeskjedMutationRequest(), mock(NyBeskjedResultatResponseProjection.class));
+
+            assertThat(beskjedId).isEqualTo(expectedId);
+        }
+
+        @Test
+        void opprettBeskjed_skal_fortsatt_feile_ved_valideringsfeil() {
+            var response = new NyBeskjedMutationResponse();
+            response.setData(Map.of("nyBeskjed", new UgyldigMerkelapp("Ugyldig merkelapp")));
+            when(restClient.sendReturnUnhandled(any(RestRequest.class))).thenReturn(new MockGraphQLHttpResponse<>(response));
+
+            var ex = assertThrows(TekniskException.class,
+                () -> agKlient.opprettBeskjedOgVarsling(new NyBeskjedMutationRequest(), mock(NyBeskjedResultatResponseProjection.class)));
+
+            assertThat(ex.getMessage()).contains("Ugyldig merkelapp");
         }
     }
 

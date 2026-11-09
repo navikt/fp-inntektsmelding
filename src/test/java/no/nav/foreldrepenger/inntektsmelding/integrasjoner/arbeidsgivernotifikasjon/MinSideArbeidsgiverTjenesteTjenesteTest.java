@@ -97,7 +97,9 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
         tjeneste.opprettSak(forespørsel);
 
         var requestCaptor = ArgumentCaptor.forClass(NySakMutationRequest.class);
-        verify(klient).opprettSak(requestCaptor.capture(), any(NySakResultatResponseProjection.class));
+        var projectionCaptor = ArgumentCaptor.forClass(NySakResultatResponseProjection.class);
+        verify(klient).opprettSak(requestCaptor.capture(), projectionCaptor.capture());
+        assertThat(projectionCaptor.getValue().toString()).contains("...on DuplikatGrupperingsid { feilmelding idTilEksisterende }");
 
         var input = requestCaptor.getValue().getInput();
         assertThat(input).containsOnlyKeys("grupperingsid",
@@ -134,7 +136,9 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
         tjeneste.opprettOppgave(forespørsel);
 
         var requestCaptor = ArgumentCaptor.forClass(NyOppgaveMutationRequest.class);
-        verify(klient).opprettOppgave(requestCaptor.capture(), any(NyOppgaveResultatResponseProjection.class));
+        var projectionCaptor = ArgumentCaptor.forClass(NyOppgaveResultatResponseProjection.class);
+        verify(klient).opprettOppgave(requestCaptor.capture(), projectionCaptor.capture());
+        assertThat(projectionCaptor.getValue().toString()).contains("...on DuplikatEksternIdOgMerkelapp { feilmelding idTilEksisterende }");
 
         var input = requestCaptor.getValue().getInput();
         assertThat(input).isNotNull().hasSize(1).containsKey("nyOppgave");
