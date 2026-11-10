@@ -29,6 +29,7 @@ public class MinSideArbeidsgiverTjeneste {
     private static final Environment ENV = Environment.current();
     static final String SAK_STATUS_TEKST = "";
     static final String SAK_STATUS_TEKST_ARBEIDSGIVERINITIERT = "Mottatt - Se kvittering eller korriger inntektsmelding";
+    static final String STANDARD_VARSEL_TITTEL = "Nav trenger inntektsmelding";
     static final Sendevindu VARSEL_SENDEVINDU = Sendevindu.LOEPENDE;
     static final int PÅMINNELSE_ETTER_DAGER;
     static final String ALTINN_INNTEKTSMELDING_RESSURS = AltinnRessurser.ALTINN_TRE_INNTEKTSMELDING_RESSURS;
@@ -349,7 +350,7 @@ public class MinSideArbeidsgiverTjeneste {
     public String sendNyBeskjedMedEksternVarsling(String grupperingsid, Merkelapp merkelapp, String virksomhetsnummer,
                                                   String beskjedTekst, String varselTekst, URI lenke, String eksternId) {
         return sendNyBeskjedMedEksternVarsling(grupperingsid, merkelapp, virksomhetsnummer, beskjedTekst, varselTekst, lenke, eksternId,
-            "Nav trenger inntektsmelding");
+            STANDARD_VARSEL_TITTEL);
     }
 
     public String sendNyBeskjedMedEksternVarsling(String grupperingsid, Merkelapp merkelapp, String virksomhetsnummer,
@@ -365,7 +366,7 @@ public class MinSideArbeidsgiverTjeneste {
                                  URI oppgaveLenke,
                                  String eksternId) {
         return sendNyBeskjed(grupperingsid, beskjedMerkelapp, organisasjonsnummer, beskjedTekst, varselTekst, oppgaveLenke, eksternId,
-            "Nav trenger inntektsmelding");
+            STANDARD_VARSEL_TITTEL);
     }
 
     private String sendNyBeskjed(String grupperingsid,
@@ -410,7 +411,7 @@ public class MinSideArbeidsgiverTjeneste {
     }
 
     private static EksterntVarselInput lagEksternVarselAltinn(String varselTekst, Integer minutterForsinkelse) {
-        return lagEksternVarselAltinn("Nav trenger inntektsmelding", varselTekst, minutterForsinkelse);
+        return lagEksternVarselAltinn(STANDARD_VARSEL_TITTEL, varselTekst, minutterForsinkelse);
     }
 
     private static EksterntVarselInput lagEksternVarselAltinn(String tittel, String varselTekst, Integer minutterForsinkelse) {
