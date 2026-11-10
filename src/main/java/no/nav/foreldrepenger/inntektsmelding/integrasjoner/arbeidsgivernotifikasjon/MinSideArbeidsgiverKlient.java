@@ -103,6 +103,17 @@ class MinSideArbeidsgiverKlient {
         throw ulovligTilstandException();
     }
 
+    public void oppgaveUtgåttViaEksternId(OppgaveUtgaattByEksternIdMutationRequest request, OppgaveUtgaattResultatResponseProjection projection) {
+        LOG.info("FAGER: Setter oppgave utgått via ekstern ID (forespørseluuid)");
+        var resultat = query(new GraphQLRequest(request, projection), OppgaveUtgaattByEksternIdMutationResponse.class).oppgaveUtgaattByEksternId();
+        if (resultat instanceof OppgaveUtgaattVellykket || resultat instanceof NotifikasjonFinnesIkke
+            || resultat instanceof OppgavenErAlleredeUtfoert) {
+            return;
+        }
+        loggFeilmelding((Error) resultat, "sett oppgave utgått via ekstern ID (forespørseluuid)");
+        throw ulovligTilstandException();
+    }
+
     public String oppdaterSakStatus(NyStatusSakMutationRequest request, NyStatusSakResultatResponseProjection projection) {
         LOG.info("FAGER: Oppdater sak status");
         var resultat = query(new GraphQLRequest(request, projection), NyStatusSakMutationResponse.class).nyStatusSak();

@@ -8,11 +8,14 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -201,6 +204,48 @@ class MinSideArbeidsgiverTjenesteKlientTest {
                 () -> agKlient.opprettBeskjedOgVarsling(new NyBeskjedMutationRequest(), mock(NyBeskjedResultatResponseProjection.class)));
 
             assertThat(ex.getMessage()).contains("Ugyldig merkelapp");
+        }
+    }
+
+    @Nested
+    class SettOppgaveUtgåttByEksternId {
+        static Stream<OppgaveUtgaattResultat> ferdigHåndterteResultater() {
+            return Stream.of(new OppgaveUtgaattVellykket("oppgave-1"),
+                new NotifikasjonFinnesIkke("Oppgaven finnes ikke"),
+                new OppgavenErAlleredeUtfoert("Oppgaven er allerede utført"));
+        }
+
+        @ParameterizedTest
+        @MethodSource("ferdigHåndterteResultater")
+        void skal_godta_lukket_manglende_eller_allerede_utført_oppgave(OppgaveUtgaattResultat resultat) {
+            var response = new OppgaveUtgaattByEksternIdMutationResponse();
+            response.setData(Map.of("oppgaveUtgaattByEksternId", resultat));
+            when(restClient.sendReturnUnhandled(any(RestRequest.class))).thenReturn(new MockGraphQLHttpResponse<>(response));
+
+            agKlient.oppgaveUtgåttViaEksternId(new OppgaveUtgaattByEksternIdMutationRequest(),
+                new OppgaveUtgaattResultatResponseProjection().typename());
+        }
+
+        @Test
+        void skal_kaste_valideringsfeil_videre() {
+            var response = new OppgaveUtgaattByEksternIdMutationResponse();
+            response.setData(Map.of("oppgaveUtgaattByEksternId", new UgyldigMerkelapp("Ugyldig merkelapp")));
+            when(restClient.sendReturnUnhandled(any(RestRequest.class))).thenReturn(new MockGraphQLHttpResponse<>(response));
+
+            var ex = assertThrows(TekniskException.class,
+                () -> agKlient.oppgaveUtgåttViaEksternId(new OppgaveUtgaattByEksternIdMutationRequest(),
+                    new OppgaveUtgaattResultatResponseProjection().typename()));
+
+            assertThat(ex.getMessage()).contains("Ugyldig merkelapp");
+        }
+
+        @Test
+        void skal_kaste_tekniske_feil_videre() {
+            when(restClient.sendReturnUnhandled(any(RestRequest.class))).thenThrow(new IllegalStateException("Fager er utilgjengelig"));
+
+            assertThrows(IllegalStateException.class,
+                () -> agKlient.oppgaveUtgåttViaEksternId(new OppgaveUtgaattByEksternIdMutationRequest(),
+                    new OppgaveUtgaattResultatResponseProjection().typename()));
         }
     }
 

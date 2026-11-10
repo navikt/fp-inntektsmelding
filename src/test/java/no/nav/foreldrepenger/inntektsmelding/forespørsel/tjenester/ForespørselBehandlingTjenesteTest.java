@@ -7,6 +7,7 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -408,7 +409,7 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
     }
 
     @Test
-    void tasks_skal_ikke_opprette_eller_sette_utgått_eksterne_ressurser_som_ikke_finnes() {
+    void tasks_skal_rydde_opp_oppgave_uten_å_opprette_ressurser_for_utgått_forespørsel() {
         var forespørselUuid = lagreForespørsel(SKJÆRINGSTIDSPUNKT, YTELSETYPE, AKTØR_ID, BRREG_ORGNUMMER, SAKSNUMMER,
             FØRSTE_UTTAKSDATO, ForespørselType.BESTILT_AV_FAGSYSTEM);
 
@@ -426,7 +427,10 @@ class ForespørselBehandlingTjenesteTest extends EntityManagerAwareTest {
         kjørSettSakTilUtgåttTask(forespørselUuid);
         kjørSettDialogTilUtgåttTask(forespørselUuid);
 
-        verifyNoInteractions(minSideArbeidsgiverTjeneste, dialogportenTjeneste);
+        verify(minSideArbeidsgiverTjeneste).settOppgaveTilUtgått(
+            forespørselTjeneste.hentForespørsel(forespørselUuid));
+        verifyNoMoreInteractions(minSideArbeidsgiverTjeneste);
+        verifyNoInteractions(dialogportenTjeneste);
     }
 
     @Test

@@ -382,6 +382,7 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
         var oppgaveUtgåttCaptor = ArgumentCaptor.forClass(OppgaveUtgaattMutationRequest.class);
         verify(klient).oppgaveUtgått(oppgaveUtgåttCaptor.capture(), any(OppgaveUtgaattResultatResponseProjection.class));
         assertThat(oppgaveUtgåttCaptor.getValue().getInput()).containsEntry("id", "oppgave-1");
+        verify(klient, never()).oppgaveUtgåttViaEksternId(any(), any());
 
         var tilleggsinfoCaptor = ArgumentCaptor.forClass(TilleggsinformasjonSakMutationRequest.class);
         verify(klient).oppdaterSakTilleggsinformasjon(tilleggsinfoCaptor.capture(), any(TilleggsinformasjonSakResultatResponseProjection.class));
@@ -391,13 +392,22 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
     }
 
     @Test
-    void sett_sak_til_utgått_uten_oppgave_skal_ikke_kalle_oppgave_utgått() {
+    void sett_sak_til_utgått_uten_lokal_oppgave_id_skal_lukke_via_ekstern_id() {
         var uuid = UUID.randomUUID();
         var forespørsel = lagForespørsel(uuid, null, "sak-1", LocalDate.now());
 
         tjeneste.settSakTilUtgått(forespørsel);
 
         verify(klient, never()).oppgaveUtgått(any(), any());
+        var requestCaptor = ArgumentCaptor.forClass(OppgaveUtgaattByEksternIdMutationRequest.class);
+        var projectionCaptor = ArgumentCaptor.forClass(OppgaveUtgaattResultatResponseProjection.class);
+        verify(klient).oppgaveUtgåttViaEksternId(requestCaptor.capture(), projectionCaptor.capture());
+        assertThat(requestCaptor.getValue().getInput())
+            .containsEntry("eksternId", uuid.toString())
+            .containsEntry("merkelapp", ForespørselTekster.finnMerkelapp(forespørsel.ytelseType()).getBeskrivelse());
+        assertThat(projectionCaptor.getValue().toString())
+            .contains("...on NotifikasjonFinnesIkke { feilmelding }",
+                "...on OppgavenErAlleredeUtfoert { feilmelding }");
         verify(klient).oppdaterSakTilleggsinformasjon(any(TilleggsinformasjonSakMutationRequest.class), any(TilleggsinformasjonSakResultatResponseProjection.class));
     }
 
