@@ -9,7 +9,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 
-import io.swagger.v3.jaxrs2.integration.resources.OpenApiResource;
+import io.swagger.v3.rest.integration.resources.OpenApiResource;
 import io.swagger.v3.oas.annotations.Operation;
 import no.nav.foreldrepenger.inntektsmelding.server.auth.api.AutentisertMedAzure;
 

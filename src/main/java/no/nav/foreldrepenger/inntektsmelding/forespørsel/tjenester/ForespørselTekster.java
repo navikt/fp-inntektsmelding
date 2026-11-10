@@ -5,8 +5,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
-
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.altinn.FlerspråkligTekst;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon.Merkelapp;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.organisasjon.Organisasjon;
@@ -99,7 +97,11 @@ public class ForespørselTekster {
     }
 
     static String capitalizeFully(String input) {
-        return Arrays.stream(input.toLowerCase().split("\\s+")).map(StringUtils::capitalize).collect(Collectors.joining(" "));
+        return Arrays.stream(input.toLowerCase().split("\\s+")).map(ForespørselTekster::capitalize).collect(Collectors.joining(" "));
+    }
+
+    private static String capitalize(String str) {
+        return  (str == null || str.isEmpty()) ? str : str.substring(0, 1).toUpperCase() + str.substring(1);
     }
 
     // ---------------------------------------------------------------------
