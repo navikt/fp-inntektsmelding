@@ -126,9 +126,7 @@ public class ForespørselTekster {
         "Berekna månadsløn stemmer ikkje med det som er registrert i A-ordninga, og årsak til avviket manglar. Du må sende inn ny inntektsmelding.",
         "The calculated monthly salary does not match what is registered in A-ordningen, and no reason for the deviation has been given. You must submit a new income statement.");
 
-    private static final String AVVIST_INNTEKT_VARSEL =
-        "Inntektsmeldingen ble avvist fordi oppgitt inntekt avviker fra inntekten rapportert i a-ordningen de siste tre månedene. "
-            + "Send inn ny inntektsmelding med riktig beløp, eller oppgi årsak til avvik.";
+    private static final String AVVIST_INNTEKT_VARSEL = "Du må sende ny inntektsmelding.";
 
 
     private static final FlerspråkligTekst ENDRET_FØRSTE_UTTAKSDATO_MAL = new FlerspråkligTekst(

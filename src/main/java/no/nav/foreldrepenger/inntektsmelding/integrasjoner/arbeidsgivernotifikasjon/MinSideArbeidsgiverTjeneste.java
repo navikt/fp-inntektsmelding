@@ -180,7 +180,7 @@ public class MinSideArbeidsgiverTjeneste {
         var lenke = URI.create(inntektsmeldingSkjemaLenke + "/" + forespørselDto.uuid());
         var eksternId = "avvist-inntektsmelding-" + forespørselDto.uuid();
         var varselTekst = ForespørselTekster.lagAvvistInntektVarselTekst();
-        var varselTittel = "Inntektsmeldingen ble avvist";
+        var varselTittel = "Inntektsmelding er avvist";
 
         sendNyBeskjedMedEksternVarsling(grupperingsid, merkelapp, organisasjonsnummer, feiltekst, varselTekst, lenke, eksternId, varselTittel);
     }

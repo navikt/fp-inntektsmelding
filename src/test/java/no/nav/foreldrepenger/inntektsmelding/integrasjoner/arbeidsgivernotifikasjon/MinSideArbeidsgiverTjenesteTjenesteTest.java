@@ -461,11 +461,10 @@ class MinSideArbeidsgiverTjenesteTjenesteTest {
         assertThat(nyBeskjed.getMetadata().getEksternId()).isEqualTo("avvist-inntektsmelding-" + uuid);
         assertThat(nyBeskjed.getEksterneVarsler()).hasSize(1);
         var avvisningsvarsel = nyBeskjed.getEksterneVarsler().getFirst().getAltinnressurs();
-        var forventetVarselTekst = "Inntektsmeldingen ble avvist fordi oppgitt inntekt avviker fra inntekten rapportert i a-ordningen de siste tre månedene. "
-            + "Send inn ny inntektsmelding med riktig beløp, eller oppgi årsak til avvik.";
-        assertThat(avvisningsvarsel.getEpostTittel()).isEqualTo("Inntektsmeldingen ble avvist");
+        var forventetVarselTekst = "Du må sende ny inntektsmelding.";
+        assertThat(avvisningsvarsel.getEpostTittel()).isEqualTo("Inntektsmelding er avvist");
         assertThat(avvisningsvarsel.getEpostHtmlBody()).isEqualTo(forventetVarselTekst);
-        assertThat(avvisningsvarsel.getSmsTekst()).isEqualTo(forventetVarselTekst);
+        assertThat(avvisningsvarsel.getSmsTekst()).isEqualTo("Inntektsmelding er avvist. " + forventetVarselTekst);
     }
 
     @Test
