@@ -218,7 +218,7 @@ public class MinSideArbeidsgiverTjeneste {
             .onNySakVellykket(new NySakVellykketResponseProjection().id())
             .onUgyldigMerkelapp(new UgyldigMerkelappResponseProjection().feilmelding())
             .onUgyldigMottaker(new UgyldigMottakerResponseProjection().feilmelding())
-            .onDuplikatGrupperingsid(new DuplikatGrupperingsidResponseProjection().feilmelding())
+            .onDuplikatGrupperingsid(new DuplikatGrupperingsidResponseProjection().feilmelding().idTilEksisterende())
             .onDuplikatGrupperingsidEtterDelete(new DuplikatGrupperingsidEtterDeleteResponseProjection().feilmelding())
             .onUkjentProdusent(new UkjentProdusentResponseProjection().feilmelding())
             .onUkjentRolle(new UkjentRolleResponseProjection().feilmelding());
@@ -288,7 +288,7 @@ public class MinSideArbeidsgiverTjeneste {
             .onNyOppgaveVellykket(new NyOppgaveVellykketResponseProjection().id())
             .onUgyldigMerkelapp(new UgyldigMerkelappResponseProjection().feilmelding())
             .onUgyldigMottaker(new UgyldigMottakerResponseProjection().feilmelding())
-            .onDuplikatEksternIdOgMerkelapp(new DuplikatEksternIdOgMerkelappResponseProjection().feilmelding())
+            .onDuplikatEksternIdOgMerkelapp(new DuplikatEksternIdOgMerkelappResponseProjection().feilmelding().idTilEksisterende())
             .onUkjentProdusent(new UkjentProdusentResponseProjection().feilmelding())
             .onUkjentRolle(new UkjentRolleResponseProjection().feilmelding())
             .onUgyldigPaaminnelseTidspunkt(new UgyldigPaaminnelseTidspunktResponseProjection().feilmelding());
@@ -397,7 +397,7 @@ public class MinSideArbeidsgiverTjeneste {
             .onNyBeskjedVellykket(new NyBeskjedVellykketResponseProjection().id())
             .onUgyldigMerkelapp(new UgyldigMerkelappResponseProjection().feilmelding())
             .onUkjentProdusent(new UkjentProdusentResponseProjection().feilmelding())
-            .onDuplikatEksternIdOgMerkelapp(new DuplikatEksternIdOgMerkelappResponseProjection().feilmelding())
+            .onDuplikatEksternIdOgMerkelapp(new DuplikatEksternIdOgMerkelappResponseProjection().feilmelding().idTilEksisterende())
             .onUgyldigMerkelapp(new UgyldigMerkelappResponseProjection().feilmelding())
             .onUgyldigMottaker(new UgyldigMottakerResponseProjection().feilmelding())
             .onUkjentRolle(new UkjentRolleResponseProjection().feilmelding());

@@ -8,15 +8,20 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 
+import jakarta.persistence.OptimisticLockException;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import no.nav.foreldrepenger.inntektsmelding.database.JpaExtension;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselRepository;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.EndringsårsakType;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselType;
+import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingStatus;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Kildesystem;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.Ytelsetype;
 import no.nav.foreldrepenger.inntektsmelding.typer.lager.AktørIdEntitet;
@@ -33,6 +38,72 @@ class InntektsmeldingRepositoryTest extends EntityManagerAwareTest {
     void setUp() {
         this.forespørselRepository = new ForespørselRepository(getEntityManager());
         this.inntektsmeldingRepository = new InntektsmeldingRepository(getEntityManager());
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = InntektsmeldingStatus.class, names = {"UTDATERT", "GODKJENT", "AVVIST"})
+    void skal_avvise_utdatert_statusendring_og_lese_committet_status_ved_nytt_forsøk(InntektsmeldingStatus committetStatus) {
+        var forespørsel = new ForespørselEntitet("999999999", LocalDate.now(), new AktørIdEntitet("9999999999999"),
+            Ytelsetype.FORELDREPENGER, "123", LocalDate.now(), ForespørselType.BESTILT_AV_FAGSYSTEM);
+        var inntektsmelding = InntektsmeldingEntitet.builder()
+            .medAktørId(forespørsel.getAktørId())
+            .medArbeidsgiverIdent(forespørsel.getOrganisasjonsnummer())
+            .medYtelsetype(Ytelsetype.FORELDREPENGER)
+            .medStartDato(LocalDate.now())
+            .medMånedInntekt(BigDecimal.valueOf(4000))
+            .medForespørsel(forespørsel)
+            .medKildesystem(Kildesystem.ARBEIDSGIVERPORTAL)
+            .medStatus(InntektsmeldingStatus.VENTER_VURDERING)
+            .build();
+        var uuid = inntektsmelding.getUuid();
+        var emf = getEntityManager().getEntityManagerFactory();
+
+        try (var førsteEm = emf.createEntityManager(); var utdatertEm = emf.createEntityManager()) {
+            var førsteRepository = new InntektsmeldingRepository(førsteEm);
+            var utdatertRepository = new InntektsmeldingRepository(utdatertEm);
+            try {
+                førsteEm.getTransaction().begin();
+                new ForespørselRepository(førsteEm).lagreForespørsel(forespørsel);
+                førsteRepository.lagreInntektsmelding(inntektsmelding);
+                førsteEm.getTransaction().commit();
+                førsteEm.clear();
+
+                utdatertEm.getTransaction().begin();
+                assertThat(utdatertRepository.finnInntektsmelding(uuid).orElseThrow().getStatus())
+                    .isEqualTo(InntektsmeldingStatus.VENTER_VURDERING);
+
+                førsteEm.getTransaction().begin();
+                førsteRepository.oppdaterStatusTilInntektsmelding(uuid, committetStatus);
+                førsteEm.getTransaction().commit();
+
+                var utdatertStatus = committetStatus == InntektsmeldingStatus.GODKJENT
+                    ? InntektsmeldingStatus.AVVIST : InntektsmeldingStatus.GODKJENT;
+                assertThatThrownBy(() -> utdatertRepository.oppdaterStatusTilInntektsmelding(uuid, utdatertStatus))
+                    .isInstanceOf(OptimisticLockException.class);
+                utdatertEm.getTransaction().rollback();
+                utdatertEm.clear();
+
+                utdatertEm.getTransaction().begin();
+                var etterNyttForsøk = utdatertRepository.finnInntektsmelding(uuid).orElseThrow();
+                assertThat(etterNyttForsøk.getStatus()).isEqualTo(committetStatus);
+                utdatertEm.getTransaction().commit();
+            } finally {
+                if (førsteEm.getTransaction().isActive()) {
+                    førsteEm.getTransaction().rollback();
+                }
+                if (utdatertEm.getTransaction().isActive()) {
+                    utdatertEm.getTransaction().rollback();
+                }
+            }
+        } finally {
+            try (var ryddingEm = emf.createEntityManager()) {
+                ryddingEm.getTransaction().begin();
+                new InntektsmeldingRepository(ryddingEm).finnInntektsmelding(uuid).ifPresent(ryddingEm::remove);
+                ryddingEm.flush();
+                new ForespørselRepository(ryddingEm).hentForespørsel(forespørsel.getUuid()).ifPresent(ryddingEm::remove);
+                ryddingEm.getTransaction().commit();
+            }
+        }
     }
 
     @Test

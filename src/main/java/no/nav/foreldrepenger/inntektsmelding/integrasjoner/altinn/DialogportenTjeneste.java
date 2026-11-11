@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.persistence.PersistenceException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,11 +39,14 @@ public class DialogportenTjeneste {
     /**
      * Kjører en handling mot Dialogporten med toleranse for feil i dev-miljø. Alle arbeidsgivere/testbrukere er ikke
      * satt opp mot Dialogporten i dev, så kall feiler der jevnlig av grunner som ikke er reelle bugs hos oss. I prod
-     * kastes feilen videre uendret, slik at prosesstask-rammeverket kan prøve tasken på nytt automatisk
+     * kastes feilen videre uendret, slik at prosesstask-rammeverket kan prøve tasken på nytt automatisk.
+     * Databasefeil kastes alltid videre, også i dev.
      */
     public void utførMotDialogportenMedDevToleranse(Runnable handling) {
         try {
             handling.run();
+        } catch (PersistenceException e) {
+            throw e;
         } catch (Exception e) {
             if (ENV.isProd()) {
                 throw e;
