@@ -55,8 +55,9 @@ class OpprettOppgaveTaskTest {
         doThrow(new IllegalStateException("Fager er utilgjengelig"))
             .when(minSideArbeidsgiverTjeneste).settOppgaveTilUtgått(utgått);
         var task = new OpprettOppgaveTask(forespørselTjeneste, minSideArbeidsgiverTjeneste);
+        var taskData = lagTaskData(uuid);
 
-        assertThatThrownBy(() -> task.doTask(lagTaskData(uuid))).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> task.doTask(taskData)).isInstanceOf(IllegalStateException.class);
     }
 
     private static ProsessTaskData lagTaskData(UUID uuid) {
