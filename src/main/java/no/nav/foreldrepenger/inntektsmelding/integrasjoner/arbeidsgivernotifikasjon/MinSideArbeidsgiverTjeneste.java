@@ -153,8 +153,9 @@ public class MinSideArbeidsgiverTjeneste {
             return;
         }
 
-        // Oppgaven kan være opprettet når vi feilet pga optimistisk lås og ID-en ble rullet tilbake.
-        // Vi må derfor sette til utgått vha ekstern id siden vi ikke har oppgave id i disse tilfellene
+        // Oppgaver kan være opprettet men uten oppgave id dersom feilet pga optimistisk lås.
+        // Vi må derfor sette oppgave til utgått hvis finnes
+        // Vi bruker eksternId(forespørselUuid) som er unik for forespørselen for å utgå den.
         var request = OppgaveUtgaattByEksternIdMutationRequest.builder()
             .setEksternId(forespørsel.uuid().toString())
             .setMerkelapp(ForespørselTekster.finnMerkelapp(forespørsel.ytelseType()).getBeskrivelse())
