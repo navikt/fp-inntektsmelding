@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import no.nav.foreldrepenger.inntektsmelding.imdialog.tjenester.GrunnlagDtoTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.imdialog.tjenester.UregistrertValiderer;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.aareg.ArbeidstakerTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.fpsak.FpsakFagsak;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.fpsak.FpsakTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
@@ -45,6 +46,7 @@ public class ArbeidsgiverinitiertDialogRest {
     private GrunnlagDtoTjeneste grunnlagDtoTjeneste;
     private FpsakTjeneste fpsakTjeneste;
     private Tilgang tilgang;
+    private ArbeidstakerTjeneste arbeidstakerTjeneste;
 
     ArbeidsgiverinitiertDialogRest() {
         // CDI
@@ -53,10 +55,12 @@ public class ArbeidsgiverinitiertDialogRest {
     @Inject
     public ArbeidsgiverinitiertDialogRest(GrunnlagDtoTjeneste grunnlagDtoTjeneste,
                                           FpsakTjeneste fpsakTjeneste,
-                                          Tilgang tilgang) {
+                                          Tilgang tilgang,
+                                          ArbeidstakerTjeneste arbeidstakerTjeneste) {
         this.grunnlagDtoTjeneste = grunnlagDtoTjeneste;
         this.fpsakTjeneste = fpsakTjeneste;
         this.tilgang = tilgang;
+        this.arbeidstakerTjeneste = arbeidstakerTjeneste;
     }
 
     @POST
@@ -108,12 +112,14 @@ public class ArbeidsgiverinitiertDialogRest {
     @Produces(MediaType.APPLICATION_JSON + ";charset=utf-8")
     @Tilgangskontrollert
     public Response hentOpplysninger(@Valid @NotNull OpplysningerRequestDto request) {
-        tilgang.sjekkAtArbeidsgiverHarTilgangTilBedrift(Arbeidsgiver.fra(request.organisasjonsnummer().orgnr()));
+        var arbeidsgiver = Arbeidsgiver.fra(request.organisasjonsnummer().orgnr());
+        tilgang.sjekkAtArbeidsgiverHarTilgangTilBedrift(arbeidsgiver);
+        arbeidstakerTjeneste.sjekkAtSøkerHarArbeidsforholdHosArbeidsgiver(request.fødselsnummer(), request.førsteFraværsdag(), arbeidsgiver);
         LOG.info("Henter opplysninger for søker {}", request.fødselsnummer());
         var dto = grunnlagDtoTjeneste.lagArbeidsgiverinitiertNyansattDialogDto(request.fødselsnummer(),
             request.ytelseType(),
             request.førsteFraværsdag(),
-            Arbeidsgiver.fra(request.organisasjonsnummer().orgnr()));
+            arbeidsgiver);
         return Response.ok(dto).build();
     }
 

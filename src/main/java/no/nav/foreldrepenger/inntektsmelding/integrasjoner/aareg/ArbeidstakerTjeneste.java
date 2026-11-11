@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.PersonIdent;
 import no.nav.foreldrepenger.inntektsmelding.pip.AltinnTilgangTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.typer.domene.Arbeidsgiver;
+import no.nav.vedtak.exception.ManglerTilgangException;
 
 @ApplicationScoped
 public class ArbeidstakerTjeneste {
@@ -54,6 +55,14 @@ public class ArbeidstakerTjeneste {
 
         LOG.info("Returnerer informasjon om arbeidsforhold for {}", ident);
         return arbeidsforholdArbeidsgiverHarTilgangTil;
+    }
+
+    public void sjekkAtSøkerHarArbeidsforholdHosArbeidsgiver(PersonIdent ident, LocalDate førsteFraværsdag, Arbeidsgiver arbeidsgiver) {
+        var harArbeidsforhold = finnSøkersArbeidsforholdSomArbeidsgiverHarTilgangTil(ident, førsteFraværsdag).stream()
+            .anyMatch(arbeidsforhold -> arbeidsgiver.orgnr().equals(arbeidsforhold.organisasjonsnummer()));
+        if (!harArbeidsforhold) {
+            throw new ManglerTilgangException("IM-00403", "Søker har ikke et registrert arbeidsforhold hos bedriften.");
+        }
     }
 
     public List<Arbeidsgiver> finnOrganisasjonerArbeidsgiverHarTilgangTil(PersonIdent ident) {

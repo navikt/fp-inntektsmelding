@@ -19,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import no.nav.foreldrepenger.inntektsmelding.imdialog.rest.InntektsmeldingDialogDto;
 import no.nav.foreldrepenger.inntektsmelding.imdialog.tjenester.GrunnlagDtoTjeneste;
+import no.nav.foreldrepenger.inntektsmelding.integrasjoner.aareg.ArbeidstakerTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.fpsak.FpsakFagsak;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.fpsak.FpsakTjeneste;
 import no.nav.foreldrepenger.inntektsmelding.integrasjoner.person.AktørId;
@@ -46,12 +47,14 @@ class ArbeidsgiverinitiertDialogRestTest {
     private FpsakTjeneste fpsakTjeneste;
     @Mock
     private Tilgang tilgang;
+    @Mock
+    private ArbeidstakerTjeneste arbeidstakerTjeneste;
 
     private ArbeidsgiverinitiertDialogRest rest;
 
     @BeforeEach
     void setUp() {
-        rest = new ArbeidsgiverinitiertDialogRest(grunnlagDtoTjeneste, fpsakTjeneste, tilgang);
+        rest = new ArbeidsgiverinitiertDialogRest(grunnlagDtoTjeneste, fpsakTjeneste, tilgang, arbeidstakerTjeneste);
     }
 
     @Test
@@ -64,6 +67,20 @@ class ArbeidsgiverinitiertDialogRestTest {
         var rekkefølge = inOrder(tilgang);
         rekkefølge.verify(tilgang).sjekkAtArbeidsgiverHarTilgangTilBedrift(ARBEIDSGIVER);
         verifyNoMoreInteractions(tilgang);
+        verifyNoInteractions(grunnlagDtoTjeneste, fpsakTjeneste, arbeidstakerTjeneste);
+    }
+
+    @Test
+    void skal_avvise_nyansatt_uten_arbeidsforhold_hos_arbeidsgiver_før_dataoppslag() {
+        var avslag = new ManglerTilgangException("IM-00403", "Søker har ikke et registrert arbeidsforhold hos bedriften.");
+        doThrow(avslag).when(arbeidstakerTjeneste).sjekkAtSøkerHarArbeidsforholdHosArbeidsgiver(IDENT, DATO, ARBEIDSGIVER);
+
+        assertThatThrownBy(() -> rest.hentOpplysninger(nyansattRequest())).isSameAs(avslag);
+
+        var rekkefølge = inOrder(tilgang, arbeidstakerTjeneste);
+        rekkefølge.verify(tilgang).sjekkAtArbeidsgiverHarTilgangTilBedrift(ARBEIDSGIVER);
+        rekkefølge.verify(arbeidstakerTjeneste).sjekkAtSøkerHarArbeidsforholdHosArbeidsgiver(IDENT, DATO, ARBEIDSGIVER);
+        verifyNoMoreInteractions(tilgang, arbeidstakerTjeneste);
         verifyNoInteractions(grunnlagDtoTjeneste, fpsakTjeneste);
     }
 
@@ -77,7 +94,7 @@ class ArbeidsgiverinitiertDialogRestTest {
         var rekkefølge = inOrder(tilgang);
         rekkefølge.verify(tilgang).sjekkAtArbeidsgiverHarTilgangTilBedrift(ARBEIDSGIVER);
         verifyNoMoreInteractions(tilgang);
-        verifyNoInteractions(grunnlagDtoTjeneste, fpsakTjeneste);
+        verifyNoInteractions(grunnlagDtoTjeneste, fpsakTjeneste, arbeidstakerTjeneste);
     }
 
     @Test
@@ -90,11 +107,12 @@ class ArbeidsgiverinitiertDialogRestTest {
 
         assertThat(response.getStatus()).isEqualTo(200);
         assertThat(response.getEntity()).isSameAs(dialog);
-        var rekkefølge = inOrder(tilgang, grunnlagDtoTjeneste);
+        var rekkefølge = inOrder(tilgang, arbeidstakerTjeneste, grunnlagDtoTjeneste);
         rekkefølge.verify(tilgang).sjekkAtArbeidsgiverHarTilgangTilBedrift(ARBEIDSGIVER);
+        rekkefølge.verify(arbeidstakerTjeneste).sjekkAtSøkerHarArbeidsforholdHosArbeidsgiver(IDENT, DATO, ARBEIDSGIVER);
         rekkefølge.verify(grunnlagDtoTjeneste)
             .lagArbeidsgiverinitiertNyansattDialogDto(IDENT, Ytelsetype.FORELDREPENGER, DATO, ARBEIDSGIVER);
-        verifyNoMoreInteractions(tilgang, grunnlagDtoTjeneste);
+        verifyNoMoreInteractions(tilgang, arbeidstakerTjeneste, grunnlagDtoTjeneste);
         verifyNoInteractions(fpsakTjeneste);
     }
 
