@@ -95,13 +95,13 @@ class ForespørselRepositoryTest extends EntityManagerAwareTest {
                 førsteEm.getTransaction().commit();
                 førsteEm.clear();
 
-                assertThatThrownBy(() -> {
-                    if (sakIdLagresFørst) {
-                        utdatertRepository.ferdigstillForespørsel(uuid);
-                    } else {
-                        utdatertRepository.oppdaterArbeidsgiverNotifikasjonSakId(uuid, sakId);
-                    }
-                }).isInstanceOf(OptimisticLockException.class);
+                if (sakIdLagresFørst) {
+                    assertThatThrownBy(() -> utdatertRepository.ferdigstillForespørsel(uuid))
+                        .isInstanceOf(OptimisticLockException.class);
+                } else {
+                    assertThatThrownBy(() -> utdatertRepository.oppdaterArbeidsgiverNotifikasjonSakId(uuid, sakId))
+                        .isInstanceOf(OptimisticLockException.class);
+                }
                 utdatertEm.getTransaction().rollback();
                 utdatertEm.clear();
 

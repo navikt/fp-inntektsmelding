@@ -41,15 +41,17 @@ class MinSideArbeidsgiverKlient {
     public String opprettSak(NySakMutationRequest request, NySakResultatResponseProjection projection) {
         LOG.info("FAGER: Opprett Sak");
         var resultat = query(new GraphQLRequest(request, projection), NySakMutationResponse.class).nySak();
-        if (resultat instanceof NySakVellykket vellykket) {
-            LOG.info("Vellykket opprettelse av sak");
-            return vellykket.getId();
-        } else if (resultat instanceof DuplikatGrupperingsid duplikat) {
-            return duplikat.getIdTilEksisterende();
-        } else {
-            loggFeilmelding((Error) resultat, "opprettelse av ny sak");
-        }
-        throw ulovligTilstandException();
+        return switch (resultat) {
+            case NySakVellykket vellykket -> {
+                LOG.info("Vellykket opprettelse av sak");
+                yield vellykket.getId();
+            }
+            case DuplikatGrupperingsid duplikat -> duplikat.getIdTilEksisterende();
+            case null, default -> {
+                loggFeilmelding((Error) resultat, "opprettelse av ny sak");
+                throw ulovligTilstandException();
+            }
+        };
     }
 
     public String oppdaterSakTilleggsinformasjon(TilleggsinformasjonSakMutationRequest request,
@@ -67,15 +69,17 @@ class MinSideArbeidsgiverKlient {
     public String opprettOppgave(NyOppgaveMutationRequest request, NyOppgaveResultatResponseProjection projection) {
         LOG.info("FAGER: Opprett Oppgave");
         var resultat = query(new GraphQLRequest(request, projection), NyOppgaveMutationResponse.class).nyOppgave();
-        if (resultat instanceof NyOppgaveVellykket vellykket) {
-            LOG.info("Vellykket opprettelse av oppgave");
-            return vellykket.getId();
-        } else if (resultat instanceof DuplikatEksternIdOgMerkelapp duplikat) {
-            return duplikat.getIdTilEksisterende();
-        } else {
-            loggFeilmelding((Error) resultat, "opprettelse av ny oppgave");
-        }
-        throw ulovligTilstandException();
+        return switch (resultat) {
+            case NyOppgaveVellykket vellykket -> {
+                LOG.info("Vellykket opprettelse av oppgave");
+                yield vellykket.getId();
+            }
+            case DuplikatEksternIdOgMerkelapp duplikat -> duplikat.getIdTilEksisterende();
+            case null, default -> {
+                loggFeilmelding((Error) resultat, "opprettelse av ny oppgave");
+                throw ulovligTilstandException();
+            }
+        };
     }
 
     public String oppgaveUtført(OppgaveUtfoertMutationRequest request, OppgaveUtfoertResultatResponseProjection projection) {
@@ -100,6 +104,17 @@ class MinSideArbeidsgiverKlient {
         } else {
             loggFeilmelding((Error) resultat, "sett oppgave utgått");
         }
+        throw ulovligTilstandException();
+    }
+
+    public void oppgaveUtgåttViaEksternId(OppgaveUtgaattByEksternIdMutationRequest request, OppgaveUtgaattResultatResponseProjection projection) {
+        LOG.info("FAGER: Setter oppgave utgått via ekstern ID (forespørseluuid)");
+        var resultat = query(new GraphQLRequest(request, projection), OppgaveUtgaattByEksternIdMutationResponse.class).oppgaveUtgaattByEksternId();
+        if (resultat instanceof OppgaveUtgaattVellykket || resultat instanceof NotifikasjonFinnesIkke
+            || resultat instanceof OppgavenErAlleredeUtfoert) {
+            return;
+        }
+        loggFeilmelding((Error) resultat, "sett oppgave utgått via ekstern ID (forespørseluuid)");
         throw ulovligTilstandException();
     }
 
@@ -131,15 +146,17 @@ class MinSideArbeidsgiverKlient {
     public String opprettBeskjedOgVarsling(NyBeskjedMutationRequest request, NyBeskjedResultatResponseProjection projection) {
         LOG.info("FAGER: Oppretter beskjed og ekstern varsling");
         var resultat = query(new GraphQLRequest(request, projection), NyBeskjedMutationResponse.class).nyBeskjed();
-        if (resultat instanceof NyBeskjedVellykket vellykket) {
-            LOG.info("Vellykket opprettelse av beskjed");
-            return vellykket.getId();
-        } else if (resultat instanceof DuplikatEksternIdOgMerkelapp duplikat) {
-            return duplikat.getIdTilEksisterende();
-        } else {
-            loggFeilmelding((Error) resultat, "opprettelse av ny beskjed");
-        }
-        throw ulovligTilstandException();
+        return switch (resultat) {
+            case NyBeskjedVellykket vellykket -> {
+                LOG.info("Vellykket opprettelse av beskjed");
+                yield vellykket.getId();
+            }
+            case DuplikatEksternIdOgMerkelapp duplikat -> duplikat.getIdTilEksisterende();
+            case null, default -> {
+                loggFeilmelding((Error) resultat, "opprettelse av ny beskjed");
+                throw ulovligTilstandException();
+            }
+        };
     }
 
     private <T extends GraphQLResult<?>> T query(GraphQLRequest req, Class<T> clazz) {

@@ -43,6 +43,7 @@ public class OpprettOppgaveTask implements ProsessTaskHandler {
         var forespørsel = forespørselTjeneste.hentForespørsel(forespørselUuid);
 
         if (ForespørselStatus.UTGÅTT.equals(forespørsel.status())) {
+            minSideArbeidsgiverTjeneste.settOppgaveTilUtgått(forespørsel);
             LOG.info("Forespørsel {} er utgått, oppretter ikke oppgave", forespørselUuid);
             return;
         }

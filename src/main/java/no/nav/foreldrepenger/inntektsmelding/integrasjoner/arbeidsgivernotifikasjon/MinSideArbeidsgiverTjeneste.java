@@ -141,11 +141,34 @@ public class MinSideArbeidsgiverTjeneste {
     }
 
     public void settSakTilUtgått(ForespørselDto forespørsel) {
-        Optional.ofNullable(forespørsel.oppgaveId())
-            .ifPresent(oppgaveId -> oppgaveUtgått(oppgaveId, OffsetDateTime.now()));
+        settOppgaveTilUtgått(forespørsel);
 
         oppdaterSakTilleggsinformasjon(forespørsel.arbeidsgiverNotifikasjonSakId(),
             ForespørselTekster.lagTilleggsInformasjon(LukkeÅrsak.UTGÅTT, forespørsel.førsteUttaksdato()));
+    }
+
+    public void settOppgaveTilUtgått(ForespørselDto forespørsel) {
+        if (forespørsel.oppgaveId() != null) {
+            oppgaveUtgått(forespørsel.oppgaveId(), OffsetDateTime.now());
+            return;
+        }
+
+        // Oppgaver kan være opprettet men uten oppgave id dersom feilet pga optimistisk lås.
+        // Vi må derfor sette oppgave til utgått hvis finnes
+        // Vi bruker eksternId(forespørselUuid) som er unik for forespørselen for å utgå den.
+        var request = OppgaveUtgaattByEksternIdMutationRequest.builder()
+            .setEksternId(forespørsel.uuid().toString())
+            .setMerkelapp(ForespørselTekster.finnMerkelapp(forespørsel.ytelseType()).getBeskrivelse())
+            .setUtgaattTidspunkt(OffsetDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME))
+            .build();
+        var projection = new OppgaveUtgaattResultatResponseProjection().typename()
+            .onOppgaveUtgaattVellykket(new OppgaveUtgaattVellykketResponseProjection().id())
+            .onOppgavenErAlleredeUtfoert(new OppgavenErAlleredeUtfoertResponseProjection().feilmelding())
+            .onNotifikasjonFinnesIkke(new NotifikasjonFinnesIkkeResponseProjection().feilmelding())
+            .onUgyldigMerkelapp(new UgyldigMerkelappResponseProjection().feilmelding())
+            .onUkjentProdusent(new UkjentProdusentResponseProjection().feilmelding());
+
+        minSideArbeidsgiverKlient.oppgaveUtgåttViaEksternId(request, projection);
     }
 
     /**

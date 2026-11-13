@@ -1,6 +1,7 @@
 package no.nav.foreldrepenger.inntektsmelding.integrasjoner.arbeidsgivernotifikasjon;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -8,11 +9,14 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -70,8 +74,10 @@ class MinSideArbeidsgiverTjenesteKlientTest {
             response.setData(Map.of("nySak", new DuplikatGrupperingsidEtterDelete("Tidligere sak er slettet")));
             when(restClient.sendReturnUnhandled(any(RestRequest.class))).thenReturn(new MockGraphQLHttpResponse<>(response));
 
+            var request = new NySakMutationRequest();
+            var projection = mock(NySakResultatResponseProjection.class);
             var ex = assertThrows(TekniskException.class,
-                () -> agKlient.opprettSak(new NySakMutationRequest(), mock(NySakResultatResponseProjection.class)));
+                () -> agKlient.opprettSak(request, projection));
 
             assertThat(ex.getMessage()).contains("Tidligere sak er slettet");
         }
@@ -197,10 +203,56 @@ class MinSideArbeidsgiverTjenesteKlientTest {
             response.setData(Map.of("nyBeskjed", new UgyldigMerkelapp("Ugyldig merkelapp")));
             when(restClient.sendReturnUnhandled(any(RestRequest.class))).thenReturn(new MockGraphQLHttpResponse<>(response));
 
+            var request = new NyBeskjedMutationRequest();
+            var projection = mock(NyBeskjedResultatResponseProjection.class);
             var ex = assertThrows(TekniskException.class,
-                () -> agKlient.opprettBeskjedOgVarsling(new NyBeskjedMutationRequest(), mock(NyBeskjedResultatResponseProjection.class)));
+                () -> agKlient.opprettBeskjedOgVarsling(request, projection));
 
             assertThat(ex.getMessage()).contains("Ugyldig merkelapp");
+        }
+    }
+
+    @Nested
+    class SettOppgaveUtgåttByEksternId {
+        static Stream<OppgaveUtgaattResultat> ferdigHåndterteResultater() {
+            return Stream.of(new OppgaveUtgaattVellykket("oppgave-1"),
+                new NotifikasjonFinnesIkke("Oppgaven finnes ikke"),
+                new OppgavenErAlleredeUtfoert("Oppgaven er allerede utført"));
+        }
+
+        @ParameterizedTest
+        @MethodSource("ferdigHåndterteResultater")
+        void skal_godta_lukket_manglende_eller_allerede_utført_oppgave(OppgaveUtgaattResultat resultat) {
+            var response = new OppgaveUtgaattByEksternIdMutationResponse();
+            response.setData(Map.of("oppgaveUtgaattByEksternId", resultat));
+            when(restClient.sendReturnUnhandled(any(RestRequest.class))).thenReturn(new MockGraphQLHttpResponse<>(response));
+
+            var request = new OppgaveUtgaattByEksternIdMutationRequest();
+            var projection = new OppgaveUtgaattResultatResponseProjection().typename();
+            assertDoesNotThrow(() -> agKlient.oppgaveUtgåttViaEksternId(request, projection));
+        }
+
+        @Test
+        void skal_kaste_valideringsfeil_videre() {
+            var response = new OppgaveUtgaattByEksternIdMutationResponse();
+            response.setData(Map.of("oppgaveUtgaattByEksternId", new UgyldigMerkelapp("Ugyldig merkelapp")));
+            when(restClient.sendReturnUnhandled(any(RestRequest.class))).thenReturn(new MockGraphQLHttpResponse<>(response));
+
+            var request = new OppgaveUtgaattByEksternIdMutationRequest();
+            var projection = new OppgaveUtgaattResultatResponseProjection().typename();
+            var ex = assertThrows(TekniskException.class,
+                () -> agKlient.oppgaveUtgåttViaEksternId(request, projection));
+
+            assertThat(ex.getMessage()).contains("Ugyldig merkelapp");
+        }
+
+        @Test
+        void skal_kaste_tekniske_feil_videre() {
+            when(restClient.sendReturnUnhandled(any(RestRequest.class))).thenThrow(new IllegalStateException("Fager er utilgjengelig"));
+
+            var request = new OppgaveUtgaattByEksternIdMutationRequest();
+            var projection = new OppgaveUtgaattResultatResponseProjection().typename();
+            assertThrows(IllegalStateException.class, () -> agKlient.oppgaveUtgåttViaEksternId(request, projection));
         }
     }
 
