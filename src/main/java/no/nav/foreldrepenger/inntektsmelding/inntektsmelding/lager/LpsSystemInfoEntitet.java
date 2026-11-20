@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 
 @Entity(name = "LpsSystemInfoEntitet")
 @Table(name = "LPS_SYSTEM_INFORMASJON")
@@ -18,9 +19,11 @@ public class LpsSystemInfoEntitet {
     @JoinColumn(name = "inntektsmelding_id", nullable = false, updatable = false, unique = true)
     private InntektsmeldingEntitet inntektsmelding;
 
+    @NotNull
     @Column(name = "navn", length = 100, nullable = false, updatable = false)
     private String navn;
 
+    @NotNull
     @Column(name = "versjon", length = 100, nullable = false, updatable = false)
     private String versjon;
 

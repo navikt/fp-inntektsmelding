@@ -23,6 +23,7 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+import jakarta.validation.constraints.NotNull;
 
 import no.nav.foreldrepenger.inntektsmelding.inntektsmelding.lager.InntektsmeldingEntitet;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.ForespørselStatus;
@@ -45,15 +46,18 @@ public class ForespørselEntitet {
     @Column(name = "versjon", nullable = false)
     private long versjon;
 
-    @Column(name = "loepe_nummer", nullable = false, updatable = false)
+    @NotNull
+    @Column(name = "loepe_nummer", nullable = false, updatable = false, unique = true)
     private Long løpenummer;
 
-    @Column(name = "uuid", nullable = false, updatable = false)
+    @NotNull
+    @Column(name = "uuid", nullable = false, updatable = false, unique = true)
     private UUID uuid;
 
     @Column(name = "sak_id")
     private String sakId;
 
+    @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private ForespørselStatus status = ForespørselStatus.UNDER_BEHANDLING;
@@ -61,19 +65,23 @@ public class ForespørselEntitet {
     @Column(name = "oppgave_id")
     private String oppgaveId;
 
+    @NotNull
     @Column(name = "orgnr", nullable = false, updatable = false)
     private String organisasjonsnummer;
 
     @Column(name = "skjaeringstidspunkt")
     private LocalDate skjæringstidspunkt;
 
-    @Column(name = "forste_uttaksdato", nullable = false)
+    // TODO (anyone): Er intensjonen at denne er not-null? Den er nullable i DB.
+    @Column(name = "forste_uttaksdato")
     private LocalDate førsteUttaksdato;
 
+    @NotNull
     @Embedded
     @AttributeOverride(name = "aktørId", column = @Column(name = "bruker_aktoer_id", nullable = false, updatable = false))
     private AktørIdEntitet aktørId;
 
+    @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "ytelse_type", nullable = false, updatable = false)
     private Ytelsetype ytelseType;
@@ -81,10 +89,12 @@ public class ForespørselEntitet {
     @Column(name = "fagsystem_saksnummer", updatable = false)
     private String fagsystemSaksnummer;
 
+    @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "forespoersel_type", nullable = false, updatable = false)
     private ForespørselType forespørselType;
 
+    @NotNull
     @Column(name = "opprettet_tid", nullable = false, updatable = false)
     private final LocalDateTime opprettetTidspunkt = LocalDateTime.now();
 

@@ -13,6 +13,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 
 @Entity(name = "ForespørselEndringHistorikkEntitet")
 @Table(name = "FORESPOERSEL_ENDRING_HISTORIKK")
@@ -32,6 +33,7 @@ public class ForespørselEndringHistorikkEntitet {
     @Column(name = "forste_uttaksdato", updatable = false)
     private LocalDate førsteUttaksdato;
 
+    @NotNull
     @Column(name = "opprettet_tid", nullable = false, updatable = false)
     private final LocalDateTime opprettetTidspunkt = LocalDateTime.now();
 

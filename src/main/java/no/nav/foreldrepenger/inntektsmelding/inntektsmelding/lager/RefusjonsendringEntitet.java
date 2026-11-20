@@ -11,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 
 @Entity(name = "RefusjonEndringEntitet")
 @Table(name = "REFUSJON_ENDRING")
@@ -19,14 +20,17 @@ public class RefusjonsendringEntitet {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "GLOBAL_PK_SEQ_GENERATOR")
     private Long id;
 
+    @NotNull
     @ManyToOne(optional = false)
     @JoinColumn(name = "inntektsmelding_id", nullable = false, updatable = false)
     private InntektsmeldingEntitet inntektsmelding;
 
-    @Column(name = "fom")
+    @NotNull
+    @Column(name = "fom", nullable = false)
     private LocalDate fom;
 
-    @Column(name = "maaned_refusjon")
+    @NotNull
+    @Column(name = "maaned_refusjon", nullable = false)
     private BigDecimal refusjonPrMnd;
 
     public RefusjonsendringEntitet() {

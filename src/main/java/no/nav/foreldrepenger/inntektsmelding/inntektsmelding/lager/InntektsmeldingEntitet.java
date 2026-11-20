@@ -25,6 +25,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+import jakarta.validation.constraints.NotNull;
 
 import no.nav.foreldrepenger.inntektsmelding.forespørsel.lager.ForespørselEntitet;
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.InntektsmeldingStatus;
@@ -45,29 +46,36 @@ public class InntektsmeldingEntitet {
     @Column(name = "versjon", nullable = false)
     private long versjon;
 
-    @Column(name = "loepe_nummer", nullable = false, updatable = false)
+    @NotNull
+    @Column(name = "loepe_nummer", nullable = false, updatable = false, unique = true)
     private Long løpenummer;
 
+    @NotNull
     @Embedded
     @AttributeOverride(name = "aktørId", column = @Column(name = "bruker_aktoer_id", nullable = false, updatable = false))
     private AktørIdEntitet aktørId;
 
+    @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "ytelse_type")
+    @Column(name = "ytelse_type", nullable = false)
     private Ytelsetype ytelsetype;
 
-    @Column(name = "arbeidsgiver_ident")
+    @NotNull
+    @Column(name = "arbeidsgiver_ident", nullable = false)
     private String arbeidsgiverIdent;
 
-    @Column(name = "uuid", nullable = false, updatable = false)
+    // TODO (anyone): Skal denne være nullable? Den er nullable i Flyway, settes alltid i builder
+    @Column(name = "uuid", updatable = false)
     private UUID uuid;
 
     @OneToOne(cascade = CascadeType.ALL, mappedBy = "inntektsmelding")
     private KontaktpersonEntitet kontaktperson;
 
+    @NotNull
     @Column(name = "start_dato_permisjon", nullable = false)
     private LocalDate startDato;
 
+    @NotNull
     @Column(name = "maaned_inntekt", nullable = false)
     private BigDecimal månedInntekt;
 
@@ -77,14 +85,16 @@ public class InntektsmeldingEntitet {
     @Column(name = "refusjon_opphoersdato")
     private LocalDate opphørsdatoRefusjon;
 
+    @NotNull
     @Column(name = "opprettet_tid", nullable = false, updatable = false)
     private LocalDateTime opprettetTidspunkt = LocalDateTime.now();
 
     @Column(name = "opprettet_av", updatable = false)
     private String opprettetAv;
 
+    // TODO (anyone): Skal denne være nullable?
     @Enumerated(EnumType.STRING)
-    @Column(name = "kildesystem", nullable = false, updatable = false)
+    @Column(name = "kildesystem", updatable = false)
     private Kildesystem kildesystem;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "inntektsmelding")
@@ -103,6 +113,7 @@ public class InntektsmeldingEntitet {
     @JoinColumn(name = "forespoersel_id")
     private ForespørselEntitet forespørsel;
 
+    @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private InntektsmeldingStatus status = InntektsmeldingStatus.GODKJENT;
