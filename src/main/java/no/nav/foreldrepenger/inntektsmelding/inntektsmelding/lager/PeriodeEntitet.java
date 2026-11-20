@@ -5,16 +5,19 @@ import java.time.LocalDate;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import jakarta.validation.constraints.NotNull;
 
 import no.nav.vedtak.konfig.Tid;
 
 @Embeddable
 public class PeriodeEntitet {
 
-    @Column(name = "fom")
+    @NotNull
+    @Column(name = "fom", nullable = false)
     private LocalDate fom;
 
-    @Column(name = "tom")
+    @NotNull
+    @Column(name = "tom", nullable = false)
     private LocalDate tom;
 
     public PeriodeEntitet() {

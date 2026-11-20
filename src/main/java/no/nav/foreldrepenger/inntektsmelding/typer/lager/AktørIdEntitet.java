@@ -6,12 +6,14 @@ import java.util.regex.Pattern;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import jakarta.validation.constraints.NotNull;
 
 @Embeddable
 public class AktørIdEntitet {
     private static final Pattern VALID = Pattern.compile("^\\d{13}");
 
-    @Column(name = "aktoer_id")
+    @NotNull
+    @Column(name = "aktoer_id", nullable = false)
     private String aktørId;
 
     public AktørIdEntitet() {
