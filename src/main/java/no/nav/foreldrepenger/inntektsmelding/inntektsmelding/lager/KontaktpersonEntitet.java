@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 
 @Entity(name = "KontaktpersonEntitet")
 @Table(name = "KONTAKTPERSON")
@@ -17,14 +18,17 @@ public class KontaktpersonEntitet {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "GLOBAL_PK_SEQ_GENERATOR")
     private Long id;
 
+    @NotNull
     @OneToOne(optional = false)
     @JoinColumn(name = "inntektsmelding_id", nullable = false, updatable = false)
     private InntektsmeldingEntitet inntektsmelding;
 
-    @Column(name = "telefonnummer")
+    @NotNull
+    @Column(name = "telefonnummer", nullable = false)
     private String telefonnummer;
 
-    @Column(name = "navn")
+    @NotNull
+    @Column(name = "navn", nullable = false)
     private String navn;
 
     public KontaktpersonEntitet() {

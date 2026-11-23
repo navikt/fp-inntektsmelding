@@ -14,6 +14,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 
 import no.nav.foreldrepenger.inntektsmelding.typer.kodeverk.EndringsårsakType;
 
@@ -25,10 +26,12 @@ public class EndringsårsakEntitet {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "GLOBAL_PK_SEQ_GENERATOR")
     private Long id;
 
+    @NotNull
     @ManyToOne(optional = false)
     @JoinColumn(name = "inntektsmelding_id", nullable = false, updatable = false)
     private InntektsmeldingEntitet inntektsmelding;
 
+    @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "aarsak", nullable = false)
     private EndringsårsakType årsak;
